@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:sigil_of_ainz"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "KCK",
+      "CDC",
+      "KCK"
+    ],
+    "key": {
+      "K": {
+        "item": "overlord:guardian_crest"
+      },
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "D": {
+        "item": "minecraft:diamond_block"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:guardian_crest"
+      }
+    ],
+    "result": {
+      "item": "overlord:sigil_of_ainz",
+      "count": 1
+    }
+  }
+}

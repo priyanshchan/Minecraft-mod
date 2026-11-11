@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "overlord:data_crystal_from_block"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "overlord:data_crystal_block"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "overlord:data_crystal_block"
+      }
+    ],
+    "result": {
+      "item": "overlord:data_crystal",
+      "count": 9
+    }
+  }
+}

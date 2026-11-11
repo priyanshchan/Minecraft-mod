@@ -1,0 +1,52 @@
+## Overlord: Tomb of Nazarick
+
+item.overlord.staff_of_ainz_ooal_gown.name=Staff of Ainz Ooal Gown
+item.overlord.ring_of_ainz_ooal_gown.name=Ring of Ainz Ooal Gown
+item.overlord.spuit_lance.name=Spuit Lance
+item.overlord.ginnungagap.name=Ginnungagap
+item.overlord.god_slaying_emperor_blade.name=God Slaying Emperor Blade
+item.overlord.death_knight_sword.name=Death Knight Flamberge
+item.overlord.tome_create_undead.name=Tome: Create Undead
+item.overlord.red_potion.name=Minor Healing Potion
+item.overlord.data_crystal.name=Data Crystal
+item.overlord.yggdrasil_gold_coin.name=YGGDRASIL Gold Coin
+item.overlord.guardian_crest.name=Floor Guardian Crest
+item.overlord.adamantite_ingot.name=Adamantite Ingot
+item.overlord.dark_warrior_helmet.name=Dark Warrior Helmet
+item.overlord.dark_warrior_chestplate.name=Dark Warrior Chestplate
+item.overlord.dark_warrior_leggings.name=Dark Warrior Leggings
+item.overlord.dark_warrior_boots.name=Dark Warrior Boots
+item.overlord.sigil_of_ainz.name=Sigil of Ainz Ooal Gown
+item.overlord.sigil_of_albedo.name=Sigil of Albedo
+item.overlord.sigil_of_shalltear.name=Sigil of Shalltear Bloodfallen
+item.overlord.sigil_of_cocytus.name=Sigil of Cocytus
+item.overlord.sigil_of_demiurge.name=Sigil of Demiurge
+item.overlord.sigil_of_sebas.name=Sigil of Sebas Tian
+
+tile.overlord:nazarick_bricks.name=Nazarick Bricks
+tile.overlord:data_crystal_block.name=Block of Data Crystal
+
+entity.overlord:ainz.name=Ainz Ooal Gown
+entity.overlord:albedo.name=Albedo
+entity.overlord:shalltear.name=Shalltear Bloodfallen
+entity.overlord:cocytus.name=Cocytus
+entity.overlord:demiurge.name=Demiurge
+entity.overlord:sebas.name=Sebas Tian
+entity.overlord:death_knight.name=Death Knight
+entity.overlord:elder_lich.name=Elder Lich
+entity.overlord:hamsuke.name=Hamsuke
+entity.overlord:fireball.name=Fireball
+entity.overlord:negative_burst.name=Negative Burst
+
+item.spawn_egg.entity.overlord:ainz.name=Ainz Ooal Gown Spawn Egg
+item.spawn_egg.entity.overlord:albedo.name=Albedo Spawn Egg
+item.spawn_egg.entity.overlord:shalltear.name=Shalltear Bloodfallen Spawn Egg
+item.spawn_egg.entity.overlord:cocytus.name=Cocytus Spawn Egg
+item.spawn_egg.entity.overlord:demiurge.name=Demiurge Spawn Egg
+item.spawn_egg.entity.overlord:sebas.name=Sebas Tian Spawn Egg
+item.spawn_egg.entity.overlord:death_knight.name=Death Knight Spawn Egg
+item.spawn_egg.entity.overlord:elder_lich.name=Elder Lich Spawn Egg
+item.spawn_egg.entity.overlord:hamsuke.name=Hamsuke Spawn Egg
+
+pack.name=Overlord: Tomb of Nazarick
+pack.description=Ainz Ooal Gown, the Floor Guardians, Death Knights, legendary weapons and spells. §7v1.0.0

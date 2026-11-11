@@ -1,0 +1,9 @@
+{
+  "format_version": "1.21.40",
+  "overlord:nazarick_bricks": {
+    "sound": "stone"
+  },
+  "overlord:data_crystal_block": {
+    "sound": "glass"
+  }
+}

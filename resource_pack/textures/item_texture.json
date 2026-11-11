@@ -1,0 +1,99 @@
+{
+  "resource_pack_name": "overlord",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "overlord_adamantite_ingot": {
+      "textures": "textures/items/overlord/adamantite_ingot"
+    },
+    "overlord_dark_warrior_boots": {
+      "textures": "textures/items/overlord/dark_warrior_boots"
+    },
+    "overlord_dark_warrior_chestplate": {
+      "textures": "textures/items/overlord/dark_warrior_chestplate"
+    },
+    "overlord_dark_warrior_helmet": {
+      "textures": "textures/items/overlord/dark_warrior_helmet"
+    },
+    "overlord_dark_warrior_leggings": {
+      "textures": "textures/items/overlord/dark_warrior_leggings"
+    },
+    "overlord_data_crystal": {
+      "textures": "textures/items/overlord/data_crystal"
+    },
+    "overlord_death_knight_sword": {
+      "textures": "textures/items/overlord/death_knight_sword"
+    },
+    "overlord_egg_ainz": {
+      "textures": "textures/items/overlord/egg_ainz"
+    },
+    "overlord_egg_albedo": {
+      "textures": "textures/items/overlord/egg_albedo"
+    },
+    "overlord_egg_cocytus": {
+      "textures": "textures/items/overlord/egg_cocytus"
+    },
+    "overlord_egg_death_knight": {
+      "textures": "textures/items/overlord/egg_death_knight"
+    },
+    "overlord_egg_demiurge": {
+      "textures": "textures/items/overlord/egg_demiurge"
+    },
+    "overlord_egg_elder_lich": {
+      "textures": "textures/items/overlord/egg_elder_lich"
+    },
+    "overlord_egg_hamsuke": {
+      "textures": "textures/items/overlord/egg_hamsuke"
+    },
+    "overlord_egg_sebas": {
+      "textures": "textures/items/overlord/egg_sebas"
+    },
+    "overlord_egg_shalltear": {
+      "textures": "textures/items/overlord/egg_shalltear"
+    },
+    "overlord_ginnungagap": {
+      "textures": "textures/items/overlord/ginnungagap"
+    },
+    "overlord_god_slaying_emperor_blade": {
+      "textures": "textures/items/overlord/god_slaying_emperor_blade"
+    },
+    "overlord_guardian_crest": {
+      "textures": "textures/items/overlord/guardian_crest"
+    },
+    "overlord_red_potion": {
+      "textures": "textures/items/overlord/red_potion"
+    },
+    "overlord_ring_of_ainz_ooal_gown": {
+      "textures": "textures/items/overlord/ring_of_ainz_ooal_gown"
+    },
+    "overlord_sigil_of_ainz": {
+      "textures": "textures/items/overlord/sigil_of_ainz"
+    },
+    "overlord_sigil_of_albedo": {
+      "textures": "textures/items/overlord/sigil_of_albedo"
+    },
+    "overlord_sigil_of_cocytus": {
+      "textures": "textures/items/overlord/sigil_of_cocytus"
+    },
+    "overlord_sigil_of_demiurge": {
+      "textures": "textures/items/overlord/sigil_of_demiurge"
+    },
+    "overlord_sigil_of_sebas": {
+      "textures": "textures/items/overlord/sigil_of_sebas"
+    },
+    "overlord_sigil_of_shalltear": {
+      "textures": "textures/items/overlord/sigil_of_shalltear"
+    },
+    "overlord_spuit_lance": {
+      "textures": "textures/items/overlord/spuit_lance"
+    },
+    "overlord_staff_of_ainz_ooal_gown": {
+      "textures": "textures/items/overlord/staff_of_ainz_ooal_gown"
+    },
+    "overlord_tome_create_undead": {
+      "textures": "textures/items/overlord/tome_create_undead"
+    },
+    "overlord_yggdrasil_gold_coin": {
+      "textures": "textures/items/overlord/yggdrasil_gold_coin"
+    }
+  }
+}

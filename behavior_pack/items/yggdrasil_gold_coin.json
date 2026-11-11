@@ -1,0 +1,22 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:yggdrasil_gold_coin",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_yggdrasil_gold_coin"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.yggdrasil_gold_coin.name"
+      },
+      "minecraft:max_stack_size": 64
+    }
+  }
+}
