@@ -9,6 +9,12 @@
     },
     "overlord_data_crystal_block": {
       "textures": "textures/blocks/overlord/data_crystal_block"
+    },
+    "overlord_nazarick_tiles": {
+      "textures": "textures/blocks/overlord/nazarick_tiles"
+    },
+    "overlord_nazarick_lamp": {
+      "textures": "textures/blocks/overlord/nazarick_lamp"
     }
   }
 }

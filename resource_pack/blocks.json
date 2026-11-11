@@ -5,5 +5,11 @@
   },
   "overlord:data_crystal_block": {
     "sound": "glass"
+  },
+  "overlord:nazarick_tiles": {
+    "sound": "stone"
+  },
+  "overlord:nazarick_lamp": {
+    "sound": "glass"
   }
 }

@@ -1,0 +1,28 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:lightning_bolt",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/lightning_bolt"
+      },
+      "geometry": {
+        "default": "geometry.overlord.lightning_bolt"
+      },
+      "scripts": {
+        "animate": [
+          "projectile_spin"
+        ]
+      },
+      "animations": {
+        "projectile_spin": "animation.overlord.projectile.spin"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ]
+    }
+  }
+}

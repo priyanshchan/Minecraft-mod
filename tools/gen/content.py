@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [1, 0, 0]
+VERSION = [1, 1, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, Death Knights, legendary weapons and spells. §7v1.0.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, Death Knights, legendary weapons and spells. §7v1.1.0"
 
 
 def oid(name):
@@ -93,6 +93,8 @@ SIGILS = {
     "cocytus": ("Cocytus", "minecraft:packed_ice"),
     "demiurge": ("Demiurge", "minecraft:magma"),
     "sebas": ("Sebas Tian", "minecraft:iron_block"),
+    "narberal": ("Narberal Gamma", "minecraft:copper_block"),
+    "pandoras_actor": ("Pandora's Actor", "minecraft:gold_block"),
 }
 
 ITEMS = {
@@ -133,6 +135,23 @@ ITEMS = {
                               _armor("slot.armor.legs", 6, 555, "armor_legs")),
     "dark_warrior_boots": ("Dark Warrior Boots", "equipment",
                            _armor("slot.armor.feet", 3, 481, "armor_feet")),
+    "dark_warrior_greatsword": ("Dark Warrior Greatsword", "equipment", _weapon(9, {
+        "minecraft:durability": {"max_durability": 2031},
+        "minecraft:repairable": {"repair_items": [
+            {"items": [oid("adamantite_ingot")], "repair_amount": "query.max_durability * 0.25"}]},
+    }, rarity="rare")),
+    "mask_of_envy": ("Mask of Envy", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "uncommon",
+        "minecraft:wearable": {"slot": "slot.armor.head", "protection": 1}}),
+    "scroll_of_lightning": ("Scroll: Call Greater Thunder", "items", {
+        "minecraft:max_stack_size": 16, "minecraft:rarity": "uncommon",
+        **_cooldown("overlord_scroll", 1.5)}),
+    "scroll_of_fly": ("Scroll: Fly", "items", {
+        "minecraft:max_stack_size": 16, "minecraft:rarity": "uncommon",
+        **_cooldown("overlord_scroll", 1.5)}),
+    "ring_of_sustenance": ("Ring of Sustenance", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "rare", "minecraft:glint": True,
+        **_cooldown("overlord_sustenance", 60.0)}),
     "sigil_of_ainz": ("Sigil of Ainz Ooal Gown", "items", {
         "minecraft:max_stack_size": 16, "minecraft:rarity": "epic", "minecraft:glint": True}),
 }
@@ -170,6 +189,17 @@ BLOCKS = {
         "minecraft:destructible_by_explosion": {"explosion_resistance": 12},
         "minecraft:map_color": "#43d6e8",
         "minecraft:light_emission": 10,
+    }),
+    "nazarick_tiles": ("Nazarick Tiles", "stone", {
+        "minecraft:destructible_by_mining": {"seconds_to_destroy": 2.0},
+        "minecraft:destructible_by_explosion": {"explosion_resistance": 30},
+        "minecraft:map_color": "#2e2839",
+    }),
+    "nazarick_lamp": ("Nazarick Lamp", "glass", {
+        "minecraft:destructible_by_mining": {"seconds_to_destroy": 1.0},
+        "minecraft:destructible_by_explosion": {"explosion_resistance": 6},
+        "minecraft:map_color": "#b99cff",
+        "minecraft:light_emission": 15,
     }),
 }
 
@@ -245,6 +275,18 @@ def recipe_files():
                                               cry, 9),
         "nazarick_bricks": _shaped("nazarick_bricks", ["SSS", "SOS", "SSS"], {
             "O": "minecraft:obsidian", "S": "minecraft:stone_bricks"}, oid("nazarick_bricks"), 8),
+        "dark_warrior_greatsword": _shaped("dark_warrior_greatsword", ["A", "A", "S"], {
+            "A": ing, "S": "minecraft:stick"}, oid("dark_warrior_greatsword")),
+        "mask_of_envy": _shaped("mask_of_envy", ["BBB", "BCB"], {
+            "B": "minecraft:bone", "C": cry}, oid("mask_of_envy"), unlock=cry),
+        "scroll_of_lightning": _shapeless("scroll_of_lightning", [
+            "minecraft:paper", "minecraft:copper_ingot", cry], oid("scroll_of_lightning"), 2),
+        "scroll_of_fly": _shapeless("scroll_of_fly", [
+            "minecraft:paper", "minecraft:feather", cry], oid("scroll_of_fly"), 2),
+        "nazarick_tiles": _shaped("nazarick_tiles", ["SS", "SS"], {"S": oid("nazarick_bricks")},
+                                  oid("nazarick_tiles"), 4),
+        "nazarick_lamp": _shaped("nazarick_lamp", [" S ", "SGS", " S "], {
+            "S": oid("nazarick_bricks"), "G": "minecraft:glowstone"}, oid("nazarick_lamp"), 2),
         "sigil_of_ainz": _shaped("sigil_of_ainz", ["KCK", "CDC", "KCK"], {
             "K": oid("guardian_crest"), "C": cry, "D": "minecraft:diamond_block"}, oid("sigil_of_ainz")),
     }
@@ -260,7 +302,9 @@ VANILLA_ITEMS_USED = [
     "minecraft:diamond_block", "minecraft:redstone_block", "minecraft:packed_ice", "minecraft:magma",
     "minecraft:iron_block", "minecraft:wheat_seeds", "minecraft:pumpkin_seeds", "minecraft:melon_seeds",
     "minecraft:beetroot_seeds", "minecraft:wheat", "minecraft:apple", "minecraft:carrot",
-    "minecraft:golden_carrot", "minecraft:blaze_rod",
+    "minecraft:golden_carrot", "minecraft:blaze_rod", "minecraft:paper", "minecraft:stick",
+    "minecraft:copper_ingot", "minecraft:feather", "minecraft:copper_block", "minecraft:gold_block",
+    "minecraft:glowstone",
 ]
 
 
@@ -302,6 +346,16 @@ def loot_files():
         "ainz": [one(oid("staff_of_ainz_ooal_gown")), one(oid("ring_of_ainz_ooal_gown")),
                  _pool(_entry(cry, 8, 12)), _pool(_entry(coin, 24, 32)),
                  _pool(_entry(oid("tome_create_undead"), 1, 1, looting=False))],
+        "narberal": [_pool(_entry(oid("scroll_of_lightning"), 2, 4, looting=False)),
+                     _pool(_entry(cry, 3, 5)), _pool(_entry(coin, 6, 12))],
+        "pandoras_actor": [one(crest), one(oid("ring_of_sustenance")), _pool(_entry(cry, 4, 8)),
+                           _pool(_entry(coin, 32, 48))],
+        "old_guarder": [
+            _pool(_entry("minecraft:bone", 0, 2)), _pool(_entry(coin, 0, 1)),
+            _pool(_entry(cry, 1, 1, looting=False), conditions=[
+                {"condition": "killed_by_player"},
+                {"condition": "random_chance_with_looting", "chance": 0.25, "looting_multiplier": 0.05}]),
+        ],
         "empty": [],
     }
     return {f"loot_tables/entities/{NS}/{k}.json": {"pools": v} for k, v in t.items()}
@@ -483,6 +537,33 @@ def entity_files():
     }
     out["demiurge"] = _entity("demiurge", c, groups, dict(events))
 
+    # --------------------------------------------- Narberal / Pandora's Actor
+    c = guardian("narberal", 220, 0.32, 9, (0.7, 2.0), kb=0.4, xp=100)
+    del c["minecraft:attack"], c["minecraft:behavior.melee_box_attack"]
+    narberal_groups = {
+        "overlord:mode_switcher": groups["overlord:mode_switcher"],
+        "overlord:ranged_mode": {
+            "minecraft:shooter": {"def": oid("lightning_bolt")},
+            "minecraft:behavior.ranged_attack": {
+                "priority": 3, "attack_interval_min": 1.5, "attack_interval_max": 2.5,
+                "attack_radius": 20.0, "speed_multiplier": 1.0}},
+        "overlord:melee_mode": {
+            "minecraft:attack": {"damage": 9},
+            "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.25,
+                                                    "track_target": True}},
+    }
+    out["narberal"] = _entity("narberal", c, narberal_groups, dict(events))
+    out["pandoras_actor"] = _entity("pandoras_actor", guardian(
+        "pandoras_actor", 300, 0.32, 12, (0.7, 2.0), kb=0.7))
+
+    # ----------------------------------------------- Nazarick Old Guarder
+    c = _mob("old_guarder", ["old_guarder", "nazarick", "undead", "skeleton", "monster", "mob"], 30, 0.25,
+             (0.6, 1.9), loot="old_guarder", xp=8, undead=True)
+    c["minecraft:attack"] = {"damage": 5}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally])
+    out["old_guarder"] = _entity("old_guarder", c)
+
     # ----------------------------------------------------- Death Knight
     c = _mob("death_knight", ["death_knight", "nazarick", "undead", "monster", "mob"], 80, 0.27,
              (0.8, 2.0), xp=20, scale=1.3, kb=0.6, undead=True)
@@ -610,18 +691,24 @@ def entity_files():
                        "durationhard": 200, "amplifier": 1},
         "remove_on_hit": {},
     }, {}, {})
+    out["lightning_bolt"] = projectile("lightning_bolt", 0.3, {
+        "impact_damage": {"damage": 9, "knockback": True, "semi_random_diff_damage": False},
+        "remove_on_hit": {},
+    }, {}, {})
     return {f"entities/{k}.json": v for k, v in out.items()}
 
 
 MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_knight", "elder_lich",
-        "hamsuke"]
-PROJECTILES = ["fireball", "negative_burst"]
+        "hamsuke", "narberal", "pandoras_actor", "old_guarder"]
+PROJECTILES = ["fireball", "negative_burst", "lightning_bolt"]
 
 ENTITY_NAMES = {
     "ainz": "Ainz Ooal Gown", "albedo": "Albedo", "shalltear": "Shalltear Bloodfallen",
     "cocytus": "Cocytus", "demiurge": "Demiurge", "sebas": "Sebas Tian",
     "death_knight": "Death Knight", "elder_lich": "Elder Lich", "hamsuke": "Hamsuke",
-    "fireball": "Fireball", "negative_burst": "Negative Burst",
+    "narberal": "Narberal Gamma", "pandoras_actor": "Pandora's Actor",
+    "old_guarder": "Nazarick Old Guarder",
+    "fireball": "Fireball", "negative_burst": "Negative Burst", "lightning_bolt": "Lightning",
 }
 
 
@@ -637,7 +724,7 @@ def spawn_rule_files():
                     "minecraft:brightness_filter": {"min": 0, "max": 7, "adjust_for_weather": True},
                     "minecraft:difficulty_filter": {"min": "easy", "max": "hard"},
                     "minecraft:weight": {"default": weight},
-                    "minecraft:density_limit": {"surface": 2},
+                    "minecraft:density_limit": {"surface": max(2, herd[1])},
                     "minecraft:herd": {"min_size": herd[0], "max_size": herd[1]},
                     "minecraft:biome_filter": {"all_of": [
                         {"test": "has_biome_tag", "operator": "==", "value": "monster"},
@@ -664,6 +751,7 @@ def spawn_rule_files():
     return {
         "spawn_rules/death_knight.json": monster("death_knight", 8),
         "spawn_rules/elder_lich.json": monster("elder_lich", 8),
+        "spawn_rules/old_guarder.json": monster("old_guarder", 12, herd=(2, 3)),
         "spawn_rules/hamsuke.json": hamsuke,
     }
 
@@ -690,6 +778,12 @@ SOUNDS = {
     "elder_lich": (1.0, [0.7, 0.9], {"ambient": "mob.stray.ambient", "hurt": "mob.stray.hurt",
                                      "death": "mob.stray.death", "step": "mob.stray.step",
                                      "shoot": "mob.blaze.shoot"}),
+    "narberal": (1.0, [1.15, 1.3], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                    "step": "mob.zombie.step", "shoot": "mob.shulker.shoot"}),
+    "pandoras_actor": (1.0, [0.95, 1.05], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                          "step": "mob.zombie.step"}),
+    "old_guarder": (1.0, [0.8, 1.0], {"ambient": "mob.skeleton.say", "hurt": "mob.skeleton.hurt",
+                                      "death": "mob.skeleton.death", "step": "mob.skeleton.step"}),
     "hamsuke": (1.0, [0.6, 0.8], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
                                   "death": "mob.rabbit.death", "step": "mob.polarbear.step"}),
 }
@@ -770,6 +864,10 @@ ENTITY_ANIMS = {
     "sebas": ["look_at_target", "idle", "walk", "attack"],
     "death_knight": ["look_at_target", "idle", "walk", "attack"],
     "hamsuke": ["look_at_target", "hamsuke.walk", "hamsuke.tail", "hamsuke.attack"],
+    "narberal": ["look_at_target", "idle", "robe_walk", "attack"],
+    "pandoras_actor": ["look_at_target", "idle", "walk", "attack"],
+    "old_guarder": ["look_at_target", "idle", "walk", "attack"],
+    "lightning_bolt": ["projectile.spin"],
     "fireball": ["projectile.spin"],
     "negative_burst": ["projectile.spin"],
 }
@@ -813,17 +911,25 @@ ARMOR = {
 }
 
 
+# wearable item -> (armour piece geometry, texture)
+WEARABLES = {
+    **{f"dark_warrior_{piece}": (piece, f"{NS}_dark_warrior_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    "mask_of_envy": ("helmet", f"{NS}_mask_of_envy"),
+}
+
+
 def attachable_files():
     """Mirrors the vanilla diamond armour attachables (player + other mobs)."""
     out = {}
-    for piece, (layer, setup) in ARMOR.items():
-        item = oid(f"dark_warrior_{piece}")
+    for name, (piece, texture) in WEARABLES.items():
+        item = oid(name)
+        setup = ARMOR[piece][1]
         common = {
             "materials": {"default": "armor", "enchanted": "armor_enchanted"},
-            "textures": {"default": f"textures/models/armor/{NS}_dark_warrior_{layer}",
+            "textures": {"default": f"textures/models/armor/{texture}",
                          "enchanted": "textures/misc/enchanted_actor_glint"},
         }
-        out[f"attachables/dark_warrior_{piece}.player.json"] = {
+        out[f"attachables/{name}.player.json"] = {
             "format_version": "1.10.0",
             "minecraft:attachable": {"description": {
                 "identifier": f"{item}.player",
@@ -835,7 +941,7 @@ def attachable_files():
                 "render_controllers": ["controller.render.armor"],
             }},
         }
-        out[f"attachables/dark_warrior_{piece}.json"] = {
+        out[f"attachables/{name}.json"] = {
             "format_version": "1.8.0",
             "minecraft:attachable": {"description": {
                 "identifier": item,

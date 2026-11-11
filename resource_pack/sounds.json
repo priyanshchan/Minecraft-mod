@@ -106,6 +106,44 @@
           "shoot": "mob.blaze.shoot"
         }
       },
+      "overlord:narberal": {
+        "volume": 1.0,
+        "pitch": [
+          1.15,
+          1.3
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "mob.shulker.shoot"
+        }
+      },
+      "overlord:pandoras_actor": {
+        "volume": 1.0,
+        "pitch": [
+          0.95,
+          1.05
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:old_guarder": {
+        "volume": 1.0,
+        "pitch": [
+          0.8,
+          1.0
+        ],
+        "events": {
+          "ambient": "mob.skeleton.say",
+          "hurt": "mob.skeleton.hurt",
+          "death": "mob.skeleton.death",
+          "step": "mob.skeleton.step"
+        }
+      },
       "overlord:hamsuke": {
         "volume": 1.0,
         "pitch": [

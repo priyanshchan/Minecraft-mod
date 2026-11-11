@@ -32,8 +32,11 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 | **Cocytus** | 360 | Four-armed warrior, hits apply Slowness | God Slaying Emperor Blade, Guardian Crest |
 | **Demiurge** | 280 | Fire-immune, fireball bursts at range, melee up close | Guardian Crest, Blaze Rods |
 | **Sebas Tian** | 260 | Neutral — only fights back when attacked | Guardian Crest, Healing Potions |
+| **Narberal Gamma** | 220 | Battle maid: throws lightning at range, melee up close | Scrolls of Call Greater Thunder |
+| **Pandora's Actor** | 300 | Treasury guardian, fast melee | Ring of Sustenance, Guardian Crest, lots of Gold Coins |
 | **Death Knight** | 80 | Spawns at night on the surface; can be summoned as an ally | Data Crystals, Gold Coins, rarely its Flamberge |
 | **Elder Lich** | 40 | Spawns at night; casts fireballs | Data Crystals, Gold Coins, Bones |
+| **Nazarick Old Guarder** | 30 | Skeleton soldier; spawns at night in groups of 2–3 | Bones, Gold Coins, sometimes a Data Crystal |
 | **Hamsuke** | 60 | Lives in forests; tame with seeds, then ride it (no saddle needed) | — |
 
 Every mob has its own spawn egg.
@@ -48,26 +51,35 @@ Every mob has its own spawn egg.
 | **Spuit Lance** | 10 damage, heals you for a quarter of the damage dealt |
 | **God Slaying Emperor Blade** | 11 damage, freezes targets with Slowness III |
 | **Death Knight Flamberge** | 8 damage, repairable with iron |
+| **Dark Warrior Greatsword** | 9 damage, repairable with adamantite |
+| **Scroll: Call Greater Thunder** | Single use: strikes the mob or block you look at with lightning (up to 40 blocks) |
+| **Scroll: Fly** | Single use: lifts you into the air, then lets you glide down safely |
+| **Ring of Sustenance** | Use: refills your hunger bar (60 s cooldown) |
+| **Mask of Envy** | Wearable mask that grants Night Vision |
 | **Tome: Create Undead** | Summons a Death Knight that follows and defends you for 5 minutes (max. 3) |
 | **Minor Healing Potion** | Drink for instant health and regeneration |
 | **Dark Warrior armour** | Helmet, chestplate, leggings, boots (netherite-level protection). Full set grants Strength and Resistance |
 | **Guardian sigils** | Use to summon the matching Floor Guardian or Ainz himself |
 | Data Crystal, YGGDRASIL Gold Coin, Guardian Crest, Adamantite Ingot | Crafting materials |
 
-Blocks: **Nazarick Bricks** and **Block of Data Crystal** (glows).
+Blocks: **Nazarick Bricks**, **Nazarick Tiles**, **Nazarick Lamp** (full light) and **Block of Data Crystal** (glows).
 
 ### Survival progression
 
 1. Hunt **Death Knights** and **Elder Liches** at night for *Data Crystals* and *Gold Coins*.
 2. Craft **Adamantite Ingots** (2 iron ingots + diamond + data crystal → 2 ingots) and forge the Dark Warrior armour with the usual armour shapes.
 3. Craft a **guardian sigil**: 4 data crystals in the corners, 1 gold coin in the centre and 4 of the guardian's material on the edges —
-   obsidian (Albedo), redstone block (Shalltear), packed ice (Cocytus), magma block (Demiurge), iron block (Sebas).
+   obsidian (Albedo), redstone block (Shalltear), packed ice (Cocytus), magma block (Demiurge), iron block (Sebas),
+   copper block (Narberal Gamma), gold block (Pandora's Actor).
 4. Defeat the guardians for their weapons and **Guardian Crests**.
 5. Craft the **Sigil of Ainz Ooal Gown** (4 crests in the corners, 4 data crystals on the edges, diamond block in the centre) and face the Overlord.
 
 Other recipes: Healing Potion (redstone, data crystal, redstone over 3 glass bottles → 3 potions), Tome: Create Undead
 (book surrounded by 4 data crystals and 4 bones), Nazarick Bricks (8 stone bricks around obsidian → 8),
-Block of Data Crystal (9 crystals, reversible).
+Block of Data Crystal (9 crystals, reversible), Dark Warrior Greatsword (2 adamantite ingots above a stick),
+Mask of Envy (5 bones in a helmet shape with a data crystal in the middle), Scroll: Call Greater Thunder
+(paper + copper ingot + data crystal → 2), Scroll: Fly (paper + feather + data crystal → 2),
+Nazarick Tiles (2×2 Nazarick Bricks → 4), Nazarick Lamp (glowstone with Nazarick Bricks on its four sides → 2).
 
 ## Repository layout
 

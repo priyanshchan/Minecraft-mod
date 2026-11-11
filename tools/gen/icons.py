@@ -74,7 +74,7 @@ def staff():
     return s.outline().img
 
 
-def ring():
+def ring(gem="#c2171d"):
     return sprite16([
         "................",
         "................",
@@ -92,7 +92,8 @@ def ring():
         "................",
         "................",
         "................",
-    ], {"G": GOLD, "L": GOLD_L, "g": GOLD_D, "R": "#c2171d", "r": "#8a0f14", "W": "#ff9d94"})
+    ], {"G": GOLD, "L": GOLD_L, "g": GOLD_D, "R": gem, "r": shade(gem, 0.65),
+        "W": mix(gem, "#ffffff", 0.6)})
 
 
 def lance():
@@ -309,6 +310,8 @@ SIGIL_COLORS = {
     "cocytus": ("#9fd4ef", "#16324d", "#5f9fc6", "#e9fbff"),
     "demiurge": ("#e0703a", "#2a1210", "#d9a92b", "#ffd23d"),
     "sebas": ("#c9c9cc", "#1a1a21", "#7d8bb3", "#f3f3f1"),
+    "narberal": ("#aeb6c6", "#16141c", "#ffe94d", "#ffffff"),
+    "pandoras_actor": ("#e0b955", "#1d1b20", "#f0e7cb", "#b3141c"),
 }
 
 
@@ -575,6 +578,133 @@ def armor_layers():
     return l1, l2
 
 
+def greatsword():
+    s = Sprite()
+    s.shaft(1, 14, 3, "#5a1218", "#2e080c")
+    s.stamp([".GL", "GLG", "LG."], {"G": GOLD, "L": GOLD_L}, 2, 10)
+    for i in range(10):
+        x, y = 5 + i, 10 - i
+        s.px(x, y, "#4a4656").px(x + 1, y, "#211f29").px(x, y - 1, "#8d899c")
+        if i < 9:
+            s.px(x + 1, y + 1, "#121016")
+        if i in (2, 5):
+            s.px(x, y, "#d4202a")
+    s.px(15, 0, "#8d899c")
+    return s.outline().img
+
+
+def mask():
+    return sprite16([
+        "................",
+        "................",
+        "...WWWWWWWWWW...",
+        "..WWWWWWWWWWWW..",
+        "..WWKKWWWWKKWW..",
+        "..WKKKKWWKKKKW..",
+        "..WWKKWWWWKKWW..",
+        "..WWbWWWWWWbWW..",
+        "..WWbWWwwWWbWw..",
+        "..WWWWWwwWWWWw..",
+        "..WWWKWWWWKWWw..",
+        "...WWWKKKKWWw...",
+        "...WWWWWWWwww...",
+        "....wwwwwwww....",
+        "................",
+        "................",
+    ], {"W": "#f4f1ea", "w": "#c9c3b5", "K": "#15131a", "b": "#4aa8e8"})
+
+
+def scroll(seal):
+    return sprite16([
+        "................",
+        "...ddddddddd....",
+        "..dPPPPPPPPPd...",
+        "..dppppppppPd...",
+        "...PPPPPPPPP....",
+        "...PgPPgPgPP....",
+        "...PPPPPPPPP....",
+        "...PPgSSSgPP....",
+        "...PPPSsSPPP....",
+        "...PPgSSSgPP....",
+        "...PPPPPPPPP....",
+        "..dppppppppPd...",
+        "..dPPPPPPPPPd...",
+        "...ddddddddd....",
+        "................",
+        "................",
+    ], {"P": "#e9dcb4", "p": "#c9b98a", "d": "#8a7748", "g": "#7a6a44", "S": seal,
+        "s": mix(seal, "#ffffff", 0.65)})
+
+
+def nazarick_tiles():
+    rnd = random.Random(21)
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            edge = x % 8 in (0, 7) or y % 8 in (0, 7)
+            dark = ((x // 8) + (y // 8)) % 2 == 0
+            c = "#191620" if edge else ("#3f3850" if dark else "#2e2839")
+            if x % 8 == 1 and y % 8 == 1:
+                c = "#d9a92b"
+            d = 0 if edge else rnd.randint(-5, 5)
+            r, g, b, a = rgba(c)
+            img.putpixel((x, y), (max(0, r + d), max(0, g + d), max(0, b + d), 255))
+    return img
+
+
+def nazarick_lamp():
+    rnd = random.Random(33)
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            ring = max(abs(x - 7.5), abs(y - 7.5))
+            if ring > 6.5:
+                c = "#231d2e"
+            elif ring > 5.5:
+                c = "#d9a92b"
+            elif ring > 4.5:
+                c = "#5f3fa0"
+            elif ring > 2.5:
+                c = "#b99cff"
+            else:
+                c = "#f3ecff"
+            d = rnd.randint(-5, 5)
+            r, g, b, a = rgba(c)
+            img.putpixel((x, y), (max(0, min(255, r + d)), max(0, min(255, g + d)),
+                                  max(0, min(255, b + d)), 255))
+    for x, y in ((0, 0), (15, 0), (0, 15), (15, 15)):
+        img.putpixel((x, y), rgba("#96701a"))
+    return img
+
+
+def mask_layer():
+    """64x32 armour sheet that only paints the Mask of Envy on the face."""
+    sheet = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+    head = Cube((0, 0, 0), (8, 8, 8))
+    head.front.rows([
+        "wWWWWWWw",
+        "WWWWWWWW",
+        "WKKWWKKW",
+        "WKKWWKKW",
+        "WbWWWWbW",
+        "WbWwwWbW",
+        "WWKWWKWW",
+        "wWWKKWWw",
+    ], {"W": "#f4f1ea", "w": "#c9c3b5", "K": "#15131a", "b": "#4aa8e8"})
+    for f in (head.right, head.left, head.back):
+        f.hline(3, "#3a2a1e")
+    sheet.paste(head.img, (0, 0))
+    return sheet
+
+
+BLOCK_TEXTURES = {
+    "nazarick_bricks": nazarick_bricks,
+    "data_crystal_block": crystal_block,
+    "nazarick_tiles": nazarick_tiles,
+    "nazarick_lamp": nazarick_lamp,
+}
+
+
 EGG_COLORS = {
     "ainz": ("#2b1a3d", "#d9a92b"),
     "albedo": ("#f1eff0", "#17141d"),
@@ -585,6 +715,9 @@ EGG_COLORS = {
     "death_knight": ("#1c1a22", "#b3141c"),
     "elder_lich": ("#4a2020", "#b6ff4a"),
     "hamsuke": ("#dcdee6", "#6f9468"),
+    "narberal": ("#1d1c26", "#f2f1f3"),
+    "pandoras_actor": ("#c79a32", "#1d1b20"),
+    "old_guarder": ("#e9e3cf", "#6b4a36"),
 }
 
 
@@ -606,6 +739,11 @@ def all_item_icons():
         "dark_warrior_chestplate": chestplate(),
         "dark_warrior_leggings": leggings(),
         "dark_warrior_boots": boots(),
+        "dark_warrior_greatsword": greatsword(),
+        "mask_of_envy": mask(),
+        "scroll_of_lightning": scroll("#f2c21b"),
+        "scroll_of_fly": scroll("#3ed0ff"),
+        "ring_of_sustenance": ring("#2fbf5b"),
     }
     for who in SIGIL_COLORS:
         icons[f"sigil_of_{who}"] = sigil(who)

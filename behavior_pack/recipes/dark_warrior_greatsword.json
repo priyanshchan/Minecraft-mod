@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:dark_warrior_greatsword"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "A",
+      "A",
+      "S"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:adamantite_ingot"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:adamantite_ingot"
+      }
+    ],
+    "result": {
+      "item": "overlord:dark_warrior_greatsword",
+      "count": 1
+    }
+  }
+}

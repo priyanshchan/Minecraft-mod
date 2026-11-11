@@ -91,8 +91,10 @@ def main():
     item_icons = icons.all_item_icons()
     for name, img in item_icons.items():
         save_png(RP / f"textures/items/{content.NS}/{name}.png", img)
-    save_png(RP / f"textures/blocks/{content.NS}/nazarick_bricks.png", icons.nazarick_bricks())
-    save_png(RP / f"textures/blocks/{content.NS}/data_crystal_block.png", icons.crystal_block())
+    assert set(icons.BLOCK_TEXTURES) == set(content.BLOCKS)
+    for name, draw in icons.BLOCK_TEXTURES.items():
+        save_png(RP / f"textures/blocks/{content.NS}/{name}.png", draw())
+    save_png(RP / f"textures/models/armor/{content.NS}_mask_of_envy.png", icons.mask_layer())
     layer1, layer2 = icons.armor_layers()
     save_png(RP / f"textures/models/armor/{content.NS}_dark_warrior_1.png", layer1)
     save_png(RP / f"textures/models/armor/{content.NS}_dark_warrior_2.png", layer2)

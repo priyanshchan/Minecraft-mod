@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:mask_of_envy"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "BBB",
+      "BCB"
+    ],
+    "key": {
+      "B": {
+        "item": "minecraft:bone"
+      },
+      "C": {
+        "item": "overlord:data_crystal"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:data_crystal"
+      }
+    ],
+    "result": {
+      "item": "overlord:mask_of_envy",
+      "count": 1
+    }
+  }
+}

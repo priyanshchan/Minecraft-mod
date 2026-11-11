@@ -11,6 +11,9 @@
     "overlord_dark_warrior_chestplate": {
       "textures": "textures/items/overlord/dark_warrior_chestplate"
     },
+    "overlord_dark_warrior_greatsword": {
+      "textures": "textures/items/overlord/dark_warrior_greatsword"
+    },
     "overlord_dark_warrior_helmet": {
       "textures": "textures/items/overlord/dark_warrior_helmet"
     },
@@ -44,6 +47,15 @@
     "overlord_egg_hamsuke": {
       "textures": "textures/items/overlord/egg_hamsuke"
     },
+    "overlord_egg_narberal": {
+      "textures": "textures/items/overlord/egg_narberal"
+    },
+    "overlord_egg_old_guarder": {
+      "textures": "textures/items/overlord/egg_old_guarder"
+    },
+    "overlord_egg_pandoras_actor": {
+      "textures": "textures/items/overlord/egg_pandoras_actor"
+    },
     "overlord_egg_sebas": {
       "textures": "textures/items/overlord/egg_sebas"
     },
@@ -59,11 +71,23 @@
     "overlord_guardian_crest": {
       "textures": "textures/items/overlord/guardian_crest"
     },
+    "overlord_mask_of_envy": {
+      "textures": "textures/items/overlord/mask_of_envy"
+    },
     "overlord_red_potion": {
       "textures": "textures/items/overlord/red_potion"
     },
     "overlord_ring_of_ainz_ooal_gown": {
       "textures": "textures/items/overlord/ring_of_ainz_ooal_gown"
+    },
+    "overlord_ring_of_sustenance": {
+      "textures": "textures/items/overlord/ring_of_sustenance"
+    },
+    "overlord_scroll_of_fly": {
+      "textures": "textures/items/overlord/scroll_of_fly"
+    },
+    "overlord_scroll_of_lightning": {
+      "textures": "textures/items/overlord/scroll_of_lightning"
     },
     "overlord_sigil_of_ainz": {
       "textures": "textures/items/overlord/sigil_of_ainz"
@@ -76,6 +100,12 @@
     },
     "overlord_sigil_of_demiurge": {
       "textures": "textures/items/overlord/sigil_of_demiurge"
+    },
+    "overlord_sigil_of_narberal": {
+      "textures": "textures/items/overlord/sigil_of_narberal"
+    },
+    "overlord_sigil_of_pandoras_actor": {
+      "textures": "textures/items/overlord/sigil_of_pandoras_actor"
     },
     "overlord_sigil_of_sebas": {
       "textures": "textures/items/overlord/sigil_of_sebas"

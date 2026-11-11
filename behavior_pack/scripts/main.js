@@ -24,6 +24,8 @@ const SIGILS = {
   [id("sigil_of_cocytus")]: id("cocytus"),
   [id("sigil_of_demiurge")]: id("demiurge"),
   [id("sigil_of_sebas")]: id("sebas"),
+  [id("sigil_of_narberal")]: id("narberal"),
+  [id("sigil_of_pandoras_actor")]: id("pandoras_actor"),
 };
 
 /** @type {[EquipmentSlot, string][]} */
@@ -314,6 +316,54 @@ function castCreateUndead(player) {
   actionBar(player, "§5Create Undead: a Death Knight rises!");
 }
 
+/** Scroll: Call Greater Thunder. @param {import("@minecraft/server").Player} player */
+function castLightning(player) {
+  const entityHit = player
+    .getEntitiesFromViewDirection({ maxDistance: 40 })
+    .map((h) => h.entity)
+    .find((e) => e.isValid && e.getComponent("minecraft:health"));
+  const blockHit = entityHit ? undefined : player.getBlockFromViewDirection({ maxDistance: 40 });
+  if (!entityHit && !blockHit) {
+    actionBar(player, "§7Call Greater Thunder: nothing in range");
+    return;
+  }
+  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  /** @type {import("@minecraft/server").Vector3} */
+  let strike;
+  if (entityHit) {
+    strike = entityHit.location;
+  } else {
+    const b = /** @type {import("@minecraft/server").BlockRaycastHit} */ (blockHit).block.location;
+    strike = { x: b.x + 0.5, y: b.y + 1, z: b.z + 0.5 };
+  }
+  player.dimension.spawnEntity("minecraft:lightning_bolt", strike);
+  if (entityHit && entityHit.isValid) {
+    entityHit.applyDamage(12, { cause: EntityDamageCause.magic, damagingEntity: player });
+  }
+  consumeHeldItem(player);
+  actionBar(player, "§eCall Greater Thunder!");
+}
+
+/** Scroll: Fly. @param {import("@minecraft/server").Player} player */
+function castFly(player) {
+  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  player.addEffect("levitation", 6 * TICKS, { amplifier: 2, showParticles: false });
+  player.addEffect("slow_falling", 25 * TICKS, { showParticles: false });
+  consumeHeldItem(player);
+  particle(player.dimension, "minecraft:totem_particle", add(player.location, { x: 0, y: 1, z: 0 }));
+  playSound(player.dimension, "mob.bat.takeoff", player.location, 0.8);
+  actionBar(player, "§bFly!");
+}
+
+/** Ring of Sustenance: refills hunger. @param {import("@minecraft/server").Player} player */
+function useSustenance(player) {
+  if (!tryCooldown(player, "overlord_sustenance", 60.0)) return;
+  player.addEffect("saturation", 10, { amplifier: 9, showParticles: false });
+  player.addEffect("regeneration", 5 * TICKS, { amplifier: 0 });
+  playSound(player.dimension, "random.burp", player.location, 1);
+  actionBar(player, "§aRing of Sustenance: hunger restored");
+}
+
 /** @param {import("@minecraft/server").Player} player */
 function ownerTag(player) {
   return `overlord_owner_${player.id}`;
@@ -351,6 +401,12 @@ world.afterEvents.itemUse.subscribe((event) => {
       castShockwave(player);
     } else if (item === id("tome_create_undead")) {
       castCreateUndead(player);
+    } else if (item === id("scroll_of_lightning")) {
+      castLightning(player);
+    } else if (item === id("scroll_of_fly")) {
+      castFly(player);
+    } else if (item === id("ring_of_sustenance")) {
+      useSustenance(player);
     } else if (item in SIGILS) {
       useSigil(player, SIGILS[item]);
     }
@@ -412,7 +468,26 @@ world.afterEvents.playerSpawn.subscribe((event) => {
   }, 5 * TICKS);
 });
 
-// Dark Warrior full-set bonus ("Perfect Warrior").
+// Narberal's lightning: flash and crack where the bolt lands.
+/**
+ * @param {import("@minecraft/server").Entity} projectile
+ * @param {import("@minecraft/server").Dimension} dimension
+ * @param {import("@minecraft/server").Vector3} location
+ */
+function lightningImpact(projectile, dimension, location) {
+  try {
+    if (projectile.typeId !== id("lightning_bolt")) return;
+    particle(dimension, "minecraft:electric_spark_particle", location);
+    particle(dimension, "minecraft:critical_hit_emitter", location);
+    playSound(dimension, "ambient.weather.lightning.impact", location, 1.6);
+  } catch {
+    // projectile already removed
+  }
+}
+world.afterEvents.projectileHitEntity.subscribe((e) => lightningImpact(e.projectile, e.dimension, e.location));
+world.afterEvents.projectileHitBlock.subscribe((e) => lightningImpact(e.projectile, e.dimension, e.location));
+
+// Worn-item effects: Dark Warrior full-set bonus ("Perfect Warrior") and the Mask of Envy.
 system.runInterval(() => {
   for (const player of world.getAllPlayers()) {
     try {
@@ -422,6 +497,9 @@ system.runInterval(() => {
       if (complete) {
         player.addEffect("strength", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
+      }
+      if (gear.getEquipment(EquipmentSlot.Head)?.typeId === id("mask_of_envy")) {
+        player.addEffect("night_vision", 15 * TICKS, { amplifier: 0, showParticles: false });
       }
     } catch {
       // player is mid-teleport or leaving

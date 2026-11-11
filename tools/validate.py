@@ -29,7 +29,7 @@ VANILLA = {
     "render_controller": {"controller.render.armor"},
     "material": {"entity_alphatest", "armor", "armor_enchanted"},
     "texture": {"textures/misc/enchanted_actor_glint"},
-    "entity": {"minecraft:small_fireball", "minecraft:player"},
+    "entity": {"minecraft:small_fireball", "minecraft:player", "minecraft:lightning_bolt"},
     "block_geometry": {"minecraft:geometry.full_block"},
     # verified against @minecraft/vanilla-data 1.26.60
     "item": {
@@ -39,6 +39,8 @@ VANILLA = {
         "minecraft:iron_block", "minecraft:wheat_seeds", "minecraft:pumpkin_seeds",
         "minecraft:melon_seeds", "minecraft:beetroot_seeds", "minecraft:wheat", "minecraft:apple",
         "minecraft:carrot", "minecraft:golden_carrot", "minecraft:blaze_rod", "minecraft:grass_block",
+        "minecraft:paper", "minecraft:stick", "minecraft:copper_ingot", "minecraft:feather",
+        "minecraft:copper_block", "minecraft:gold_block", "minecraft:glowstone",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
     "sound": {
@@ -49,15 +51,17 @@ VANILLA = {
         "mob.blaze.shoot", "mob.husk.ambient", "mob.husk.hurt", "mob.husk.death", "mob.stray.ambient",
         "mob.stray.hurt", "mob.stray.death", "mob.stray.step", "mob.rabbit.idle", "mob.rabbit.hurt",
         "mob.rabbit.death", "mob.polarbear.step", "mob.ghast.fireball", "mob.endermen.portal",
-        "random.explode", "random.orb",
+        "random.explode", "random.orb", "mob.skeleton.say", "mob.skeleton.death", "mob.shulker.shoot",
+        "ambient.weather.lightning.impact", "item.book.page_turn", "mob.bat.takeoff", "random.burp",
     },
     # verified against the vanilla particle definitions
     "particle": {
         "minecraft:critical_hit_emitter", "minecraft:soul_particle", "minecraft:totem_particle",
         "minecraft:knockback_roar_particle", "minecraft:heart_particle", "minecraft:blue_flame_particle",
+        "minecraft:electric_spark_particle",
     },
     "effect": {"slowness", "slow_falling", "instant_health", "regeneration", "strength", "resistance",
-               "wither"},
+               "wither", "night_vision", "saturation", "levitation"},
 }
 
 errors: list[str] = []
@@ -357,6 +361,8 @@ def main():
         ident = f"{NS}:{name}"
         events = {e for d in entities.values() for e in d.get("events", {})}
         check(ident in items or ident in entities or ident in events, f"main.js: unknown identifier {ident}")
+    for ident in re.findall(r'spawnEntity\("([^"]+)"', script):
+        check(ident in known_entities, f"main.js: unknown entity {ident}")
     for sound in re.findall(r'playSound\([^,]+,\s*"([^"]+)"', script):
         check(sound in VANILLA["sound"], f"main.js: unknown sound {sound}")
     for p in re.findall(r'particle\([^,]+,\s*"([^"]+)"', script):
