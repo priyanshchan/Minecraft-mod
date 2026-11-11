@@ -5,6 +5,9 @@
     "overlord_adamantite_ingot": {
       "textures": "textures/items/overlord/adamantite_ingot"
     },
+    "overlord_aura_whip": {
+      "textures": "textures/items/overlord/aura_whip"
+    },
     "overlord_dark_warrior_boots": {
       "textures": "textures/items/overlord/dark_warrior_boots"
     },
@@ -32,6 +35,12 @@
     "overlord_egg_albedo": {
       "textures": "textures/items/overlord/egg_albedo"
     },
+    "overlord_egg_aura": {
+      "textures": "textures/items/overlord/egg_aura"
+    },
+    "overlord_egg_clementine": {
+      "textures": "textures/items/overlord/egg_clementine"
+    },
     "overlord_egg_cocytus": {
       "textures": "textures/items/overlord/egg_cocytus"
     },
@@ -44,11 +53,20 @@
     "overlord_egg_elder_lich": {
       "textures": "textures/items/overlord/egg_elder_lich"
     },
+    "overlord_egg_gazef": {
+      "textures": "textures/items/overlord/egg_gazef"
+    },
     "overlord_egg_hamsuke": {
       "textures": "textures/items/overlord/egg_hamsuke"
     },
+    "overlord_egg_mare": {
+      "textures": "textures/items/overlord/egg_mare"
+    },
     "overlord_egg_narberal": {
       "textures": "textures/items/overlord/egg_narberal"
+    },
+    "overlord_egg_nazarick_maid": {
+      "textures": "textures/items/overlord/egg_nazarick_maid"
     },
     "overlord_egg_old_guarder": {
       "textures": "textures/items/overlord/egg_old_guarder"
@@ -71,8 +89,14 @@
     "overlord_guardian_crest": {
       "textures": "textures/items/overlord/guardian_crest"
     },
+    "overlord_maid_bell": {
+      "textures": "textures/items/overlord/maid_bell"
+    },
     "overlord_mask_of_envy": {
       "textures": "textures/items/overlord/mask_of_envy"
+    },
+    "overlord_razor_edge": {
+      "textures": "textures/items/overlord/razor_edge"
     },
     "overlord_red_potion": {
       "textures": "textures/items/overlord/red_potion"
@@ -86,8 +110,17 @@
     "overlord_scroll_of_fly": {
       "textures": "textures/items/overlord/scroll_of_fly"
     },
+    "overlord_scroll_of_invisibility": {
+      "textures": "textures/items/overlord/scroll_of_invisibility"
+    },
     "overlord_scroll_of_lightning": {
       "textures": "textures/items/overlord/scroll_of_lightning"
+    },
+    "overlord_scroll_of_teleportation": {
+      "textures": "textures/items/overlord/scroll_of_teleportation"
+    },
+    "overlord_shadow_of_yggdrasil": {
+      "textures": "textures/items/overlord/shadow_of_yggdrasil"
     },
     "overlord_sigil_of_ainz": {
       "textures": "textures/items/overlord/sigil_of_ainz"
@@ -95,11 +128,17 @@
     "overlord_sigil_of_albedo": {
       "textures": "textures/items/overlord/sigil_of_albedo"
     },
+    "overlord_sigil_of_aura": {
+      "textures": "textures/items/overlord/sigil_of_aura"
+    },
     "overlord_sigil_of_cocytus": {
       "textures": "textures/items/overlord/sigil_of_cocytus"
     },
     "overlord_sigil_of_demiurge": {
       "textures": "textures/items/overlord/sigil_of_demiurge"
+    },
+    "overlord_sigil_of_mare": {
+      "textures": "textures/items/overlord/sigil_of_mare"
     },
     "overlord_sigil_of_narberal": {
       "textures": "textures/items/overlord/sigil_of_narberal"
@@ -119,8 +158,23 @@
     "overlord_staff_of_ainz_ooal_gown": {
       "textures": "textures/items/overlord/staff_of_ainz_ooal_gown"
     },
+    "overlord_stiletto": {
+      "textures": "textures/items/overlord/stiletto"
+    },
     "overlord_tome_create_undead": {
       "textures": "textures/items/overlord/tome_create_undead"
+    },
+    "overlord_world_champion_boots": {
+      "textures": "textures/items/overlord/world_champion_boots"
+    },
+    "overlord_world_champion_chestplate": {
+      "textures": "textures/items/overlord/world_champion_chestplate"
+    },
+    "overlord_world_champion_helmet": {
+      "textures": "textures/items/overlord/world_champion_helmet"
+    },
+    "overlord_world_champion_leggings": {
+      "textures": "textures/items/overlord/world_champion_leggings"
     },
     "overlord_yggdrasil_gold_coin": {
       "textures": "textures/items/overlord/yggdrasil_gold_coin"

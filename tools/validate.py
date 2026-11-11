@@ -29,7 +29,8 @@ VANILLA = {
     "render_controller": {"controller.render.armor"},
     "material": {"entity_alphatest", "armor", "armor_enchanted"},
     "texture": {"textures/misc/enchanted_actor_glint"},
-    "entity": {"minecraft:small_fireball", "minecraft:player", "minecraft:lightning_bolt"},
+    "entity": {"minecraft:small_fireball", "minecraft:player", "minecraft:lightning_bolt",
+               "minecraft:arrow", "minecraft:evocation_fang"},
     "block_geometry": {"minecraft:geometry.full_block"},
     # verified against @minecraft/vanilla-data 1.26.60
     "item": {
@@ -41,6 +42,8 @@ VANILLA = {
         "minecraft:carrot", "minecraft:golden_carrot", "minecraft:blaze_rod", "minecraft:grass_block",
         "minecraft:paper", "minecraft:stick", "minecraft:copper_ingot", "minecraft:feather",
         "minecraft:copper_block", "minecraft:gold_block", "minecraft:glowstone",
+        "minecraft:gold_ingot", "minecraft:fermented_spider_eye", "minecraft:ender_pearl",
+        "minecraft:oak_log", "minecraft:moss_block", "minecraft:golden_apple",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
     "sound": {
@@ -53,15 +56,19 @@ VANILLA = {
         "mob.rabbit.death", "mob.polarbear.step", "mob.ghast.fireball", "mob.endermen.portal",
         "random.explode", "random.orb", "mob.skeleton.say", "mob.skeleton.death", "mob.shulker.shoot",
         "ambient.weather.lightning.impact", "item.book.page_turn", "mob.bat.takeoff", "random.burp",
+        "random.bow", "mob.evocation_illager.prepare_attack", "mob.villager.hit", "mob.villager.death",
+        "mob.villager.haggle", "mob.villager.yes", "mob.villager.no", "mob.evocation_fangs.attack",
+        "note.bell", "mob.irongolem.throw", "dig.grass", "random.fizz",
     },
     # verified against the vanilla particle definitions
     "particle": {
         "minecraft:critical_hit_emitter", "minecraft:soul_particle", "minecraft:totem_particle",
         "minecraft:knockback_roar_particle", "minecraft:heart_particle", "minecraft:blue_flame_particle",
-        "minecraft:electric_spark_particle",
+        "minecraft:electric_spark_particle", "minecraft:villager_happy",
     },
     "effect": {"slowness", "slow_falling", "instant_health", "regeneration", "strength", "resistance",
-               "wither", "night_vision", "saturation", "levitation"},
+               "wither", "night_vision", "saturation", "levitation", "invisibility", "speed",
+               "fire_resistance", "poison"},
 }
 
 errors: list[str] = []
@@ -344,6 +351,14 @@ def main():
         for pool in load(f)["pools"]:
             for entry in pool["entries"]:
                 check(entry["name"] in known_items, f"{rel(f)}: unknown item {entry['name']}")
+    for f in sorted((BP / "trading").rglob("*.json")):
+        for tier in load(f)["tiers"]:
+            for group in tier["groups"]:
+                check(0 < group["num_to_select"] <= len(group["trades"]), f"{rel(f)}: bad num_to_select")
+                for trade in group["trades"]:
+                    for side in trade["wants"] + trade["gives"]:
+                        check(side["item"] in known_items, f"{rel(f)}: unknown item {side['item']}")
+                        check(1 <= side["quantity"] <= 64, f"{rel(f)}: quantity out of range")
     for f in sorted((BP / "spawn_rules").glob("*.json")):
         ident = load(f)["minecraft:spawn_rules"]["description"]["identifier"]
         check(ident in entities and entities[ident]["description"]["is_spawnable"],
@@ -361,6 +376,9 @@ def main():
         ident = f"{NS}:{name}"
         events = {e for d in entities.values() for e in d.get("events", {})}
         check(ident in items or ident in entities or ident in events, f"main.js: unknown identifier {ident}")
+    for armor_set in re.findall(r'wearsFullSet\(gear, "([a-z_]+)"\)', script):
+        for piece in ("helmet", "chestplate", "leggings", "boots"):
+            check(f"{NS}:{armor_set}_{piece}" in items, f"main.js: unknown armour piece {armor_set}_{piece}")
     for ident in re.findall(r'spawnEntity\("([^"]+)"', script):
         check(ident in known_entities, f"main.js: unknown entity {ident}")
     for sound in re.findall(r'playSound\([^,]+,\s*"([^"]+)"', script):

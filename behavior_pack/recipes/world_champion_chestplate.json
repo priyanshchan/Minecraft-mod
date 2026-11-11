@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "overlord:world_champion_chestplate"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "overlord:dark_warrior_chestplate"
+      },
+      {
+        "item": "minecraft:diamond_block"
+      },
+      {
+        "item": "overlord:guardian_crest"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "overlord:guardian_crest"
+      }
+    ],
+    "result": {
+      "item": "overlord:world_champion_chestplate",
+      "count": 1
+    }
+  }
+}

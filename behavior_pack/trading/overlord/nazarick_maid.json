@@ -1,0 +1,209 @@
+{
+  "tiers": [
+    {
+      "total_exp_required": 0,
+      "groups": [
+        {
+          "num_to_select": 13,
+          "trades": [
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 4
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:red_potion",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 6
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:data_crystal",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 8
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:scroll_of_fly",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 8
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:scroll_of_lightning",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 10
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:scroll_of_invisibility",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 12
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:scroll_of_teleportation",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 4
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:nazarick_bricks",
+                  "quantity": 16
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 6
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:nazarick_lamp",
+                  "quantity": 4
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 16
+                }
+              ],
+              "gives": [
+                {
+                  "item": "minecraft:golden_apple",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 24
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:adamantite_ingot",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "minecraft:diamond",
+                  "quantity": 1
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 6
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "minecraft:gold_ingot",
+                  "quantity": 4
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 5
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "minecraft:bone",
+                  "quantity": 16
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 32
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

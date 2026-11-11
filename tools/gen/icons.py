@@ -312,6 +312,8 @@ SIGIL_COLORS = {
     "sebas": ("#c9c9cc", "#1a1a21", "#7d8bb3", "#f3f3f1"),
     "narberal": ("#aeb6c6", "#16141c", "#ffe94d", "#ffffff"),
     "pandoras_actor": ("#e0b955", "#1d1b20", "#f0e7cb", "#b3141c"),
+    "aura": ("#d9534a", "#2a1e16", "#f2d66b", "#3fbf5f"),
+    "mare": ("#62b85f", "#1d4a61", "#f2d66b", "#3f8fe0"),
 }
 
 
@@ -323,9 +325,10 @@ def sigil(who):
 
 
 ARMOR_PAL = {"K": "#0c0b10", "k": "#2b2833", "l": "#45414f", "G": GOLD, "g": GOLD_D, "R": "#d4202a"}
+CHAMPION_PAL = {"K": "#4a5263", "k": "#d5dce8", "l": "#ffffff", "G": "#3f7fe0", "g": "#2a5aa8", "R": "#d4202a"}
 
 
-def helmet():
+def helmet(pal=None):
     return sprite16([
         "................",
         "................",
@@ -343,10 +346,10 @@ def helmet():
         "...KKKK..KKKK...",
         "................",
         "................",
-    ], ARMOR_PAL, outline=False)
+    ], pal or ARMOR_PAL, outline=False)
 
 
-def chestplate():
+def chestplate(pal=None):
     return sprite16([
         "................",
         "..KKK......KKK..",
@@ -364,10 +367,10 @@ def chestplate():
         "....KKKKKKKK....",
         "................",
         "................",
-    ], ARMOR_PAL, outline=False)
+    ], pal or ARMOR_PAL, outline=False)
 
 
-def leggings():
+def leggings(pal=None):
     return sprite16([
         "................",
         "...KKKKKKKKKK...",
@@ -385,10 +388,10 @@ def leggings():
         "...KKKK..KKKK...",
         "................",
         "................",
-    ], ARMOR_PAL, outline=False)
+    ], pal or ARMOR_PAL, outline=False)
 
 
-def boots():
+def boots(pal=None):
     return sprite16([
         "................",
         "................",
@@ -406,7 +409,7 @@ def boots():
         "................",
         "................",
         "................",
-    ], ARMOR_PAL, outline=False)
+    ], pal or ARMOR_PAL, outline=False)
 
 
 EGG = [
@@ -485,9 +488,9 @@ def crystal_block():
 
 
 # ----------------------------------------------------------- armour layers
-def armor_layers():
+def armor_layers(plate="#1b1a22", plate_l="#35323f", plate_d="#0c0b10", red="#d4202a",
+                 GOLD=GOLD, GOLD_D=GOLD_D):
     """Standard 64x32 humanoid armour sheets (layer 1 and layer 2)."""
-    plate, plate_l, plate_d, red = "#1b1a22", "#35323f", "#0c0b10", "#d4202a"
     pal = {"K": plate, "k": plate_l, "D": plate_d, "G": GOLD, "g": GOLD_D, "R": red, "r": "#7a1016"}
 
     def put(sheet, cube, uv):
@@ -677,6 +680,124 @@ def nazarick_lamp():
     return img
 
 
+def blade_icon(grip, grip_d, guard, edge, mid, dark, length=10, glow=None):
+    s = Sprite()
+    s.shaft(1, 14, 3, grip, grip_d)
+    s.stamp([".GL", "GLG", "LG."], {"G": guard, "L": shade(guard, 1.3)}, 2, 10)
+    for i in range(length):
+        x, y = 5 + i, 10 - i
+        s.px(x, y, edge).px(x + 1, y, mid)
+        if i < length - 1:
+            s.px(x + 1, y + 1, dark)
+        if glow and i % 3 == 1:
+            s.px(x, y, glow)
+    s.px(5 + length, 10 - length, edge)
+    return s.outline().img
+
+
+def yggdrasil_staff():
+    s = Sprite()
+    s.shaft(1, 14, 10, "#8a6238", "#5b3d22")
+    s.stamp([
+        "..lLl.",
+        ".lLLLl",
+        "lLDLLL",
+        "LLLLDl",
+        ".lLLl.",
+        "..ll..",
+    ], {"L": "#3d8a3f", "l": "#62b85f", "D": "#275c2a"}, 9, 0)
+    s.px(4, 11, "#62b85f").px(7, 8, "#62b85f")
+    return s.outline().img
+
+
+def whip():
+    return sprite16([
+        "................",
+        "......BBBB......",
+        "....BBbbbbBB....",
+        "...Bbb....bbB...",
+        "..Bbb.BBBB.bbB..",
+        "..Bb.BbbbbB.bB..",
+        "..Bb.Bb..bB.bB..",
+        "..Bb.Bb.BbB.bB..",
+        "..Bb.BbB.B..bB..",
+        "..Bbb.BbbB.bbB..",
+        "...Bbb....bbB...",
+        "....BBbbbbBH....",
+        "......BBBBHhH...",
+        "...........HhH..",
+        "............HG..",
+        "................",
+    ], {"B": "#7a4a2a", "b": "#a56a3c", "H": "#3a1a16", "h": "#6b2a22", "G": GOLD})
+
+
+def bell():
+    return sprite16([
+        "................",
+        ".......GG.......",
+        "......GLLG......",
+        ".....GLLLGG.....",
+        ".....GLLGGG.....",
+        "....GLLLGGGg....",
+        "....GLLGGGGg....",
+        "....GLLGGGGg....",
+        "...GLLLGGGGGg...",
+        "...GLLGGGGGGg...",
+        "..GGLGGGGGGGgg..",
+        "..gggggggggggg..",
+        ".......dd.......",
+        "......dDDd......",
+        ".......dd.......",
+        "................",
+    ], {"G": GOLD, "L": GOLD_L, "g": GOLD_D, "d": "#6b4a16", "D": "#96701a"})
+
+
+def adamantite_block():
+    rnd = random.Random(55)
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            ring = max(abs(x - 7.5), abs(y - 7.5))
+            c = "#aab6d6" if (x == 0 or y == 0) else "#343c5c" if (x == 15 or y == 15) else \
+                "#7d8bb3" if ring > 5.5 else "#55618a" if (x + y) % 6 < 3 else "#606d98"
+            d = rnd.randint(-4, 4)
+            r, g, b, a = rgba(c)
+            img.putpixel((x, y), (max(0, r + d), max(0, g + d), max(0, b + d), 255))
+    return img
+
+
+def pillar_side():
+    rnd = random.Random(61)
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            cap = y < 2 or y > 13
+            groove = x % 4 == 3
+            c = "#d9a92b" if y in (2, 13) else "#4a4259" if cap else "#231e2c" if groove else \
+                "#3a3346" if x % 4 == 1 else "#332c3f"
+            d = 0 if y in (2, 13) else rnd.randint(-5, 5)
+            r, g, b, a = rgba(c)
+            img.putpixel((x, y), (max(0, r + d), max(0, g + d), max(0, b + d), 255))
+    return img
+
+
+def pillar_top():
+    rnd = random.Random(62)
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            ring = max(abs(x - 7.5), abs(y - 7.5))
+            c = "#231e2c" if ring > 6.5 else "#4a4259" if ring > 4.5 else "#d9a92b" if ring > 3.5 else "#3a3346"
+            d = rnd.randint(-5, 5)
+            r, g, b, a = rgba(c)
+            img.putpixel((x, y), (max(0, r + d), max(0, g + d), max(0, b + d), 255))
+    return img
+
+
+def champion_layers():
+    return armor_layers("#cfd6e2", "#f4f7fb", "#8f98aa", "#d4202a", GOLD="#3f7fe0", GOLD_D="#2a5aa8")
+
+
 def mask_layer():
     """64x32 armour sheet that only paints the Mask of Envy on the face."""
     sheet = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
@@ -702,6 +823,9 @@ BLOCK_TEXTURES = {
     "data_crystal_block": crystal_block,
     "nazarick_tiles": nazarick_tiles,
     "nazarick_lamp": nazarick_lamp,
+    "adamantite_block": adamantite_block,
+    "nazarick_pillar_side": pillar_side,
+    "nazarick_pillar_top": pillar_top,
 }
 
 
@@ -718,6 +842,11 @@ EGG_COLORS = {
     "narberal": ("#1d1c26", "#f2f1f3"),
     "pandoras_actor": ("#c79a32", "#1d1b20"),
     "old_guarder": ("#e9e3cf", "#6b4a36"),
+    "aura": ("#b3261f", "#f2d66b"),
+    "mare": ("#2f6f8f", "#62b85f"),
+    "gazef": ("#7a808c", "#7a1f1f"),
+    "clementine": ("#18161c", "#eed27a"),
+    "nazarick_maid": ("#f4f3f5", "#1f1e28"),
 }
 
 
@@ -744,6 +873,17 @@ def all_item_icons():
         "scroll_of_lightning": scroll("#f2c21b"),
         "scroll_of_fly": scroll("#3ed0ff"),
         "ring_of_sustenance": ring("#2fbf5b"),
+        "razor_edge": blade_icon("#3a2a1f", "#22170f", GOLD, "#ffffff", "#9fd4ff", "#4f8fd0", glow="#dff1ff"),
+        "stiletto": blade_icon("#3a2a2a", "#201616", "#737b8c", "#f2f5f9", "#aab2c0", "#737b8c", length=6),
+        "shadow_of_yggdrasil": yggdrasil_staff(),
+        "aura_whip": whip(),
+        "scroll_of_invisibility": scroll("#c9c9cc"),
+        "scroll_of_teleportation": scroll("#a04bff"),
+        "maid_bell": bell(),
+        "world_champion_helmet": helmet(CHAMPION_PAL),
+        "world_champion_chestplate": chestplate(CHAMPION_PAL),
+        "world_champion_leggings": leggings(CHAMPION_PAL),
+        "world_champion_boots": boots(CHAMPION_PAL),
     }
     for who in SIGIL_COLORS:
         icons[f"sigil_of_{who}"] = sigil(who)

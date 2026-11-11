@@ -1202,6 +1202,404 @@ def old_guarder():
     return m
 
 
+# ------------------------------------------------- Aura & Mare (dark elves)
+ELF_SKIN, ELF_SKIN_D = "#b9835a", "#96643f"
+ELF_HAIR, ELF_HAIR_D = "#f2d66b", "#c9a53c"
+
+
+def _elf_head(m, front, pal, long_hair):
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(ELF_HAIR, noise=4)
+    art(hd.front, front, pal)
+    rows = 8 if long_hair else 5
+    for f in (hd.right, hd.left):
+        f.fill(ELF_SKIN, 0, rows, None, 8)
+        for x in (2, 5):
+            f.vline(x, ELF_HAIR_D, 0, rows)
+    for x in (1, 4, 6):
+        hd.back.vline(x, ELF_HAIR_D, 0, 8)
+    if not long_hair:
+        hd.back.fill(ELF_SKIN, 0, 6, None, 8)
+    hd.bottom.fill(ELF_SKIN_D)
+    for sx in (-6, 4):
+        ear = head.cube((sx, 27, -1), (2, 2, 1))
+        ear.fill(ELF_SKIN)
+        ear.band(1, 2, ELF_SKIN_D)
+    return head
+
+
+def aura():
+    m = Model("aura", bounds=(3, 3.5, 1.25))
+    red, red_l, red_d = "#b3261f", "#d9534a", "#7a1612"
+    white, white_d = "#f3f1ee", "#c9c5bf"
+    pal = {"S": ELF_SKIN, "s": ELF_SKIN_D, "H": ELF_HAIR, "h": ELF_HAIR_D, "g": "#3fbf5f",
+           "b": "#3f8fe0", "m": "#7a4030", "R": red, "r": red_l, "D": red_d, "W": white, "w": white_d,
+           "G": GOLD, "K": "#2a1e16"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(red)
+    art(torso.front, [
+        "RrWWWWrR",
+        "RrGWWGrR",
+        "RrRWWRrR",
+        "RDrWWrDR",
+        "RrRWWRrR",
+        "RDrWWrDR",
+        "RrRWWRrR",
+        "RDrGGrDR",
+        "RrRRRRrR",
+        "KKKGGKKK",
+        "WWWWWWWW",
+        "WwWWWWwW",
+    ], pal)
+    torso.band(9, 10, "#2a1e16")
+    art(torso.front, ["KKKGGKKK"], pal, 0, 9)
+    torso.band(10, 12, white)
+    for f in (torso.right, torso.left, torso.back):
+        for y in (2, 5):
+            f.hline(y, red_d)
+    whip = body.cube((-6, 8, -2), (1, 4, 4))
+    whip.fill("#6b4226", noise=6)
+    whip.right.fill("#3d2513", 1, 1, 3, 3)
+
+    _elf_head(m, [
+        "HHHHHHHH",
+        "HHhHHhHH",
+        "HHSHHSHH",
+        "HSSSSSSH",
+        "SgSSSSbS",
+        "SSSSSSSS",
+        "SSSmmSSS",
+        "SSSSSSSS",
+    ], pal, long_hair=False)
+
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(white)
+        arm.band(0, 2, red)
+        arm.band(2, 3, GOLD)
+        arm.band(8, 12, "#2a1e16")
+        arm.band(8, 9, GOLD_D)
+    for name, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill(white)
+        for f in leg.sides:
+            f.vshade(1.0, 0.9)
+        leg.band(8, 12, "#2a1e16")
+        leg.band(8, 9, GOLD_D)
+    return m
+
+
+def mare():
+    m = Model("mare", bounds=(3, 3.5, 1.25))
+    teal, teal_l, teal_d = "#2f6f8f", "#4f97b8", "#1d4a61"
+    white, white_d = "#f3f1ee", "#c9c5bf"
+    leaf, leaf_l, leaf_d = "#3d8a3f", "#62b85f", "#275c2a"
+    pal = {"S": ELF_SKIN, "s": ELF_SKIN_D, "H": ELF_HAIR, "h": ELF_HAIR_D, "g": "#3fbf5f",
+           "b": "#3f8fe0", "m": "#7a4030", "T": teal, "t": teal_l, "D": teal_d, "W": white, "w": white_d,
+           "G": GOLD, "L": leaf, "l": leaf_l}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(teal)
+    art(torso.front, [
+        "LLWWWWLL",
+        "TLlGGlLT",
+        "TtTWWTtT",
+        "TtTWWTtT",
+        "TDtWWtDT",
+        "TtTTTTtT",
+        "TDtTTtDT",
+        "TtTTTTtT",
+        "GGGGGGGG",
+        "WWWWWWWW",
+        "WwWWWWwW",
+        "WWwWWwWW",
+    ], pal)
+    torso.band(8, 9, GOLD)
+    torso.band(9, 12, white)
+    skirt = body.cube((-5, 7, -3), (10, 5, 6))
+    skirt.fill(white)
+    for f in skirt.sides:
+        f.vshade(1.0, 0.88)
+        for x in range(1, f.w, 2):
+            f.vline(x, white_d, 1, 5)
+    skirt.bottom.fill(None)
+    cloak = body.cube((-5, 9, 2), (10, 15, 1))
+    cloak.fill(leaf)
+    for f in (cloak.front, cloak.back):
+        for x in (1, 4, 6, 8):
+            f.vline(x, leaf_d, 1, 15)
+        for x in (2, 5):
+            f.vline(x, leaf_l, 0, 12)
+        f.ragged_bottom(3, seed=8)
+    cloak.bottom.fill(None)
+
+    _elf_head(m, [
+        "HHHHHHHH",
+        "HhHHHHhH",
+        "HHHSSHHH",
+        "HSSSSSSH",
+        "HbSSSSgH",
+        "HSSSSSSH",
+        "HSSmmSSH",
+        "HHSSSSHH",
+    ], pal, long_hair=True)
+
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(teal)
+        arm.band(0, 1, leaf)
+        arm.band(6, 7, GOLD)
+        arm.band(7, 11, white)
+        arm.band(11, 12, ELF_SKIN)
+    for name, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill(white)
+        leg.band(0, 4, ELF_SKIN)
+        leg.band(4, 5, teal)
+        leg.band(9, 12, teal_d)
+
+    staff = m.bone("staff", (-6, 13, -3), parent="rightArm")
+    shaft = staff.cube((-6.5, 2, -3.5), (1, 28, 1))
+    shaft.fill("#6b4a2a", noise=6)
+    stripes(shaft, "#4a321b", every=5, start=2)
+    crown = staff.cube((-8, 30, -5), (4, 4, 4))
+    crown.fill(leaf, noise=8)
+    for f in crown.faces:
+        f.px(1, 1, leaf_l)
+        f.px(2, 2, leaf_d)
+    bud = staff.cube((-7, 34, -4), (2, 2, 2))
+    bud.fill(leaf_l)
+    return m
+
+
+# ------------------------------------------------- Gazef / Clementine / maid
+def gazef():
+    m = Model("gazef", bounds=(3, 3.5, 1.25))
+    skin, skin_d = "#d6a57e", "#b38460"
+    hair, hair_l = "#3a2a1f", "#55402f"
+    steel, steel_l, steel_d = "#7a808c", "#a9b0bd", "#4c515b"
+    cloth, cloth_d = "#7a1f1f", "#4f1212"
+    pal = {"S": skin, "s": skin_d, "H": hair, "h": hair_l, "e": "#2b2118", "M": steel, "m": steel_l,
+           "D": steel_d, "C": cloth, "c": cloth_d, "G": GOLD, "b": "#8a6a55"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(steel)
+    art(torso.front, [
+        "MmMSSMmM",
+        "MmMMMMmM",
+        "DMmMMmMD",
+        "DMMGGMMD",
+        "DMMGGMMD",
+        "DDMMMMDD",
+        "MDDMMDDM",
+        "MMDDDDMM",
+        "CCCGGCCC",
+        "CcCCCCcC",
+        "CcCCCCcC",
+        "cCcCCcCc",
+    ], pal)
+    torso.band(8, 9, cloth_d)
+    art(torso.front, ["CCCGGCCC"], pal, 0, 8)
+    torso.band(9, 12, cloth)
+    for f in (torso.right, torso.left, torso.back):
+        f.hline(4, steel_d)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(skin, noise=3)
+    art(hd.front, [
+        "HHHHHHHH",
+        "HhHHHHhH",
+        "HSSSSSSH",
+        "SHHSSHHS",
+        "SeSSSSeS",
+        "SSSssSSS",
+        "bSSSSSSb",
+        "bbbHHbbb",
+    ], pal)
+    for f in (hd.right, hd.left):
+        f.fill(hair, 0, 0, None, 3)
+        f.hline(7, "#8a6a55")
+    hd.right.fill(hair, 0, 3, 4, 5)
+    hd.left.fill(hair, 4, 3, 8, 5)
+    hd.back.fill(hair, 0, 0, None, 6)
+    hd.top.fill(hair)
+    for x in (2, 5):
+        hd.top.vline(x, hair_l)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(steel)
+        arm.band(0, 1, steel_l)
+        arm.band(3, 4, steel_d)
+        arm.band(4, 7, cloth)
+        arm.band(7, 8, steel_d)
+        arm.band(11, 12, steel_d)
+    for name, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill("#3b3029")
+        leg.band(4, 6, steel)
+        leg.band(8, 12, steel_d)
+        leg.band(8, 9, steel_l)
+    sword = m.bone("weapon", (-6, 13, -2), parent="rightArm")
+    grip = sword.cube((-6.5, 12.5, -5), (1, 1, 3))
+    grip.fill("#3a2a1f", noise=2)
+    guard = sword.cube((-8, 12, -6), (4, 2, 1))
+    guard.fill(GOLD)
+    blade = sword.cube((-6.5, 12, -22), (1, 2, 16))
+    blade.fill("#dff1ff", noise=3)
+    for f in (blade.right, blade.left):
+        f.hline(1, "#7fc4ff")
+    blade.front.fill("#ffffff")
+    return m
+
+
+def clementine():
+    m = Model("clementine", bounds=(3, 3.5, 1.25))
+    skin, skin_d = "#f1d3bd", "#d2ab92"
+    hair, hair_d = "#eed27a", "#c4a54a"
+    cloak, cloak_l = "#18161c", "#2c2933"
+    steel, steel_d = "#b5bcc9", "#737b8c"
+    pal = {"S": skin, "s": skin_d, "H": hair, "h": hair_d, "e": "#d4202a", "m": "#a8434f", "K": cloak,
+           "k": cloak_l, "M": steel, "d": steel_d, "G": GOLD, "c": "#b87333", "L": "#3a2a2a"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(skin)
+    art(torso.front, [
+        "KKSSSSKK",
+        "KMdMMdMK",
+        "KMGMcMMK",
+        "KdMMMMdK",
+        "KSMcGMSK",
+        "KSSSSSSK",
+        "KSSSSSSK",
+        "KSSssSSK",
+        "LLLLLLLL",
+        "MGLLLLcM",
+        "LMcLLGML",
+        "LLLLLLLL",
+    ], pal)
+    for f in (torso.right, torso.left, torso.back):
+        f.fill(cloak)
+        f.noise(4, 2)
+    cape = body.cube((-5, 3, 2), (10, 21, 1))
+    cape.fill(cloak)
+    for f in (cape.front, cape.back):
+        f.vshade(1.0, 0.8)
+        for x in (2, 5, 7):
+            f.vline(x, cloak_l, 1, 20)
+        f.ragged_bottom(2, seed=4)
+    cape.bottom.fill(None)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(hair, noise=4)
+    art(hd.front, [
+        "HHHHHHHH",
+        "HHhHHhHH",
+        "HSHSSHSH",
+        "HSSSSSSH",
+        "SeSSSSeS",
+        "SSSSSSSS",
+        "SmSSSSmS",
+        "SSmmmmSS",
+    ], pal)
+    for f in (hd.right, hd.left):
+        f.fill(skin, 0, 6, None, 8)
+        for x in (2, 5):
+            f.vline(x, hair_d, 0, 6)
+    hd.back.fill(skin, 0, 7, None, 8)
+    hd.bottom.fill(skin_d)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(skin)
+        arm.band(0, 3, cloak)
+        arm.band(7, 11, "#3a2a2a")
+        arm.band(7, 8, steel_d)
+    for name, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill("#3a2a2a")
+        leg.band(0, 2, skin)
+        leg.band(5, 6, steel)
+        leg.band(9, 12, cloak)
+    dagger = m.bone("weapon", (-6, 13, -2), parent="rightArm")
+    grip = dagger.cube((-6.5, 12.5, -5), (1, 1, 3))
+    grip.fill("#3a2a2a", noise=2)
+    guard = dagger.cube((-7.5, 12, -6), (3, 2, 1))
+    guard.fill(steel_d)
+    blade = dagger.cube((-6.5, 12.5, -13), (1, 1, 7))
+    blade.fill("#e6ebf2", noise=3)
+    return m
+
+
+def nazarick_maid():
+    m = Model("nazarick_maid", bounds=(3, 3.5, 1.25))
+    skin, skin_d = "#f6e0d0", "#d9bca8"
+    hair, hair_d = "#e9c46a", "#b9953f"
+    dress, dress_l = "#1f1e28", "#35333f"
+    white, white_d = "#f4f3f5", "#c9c7d0"
+    pal = {"S": skin, "s": skin_d, "H": hair, "h": hair_d, "K": dress, "k": dress_l, "W": white,
+           "w": white_d, "e": "#3f6fb0", "m": "#c0606f", "R": "#b3261f"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(dress)
+    art(torso.front, [
+        "KWWSSWWK",
+        "KKWRRWKK",
+        "KWWWWWWK",
+        "KkWWWWkK",
+        "KKWWWWKK",
+        "KkWWWWkK",
+        "KKWWWWKK",
+        "KkWWWWkK",
+        "KKWWWWKK",
+        "wWWWWWWw",
+        "KWWWWWWK",
+        "KkWWWWkK",
+    ], pal)
+    torso.back.hline(9, white)
+    torso.back.fill(white, 2, 9, 6, 12)
+    skirt = m.bone("robe", (0, 12, 0), parent="body").cube((-5, 0, -3), (10, 12, 6))
+    skirt.fill(dress)
+    for f in skirt.sides:
+        f.vshade(1.0, 0.85)
+        for x in range(1, f.w, 3):
+            f.vline(x, dress_l, 1, 11)
+    skirt.front.fill(white, 2, 0, 8, 9)
+    skirt.front.hline(9, white_d, 2, 8)
+    skirt.band(11, 12, white)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(hair, noise=4)
+    art(hd.front, [
+        "WwWWWWwW",
+        "HHHHHHHH",
+        "HhSHHShH",
+        "HSSSSSSH",
+        "SeSSSSeS",
+        "SSSSSSSS",
+        "SSSmmSSS",
+        "SSSSSSSS",
+    ], pal)
+    for f in (hd.right, hd.left, hd.back):
+        f.hline(0, white)
+        for x in (2, 5):
+            f.vline(x, hair_d, 1, 6)
+    for f in (hd.right, hd.left):
+        f.fill(skin, 0, 6, None, 8)
+    hd.top.hline(7, white).hline(6, white_d)
+    hd.bottom.fill(skin_d)
+    bun = head.cube((-2, 26, 4), (4, 4, 2))
+    bun.fill(hair, noise=5)
+    bun.back.border(hair_d)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(dress)
+        arm.band(0, 2, white)
+        arm.band(9, 11, white)
+        arm.band(11, 12, skin)
+    return m
+
+
 def lightning_bolt():
     m = Model("lightning_bolt", bounds=(1, 1, 0.25))
     body = m.bone("body", (0, 2, 0))
@@ -1219,4 +1617,5 @@ def lightning_bolt():
 
 
 ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_lich, hamsuke,
-       narberal, pandoras_actor, old_guarder, fireball, negative_burst, lightning_bolt]
+       narberal, pandoras_actor, old_guarder, aura, mare, gazef, clementine, nazarick_maid,
+       fireball, negative_burst, lightning_bolt]

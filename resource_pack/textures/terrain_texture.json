@@ -4,17 +4,26 @@
   "padding": 8,
   "num_mip_levels": 4,
   "texture_data": {
-    "overlord_nazarick_bricks": {
-      "textures": "textures/blocks/overlord/nazarick_bricks"
+    "overlord_adamantite_block": {
+      "textures": "textures/blocks/overlord/adamantite_block"
     },
     "overlord_data_crystal_block": {
       "textures": "textures/blocks/overlord/data_crystal_block"
     },
-    "overlord_nazarick_tiles": {
-      "textures": "textures/blocks/overlord/nazarick_tiles"
+    "overlord_nazarick_bricks": {
+      "textures": "textures/blocks/overlord/nazarick_bricks"
     },
     "overlord_nazarick_lamp": {
       "textures": "textures/blocks/overlord/nazarick_lamp"
+    },
+    "overlord_nazarick_pillar_side": {
+      "textures": "textures/blocks/overlord/nazarick_pillar_side"
+    },
+    "overlord_nazarick_pillar_top": {
+      "textures": "textures/blocks/overlord/nazarick_pillar_top"
+    },
+    "overlord_nazarick_tiles": {
+      "textures": "textures/blocks/overlord/nazarick_tiles"
     }
   }
 }

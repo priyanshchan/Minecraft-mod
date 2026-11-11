@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:nazarick_pillar"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "S",
+      "S"
+    ],
+    "key": {
+      "S": {
+        "item": "overlord:nazarick_bricks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:nazarick_bricks"
+      }
+    ],
+    "result": {
+      "item": "overlord:nazarick_pillar",
+      "count": 2
+    }
+  }
+}

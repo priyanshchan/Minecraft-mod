@@ -34,6 +34,11 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 | **Sebas Tian** | 260 | Neutral — only fights back when attacked | Guardian Crest, Healing Potions |
 | **Narberal Gamma** | 220 | Battle maid: throws lightning at range, melee up close | Scrolls of Call Greater Thunder |
 | **Pandora's Actor** | 300 | Treasury guardian, fast melee | Ring of Sustenance, Guardian Crest, lots of Gold Coins |
+| **Aura Bella Fiora** | 260 | Fast archer; switches to melee up close | Beast Tamer's Whip, Guardian Crest |
+| **Mare Bello Fiore** | 260 | Earth magic: fangs erupt from the ground around or towards you | Shadow of Yggdrasil, Guardian Crest |
+| **Gazef Stronoff** | 120 | Neutral warrior found in plains; hunts monsters, fights back if attacked | Razor Edge |
+| **Clementine** | 100 | Very fast night assassin with poisoned strikes | Clementine's Stiletto |
+| **Nazarick Maid** | 40 | Peaceful merchant who trades for YGGDRASIL Gold Coins | — |
 | **Death Knight** | 80 | Spawns at night on the surface; can be summoned as an ally | Data Crystals, Gold Coins, rarely its Flamberge |
 | **Elder Lich** | 40 | Spawns at night; casts fireballs | Data Crystals, Gold Coins, Bones |
 | **Nazarick Old Guarder** | 30 | Skeleton soldier; spawns at night in groups of 2–3 | Bones, Gold Coins, sometimes a Data Crystal |
@@ -56,13 +61,28 @@ Every mob has its own spawn egg.
 | **Scroll: Fly** | Single use: lifts you into the air, then lets you glide down safely |
 | **Ring of Sustenance** | Use: refills your hunger bar (60 s cooldown) |
 | **Mask of Envy** | Wearable mask that grants Night Vision |
+| **Razor Edge** | 10 damage, plus a delayed armour-ignoring second cut on every hit |
+| **Clementine's Stiletto** | 6 damage, sets the target on fire |
+| **Shadow of Yggdrasil** | 5 damage. Use: *Earth Surge* — a 12-block wave that damages and launches mobs in front of you |
+| **Beast Tamer's Whip** | 7 damage. Use: *Lash* — drags the mob you look at (up to 12 blocks) towards you |
+| **Scroll: Invisibility** | Single use: 45 seconds of invisibility |
+| **Scroll: Greater Teleportation** | Single use: returns you to your respawn point (bed) |
+| **Bell of Nazarick** | Use to call a Nazarick Maid merchant |
+| **World Champion armour** | Upgrade of the Dark Warrior set (stronger than netherite). Full set grants Strength II, Resistance and Speed |
 | **Tome: Create Undead** | Summons a Death Knight that follows and defends you for 5 minutes (max. 3) |
 | **Minor Healing Potion** | Drink for instant health and regeneration |
 | **Dark Warrior armour** | Helmet, chestplate, leggings, boots (netherite-level protection). Full set grants Strength and Resistance |
 | **Guardian sigils** | Use to summon the matching Floor Guardian or Ainz himself |
 | Data Crystal, YGGDRASIL Gold Coin, Guardian Crest, Adamantite Ingot | Crafting materials |
 
-Blocks: **Nazarick Bricks**, **Nazarick Tiles**, **Nazarick Lamp** (full light) and **Block of Data Crystal** (glows).
+Blocks: **Nazarick Bricks**, **Nazarick Tiles**, **Nazarick Pillar**, **Nazarick Lamp** (full light),
+**Block of Adamantite** and **Block of Data Crystal** (glows).
+
+### Trading
+
+Ring a **Bell of Nazarick** to call a **Nazarick Maid**. She sells Healing Potions, Data Crystals, all four
+spell scrolls, Nazarick Bricks and Lamps, Golden Apples and Adamantite Ingots for YGGDRASIL Gold Coins, and
+pays coins for diamonds, gold ingots and bones.
 
 ### Survival progression
 
@@ -70,7 +90,7 @@ Blocks: **Nazarick Bricks**, **Nazarick Tiles**, **Nazarick Lamp** (full light) 
 2. Craft **Adamantite Ingots** (2 iron ingots + diamond + data crystal → 2 ingots) and forge the Dark Warrior armour with the usual armour shapes.
 3. Craft a **guardian sigil**: 4 data crystals in the corners, 1 gold coin in the centre and 4 of the guardian's material on the edges —
    obsidian (Albedo), redstone block (Shalltear), packed ice (Cocytus), magma block (Demiurge), iron block (Sebas),
-   copper block (Narberal Gamma), gold block (Pandora's Actor).
+   copper block (Narberal Gamma), gold block (Pandora's Actor), oak log (Aura), moss block (Mare).
 4. Defeat the guardians for their weapons and **Guardian Crests**.
 5. Craft the **Sigil of Ainz Ooal Gown** (4 crests in the corners, 4 data crystals on the edges, diamond block in the centre) and face the Overlord.
 
@@ -79,12 +99,17 @@ Other recipes: Healing Potion (redstone, data crystal, redstone over 3 glass bot
 Block of Data Crystal (9 crystals, reversible), Dark Warrior Greatsword (2 adamantite ingots above a stick),
 Mask of Envy (5 bones in a helmet shape with a data crystal in the middle), Scroll: Call Greater Thunder
 (paper + copper ingot + data crystal → 2), Scroll: Fly (paper + feather + data crystal → 2),
-Nazarick Tiles (2×2 Nazarick Bricks → 4), Nazarick Lamp (glowstone with Nazarick Bricks on its four sides → 2).
+Nazarick Tiles (2×2 Nazarick Bricks → 4), Nazarick Lamp (glowstone with Nazarick Bricks on its four sides → 2),
+Nazarick Pillar (2 Nazarick Bricks stacked → 2), Block of Adamantite (9 ingots, reversible),
+Bell of Nazarick (gold ingot on top, then gold ingot / data crystal / gold ingot),
+Scroll: Invisibility (paper + fermented spider eye + data crystal → 2),
+Scroll: Greater Teleportation (paper + ender pearl + data crystal → 2),
+World Champion armour (matching Dark Warrior piece + diamond block + Guardian Crest, any arrangement).
 
 ## Repository layout
 
 ```
-behavior_pack/   entities, items, blocks, recipes, loot tables, spawn rules, scripts/main.js
+behavior_pack/   entities, items, blocks, recipes, loot tables, spawn rules, trading, scripts/main.js
 resource_pack/   models, textures, animations, attachables, sounds, texts
 dist/            packaged .mcaddon
 tools/gen/       generator for models, textures and JSON (Python + Pillow + NumPy)

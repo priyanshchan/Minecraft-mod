@@ -26,15 +26,26 @@ const SIGILS = {
   [id("sigil_of_sebas")]: id("sebas"),
   [id("sigil_of_narberal")]: id("narberal"),
   [id("sigil_of_pandoras_actor")]: id("pandoras_actor"),
+  [id("sigil_of_aura")]: id("aura"),
+  [id("sigil_of_mare")]: id("mare"),
 };
 
 /** @type {[EquipmentSlot, string][]} */
-const DARK_WARRIOR_SET = [
-  [EquipmentSlot.Head, id("dark_warrior_helmet")],
-  [EquipmentSlot.Chest, id("dark_warrior_chestplate")],
-  [EquipmentSlot.Legs, id("dark_warrior_leggings")],
-  [EquipmentSlot.Feet, id("dark_warrior_boots")],
+const ARMOR_SLOTS = [
+  [EquipmentSlot.Head, "helmet"],
+  [EquipmentSlot.Chest, "chestplate"],
+  [EquipmentSlot.Legs, "leggings"],
+  [EquipmentSlot.Feet, "boots"],
 ];
+
+/**
+ * True when all four armour slots hold pieces of the given set.
+ * @param {import("@minecraft/server").EntityEquippableComponent} gear
+ * @param {string} set
+ */
+function wearsFullSet(gear, set) {
+  return ARMOR_SLOTS.every(([slot, piece]) => gear.getEquipment(slot)?.typeId === id(`${set}_${piece}`));
+}
 
 // ------------------------------------------------------------------ helpers
 
@@ -364,6 +375,100 @@ function useSustenance(player) {
   actionBar(player, "§aRing of Sustenance: hunger restored");
 }
 
+/** Scroll: Invisibility. @param {import("@minecraft/server").Player} player */
+function castInvisibility(player) {
+  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  player.addEffect("invisibility", 45 * TICKS, { showParticles: false });
+  consumeHeldItem(player);
+  playSound(player.dimension, "random.fizz", player.location, 1.4);
+  actionBar(player, "§7Invisibility!");
+}
+
+/** Scroll: Greater Teleportation - back to the respawn point. @param {import("@minecraft/server").Player} player */
+function castGreaterTeleportation(player) {
+  const home = player.getSpawnPoint();
+  if (!home) {
+    actionBar(player, "§7Greater Teleportation: set a respawn point (bed) first");
+    return;
+  }
+  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  const from = player.location;
+  const fromDimension = player.dimension;
+  player.teleport({ x: home.x + 0.5, y: home.y, z: home.z + 0.5 }, { dimension: home.dimension });
+  consumeHeldItem(player);
+  particle(fromDimension, "minecraft:totem_particle", add(from, { x: 0, y: 1, z: 0 }));
+  playSound(home.dimension, "mob.endermen.portal", home, 1);
+  actionBar(player, "§dGreater Teleportation!");
+}
+
+/** Beast Tamer's Whip: drag the targeted mob towards the wielder. @param {import("@minecraft/server").Player} player */
+function castLash(player) {
+  const target = player
+    .getEntitiesFromViewDirection({ maxDistance: 12 })
+    .map((h) => h.entity)
+    .find((e) => e.isValid && e.getComponent("minecraft:health"));
+  if (!target) {
+    actionBar(player, "§7Lash: no target in reach");
+    return;
+  }
+  if (!tryCooldown(player, "overlord_whip", 3.0)) return;
+  const dx = player.location.x - target.location.x;
+  const dz = player.location.z - target.location.z;
+  const len = Math.hypot(dx, dz) || 1;
+  target.applyDamage(6, { cause: EntityDamageCause.entityAttack, damagingEntity: player });
+  if (target.isValid) {
+    target.applyKnockback({ x: (dx / len) * 2.2, z: (dz / len) * 2.2 }, 0.4);
+    target.addEffect("slowness", 2 * TICKS, { amplifier: 1 });
+  }
+  playSound(player.dimension, "mob.irongolem.throw", player.location, 1.6);
+  actionBar(player, "§6Lash!");
+}
+
+/** Shadow of Yggdrasil: a wave of earth magic along the ground. @param {import("@minecraft/server").Player} player */
+function castEarthSurge(player) {
+  if (!tryCooldown(player, "overlord_yggdrasil", 6.0)) return;
+  const view = player.getViewDirection();
+  const len = Math.hypot(view.x, view.z) || 1;
+  const dir = { x: view.x / len, y: 0, z: view.z / len };
+  const struck = new Set();
+  for (let step = 2; step <= 12; step += 2) {
+    const point = add(player.location, dir, step);
+    particle(player.dimension, "minecraft:villager_happy", add(point, { x: 0, y: 0.5, z: 0 }));
+    particle(player.dimension, "minecraft:critical_hit_emitter", add(point, { x: 0, y: 0.5, z: 0 }));
+    const victims = player.dimension.getEntities({
+      location: point,
+      maxDistance: 2.2,
+      excludeTypes: ["minecraft:player"],
+      excludeFamilies: ["nazarick_ally", "inanimate"],
+    });
+    for (const victim of victims) {
+      try {
+        if (struck.has(victim.id) || !victim.getComponent("minecraft:health")) continue;
+        if (victim.getComponent("minecraft:is_tamed")) continue;
+        struck.add(victim.id);
+        victim.applyDamage(10, { cause: EntityDamageCause.magic, damagingEntity: player });
+        if (victim.isValid) victim.applyKnockback({ x: 0, z: 0 }, 0.9);
+      } catch {
+        // entity died or left the world while we were iterating
+      }
+    }
+  }
+  playSound(player.dimension, "mob.evocation_fangs.attack", add(player.location, dir, 4), 0.8);
+  playSound(player.dimension, "dig.grass", player.location, 0.6);
+  actionBar(player, struck.size > 0 ? `§2Earth Surge struck ${struck.size}!` : "§2Earth Surge!");
+}
+
+/** Bell of Nazarick: calls a maid who trades for YGGDRASIL gold. @param {import("@minecraft/server").Player} player */
+function ringBell(player) {
+  if (!tryCooldown(player, "overlord_sigil", 1.0)) return;
+  const spot = placementSpot(player, 5);
+  player.dimension.spawnEntity(id("nazarick_maid"), spot);
+  consumeHeldItem(player);
+  particle(player.dimension, "minecraft:totem_particle", add(spot, { x: 0, y: 1, z: 0 }));
+  playSound(player.dimension, "note.bell", spot, 1.2);
+  actionBar(player, "§eA maid of Nazarick answers the bell");
+}
+
 /** @param {import("@minecraft/server").Player} player */
 function ownerTag(player) {
   return `overlord_owner_${player.id}`;
@@ -407,6 +512,16 @@ world.afterEvents.itemUse.subscribe((event) => {
       castFly(player);
     } else if (item === id("ring_of_sustenance")) {
       useSustenance(player);
+    } else if (item === id("scroll_of_invisibility")) {
+      castInvisibility(player);
+    } else if (item === id("scroll_of_teleportation")) {
+      castGreaterTeleportation(player);
+    } else if (item === id("aura_whip")) {
+      castLash(player);
+    } else if (item === id("shadow_of_yggdrasil")) {
+      castEarthSurge(player);
+    } else if (item === id("maid_bell")) {
+      ringBell(player);
     } else if (item in SIGILS) {
       useSigil(player, SIGILS[item]);
     }
@@ -445,6 +560,20 @@ world.afterEvents.entityHurt.subscribe((event) => {
     } else if (held === id("god_slaying_emperor_blade") && victim.isValid) {
       victim.addEffect("slowness", 4 * TICKS, { amplifier: 2 });
       particle(victim.dimension, "minecraft:blue_flame_particle", add(victim.location, { x: 0, y: 1, z: 0 }));
+    } else if (held === id("stiletto") && victim.isValid) {
+      victim.setOnFire(4, true); // the stiletto carries a stored fire spell
+    } else if (held === id("razor_edge") && victim.isValid) {
+      // A second, armour-ignoring cut lands once the target's hurt cooldown has passed.
+      system.runTimeout(() => {
+        try {
+          if (victim.isValid && attacker.isValid) {
+            victim.applyDamage(5, { cause: EntityDamageCause.magic, damagingEntity: attacker });
+            particle(victim.dimension, "minecraft:critical_hit_emitter", add(victim.location, { x: 0, y: 1, z: 0 }));
+          }
+        } catch {
+          // target is gone
+        }
+      }, 11);
     }
   } catch {
     // entity vanished between the hit and this callback
@@ -487,14 +616,17 @@ function lightningImpact(projectile, dimension, location) {
 world.afterEvents.projectileHitEntity.subscribe((e) => lightningImpact(e.projectile, e.dimension, e.location));
 world.afterEvents.projectileHitBlock.subscribe((e) => lightningImpact(e.projectile, e.dimension, e.location));
 
-// Worn-item effects: Dark Warrior full-set bonus ("Perfect Warrior") and the Mask of Envy.
+// Worn-item effects: armour full-set bonuses and the Mask of Envy.
 system.runInterval(() => {
   for (const player of world.getAllPlayers()) {
     try {
       const gear = player.getComponent("minecraft:equippable");
       if (!gear) continue;
-      const complete = DARK_WARRIOR_SET.every(([slot, item]) => gear.getEquipment(slot)?.typeId === item);
-      if (complete) {
+      if (wearsFullSet(gear, "world_champion")) {
+        player.addEffect("strength", 3 * TICKS, { amplifier: 1, showParticles: false });
+        player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
+        player.addEffect("speed", 3 * TICKS, { amplifier: 0, showParticles: false });
+      } else if (wearsFullSet(gear, "dark_warrior")) {
         player.addEffect("strength", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
       }

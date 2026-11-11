@@ -11,5 +11,11 @@
   },
   "overlord:nazarick_lamp": {
     "sound": "glass"
+  },
+  "overlord:adamantite_block": {
+    "sound": "metal"
+  },
+  "overlord:nazarick_pillar": {
+    "sound": "stone"
   }
 }

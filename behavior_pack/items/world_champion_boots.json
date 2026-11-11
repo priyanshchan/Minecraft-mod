@@ -1,0 +1,44 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:world_champion_boots",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_world_champion_boots"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.world_champion_boots.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:wearable": {
+        "slot": "slot.armor.feet",
+        "protection": 4
+      },
+      "minecraft:durability": {
+        "max_durability": 721
+      },
+      "minecraft:enchantable": {
+        "slot": "armor_feet",
+        "value": 15
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "overlord:adamantite_ingot"
+            ],
+            "repair_amount": "query.max_durability * 0.25"
+          }
+        ]
+      },
+      "minecraft:rarity": "epic"
+    }
+  }
+}

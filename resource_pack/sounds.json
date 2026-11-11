@@ -144,6 +144,72 @@
           "step": "mob.skeleton.step"
         }
       },
+      "overlord:aura": {
+        "volume": 1.0,
+        "pitch": [
+          1.3,
+          1.45
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "random.bow"
+        }
+      },
+      "overlord:mare": {
+        "volume": 1.0,
+        "pitch": [
+          1.35,
+          1.5
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "cast.spell": "mob.evocation_illager.cast_spell",
+          "prepare.attack": "mob.evocation_illager.prepare_attack"
+        }
+      },
+      "overlord:gazef": {
+        "volume": 1.0,
+        "pitch": [
+          0.8,
+          0.9
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:clementine": {
+        "volume": 1.0,
+        "pitch": [
+          1.2,
+          1.3
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:nazarick_maid": {
+        "volume": 1.0,
+        "pitch": [
+          1.2,
+          1.35
+        ],
+        "events": {
+          "hurt": "mob.villager.hit",
+          "death": "mob.villager.death",
+          "step": "mob.zombie.step",
+          "haggle": "mob.villager.haggle",
+          "haggle.yes": "mob.villager.yes",
+          "haggle.no": "mob.villager.no"
+        }
+      },
       "overlord:hamsuke": {
         "volume": 1.0,
         "pitch": [

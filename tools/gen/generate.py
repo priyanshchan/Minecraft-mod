@@ -20,7 +20,7 @@ import models  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 BP, RP = ROOT / "behavior_pack", ROOT / "resource_pack"
-BP_GENERATED = ["entities", "items", "blocks", "recipes", "loot_tables", "spawn_rules", "texts"]
+BP_GENERATED = ["entities", "items", "blocks", "recipes", "loot_tables", "spawn_rules", "trading", "texts"]
 RP_GENERATED = ["entity", "models", "animations", "render_controllers", "attachables", "textures", "texts"]
 
 
@@ -73,7 +73,8 @@ def main():
 
     # ---------------------------------------------------------- behavior pack
     for group in (content.item_files(), content.block_files(), content.recipe_files(),
-                  content.loot_files(), content.entity_files(), content.spawn_rule_files()):
+                  content.loot_files(), content.entity_files(), content.spawn_rule_files(),
+                  content.trade_files()):
         for rel, data in group.items():
             write_json(BP / rel, data)
     write_text(BP / "texts/en_US.lang", content.lang_bp())
@@ -91,13 +92,16 @@ def main():
     item_icons = icons.all_item_icons()
     for name, img in item_icons.items():
         save_png(RP / f"textures/items/{content.NS}/{name}.png", img)
-    assert set(icons.BLOCK_TEXTURES) == set(content.BLOCKS)
+    assert set(icons.BLOCK_TEXTURES) == set(content.terrain_textures())
     for name, draw in icons.BLOCK_TEXTURES.items():
         save_png(RP / f"textures/blocks/{content.NS}/{name}.png", draw())
     save_png(RP / f"textures/models/armor/{content.NS}_mask_of_envy.png", icons.mask_layer())
     layer1, layer2 = icons.armor_layers()
     save_png(RP / f"textures/models/armor/{content.NS}_dark_warrior_1.png", layer1)
     save_png(RP / f"textures/models/armor/{content.NS}_dark_warrior_2.png", layer2)
+    layer1, layer2 = icons.champion_layers()
+    save_png(RP / f"textures/models/armor/{content.NS}_world_champion_1.png", layer1)
+    save_png(RP / f"textures/models/armor/{content.NS}_world_champion_2.png", layer2)
 
     write_json(RP / "textures/item_texture.json", content.item_texture_json(item_icons))
     write_json(RP / "textures/terrain_texture.json", content.terrain_texture_json())

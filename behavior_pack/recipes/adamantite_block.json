@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:adamantite_block"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "AAA",
+      "AAA",
+      "AAA"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:adamantite_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:adamantite_ingot"
+      }
+    ],
+    "result": {
+      "item": "overlord:adamantite_block",
+      "count": 1
+    }
+  }
+}
