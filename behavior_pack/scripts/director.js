@@ -3,7 +3,8 @@
 // level-gated spawns, Nazarick night patrols, guards for villages, Death Knight
 // squire zombies and small talk from the human NPCs.
 import { world, system, EntityInitializationCause, GameMode } from "@minecraft/server";
-import { profileOf } from "./rpg.js";
+import { ActionFormData } from "@minecraft/server-ui";
+import { FACTIONS, addRep, creditedPlayer, profileOf, registerMenu, standingOf } from "./rpg.js";
 import { rumour } from "./structures.js";
 
 const NS = "overlord";
@@ -271,6 +272,119 @@ world.beforeEvents.playerInteractWithEntity.subscribe((event) => {
     }
   });
 });
+
+// --------------------------------------------------------------- reputation
+
+/** Faction each NPC belongs to. */
+const FACTION_OF = {
+  [id("soldier")]: "kingdom",
+  [id("archer")]: "kingdom",
+  [id("guard")]: "kingdom",
+  [id("gazef")]: "kingdom",
+  [id("imperial_knight")]: "empire",
+  [id("adventurer")]: "adventurers",
+  [id("lizardman")]: "lizardmen",
+  [id("zaryusu")]: "lizardmen",
+};
+/** NPC types that can be told to turn on players. */
+const TROOPS = {
+  kingdom: [id("soldier"), id("archer"), id("guard")],
+  empire: [id("imperial_knight")],
+  adventurers: [id("adventurer")],
+  lizardmen: [id("lizardman")],
+};
+export const HOSTILE_AT = -30;
+const MURDER = -15;
+
+/** @param {number} value */
+export function standingName(value) {
+  return value <= HOSTILE_AT ? "§cHostile" : value < 0 ? "§6Wary" : value < 30 ? "§fNeutral" : value < 60 ? "§aFriendly" : "§bHonoured";
+}
+
+world.afterEvents.entityDie.subscribe((event) => {
+  try {
+    const player = creditedPlayer(event.damageSource.damagingEntity);
+    if (!player) return;
+    const type = event.deadEntity.typeId;
+    const faction = FACTION_OF[type];
+    if (faction) {
+      addRep(player, faction, MURDER);
+      if (faction === "kingdom") addRep(player, "empire", 2);
+      if (faction === "empire") addRep(player, "kingdom", 2);
+      const standing = standingOf(profileOf(player), faction);
+      player.sendMessage(`§6[Reputation] §f${FACTIONS[faction]}: ${standingName(standing)}§f (${standing}). ${standing <= HOSTILE_AT ? "Their people will attack you on sight." : "They will not forget this."}`);
+    } else if (type === id("bandit")) {
+      addRep(player, "kingdom", 1);
+      addRep(player, "adventurers", 1);
+    }
+  } catch {
+    // killer left
+  }
+});
+
+/**
+ * Tells faction troops near a player whether to treat players as enemies.
+ * @param {import("@minecraft/server").Player} player
+ */
+export function enforceReputation(player) {
+  const p = profileOf(player);
+  for (const [faction, types] of Object.entries(TROOPS)) {
+    const hated = standingOf(p, faction) <= HOSTILE_AT;
+    for (const type of types) {
+      for (const troop of player.dimension.getEntities({ type, location: player.location, maxDistance: 24 })) {
+        try {
+          const angry = troop.hasTag("overlord_hostile");
+          if (hated && !angry) {
+            troop.addTag("overlord_hostile");
+            troop.triggerEvent(id("turn_hostile"));
+          } else if (!hated && angry) {
+            troop.removeTag("overlord_hostile");
+            troop.triggerEvent(id("calm"));
+          }
+        } catch {
+          // troop is unloading
+        }
+      }
+    }
+  }
+}
+
+system.runInterval(() => {
+  for (const player of world.getAllPlayers()) {
+    try {
+      enforceReputation(player);
+    } catch {
+      // player is leaving
+    }
+  }
+}, 5 * TICKS);
+
+// Grudges fade: one point back towards neutral every minute.
+system.runInterval(() => {
+  for (const player of world.getAllPlayers()) {
+    try {
+      const p = profileOf(player);
+      for (const faction of Object.keys(FACTIONS)) if (standingOf(p, faction) < 0) addRep(player, faction, 1);
+    } catch {
+      // player is leaving
+    }
+  }
+}, 60 * TICKS);
+
+registerMenu(
+  () => "Reputation",
+  (player) => {
+    const p = profileOf(player);
+    const form = new ActionFormData()
+      .title("Reputation")
+      .body(
+        Object.entries(FACTIONS).map(([key, name]) => `${name}: ${standingName(standingOf(p, key))}§r (${standingOf(p, key)})`).join("\n") +
+          `\n\nKilling a faction's people costs ${-MURDER} standing; at ${HOSTILE_AT} or below they attack on sight. Grudges fade by 1 a minute. Guild quests, slain bandits and cleared camps raise your standing; friends of the adventurers hire mercenaries for a quarter less.`
+      )
+      .button("Close");
+    form.show(player).catch(() => {});
+  }
+);
 
 world.afterEvents.playerLeave.subscribe((event) => {
   patrolDay.delete(event.playerId);

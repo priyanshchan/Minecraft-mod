@@ -6,6 +6,7 @@ import * as raid from "./raid.js";
 import * as spells from "./spells.js";
 import * as director from "./director.js";
 import * as sites from "./structures.js";
+import * as party from "./party.js";
 await import("./main.js"); // must load without touching the world
 
 function mkPlayer(name) {
@@ -251,8 +252,16 @@ const makeLand = (opts = {}) => {
         getComponent: (c) => (c === "minecraft:inventory" && typeId === "minecraft:chest" ? { container: { addItem(s) { (chests.get(k(l)) ?? chests.set(k(l), []).get(k(l))).push(s); } } } : undefined) }; },
     setBlockType(l, t) { placed.set(k(l), t); },
     fillBlocks(v, t) { for (let x = Math.min(v.from.x, v.to.x); x <= Math.max(v.from.x, v.to.x); x++) for (let y = Math.min(v.from.y, v.to.y); y <= Math.max(v.from.y, v.to.y); y++) for (let z = Math.min(v.from.z, v.to.z); z <= Math.max(v.from.z, v.to.z); z++) placed.set(`${x},${y},${z}`, t); },
-    spawnEntity(typeId, l) { const e = { typeId, location: l, tags: new Set(), isValid: true, addTag(t) { this.tags.add(t); } }; land.mobs.push(e); return e; },
-    getEntities: (q) => land.mobs.filter((m) => !q.type || m.typeId === q.type) };
+    spawnEntity(typeId, l) { const props = new Map(); const e = { id: `e${++land.serial}`, typeId, location: l, dimension: land, tags: new Set(), isValid: true, events: [], effects: new Map(), nameTag: "", tamedBy: undefined,
+        addTag(t) { this.tags.add(t); }, hasTag(t) { return this.tags.has(t); }, removeTag(t) { this.tags.delete(t); }, triggerEvent(n) { this.events.push(n); },
+        getDynamicProperty: (k) => props.get(k), setDynamicProperty: (k, v) => props.set(k, v), matches: () => false,
+        addEffect(n, d, o = {}) { this.effects.set(n, o.amplifier ?? 0); }, removeEffect(n) { this.effects.delete(n); },
+        health: { currentValue: 40, effectiveMax: 40, defaultValue: 40, setCurrentValue(v) { this.currentValue = v; } },
+        getComponent(c) { return c === "minecraft:health" ? this.health : c === "minecraft:tameable" ? { tame: (pl) => { e.tamedBy = pl.id; return true; } } : undefined; },
+        remove() { this.isValid = false; land.mobs = land.mobs.filter((m) => m !== this); } };
+      land.mobs.push(e); return e; },
+    serial: 0,
+    getEntities: (q) => land.mobs.filter((m) => (!q.type || m.typeId === q.type) && (q.tags ?? []).every((t) => m.tags.has(t))) };
   return land;
 };
 // every site type builds on flat ground: pad, cleared air, at least one stocked chest, and only known blocks
@@ -285,6 +294,68 @@ e.location = { x: goal.x - 20, y: 64, z: goal.z }; const xpE = pe.xp; sites.expl
 assert.ok(e.dimension.mobs.length >= 3 && e.bar.includes("Discovered"), e.bar); assert.ok(pe.level === 2 && pe.xp === xpE + 80 - rpg.xpForNext(1), "discovery XP (enough for level 2)");
 const manned = e.dimension.mobs.length; sites.explore(e); assert.equal(e.dimension.mobs.length, manned, "no refill before ten minutes");
 assert.ok([...world.props.keys()].some((key) => key.startsWith("overlord:site:")), "sites are saved in the world");
+
+// ---- party: retainers and mercenaries ----
+const f = mkPlayer("finn"); const pf = rpg.profileOf(f); f.dimension = makeLand(); f.dimension.getPlayers = () => [f];
+assert.equal(party.createMain(f, "  Lyra  ", 6), true); party.summon(f); advance(3);
+let lyra = f.dimension.mobs.find((m) => m.typeId === "overlord:retainer");
+assert.ok(lyra && lyra.tamedBy === "finn" && lyra.nameTag.startsWith("Lyra") && lyra.nameTag.includes("Healer"), lyra?.nameTag);
+assert.deepEqual(lyra.events, ["overlord:look_6", "overlord:stance_come"]);
+assert.ok(lyra.tags.has("overlord_summoned") && lyra.getDynamicProperty("overlord:owner") === "finn");
+party.tend(f); advance(41); assert.equal(f.dimension.mobs.filter((m) => m.typeId === "overlord:retainer").length, 1, "never doubled");
+party.cycleStance(f); assert.equal(pf.stance, "go"); assert.equal(lyra.events.at(-1), "overlord:stance_go");
+// the healer mends a wounded master and speaks
+f.health.currentValue = 5; f.msgs.length = 0; party.tend(f); assert.ok(f.health.currentValue > 5, "healed"); assert.ok(f.msgs.some((m) => m.startsWith("§b<Lyra>")));
+f.health.currentValue = 20;
+// hiring costs coins and the party is capped at three
+const offer = { name: "Borin", look: 0, level: 3, cost: 16 };
+assert.ok(party.hire(f, offer).includes("asks for 16")); f.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 64));
+assert.ok(party.hire(f, offer).includes("joins")); assert.ok(party.hire(f, { ...offer, name: "Kara", look: 2 }).includes("joins"));
+assert.ok(party.hire(f, offer).includes("full")); assert.equal(party.partyOf(f).length, 3);
+assert.equal(f.inv.filter((s) => s && s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0), 32);
+party.summon(f); advance(45); assert.equal(f.dimension.mobs.filter((m) => m.typeId === "overlord:retainer").length, 3);
+assert.equal(party.candidates(f, () => 0.5).length, 3); assert.equal(party.levelOf(f, party.partyOf(f)[1]), 3, "mercenaries keep their level");
+// gear upgrades cost coins and strengthen the retainer
+assert.ok(party.upgrade(f, 0).includes("rank 1")); advance(45);
+lyra = f.dimension.mobs.find((m) => m.typeId === "overlord:retainer" && m.nameTag.startsWith("Lyra"));
+assert.equal(lyra.effects.get("health_boost"), 1, "gear 1 at level 1 = two tiers of hearts");
+// a fighter uses its skill on the master's target, and the kill counts for the master
+const borin = f.dimension.mobs.find((m) => m.nameTag.startsWith("Borin"));
+const prey = mob("overlord:goblin", 16); prey.id = "prey"; prey.location = { ...borin.location }; prey.addEffect = () => {}; prey.applyKnockback = () => {}; prey.applyDamage = function (n) { this.damaged.push(n); };
+advance(700); f.msgs.length = 0; world.afterEvents.entityHurt.fire({ hurtEntity: prey, damage: 2, damageSource: { damagingEntity: f, cause: "entityAttack" } });
+assert.ok(f.msgs.some((m) => m.includes("Goblins lose heart")), "a retainer shares a tip on first contact");
+advance(45); assert.ok(prey.damaged.length >= 1, "fighter skill landed");
+const killsBefore = pf.kills["overlord:goblin"] ?? 0; world.afterEvents.entityDie.fire({ deadEntity: prey, damageSource: { damagingEntity: borin } });
+assert.equal(pf.kills["overlord:goblin"], killsBefore + 1, "retainer kills count for the master");
+// a fallen retainer rests for a minute, then returns
+world.afterEvents.entityDie.fire({ deadEntity: borin, damageSource: {} }); borin.remove();
+assert.ok(party.recovering(f, 1) > 50); advance(200); assert.ok(!f.dimension.mobs.some((m) => m.nameTag.startsWith("Borin")), "still recovering");
+advance(60 * 20); assert.ok(f.dimension.mobs.some((m) => m.nameTag.startsWith("Borin")), "back after a minute");
+party.dismiss(f); assert.equal(f.dimension.mobs.filter((m) => m.typeId === "overlord:retainer").length, 0);
+party.release(f, 2); assert.equal(party.partyOf(f).length, 2);
+// ---- bestiary ----
+for (let i = 0; i < 5; i++) kill(f, mob("overlord:ogre", 60));
+assert.equal(rpg.knowledgeOf(pf, "overlord:ogre"), 1); assert.ok(f.msgs.some((m) => m.includes("[Bestiary]")));
+const ogre = mob("overlord:ogre", 100); world.afterEvents.entityHurt.fire({ hurtEntity: ogre, damage: 20, damageSource: { damagingEntity: f, cause: "entityAttack" } });
+assert.ok(Math.abs(ogre.health.currentValue - 99) < 1e-6, "rank 1 knowledge: +5% of 20");
+// ---- reputation ----
+kill(f, mob("overlord:soldier", 30)); assert.equal(rpg.standingOf(pf, "kingdom"), -15); assert.equal(rpg.standingOf(pf, "empire"), 2);
+const sentry = f.dimension.spawnEntity("overlord:soldier", f.location);
+director.enforceReputation(f); assert.equal(sentry.events.length, 0, "wary, not hostile");
+kill(f, mob("overlord:guard", 60)); assert.equal(rpg.standingOf(pf, "kingdom"), -30);
+director.enforceReputation(f); assert.deepEqual(sentry.events, ["overlord:turn_hostile"]); director.enforceReputation(f); assert.equal(sentry.events.length, 1);
+rpg.addRep(f, "kingdom", 10); director.enforceReputation(f); assert.deepEqual(sentry.events, ["overlord:turn_hostile", "overlord:calm"]);
+kill(f, mob("overlord:bandit", 30)); assert.equal(rpg.standingOf(pf, "kingdom"), -19);
+// ---- clearing a hostile camp ----
+let lair; for (let rx = 3; rx < 200 && !lair; rx++) { const site = sites.siteOf(rx, 7); if (site && site.type.key === "goblin_camp") lair = site; }
+assert.ok(lair, "a goblin camp exists somewhere");
+f.dimension = makeLand(); f.dimension.getPlayers = () => [f]; f.location = { x: lair.x - 80, y: 64, z: lair.z }; sites.explore(f);
+f.location = { x: lair.x - 20, y: 64, z: lair.z }; sites.explore(f);
+const defenders = f.dimension.mobs.filter((m) => m.tags.has("overlord_camp")); assert.equal(defenders.length, 5);
+const purse = () => f.inv.filter((s) => s && s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0); const purseBefore = purse();
+defenders.slice(0, 4).forEach((m) => world.afterEvents.entityDie.fire({ deadEntity: m, damageSource: { damagingEntity: f } })); assert.equal(purse(), purseBefore, "not cleared yet");
+world.afterEvents.entityDie.fire({ deadEntity: defenders[4], damageSource: { damagingEntity: f } });
+assert.equal(purse(), purseBefore + 8); assert.ok(f.msgs.some((m) => m.includes("Goblin Camp cleared")));
 
 // persistence: saved profile is restored after leaving
 advance(100);

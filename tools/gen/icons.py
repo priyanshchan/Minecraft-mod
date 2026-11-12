@@ -959,6 +959,27 @@ def wand():
     return s.outline().img
 
 
+def banner():
+    return sprite16([
+        "................",
+        "..GG............",
+        "..WWRRRRRRRRR...",
+        "..WWRRRRLRRRRR..",
+        "..WWRRRLLLRRRR..",
+        "..WWRRRRLRRRR...",
+        "..WWRRRRRRRRRR..",
+        "..WWRRRRRRRR....",
+        "..WW............",
+        "..WW............",
+        "..WW............",
+        "..WW............",
+        "..WW............",
+        "..ww............",
+        "................",
+        "................",
+    ], {"G": GOLD_L, "W": "#8a6238", "w": "#5b3d22", "R": "#a8262a", "L": GOLD})
+
+
 def plate():
     return sprite16([
         "................",
@@ -1173,6 +1194,7 @@ def all_item_icons():
         "iron_gauntlets": gauntlets(),
         "magic_rifle": rifle(),
         "adventurer_plate": plate(),
+        "command_banner": banner(),
         "magic_wand": wand(),
         "grimoire": tome("#1f5c3a", "#143f27", "#f6d968", "#c05bff"),
         "tome_crystal_lance": tome("#2a5a7a", "#1c4058", "#e6f6ff", "#bfe8ff"),

@@ -27,6 +27,7 @@ const PARTY_SHARE = 0.5;
  *   cls: ClassKey, mana: number, done: number, hud: boolean,
  *   quest: ActiveQuest | null,
  *   spells: string[], slots: string[], slot: number, casts: Record<string, number>,
+ *   party: any[], stance: string, kills: Record<string, number>, rep: Record<string, number>,
  * }} Profile
  */
 
@@ -121,6 +122,104 @@ const KILL_XP = {
   "minecraft:warden": 800,
 };
 
+/** What veterans know about each foe: shown in the Bestiary and called out by retainers. */
+export const TIPS = {
+  [id("goblin")]: "Goblins lose heart when wounded - press the attack and they flee.",
+  [id("ogre")]: "Ogres are slow. Strike, step back, strike again.",
+  [id("bandit")]: "Bandits fight as a gang; hit one and the rest come running.",
+  [id("old_guarder")]: "Old Guarders fight as a pack and burn in sunlight.",
+  [id("skeleton_mage")]: "Skeleton Mages back away from blades - rush them or answer with arrows.",
+  [id("elder_lich")]: "An Elder Lich keeps its distance and hurls fire. Close the gap quickly.",
+  [id("death_knight")]: "A Death Knight's shield turns arrows aside. Use magic or get in close.",
+  [id("soul_eater")]: "Soul Eaters leap. Keep moving, and bring fire.",
+  [id("quagoa")]: "Quagoa hunt in the dark in threes. Light is your friend.",
+  [id("clementine")]: "Clementine is fast and her blade is poisoned. Do not trade blows.",
+  [id("fluder")]: "Fluder shrugs off fire. Use ice or steel.",
+  [id("narberal")]: "Narberal commands lightning and barely feels it herself.",
+  [id("cz_delta")]: "CZ Delta shoots fast from afar. Break her line of sight.",
+  [id("solution")]: "Solution halves arrow damage but burns well.",
+  [id("entoma")]: "Entoma's strikes are poisonous.",
+  [id("cocytus")]: "Cocytus ignores ice. Fire is his weakness.",
+  [id("demiurge")]: "Demiurge is one with flame. Ice hurts him most.",
+  [id("shalltear")]: "Shalltear drains life with every blow - end it quickly.",
+  [id("albedo")]: "Albedo's armour swallows two fifths of every hit and she cannot be knocked back.",
+  [id("gargantua")]: "Gargantua barely feels arrows or lightning. Stay out of its reach.",
+  [id("ainz")]: "Ainz raises Death Knights and withers what he touches. Holy magic bites deepest.",
+  "minecraft:zombie": "Zombies burn in daylight. Holy magic hurts all undead.",
+  "minecraft:skeleton": "Skeletons keep their distance. A shield or a charge ends it.",
+  "minecraft:creeper": "Creepers. Back off the moment they hiss.",
+};
+
+const KNOWLEDGE = [5, 15, 40]; // kills needed for knowledge ranks 1-3
+
+/**
+ * How well a player knows a kind of foe (0-3). Each rank adds 5% damage against it.
+ * @param {Profile} p @param {string} typeId
+ */
+export function knowledgeOf(p, typeId) {
+  const kills = p.kills[typeId] ?? 0;
+  let rank = 0;
+  for (let i = 0; i < KNOWLEDGE.length; i++) if (kills >= KNOWLEDGE[i]) rank = i + 1;
+  return rank;
+}
+
+/** @param {string} typeId */
+export function prettyName(typeId) {
+  return typeId.split(":")[1].split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
+/** @type {Record<string, string>} */
+export const FACTIONS = { kingdom: "Re-Estize Kingdom", empire: "Baharuth Empire", adventurers: "Adventurers' Guild", lizardmen: "Lizardman Tribes" };
+
+/**
+ * A player's standing with a faction, from -100 (hated) to 100.
+ * @param {Profile} p @param {string} faction
+ */
+export function standingOf(p, faction) {
+  const value = p.rep[faction];
+  return typeof value === "number" ? value : 0;
+}
+
+/**
+ * Changes a player's standing with a faction.
+ * @param {import("@minecraft/server").Player} player @param {string} faction @param {number} amount
+ */
+export function addRep(player, faction, amount) {
+  const p = profileOf(player);
+  p.rep[faction] = Math.max(-100, Math.min(100, standingOf(p, faction) + amount));
+  touch(player);
+}
+
+/** Extra entries other modules add to the Adventurer's Plate menu. */
+/** @type {{ label: (player: import("@minecraft/server").Player) => string, open: (player: import("@minecraft/server").Player) => void }[]} */
+const extraMenus = [];
+
+/**
+ * Adds a button to the Adventurer's Plate menu.
+ * @param {(player: import("@minecraft/server").Player) => string} label
+ * @param {(player: import("@minecraft/server").Player) => void} open
+ */
+export function registerMenu(label, open) {
+  extraMenus.push({ label, open });
+}
+
+/**
+ * The player credited with something an entity did: the player itself, or the owner of a retainer.
+ * @param {import("@minecraft/server").Entity | undefined} entity
+ * @returns {import("@minecraft/server").Player | undefined}
+ */
+export function creditedPlayer(entity) {
+  try {
+    if (!entity || !entity.isValid) return undefined;
+    if (entity.typeId === "minecraft:player") return /** @type {import("@minecraft/server").Player} */ (entity);
+    if (entity.typeId !== id("retainer")) return undefined;
+    const owner = entity.getDynamicProperty("overlord:owner");
+    return world.getAllPlayers().find((p) => p.id === owner);
+  } catch {
+    return undefined;
+  }
+}
+
 // ------------------------------------------------------------------ storage
 
 /** @type {Map<string, Profile>} */
@@ -130,7 +229,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {} };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {} };
 }
 
 /**
@@ -478,6 +577,7 @@ function advanceQuest(player, typeId) {
   const before = rankOf(p);
   p.quest = null;
   p.done += 1;
+  addRep(player, "adventurers", 3); // the guild remembers finished work
   giveItem(player, id("yggdrasil_gold_coin"), quest.coins);
   try {
     player.sendMessage(`§6[Guild] §fQuest complete: §e${quest.title}§f. Reward: §6${quest.coins} Gold Coins§f, §a${quest.xp} XP§f.`);
@@ -519,13 +619,20 @@ export function giveItem(player, itemId, amount) {
 
 world.afterEvents.entityDie.subscribe((event) => {
   try {
-    const killer = event.damageSource.damagingEntity;
-    if (!killer || !killer.isValid || killer.typeId !== "minecraft:player") return;
-    const player = /** @type {import("@minecraft/server").Player} */ (killer);
+    // Kills by a retainer count for its master.
+    const player = creditedPlayer(event.damageSource.damagingEntity);
+    if (!player) return;
     const dead = event.deadEntity;
-    if (dead.typeId === "minecraft:player") return;
+    if (dead.typeId === "minecraft:player" || dead.typeId === id("retainer")) return;
     const typeId = dead.typeId;
     const xp = killXp(dead);
+    const p = profileOf(player);
+    const before = knowledgeOf(p, typeId);
+    p.kills[typeId] = (p.kills[typeId] ?? 0) + 1;
+    const after = knowledgeOf(p, typeId);
+    if (after > before) {
+      player.sendMessage(`§6[Bestiary] §fYou now know the §e${prettyName(typeId)}§f better (rank ${after}): §a+${after * 5}% damage§f against it.`);
+    }
     grantXp(player, xp);
     advanceQuest(player, typeId);
     // Party play: nearby adventurers share in the kill.
@@ -588,7 +695,7 @@ world.afterEvents.entityHurt.subscribe((event) => {
     const player = /** @type {import("@minecraft/server").Player} */ (attacker);
     const p = profileOf(player);
 
-    let factor = p.str * 0.02 + (p.cls === "warrior" ? 0.2 : 0);
+    let factor = p.str * 0.02 + (p.cls === "warrior" ? 0.2 : 0) + knowledgeOf(p, victim.typeId) * 0.05;
     if (p.cls === "cleric" && victim.matches({ families: ["undead"] })) factor += 0.3;
     let crit = false;
     // Agility gives everyone a small critical chance; assassins add 25% on top.
@@ -686,7 +793,9 @@ export function openMenu(player) {
     .button("Choose class")
     .button(p.quest ? "Guild quest (in progress)" : "Guild quests")
     .button(p.hud ? "Hide status bar" : "Show status bar")
-    .button("How it works");
+    .button("How it works")
+    .button("Bestiary");
+  for (const extra of extraMenus) form.button(extra.label(player));
   show(form, player, (choice) => {
     if (choice === 0) openStats(player);
     else if (choice === 1) openClasses(player);
@@ -696,7 +805,29 @@ export function openMenu(player) {
       save(player);
       notify(player, p.hud ? "§7Status bar shown" : "§7Status bar hidden");
     } else if (choice === 4) openHelp(player);
+    else if (choice === 5) openBestiary(player);
+    else extraMenus[choice - 6]?.open(player);
   });
+}
+
+/** @param {import("@minecraft/server").Player} player */
+function openBestiary(player) {
+  const p = profileOf(player);
+  const entries = Object.entries(p.kills).sort((a, b) => b[1] - a[1]).slice(0, 24);
+  const lines = entries.map(([typeId, kills]) => {
+    const rank = knowledgeOf(p, typeId);
+    const next = KNOWLEDGE[rank];
+    const tip = rank >= 1 && TIPS[typeId] ? `\n  §7${TIPS[typeId]}§r` : "";
+    return `§e${prettyName(typeId)}§r - ${kills} slain, rank ${rank}/3${rank > 0 ? ` (§a+${rank * 5}%§r)` : ""}${next ? `, next at ${next}` : ""}${tip}`;
+  });
+  const form = new ActionFormData()
+    .title("Bestiary")
+    .body(
+      "Every kind of foe you slay is recorded. Ranks at 5, 15 and 40 kills each add 5% damage against it; rank 1 also reveals what veterans know.\n\n" +
+        (lines.length > 0 ? lines.join("\n") : "Nothing recorded yet.")
+    )
+    .button("Back");
+  show(form, player, () => openMenu(player));
 }
 
 /**
@@ -825,6 +956,9 @@ function openHelp(player) {
         STAT_KEYS.map((k) => `${STATS[k].color}${STATS[k].name}§r: ${STATS[k].help}`).join("\n") +
         "\n\n§eMana§r: staff, ring, tome and weapon abilities cost mana, which recovers over time. Scrolls and potions cost none; Healing Potions also restore mana.\n\n" +
         "§eWorld§r: monsters that spawn near you take a level close to yours (more health, harder hits, more XP). The most dangerous ones only appear once someone nearby is strong enough, and from level 5 Nazarick may send a patrol after you at night.\n\n" +
+        "§eParty§r: create a retainer and hire up to two mercenaries from the Party entry of this menu. Set their stance with the Command Banner (sneak + use switches Come / Go / Stay). Their kills count as yours.\n\n" +
+        "§eBestiary§r: every 5, 15 and 40 kills of a kind of foe add 5% damage against it.\n\n" +
+        "§eReputation§r: factions remember what you do. Kill their people and they turn on you until the grudge fades.\n\n" +
         "§eCamps§r: the wilds hold camps and outposts of the factions - Kingdom, Empire, goblins, bandits, adventurers, lizardmen and Nazarick. Finding one gives XP; adventurers, guards and soldiers may tell you where the nearest lies. Cleared camps are re-manned after ten minutes.\n\n" +
         "§eCombat§r: hitting a mob shows its remaining health. Agility adds a 0.4% critical chance per point (+50% damage). Dying costs a tenth of the XP gathered towards your next level.\n\n" +
         "§eSpells§r: open the Grimoire to learn tier magic with Data Crystals and assign up to four spells; cast them with the Magic Wand (sneak + use switches spell). Each spell grows stronger with use.\n\n" +

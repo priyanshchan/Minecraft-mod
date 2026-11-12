@@ -59,7 +59,7 @@ VANILLA = {
         "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
         "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
         "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
-        "minecraft:cod", "minecraft:bread", "minecraft:arrow",
+        "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
     "sound": {
@@ -273,15 +273,19 @@ def main():
         for gid in d["geometry"].values():
             check(gid in geometries, f"{rel(f)}: geometry {gid} is not defined")
             geo = geometries.get(gid)
-        for tex in d["textures"].values():
+        check(set(d["textures"]) == set(d["geometry"]), f"{rel(f)}: texture and geometry keys differ")
+        for key, tex in d["textures"].items():
             used_textures.add(tex)
+            geo = geometries.get(d["geometry"].get(key, ""), geo)  # each skin is checked against its own model
             if check(png(tex).is_file(), f"{rel(f)}: missing texture {tex}.png") and geo:
                 size = Image.open(png(tex)).size
                 want = (geo["description"]["texture_width"], geo["description"]["texture_height"])
                 check(size == want, f"{rel(f)}: texture is {size} but geometry expects {want}")
         for rc in d["render_controllers"]:
             check(rc in render_controllers, f"{rel(f)}: render controller {rc} is not defined")
-        bones = {b["name"] for b in geo["bones"]} if geo else set()
+        # an animated bone must exist in every model the entity can use
+        bones = set.intersection(*[{b["name"] for b in geometries[g]["bones"]} for g in d["geometry"].values()
+                                   if g in geometries]) if geo else set()
         for short in d["scripts"]["animate"]:
             check(short in d["animations"], f"{rel(f)}: animate entry '{short}' has no animation mapping")
         for short, anim_id in d["animations"].items():

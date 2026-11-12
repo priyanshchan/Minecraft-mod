@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [3, 1, 0]
+VERSION = [4, 0, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v3.1.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v4.0.0"
 
 
 def oid(name):
@@ -201,6 +201,8 @@ ITEMS = {
     "magic_rifle": ("CZ's Magic Rifle", "equipment", _weapon(3, _cooldown("overlord_rifle", 0.6),
                                                             rarity="rare")),
     "adventurer_plate": ("Adventurer's Plate", "equipment", {"minecraft:max_stack_size": 1}),
+    "command_banner": ("Command Banner", "equipment", {"minecraft:max_stack_size": 1,
+                                                       "minecraft:hand_equipped": True}),
     "grimoire": ("Grimoire", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "rare"}),
     "magic_wand": ("Magic Wand", "equipment", {
         "minecraft:max_stack_size": 1, "minecraft:hand_equipped": True, "minecraft:rarity": "rare",
@@ -463,6 +465,8 @@ def recipe_files():
                                   oid("glacier_bricks"), 4),
         "shooting_star": _shaped("shooting_star", ["EEE", "EGE", "EEE"], {
             "E": oid("pleiades_emblem"), "G": "minecraft:gold_block"}, oid("shooting_star")),
+        "command_banner": _shaped("command_banner", ["WW", "SW", "S "], {
+            "W": "minecraft:red_wool", "S": "minecraft:stick"}, oid("command_banner")),
         "grimoire": _shapeless("grimoire", ["minecraft:book", cry], oid("grimoire")),
         "magic_wand": _shaped("magic_wand", ["C", "G", "S"], {
             "C": cry, "G": "minecraft:gold_ingot", "S": "minecraft:stick"}, oid("magic_wand")),
@@ -493,7 +497,7 @@ VANILLA_ITEMS_USED = [
     "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
     "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
     "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
-    "minecraft:cod", "minecraft:bread", "minecraft:arrow",
+    "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool",
 ]
 
 
@@ -1211,6 +1215,81 @@ def entity_files():
     c["minecraft:behavior.nearest_attackable_target"] = _target_players(20, ["kingdom", "empire", "adventurer"])
     out["bandit"] = _entity("bandit", c)
 
+    # --------------------------------------------------- retainers (party members)
+    not_players = {"test": "is_family", "subject": "other", "operator": "!=", "value": "player"}
+    follow = lambda start, stop: {"priority": 4, "speed_multiplier": 1.3, "start_distance": start,
+                                  "stop_distance": stop}
+    c = {
+        "minecraft:is_hidden_when_invisible": {},
+        "minecraft:type_family": {"family": ["retainer", ally, "human", "mob"]},
+        "minecraft:collision_box": {"width": 0.6, "height": 1.9},
+        "minecraft:health": {"value": 40, "max": 40},
+        "minecraft:movement": {"value": 0.32},
+        "minecraft:follow_range": {"value": 32, "max": 32},
+        "minecraft:nameable": {"always_show": True, "allow_name_tag_renaming": False},
+        "minecraft:movement.basic": {},
+        "minecraft:jump.static": {},
+        "minecraft:can_climb": {},
+        "minecraft:navigation.walk": {"can_path_over_water": True, "avoid_damage_blocks": True,
+                                      "can_pass_doors": True, "can_open_doors": True},
+        "minecraft:physics": {},
+        "minecraft:pushable": {"is_pushable": True, "is_pushable_by_piston": True},
+        "minecraft:breathable": {"total_supply": 15, "suffocate_time": 0, "breathes_water": False},
+        "minecraft:persistent": {},
+        "minecraft:conditional_bandwidth_optimization": {},
+        "minecraft:tameable": {"probability": 0.0, "tame_items": [oid("guardian_crest")]},
+        "minecraft:healable": {"items": [{"item": oid("red_potion"), "heal_amount": 20},
+                                         {"item": "minecraft:bread", "heal_amount": 6}]},
+        # Players cannot hurt retainers, and retainers never turn on players.
+        "minecraft:damage_sensor": {"triggers": [
+            {"cause": "fall", "deals_damage": False},
+            {"on_damage": {"filters": {"test": "is_family", "subject": "other", "value": "player"}},
+             "deals_damage": False}]},
+        "minecraft:behavior.float": {"priority": 0},
+        "minecraft:behavior.hurt_by_target": {"priority": 1, "entity_types": [{"filters": not_players}]},
+        "minecraft:behavior.look_at_player": {"priority": 7, "look_distance": 8.0, "probability": 0.02},
+        "minecraft:behavior.random_look_around": {"priority": 8},
+    }
+    shot = lambda lo, hi, radius: {"priority": 3, "attack_interval_min": lo, "attack_interval_max": hi,
+                                   "attack_radius": radius, "speed_multiplier": 1.0}
+    groups = {
+        "overlord:voc_fighter": {
+            "minecraft:attack": {"damage": 6},
+            "minecraft:knockback_resistance": {"value": 0.5},
+            "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.3, "track_target": True}},
+        "overlord:voc_archer": {"minecraft:shooter": {"def": "minecraft:arrow"},
+                                "minecraft:behavior.ranged_attack": shot(1.2, 2.2, 16.0)},
+        "overlord:voc_mage": {"minecraft:shooter": {"def": oid("magic_bullet")},
+                              "minecraft:behavior.ranged_attack": shot(1.5, 2.5, 18.0)},
+        "overlord:voc_healer": {"minecraft:shooter": {"def": oid("magic_bullet")},
+                                "minecraft:behavior.ranged_attack": shot(2.5, 4.0, 14.0)},
+        # stances
+        "overlord:stance_come": {
+            "minecraft:behavior.follow_owner": follow(5, 2),
+            "minecraft:behavior.owner_hurt_by_target": {"priority": 1},
+            "minecraft:behavior.owner_hurt_target": {"priority": 2}},
+        "overlord:stance_go": {
+            "minecraft:behavior.follow_owner": follow(14, 4),
+            "minecraft:behavior.owner_hurt_by_target": {"priority": 1},
+            "minecraft:behavior.owner_hurt_target": {"priority": 2},
+            "minecraft:behavior.nearest_attackable_target": {
+                "priority": 2, "must_see": True, "reselect_targets": True,
+                "entity_types": [{"filters": _is_family("monster"), "max_dist": 18}]}},
+        "overlord:stance_stay": {},
+    }
+    events = {"minecraft:entity_spawned": {"add": {"component_groups": ["overlord:stance_come"]}}}
+    for n in range(RETAINER_LOOKS):
+        groups[f"overlord:look_{n}"] = {"minecraft:variant": {"value": n}}
+        events[f"overlord:look_{n}"] = {
+            "remove": {"component_groups": [f"overlord:look_{k}" for k in range(RETAINER_LOOKS) if k != n] +
+                                           [f"overlord:voc_{v}" for v in VOCATIONS if v != VOCATIONS[n // 2]]},
+            "add": {"component_groups": [f"overlord:look_{n}", f"overlord:voc_{VOCATIONS[n // 2]}"]}}
+    for stance in ("come", "go", "stay"):
+        events[f"overlord:stance_{stance}"] = {
+            "remove": {"component_groups": [f"overlord:stance_{k}" for k in ("come", "go", "stay") if k != stance]},
+            "add": {"component_groups": [f"overlord:stance_{stance}"]}}
+    out["retainer"] = _entity("retainer", c, groups, events, spawnable=False)
+
     _apply_ai(out)
     out["lightning_bolt"] = projectile("lightning_bolt", 0.3, {
         "impact_damage": {"damage": 9, "knockback": True, "semi_random_diff_damage": False},
@@ -1256,6 +1335,16 @@ def _apply_ai(out):
     parts("death_knight")["minecraft:damage_sensor"]["triggers"].append(
         {"cause": "projectile", "damage_multiplier": 0.5})
 
+    # Reputation: troops of a faction that has come to hate a player are told (by script) to attack players.
+    for name in ("soldier", "archer", "guard", "imperial_knight", "adventurer", "lizardman"):
+        entity = out[name]["minecraft:entity"]
+        entity["component_groups"]["overlord:hostile"] = {"minecraft:behavior.nearest_attackable_target": {
+            "priority": 2, "must_see": True, "reselect_targets": True, "entity_types": [
+                {"filters": _is_family("player"), "max_dist": 20},
+                {"filters": _is_family("monster"), "max_dist": 16}]}}
+        entity["events"]["overlord:turn_hostile"] = {"add": {"component_groups": ["overlord:hostile"]}}
+        entity["events"]["overlord:calm"] = {"remove": {"component_groups": ["overlord:hostile"]}}
+
     # Goblins lose their nerve and run once badly hurt.
     goblin = out["goblin"]["minecraft:entity"]
     goblin["component_groups"]["overlord:brave"] = {"minecraft:environment_sensor": {"triggers": [{
@@ -1292,7 +1381,7 @@ ENTITY_NAMES = {
     "skeleton_mage": "Skeleton Mage", "lizardman": "Lizardman Warrior", "evileye": "Evileye",
     "fluder": "Fluder Paradyne", "gargantua": "Gargantua", "soul_eater": "Soul Eater",
     "quagoa": "Quagoa", "crystal_shard": "Crystal Lance", "adventurer": "Adventurer",
-    "guard": "Kingdom Guard", "soldier": "Kingdom Soldier", "archer": "Kingdom Archer",
+    "retainer": "Retainer", "guard": "Kingdom Guard", "soldier": "Kingdom Soldier", "archer": "Kingdom Archer",
     "imperial_knight": "Imperial Knight", "bandit": "Bandit",
     "fireball": "Fireball", "negative_burst": "Negative Burst", "lightning_bolt": "Lightning",
 }
@@ -1520,6 +1609,8 @@ SOUNDS = {
                                           "step": "mob.zombie.step"}),
     "bandit": (1.0, [0.9, 1.0], {"hurt": "game.player.hurt", "death": "game.player.die",
                                  "step": "mob.zombie.step"}),
+    "retainer": (1.0, [0.95, 1.1], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                    "step": "mob.zombie.step", "shoot": "random.bow"}),
     "hamsuke": (1.0, [0.6, 0.8], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
                                   "death": "mob.rabbit.death", "step": "mob.polarbear.step"}),
 }
@@ -1631,6 +1722,7 @@ ENTITY_ANIMS = {
     "archer": ["look_at_target", "idle", "walk", "attack"],
     "imperial_knight": ["look_at_target", "idle", "walk", "attack"],
     "bandit": ["look_at_target", "idle", "walk", "attack"],
+    "retainer": ["look_at_target", "idle", "walk", "attack"],
     "crystal_shard": ["projectile.spin"],
     "magic_bullet": ["projectile.spin"],
     "lightning_bolt": ["projectile.spin"],
@@ -1759,14 +1851,30 @@ def player_animations_json():
 
 
 RENDER_CONTROLLER = "controller.render.overlord.entity"
+RETAINER_CONTROLLER = "controller.render.overlord.retainer"
+RETAINER_LOOKS = 8  # two looks per vocation: fighter, archer, mage, healer
+VOCATIONS = ["fighter", "archer", "mage", "healer"]
 
 
 def render_controllers_json():
-    return {"format_version": "1.8.0", "render_controllers": {RENDER_CONTROLLER: {
-        "geometry": "Geometry.default",
-        "materials": [{"*": "Material.default"}],
-        "textures": ["Texture.default"],
-    }}}
+    looks = [f"v{n}" for n in range(RETAINER_LOOKS)]
+    return {"format_version": "1.8.0", "render_controllers": {
+        RENDER_CONTROLLER: {
+            "geometry": "Geometry.default",
+            "materials": [{"*": "Material.default"}],
+            "textures": ["Texture.default"],
+        },
+        # Retainers pick their model and skin from the entity's variant (0-7).
+        RETAINER_CONTROLLER: {
+            "arrays": {
+                "textures": {"Array.skins": [f"Texture.{k}" for k in looks]},
+                "geometries": {"Array.models": [f"Geometry.{k}" for k in looks]},
+            },
+            "geometry": "Array.models[query.variant]",
+            "materials": [{"*": "Material.default"}],
+            "textures": ["Array.skins[query.variant]"],
+        },
+    }}
 
 
 def client_entity_files():
@@ -1781,6 +1889,10 @@ def client_entity_files():
             "animations": {a.replace(".", "_"): f"animation.overlord.{a}" for a in anims},
             "render_controllers": [RENDER_CONTROLLER],
         }
+        if name == "retainer":
+            d["textures"] = {f"v{n}": f"textures/entity/{NS}/retainer_{n}" for n in range(RETAINER_LOOKS)}
+            d["geometry"] = {f"v{n}": f"geometry.overlord.retainer_{n}" for n in range(RETAINER_LOOKS)}
+            d["render_controllers"] = [RETAINER_CONTROLLER]
         if name in MOBS:
             d["spawn_egg"] = {"texture": f"{NS}_egg_{name}", "texture_index": 0}
         out[f"entity/{name}.entity.json"] = {"format_version": "1.10.0",

@@ -501,6 +501,19 @@
           "step": "mob.zombie.step"
         }
       },
+      "overlord:retainer": {
+        "volume": 1.0,
+        "pitch": [
+          0.95,
+          1.1
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "random.bow"
+        }
+      },
       "overlord:hamsuke": {
         "volume": 1.0,
         "pitch": [

@@ -4,7 +4,7 @@
 // built from blocks the first time a player explores near it, and its garrison is
 // posted - and later replenished - when a player comes close.
 import { world, system, BlockVolume, ItemStack } from "@minecraft/server";
-import { grantXp, notify, profileOf } from "./rpg.js";
+import { addRep, creditedPlayer, giveItem, grantXp, notify, profileOf } from "./rpg.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -373,6 +373,11 @@ export function buildSite(dimension, site) {
 
 /** Camp key -> tick of the last time its garrison was posted. */
 const manned = new Map();
+/** Camp key -> how many defenders were posted, their tier, and how many have been slain since. */
+/** @type {Map<string, { size: number, tier: number, slain: number }>} */
+const sieges = new Map();
+/** Sites whose garrison is hostile: clearing them out is rewarded. */
+const HOSTILE_SITES = new Set(["goblin_camp", "bandit_camp", "nazarick_outpost"]);
 
 /** @param {number} level */
 function tierFor(level) {
@@ -447,10 +452,49 @@ export function explore(player) {
       const last = manned.get(key);
       if (last !== undefined && system.currentTick - last < REFILL_TICKS) continue;
       manned.set(key, system.currentTick);
-      garrison(player.dimension, camp, tierFor(profileOf(player).level));
+      const tier = tierFor(profileOf(player).level);
+      garrison(player.dimension, camp, tier);
+      sieges.set(key, { size: camp.type.garrison(tier).reduce((n, [, count]) => n + count, 0), tier, slain: 0 });
     }
   }
 }
+
+// A hostile camp is cleared when as many of its defenders have been slain as were posted.
+world.afterEvents.entityDie.subscribe((event) => {
+  try {
+    const dead = event.deadEntity;
+    if (!dead.hasTag("overlord_camp")) return;
+    const player = creditedPlayer(event.damageSource.damagingEntity);
+    if (!player) return;
+    const rx0 = Math.floor(dead.location.x / REGION);
+    const rz0 = Math.floor(dead.location.z / REGION);
+    for (let rx = rx0 - 1; rx <= rx0 + 1; rx++) {
+      for (let rz = rz0 - 1; rz <= rz0 + 1; rz++) {
+        const camp = campIn(rx, rz);
+        const key = `${rx},${rz}`;
+        const siege = sieges.get(key);
+        if (!camp || !siege || !HOSTILE_SITES.has(camp.type.key)) continue;
+        if (Math.hypot(camp.x - dead.location.x, camp.z - dead.location.z) > 60) continue;
+        siege.slain += 1;
+        if (siege.slain < siege.size) return;
+        sieges.delete(key);
+        manned.set(key, system.currentTick + REFILL_TICKS); // a cleared camp stays quiet twice as long
+        const coins = 8 * (siege.tier + 1);
+        const xp = 150 * (siege.tier + 1);
+        for (const hero of dead.dimension.getPlayers({ location: { x: camp.x, y: camp.y, z: camp.z }, maxDistance: 48 })) {
+          giveItem(hero, id("yggdrasil_gold_coin"), coins);
+          addRep(hero, "kingdom", 5);
+          addRep(hero, "adventurers", 5);
+          hero.sendMessage(`§6[Overlord] §f${camp.type.name} cleared! Reward: §6${coins} Gold Coins§f, §a${xp} XP§f. The Kingdom and the adventurers think better of you.`);
+          grantXp(hero, xp, "camp cleared");
+        }
+        return;
+      }
+    }
+  } catch {
+    // the dead mob is already unloaded
+  }
+});
 
 /**
  * A rumour about the nearest site the player has not found yet.

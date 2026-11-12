@@ -14,7 +14,7 @@ export const world = {
   props: new Map(), getDynamicProperty(k) { return this.props.get(k); }, setDynamicProperty(k, v) { this.props.set(k, v); },
   getDefaultSpawnLocation: () => ({ x: 0, y: 64, z: 0 }),
   clock: { time: 6000, day: 0 }, getTimeOfDay() { return this.clock.time; }, getDay() { return this.clock.day; },
-  afterEvents: { entitySpawn: sig(), entityDie: sig(), entityHurt: sig(), playerSpawn: sig(), playerLeave: sig(), worldLoad: sig(), itemUse: sig(), itemCompleteUse: sig(), projectileHitEntity: sig(), projectileHitBlock: sig() },
+  afterEvents: { playerDimensionChange: sig(), entitySpawn: sig(), entityDie: sig(), entityHurt: sig(), playerSpawn: sig(), playerLeave: sig(), worldLoad: sig(), itemUse: sig(), itemCompleteUse: sig(), projectileHitEntity: sig(), projectileHitBlock: sig() },
   getAllPlayers: () => players,
   scoreboard: {
     getObjective: (n) => objectives.get(n), addObjective: (n) => { const o = { scores: new Map(), setScore(p, v) { this.scores.set(p.id, v); } }; objectives.set(n, o); return o; },

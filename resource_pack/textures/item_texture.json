@@ -20,6 +20,9 @@
     "overlord_brain_katana": {
       "textures": "textures/items/overlord/brain_katana"
     },
+    "overlord_command_banner": {
+      "textures": "textures/items/overlord/command_banner"
+    },
     "overlord_dark_warrior_boots": {
       "textures": "textures/items/overlord/dark_warrior_boots"
     },

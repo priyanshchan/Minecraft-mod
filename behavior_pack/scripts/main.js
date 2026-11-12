@@ -24,6 +24,7 @@ import { castSelected, cycleSpell, openGrimoire } from "./spells.js";
 import * as fx from "./vfx.js";
 import "./director.js";
 import "./structures.js";
+import { cycleStance, openParty } from "./party.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -909,6 +910,9 @@ world.afterEvents.itemUse.subscribe((event) => {
     } else if (item === id("magic_wand")) {
       if (player.isSneaking) cycleSpell(player);
       else castSelected(player);
+    } else if (item === id("command_banner")) {
+      if (player.isSneaking) cycleStance(player);
+      else openParty(player);
     } else if (item === id("grimoire")) {
       openGrimoire(player);
     } else if (item === id("raid_horn")) {

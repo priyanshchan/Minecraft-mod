@@ -635,7 +635,7 @@ export function cycleSpell(player) {
 // ------------------------------------------------------------------ learning
 
 /** @param {Player} player @param {string} itemId */
-function countItem(player, itemId) {
+export function countItem(player, itemId) {
   const container = player.getComponent("minecraft:inventory")?.container;
   if (!container) return 0;
   let total = 0;
@@ -647,7 +647,7 @@ function countItem(player, itemId) {
 }
 
 /** @param {Player} player @param {string} itemId @param {number} amount */
-function takeItem(player, itemId, amount) {
+export function takeItem(player, itemId, amount) {
   const container = player.getComponent("minecraft:inventory")?.container;
   if (!container) return;
   let left = amount;

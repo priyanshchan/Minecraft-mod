@@ -2462,7 +2462,8 @@ def crystal_shard():
 
 
 # ------------------------------------------------ everyday NPCs: adventurer, guard
-def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, weapon_kind, mask=None):
+def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, weapon_kind, mask=None,
+             orb="#c05bff"):
     m = Model(name, bounds=(3, 3.5, 1.25))
     skin_d = shade(skin, 0.85)
     pal = {"S": skin, "s": skin_d, "H": hair, "h": shade(hair, 1.4), "e": "#2b2118", "M": armor, "m": armor_l,
@@ -2548,6 +2549,14 @@ def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, 
         quiver = body.cube((-2, 14, 2), (4, 9, 2))
         quiver.fill("#6b4a36", noise=5)
         quiver.top.fill("#e9e6dc")
+    elif weapon_kind == "staff":
+        shaft = weapon.cube((-6.5, 1, -3.5), (1, 30, 1))
+        shaft.fill("#6b4a2a", noise=5)
+        stripes(shaft, "#4a321b", every=6, start=3)
+        gem = weapon.cube((-7.5, 31, -4.5), (3, 3, 3))
+        gem.fill(orb, noise=4)
+        for f in gem.faces:
+            f.px(0, 0, mix(orb, "#ffffff", 0.7))
     elif weapon_kind == "spear":
         shaft = weapon.cube((-6.5, 1, -3.5), (1, 32, 1))
         shaft.fill("#6b4a2a", noise=5)
@@ -2601,6 +2610,29 @@ def bandit():
                     helmet=False, weapon_kind="sword", mask="#2a2420")
 
 
+# Looks a retainer can take: two per vocation (fighter, archer, mage, healer).
+RETAINER_LOOKS = [
+    # skin, hair, armour, light, dark, cloth, cloth dark, helmet, weapon, orb
+    ("#e0b48c", "#3a2a1f", "#9aa0aa", "#c9ced6", "#5d626c", "#2f4f8f", "#1f3766", True, "sword", None),
+    ("#c99a78", "#a8402a", "#7a5a3a", "#9a7a55", "#55402a", "#8f2a2a", "#601818", False, "sword", None),
+    ("#e3b894", "#c9a53c", "#5f7a4a", "#7d9a66", "#40552f", "#3f6a45", "#2a4a2f", False, "bow", None),
+    ("#b9835a", "#1f1a16", "#6b4a36", "#8a6a4a", "#45301f", "#7a6a45", "#55482f", False, "bow", None),
+    ("#f1dccb", "#5a3a66", "#4a2a6a", "#6a4a8f", "#2f1a45", "#5a2a8a", "#3d1a60", False, "staff", "#c05bff"),
+    ("#d6a57e", "#e9e6dc", "#22335c", "#34497a", "#141f3a", "#2a4a80", "#1a3058", False, "staff", "#59d0ff"),
+    ("#f6e2d4", "#ecca5c", "#d9d4c4", "#f4f1ea", "#a8a290", "#f4f1ea", "#c9c3b5", False, "staff", "#f6d968"),
+    ("#e0b48c", "#6b4a2a", "#8fb8d6", "#b8d8f0", "#5f8aa8", "#dff1ff", "#a8c8de", False, "staff", "#63ff6b"),
+]
+
+
+def _retainer(n):
+    skin, hair, armor, light, dark, cloth, cloth_d, helmet, weapon, orb = RETAINER_LOOKS[n]
+    return lambda: _soldier(f"retainer_{n}", skin, hair, armor, light, dark, cloth, cloth_d, helmet=helmet,
+                            weapon_kind=weapon, orb=orb or "#c05bff")
+
+
+RETAINERS = [_retainer(n) for n in range(len(RETAINER_LOOKS))]
+
+
 def lightning_bolt():
     m = Model("lightning_bolt", bounds=(1, 1, 0.25))
     body = m.bone("body", (0, 2, 0))
@@ -2622,5 +2654,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        brain, zaryusu, cz_delta, nfirea,
        lupusregina, entoma, solution, yuri, goblin, ogre,
        skeleton_mage, lizardman, evileye, fluder, gargantua, soul_eater, quagoa, adventurer, guard,
-       soldier, archer, imperial_knight, bandit,
+       soldier, archer, imperial_knight, bandit, *RETAINERS,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

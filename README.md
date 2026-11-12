@@ -155,6 +155,36 @@ character menu.
 
 Progress is saved per player in the world.
 
+### Party: retainers and mercenaries
+
+Open **Party** in the Adventurer's Plate menu, or use a **Command Banner** (recipe: three red wool and two
+sticks in a flag shape).
+
+- **Your retainer:** create one companion of your own — choose a name and one of eight looks, two for each
+  vocation. It levels with you and can be restyled or change vocation at any time.
+- **Mercenaries:** hire up to two more (three party members in all) for Gold Coins. They keep the level they
+  were hired at; friends of the Adventurers' Guild pay a quarter less.
+- **Vocations:** Fighter (melee, staggering shield bash), Archer (arrows, aimed shot), Mage (magic bolts in
+  the element your target is weak to), Healer (mends you when you drop below 60% health).
+- **Stances:** *Come* (stay close and defend), *Go* (range ahead and attack monsters on sight), *Stay* (hold
+  position). Sneak + use the Command Banner to switch.
+- **Gear:** five ranks bought with Gold Coins (20, 40, 60, 80, 100); each adds 4 hearts, every second one adds
+  damage.
+- **Knowledge:** retainers call out what they know the first time you strike a kind of foe, and warn you when
+  you are badly hurt.
+- **Falling:** a fallen party member returns after 60 seconds. Players cannot hurt retainers, their kills
+  count as yours for XP, quests and the bestiary, and feeding one bread or a Healing Potion heals it.
+
+### Bestiary and reputation
+
+- **Bestiary:** every kind of foe you (or your party) slay is recorded. At 5, 15 and 40 kills you gain a
+  knowledge rank worth +5% damage against it, and rank 1 reveals the veteran's tip for that foe.
+- **Reputation:** the Kingdom, the Empire, the Adventurers' Guild and the Lizardman Tribes each track their
+  opinion of you (−100 to 100). Killing their people costs 15; at −30 their troops attack you on sight.
+  Grudges fade by 1 a minute. Guild quests (+3), slain bandits (+1) and cleared camps (+5) raise it.
+- **Clearing camps:** defeat every defender of a Goblin Camp, Bandit Camp or Nazarick Outpost to clear it for
+  Gold Coins and XP (more at higher levels). A cleared camp stays quiet for twenty minutes instead of ten.
+
 ### Living world
 
 - **Mob levels:** monsters that spawn near you take a level close to yours (70–120% of the highest-level player
@@ -299,7 +329,8 @@ tools/test_rpg.py  runs the script logic against a mock of the game API (needs N
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards) and `structures.js` (camps and outposts) are written by hand; everything else inside the two pack
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts) and `party.js` (retainers) are
+written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 
 ```bash
