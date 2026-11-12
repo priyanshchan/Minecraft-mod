@@ -109,6 +109,10 @@ def main():
     layer1, layer2 = icons.dragonscale_layers()
     save_png(RP / f"textures/models/armor/{content.NS}_dragonscale_1.png", layer1)
     save_png(RP / f"textures/models/armor/{content.NS}_dragonscale_2.png", layer2)
+    for name, make in (("ranger", icons.ranger_layers), ("crimson", icons.crimson_layers)):
+        layer1, layer2 = make()
+        save_png(RP / f"textures/models/armor/{content.NS}_{name}_1.png", layer1)
+        save_png(RP / f"textures/models/armor/{content.NS}_{name}_2.png", layer2)
 
     write_json(RP / "textures/item_texture.json", content.item_texture_json(item_icons))
     write_json(RP / "textures/terrain_texture.json", content.terrain_texture_json())

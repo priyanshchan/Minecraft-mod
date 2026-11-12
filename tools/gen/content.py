@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [4, 2, 0]
+VERSION = [4, 3, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v4.2.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v4.3.0"
 
 
 def oid(name):
@@ -223,6 +223,24 @@ ITEMS = {
     "dragonscale_leggings": ("Dragonscale Greaves", "equipment",
                              _armor("slot.armor.legs", 6, 710, "armor_legs")),
     "dragonscale_boots": ("Dragonscale Boots", "equipment", _armor("slot.armor.feet", 3, 615, "armor_feet")),
+    "ranger_helmet": ("Ranger's Hood", "equipment", _armor("slot.armor.head", 2, 165, "armor_head")),
+    "ranger_chestplate": ("Ranger's Jerkin", "equipment", _armor("slot.armor.chest", 5, 240, "armor_torso")),
+    "ranger_leggings": ("Ranger's Leggings", "equipment", _armor("slot.armor.legs", 4, 225, "armor_legs")),
+    "ranger_boots": ("Ranger's Boots", "equipment", _armor("slot.armor.feet", 1, 195, "armor_feet")),
+    "crimson_helmet": ("Crimson Valkyrie Helm", "equipment", _armor("slot.armor.head", 3, 480, "armor_head")),
+    "crimson_chestplate": ("Crimson Valkyrie Cuirass", "equipment",
+                           _armor("slot.armor.chest", 8, 700, "armor_torso")),
+    "crimson_leggings": ("Crimson Valkyrie Tassets", "equipment", _armor("slot.armor.legs", 6, 655, "armor_legs")),
+    "crimson_boots": ("Crimson Valkyrie Greaves", "equipment", _armor("slot.armor.feet", 3, 570, "armor_feet")),
+    "kilineyram": ("Demonic Sword Kilineyram", "equipment", _weapon(11, _cooldown("overlord_kilineyram", 10.0))),
+    "safarlisia": ("Holy Sword Safarlisia", "equipment", _weapon(10, _cooldown("overlord_safarlisia", 8.0))),
+    "takemikazuchi": ("Takemikazuchi Mk 8", "equipment", _weapon(13, _cooldown("overlord_kings", 9.0))),
+    "fell_iron": ("War Pick Fell Iron", "equipment", _weapon(9, _cooldown("overlord_fracture", 8.0),
+                                                            rarity="rare")),
+    "bow_of_houyi": ("Bow of Houyi", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:hand_equipped": True, "minecraft:rarity": "epic",
+        "minecraft:can_destroy_in_creative": False, "minecraft:glint": True,
+        **_cooldown("overlord_houyi", 0.8)}),
     "command_banner": ("Command Banner", "equipment", {"minecraft:max_stack_size": 1,
                                                        "minecraft:hand_equipped": True}),
     "grimoire": ("Grimoire", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "rare"}),
@@ -272,6 +290,10 @@ ITEMS = {
 }
 for _piece in ("helmet", "chestplate", "leggings", "boots"):
     ITEMS[f"world_champion_{_piece}"][2]["minecraft:rarity"] = "epic"
+    ITEMS[f"ranger_{_piece}"][2]["minecraft:rarity"] = "uncommon"
+    ITEMS[f"ranger_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
+        {"items": ["minecraft:leather"], "repair_amount": "query.max_durability * 0.25"}]}
+    ITEMS[f"crimson_{_piece}"][2]["minecraft:rarity"] = "epic"
     ITEMS[f"dragonscale_{_piece}"][2]["minecraft:rarity"] = "epic"
     ITEMS[f"dragonscale_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
         {"items": [oid("frost_dragon_scale")], "repair_amount": "query.max_durability * 0.25"}]}
@@ -490,6 +512,23 @@ def recipe_files():
                                   oid("glacier_bricks"), 4),
         "shooting_star": _shaped("shooting_star", ["EEE", "EGE", "EEE"], {
             "E": oid("pleiades_emblem"), "G": "minecraft:gold_block"}, oid("shooting_star")),
+        **{f"ranger_{piece}": _shaped(f"ranger_{piece}", pattern, {"A": "minecraft:leather"},
+                                      oid(f"ranger_{piece}"))
+           for piece, pattern in (("helmet", ["AAA", "A A"]), ("chestplate", ["A A", "AAA", "AAA"]),
+                                  ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
+        **{f"crimson_{piece}": _shapeless(f"crimson_{piece}", [
+            oid(f"dark_warrior_{piece}"), oid("vampire_fang"), oid("vampire_fang"), "minecraft:redstone_block"],
+            oid(f"crimson_{piece}")) for piece in ("helmet", "chestplate", "leggings", "boots")},
+        "kilineyram": _shaped("kilineyram", ["F", "A", "S"], {
+            "F": oid("soul_fragment"), "A": ing, "S": "minecraft:stick"}, oid("kilineyram")),
+        "safarlisia": _shaped("safarlisia", ["G", "A", "S"], {
+            "G": "minecraft:gold_block", "A": ing, "S": "minecraft:stick"}, oid("safarlisia")),
+        "takemikazuchi": _shaped("takemikazuchi", ["K", "A", "S"], {
+            "K": oid("guardian_crest"), "A": ing, "S": "minecraft:stick"}, oid("takemikazuchi")),
+        "fell_iron": _shaped("fell_iron", ["IAI", " S ", " S "], {
+            "I": "minecraft:iron_block", "A": ing, "S": "minecraft:stick"}, oid("fell_iron")),
+        "bow_of_houyi": _shaped("bow_of_houyi", [" BT", "B T", " BT"], {
+            "B": "minecraft:blaze_rod", "T": "minecraft:string"}, oid("bow_of_houyi")),
         "dragonscale_helmet": _shaped("dragonscale_helmet", ["AAA", "A A"], {"A": oid("frost_dragon_scale")}, oid("dragonscale_helmet")),
         "dragonscale_chestplate": _shaped("dragonscale_chestplate", ["A A", "AAA", "AAA"], {"A": oid("frost_dragon_scale")},
                                           oid("dragonscale_chestplate")),
@@ -2053,6 +2092,8 @@ WEARABLES = {
        for piece, (layer, _s) in ARMOR.items()},
     **{f"regalia_{piece}": (piece, f"{NS}_regalia_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"dragonscale_{piece}": (piece, f"{NS}_dragonscale_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    **{f"ranger_{piece}": (piece, f"{NS}_ranger_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    **{f"crimson_{piece}": (piece, f"{NS}_crimson_{layer}") for piece, (layer, _s) in ARMOR.items()},
 }
 
 

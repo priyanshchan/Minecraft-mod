@@ -862,6 +862,53 @@ def rune_hammer():
     return s.outline().img
 
 
+RANGER_PAL = {"K": "#3a2a1a", "k": "#8a6238", "l": "#a8804f", "G": "#3f6a45", "g": "#2a4a2f", "R": "#62b85f"}
+CRIMSON_PAL = {"K": "#3a0a10", "k": "#a3121f", "l": "#d43a44", "G": GOLD, "g": GOLD_D, "R": "#f7f4f1"}
+
+
+def ranger_layers():
+    return armor_layers("#7a5530", "#a8804f", "#4a321b", "#62b85f", GOLD="#3f6a45", GOLD_D="#2a4a2f")
+
+
+def crimson_layers():
+    return armor_layers("#a3121f", "#d43a44", "#6a0a13", "#f7f4f1")
+
+
+def war_pick():
+    s = Sprite()
+    s.shaft(1, 14, 10, "#8a6238", "#5b3d22")
+    s.stamp([
+        "MMMMMMD.",
+        ".mMMMMMD",
+        "...mMMDD",
+        "....mMD.",
+        "....mD..",
+        "....D...",
+    ], {"M": "#6f7480", "m": "#a9b0bd", "D": "#454954"}, 7, 0)
+    return s.outline().img
+
+
+def sun_bow():
+    return sprite16([
+        "................",
+        "......GGGG......",
+        "....GGLLs.......",
+        "...GLL..s.......",
+        "..GLL...s.......",
+        "..GL....s.......",
+        ".GLL....s...R...",
+        ".GL.....sRRRRW..",
+        ".GL.....sRRRRW..",
+        ".GLL....s...R...",
+        "..GL....s.......",
+        "..GLL...s.......",
+        "...GLL..s.......",
+        "....GGLLs.......",
+        "......GGGG......",
+        "................",
+    ], {"G": GOLD, "L": GOLD_L, "s": "#f1ede4", "R": "#ff7a1a", "W": "#fff6c9"})
+
+
 DRAGON_PAL = {"K": "#3f6a8a", "k": "#bfe3f5", "l": "#ffffff", "G": "#5f8fb8", "g": "#3f6a8a", "R": "#f2c21b"}
 
 
@@ -1273,6 +1320,19 @@ def all_item_icons():
         "dragonscale_chestplate": chestplate(DRAGON_PAL),
         "dragonscale_leggings": leggings(DRAGON_PAL),
         "dragonscale_boots": boots(DRAGON_PAL),
+        "ranger_helmet": helmet(RANGER_PAL),
+        "ranger_chestplate": chestplate(RANGER_PAL),
+        "ranger_leggings": leggings(RANGER_PAL),
+        "ranger_boots": boots(RANGER_PAL),
+        "crimson_helmet": helmet(CRIMSON_PAL),
+        "crimson_chestplate": chestplate(CRIMSON_PAL),
+        "crimson_leggings": leggings(CRIMSON_PAL),
+        "crimson_boots": boots(CRIMSON_PAL),
+        "kilineyram": blade_icon("#2a0a3a", "#150520", "#8a2be2", "#3b2450", "#1c1029", "#0d0714", glow="#c05bff"),
+        "safarlisia": blade_icon("#8a6238", "#5b3d22", GOLD, "#ffffff", "#fff6c9", "#f6d968", glow="#ffffff"),
+        "takemikazuchi": blade_icon("#3a0d12", "#1f070a", GOLD_D, "#f2f5f9", "#c9d1df", "#8e96a6", length=10, glow="#d4202a"),
+        "fell_iron": war_pick(),
+        "bow_of_houyi": sun_bow(),
         "magic_wand": wand(),
         "grimoire": tome("#1f5c3a", "#143f27", "#f6d968", "#c05bff"),
         "tome_crystal_lance": tome("#2a5a7a", "#1c4058", "#e6f6ff", "#bfe8ff"),

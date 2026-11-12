@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:takemikazuchi"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "K",
+      "A",
+      "S"
+    ],
+    "key": {
+      "K": {
+        "item": "overlord:guardian_crest"
+      },
+      "A": {
+        "item": "overlord:adamantite_ingot"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:guardian_crest"
+      }
+    ],
+    "result": {
+      "item": "overlord:takemikazuchi",
+      "count": 1
+    }
+  }
+}

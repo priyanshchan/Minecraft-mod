@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:safarlisia"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "G",
+      "A",
+      "S"
+    ],
+    "key": {
+      "G": {
+        "item": "minecraft:gold_block"
+      },
+      "A": {
+        "item": "overlord:adamantite_ingot"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:gold_block"
+      }
+    ],
+    "result": {
+      "item": "overlord:safarlisia",
+      "count": 1
+    }
+  }
+}

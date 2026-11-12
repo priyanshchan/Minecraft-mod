@@ -89,7 +89,7 @@ VANILLA = {
         "minecraft:electric_spark_particle", "minecraft:villager_happy", "minecraft:basic_flame_particle",
     },
     "effect": {"slowness", "slow_falling", "instant_health", "regeneration", "strength", "resistance",
-               "wither", "night_vision", "saturation", "levitation", "invisibility", "speed",
+               "wither", "night_vision", "saturation", "levitation", "invisibility", "speed", "jump_boost",
                "fire_resistance", "poison", "weakness", "health_boost"},
 }
 

@@ -17,11 +17,26 @@
     "overlord_blue_potion": {
       "textures": "textures/items/overlord/blue_potion"
     },
+    "overlord_bow_of_houyi": {
+      "textures": "textures/items/overlord/bow_of_houyi"
+    },
     "overlord_brain_katana": {
       "textures": "textures/items/overlord/brain_katana"
     },
     "overlord_command_banner": {
       "textures": "textures/items/overlord/command_banner"
+    },
+    "overlord_crimson_boots": {
+      "textures": "textures/items/overlord/crimson_boots"
+    },
+    "overlord_crimson_chestplate": {
+      "textures": "textures/items/overlord/crimson_chestplate"
+    },
+    "overlord_crimson_helmet": {
+      "textures": "textures/items/overlord/crimson_helmet"
+    },
+    "overlord_crimson_leggings": {
+      "textures": "textures/items/overlord/crimson_leggings"
     },
     "overlord_dark_warrior_boots": {
       "textures": "textures/items/overlord/dark_warrior_boots"
@@ -191,6 +206,9 @@
     "overlord_fang_dagger": {
       "textures": "textures/items/overlord/fang_dagger"
     },
+    "overlord_fell_iron": {
+      "textures": "textures/items/overlord/fell_iron"
+    },
     "overlord_fluder_staff": {
       "textures": "textures/items/overlord/fluder_staff"
     },
@@ -224,6 +242,9 @@
     "overlord_iron_gauntlets": {
       "textures": "textures/items/overlord/iron_gauntlets"
     },
+    "overlord_kilineyram": {
+      "textures": "textures/items/overlord/kilineyram"
+    },
     "overlord_magic_rifle": {
       "textures": "textures/items/overlord/magic_rifle"
     },
@@ -241,6 +262,18 @@
     },
     "overlord_raid_horn": {
       "textures": "textures/items/overlord/raid_horn"
+    },
+    "overlord_ranger_boots": {
+      "textures": "textures/items/overlord/ranger_boots"
+    },
+    "overlord_ranger_chestplate": {
+      "textures": "textures/items/overlord/ranger_chestplate"
+    },
+    "overlord_ranger_helmet": {
+      "textures": "textures/items/overlord/ranger_helmet"
+    },
+    "overlord_ranger_leggings": {
+      "textures": "textures/items/overlord/ranger_leggings"
     },
     "overlord_razor_edge": {
       "textures": "textures/items/overlord/razor_edge"
@@ -268,6 +301,9 @@
     },
     "overlord_runic_hammer": {
       "textures": "textures/items/overlord/runic_hammer"
+    },
+    "overlord_safarlisia": {
+      "textures": "textures/items/overlord/safarlisia"
     },
     "overlord_scroll_of_explosion": {
       "textures": "textures/items/overlord/scroll_of_explosion"
@@ -361,6 +397,9 @@
     },
     "overlord_stiletto": {
       "textures": "textures/items/overlord/stiletto"
+    },
+    "overlord_takemikazuchi": {
+      "textures": "textures/items/overlord/takemikazuchi"
     },
     "overlord_tome_create_undead": {
       "textures": "textures/items/overlord/tome_create_undead"

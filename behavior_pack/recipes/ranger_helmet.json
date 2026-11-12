@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:ranger_helmet"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "AAA",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "minecraft:leather"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:leather"
+      }
+    ],
+    "result": {
+      "item": "overlord:ranger_helmet",
+      "count": 1
+    }
+  }
+}

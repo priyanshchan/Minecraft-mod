@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:fell_iron"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "IAI",
+      " S ",
+      " S "
+    ],
+    "key": {
+      "I": {
+        "item": "minecraft:iron_block"
+      },
+      "A": {
+        "item": "overlord:adamantite_ingot"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:iron_block"
+      }
+    ],
+    "result": {
+      "item": "overlord:fell_iron",
+      "count": 1
+    }
+  }
+}

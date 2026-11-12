@@ -120,6 +120,13 @@ Every mob has its own spawn egg.
 | **Fang Dagger** | 7 damage, heals you for 15% of the damage dealt. Two Vampire Fangs above a stick |
 | **Troll Blood Elixir** | Drink for Regeneration IV (20 s) and Strength (60 s). Glass bottle + Troll Blood + data crystal |
 | **Dragonscale armour** | Made from Frost Dragon Scales (netherite-level). Full set: Fire Resistance, Resistance, and melee attackers are chilled |
+| **Demonic Sword Kilineyram** | 11 damage, withers on hit. Use: *Dark Blade Mega Impact* — a burst of darkness within 6 blocks. Soul Fragment / adamantite ingot / stick in a column |
+| **Holy Sword Safarlisia** | 10 damage, strikes undead a second time. Use: *Holy Strike* — a 14-block wave of light, far stronger against undead. Gold block / adamantite ingot / stick |
+| **Takemikazuchi Mk 8** | 13 damage. Use: *Five Great Kings* — five rapid cuts on one foe. Guardian Crest / adamantite ingot / stick |
+| **War Pick Fell Iron** | 9 damage, staggers on hit. Use: *Fracture* — weakens and slows everything within 4 blocks. Iron block, adamantite ingot, iron block over two sticks |
+| **Bow of Houyi** | Use: looses an arrow of sunfire at the mob you look at (12 fire damage, 40 blocks, 0.8 s between shots). Three blaze rods and three strings in a bow shape |
+| **Ranger's Leathers** | Light early armour made from leather in the usual shapes. Full set: Speed and Jump Boost |
+| **Crimson Valkyrie armour** | Upgrade of a Dark Warrior piece with two Vampire Fangs and a redstone block. Full set: melee blows heal you for a tenth of their damage |
 | **Tome: Create Undead** | Summons a Death Knight that follows and defends you for 5 minutes (max. 3) |
 | **Minor Healing Potion** | Drink for instant health and regeneration |
 | **Dark Warrior armour** | Helmet, chestplate, leggings, boots (netherite-level protection). Full set grants Strength and Resistance |

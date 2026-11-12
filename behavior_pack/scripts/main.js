@@ -96,6 +96,10 @@ const FLOURISH = {
   overlord_holy: ["holy", 5, "self"],
   overlord_goblins: ["acid", 3, "raise"],
   overlord_rune: ["lightning", 6, "raise"],
+  overlord_kilineyram: ["dark", 8, "raise"],
+  overlord_safarlisia: ["holy", 7, "point"],
+  overlord_kings: ["none", 6, "point"],
+  overlord_fracture: ["none", 4, "raise"],
 };
 
 /** Own cooldown bookkeeping: `${playerId}|${category}` -> tick when usable again. */
@@ -839,6 +843,120 @@ function castGroundSlam(player) {
   actionBar(player, count > 0 ? `§7Ground Slam stunned ${count}!` : "§7Ground Slam!");
 }
 
+/** Kilineyram: Dark Blade Mega Impact - a burst of darkness around the wielder. @param {import("@minecraft/server").Player} player */
+function castDarkBlade(player) {
+  if (!tryCooldown(player, "overlord_kilineyram", 10.0, 30)) return;
+  const damage = Math.round(26 * spellPower(player));
+  let count = 0;
+  for (const foe of foesNear(player.dimension, player.location, 6)) {
+    try {
+      foe.applyDamage(damage, { cause: EntityDamageCause.magic, damagingEntity: player });
+      if (foe.isValid) foe.addEffect("wither", 4 * TICKS, { amplifier: 1 });
+      fx.spark(player.dimension, add(foe.location, { x: 0, y: 1, z: 0 }), "dark", 1.2);
+      count++;
+    } catch {
+      // already dead
+    }
+  }
+  fx.ring(player.dimension, player.location, "dark", 6);
+  fx.pillar(player.dimension, player.location, "dark", 4, 1.4);
+  playSound(player.dimension, "mob.wither.shoot", player.location, 0.7);
+  actionBar(player, count > 0 ? `§5Dark Blade Mega Impact hit ${count}!` : "§5Dark Blade Mega Impact!");
+}
+
+/** Safarlisia: Holy Strike - a wave of light along the blade's path. @param {import("@minecraft/server").Player} player */
+function castHolyStrike(player) {
+  if (!tryCooldown(player, "overlord_safarlisia", 8.0, 22)) return;
+  const origin = player.getHeadLocation();
+  const dir = player.getViewDirection();
+  fx.beam(player.dimension, add(origin, dir, 1), add(origin, dir, 14), "holy", 1.8);
+  const struck = new Set();
+  for (let step = 1; step <= 14; step += 1.5) {
+    for (const foe of foesNear(player.dimension, add(origin, dir, step), 1.8)) {
+      if (struck.has(foe.id)) continue;
+      struck.add(foe.id);
+      try {
+        const undead = foe.matches({ families: ["undead"] });
+        foe.applyDamage(Math.round((undead ? 30 : 18) * spellPower(player)), { cause: EntityDamageCause.magic, damagingEntity: player });
+        fx.spark(player.dimension, add(foe.location, { x: 0, y: 1, z: 0 }), "holy", 1.2);
+      } catch {
+        // already dead
+      }
+    }
+  }
+  playSound(player.dimension, "beacon.activate", player.location, 1.6);
+  actionBar(player, struck.size > 0 ? `§eHoly Strike hit ${struck.size}!` : "§eHoly Strike!");
+}
+
+/** Takemikazuchi Mk 8: Five Great Kings - five cuts in a heartbeat on one foe. @param {import("@minecraft/server").Player} player */
+function castFiveKings(player) {
+  const target = player
+    .getEntitiesFromViewDirection({ maxDistance: 6 })
+    .map((h) => h.entity)
+    .find((e) => e.isValid && e.typeId !== "minecraft:player" && e.getComponent("minecraft:health"));
+  if (!target) {
+    actionBar(player, "§7Five Great Kings: no foe within reach");
+    return;
+  }
+  if (!tryCooldown(player, "overlord_kings", 9.0, 20)) return;
+  for (let cut = 0; cut < 5; cut++) {
+    // The cuts are spaced past the target's hurt cooldown so every one of them lands.
+    system.runTimeout(() => {
+      try {
+        if (!target.isValid || !player.isValid) return;
+        target.applyDamage(7, { cause: EntityDamageCause.magic, damagingEntity: player });
+        fx.spark(player.dimension, add(target.location, { x: 0, y: 1, z: 0 }), "none", 0.9);
+        fx.ring(player.dimension, add(target.location, { x: 0, y: 0.4 + cut * 0.3, z: 0 }), "none", 1.0);
+      } catch {
+        // target is gone
+      }
+    }, cut * 11);
+  }
+  playSound(player.dimension, "item.trident.riptide_1", player.location, 1.9);
+  actionBar(player, "§fFive Great Kings!");
+}
+
+/** Fell Iron: Fracture - shatters the guard of everything nearby. @param {import("@minecraft/server").Player} player */
+function castFracture(player) {
+  if (!tryCooldown(player, "overlord_fracture", 8.0, 15)) return;
+  let count = 0;
+  for (const foe of foesNear(player.dimension, player.location, 4)) {
+    try {
+      foe.applyDamage(8, { cause: EntityDamageCause.entityAttack, damagingEntity: player });
+      if (foe.isValid) {
+        foe.addEffect("weakness", 8 * TICKS, { amplifier: 1 });
+        foe.addEffect("slowness", 3 * TICKS, { amplifier: 3 });
+      }
+      count++;
+    } catch {
+      // already dead
+    }
+  }
+  fx.ring(player.dimension, player.location, "none", 4);
+  playSound(player.dimension, "random.anvil_land", player.location, 0.8);
+  actionBar(player, count > 0 ? `§7Fracture broke the guard of ${count}!` : "§7Fracture!");
+}
+
+/** Bow of Houyi: looses an arrow of sunfire at whatever the wielder is looking at. @param {import("@minecraft/server").Player} player */
+function fireSunArrow(player) {
+  const target = player
+    .getEntitiesFromViewDirection({ maxDistance: 40 })
+    .map((h) => h.entity)
+    .find((e) => e.isValid && e.typeId !== "minecraft:player" && e.getComponent("minecraft:health"));
+  if (!tryCooldown(player, "overlord_houyi", 0.8, 4)) return;
+  const from = add(player.getHeadLocation(), player.getViewDirection(), 0.8);
+  if (!target) {
+    fx.beam(player.dimension, from, add(from, player.getViewDirection(), 24), "fire", 0.8);
+  } else {
+    const at = add(target.location, { x: 0, y: 1, z: 0 });
+    fx.beam(player.dimension, from, at, "fire");
+    fx.spark(player.dimension, at, "fire", 1.0);
+    target.applyDamage(Math.round(12 * spellPower(player)), { cause: EntityDamageCause.magic, damagingEntity: player });
+    if (target.isValid) target.setOnFire(4, true);
+  }
+  playSound(player.dimension, "random.bow", player.location, 1.2);
+}
+
 /** Dwarven Runic Hammer: Rune Burst - lightning leaps from the struck ground. @param {import("@minecraft/server").Player} player */
 function castRuneBurst(player) {
   if (!tryCooldown(player, "overlord_rune", 8.0, 22)) return;
@@ -952,6 +1070,16 @@ world.afterEvents.itemUse.subscribe((event) => {
       castGroundSlam(player);
     } else if (item === id("scroll_of_rebirth")) {
       castRebirth(player);
+    } else if (item === id("kilineyram")) {
+      castDarkBlade(player);
+    } else if (item === id("safarlisia")) {
+      castHolyStrike(player);
+    } else if (item === id("takemikazuchi")) {
+      castFiveKings(player);
+    } else if (item === id("fell_iron")) {
+      castFracture(player);
+    } else if (item === id("bow_of_houyi")) {
+      fireSunArrow(player);
     } else if (item === id("runic_hammer")) {
       castRuneBurst(player);
     } else if (item === id("holy_staff")) {
@@ -1062,6 +1190,19 @@ world.afterEvents.entityHurt.subscribe((event) => {
       const dz = victim.location.z - attacker.location.z;
       const len = Math.hypot(dx, dz) || 1;
       victim.applyKnockback({ x: (dx / len) * 2.4, z: (dz / len) * 2.4 }, 0.55); // dragon-fist punch
+    } else if (held === id("safarlisia") && victim.isValid && victim.matches({ families: ["undead"] })) {
+      // The holy blade bites twice into the undead; the second cut waits out the hurt cooldown.
+      system.runTimeout(() => {
+        try {
+          if (victim.isValid && attacker.isValid) victim.applyDamage(5, { cause: EntityDamageCause.magic, damagingEntity: attacker });
+        } catch {
+          // target is gone
+        }
+      }, 11);
+    } else if (held === id("fell_iron") && victim.isValid) {
+      victim.addEffect("slowness", 1.5 * TICKS, { amplifier: 4 }); // the pick's blow staggers
+    } else if (held === id("kilineyram") && victim.isValid) {
+      victim.addEffect("wither", 3 * TICKS, { amplifier: 0 });
     } else if (held === id("fang_dagger")) {
       heal(attacker, Math.max(1, event.damage * 0.15));
     } else if (held === id("blade_bug") && victim.isValid) {
@@ -1133,6 +1274,9 @@ system.runInterval(() => {
         player.addEffect("strength", 3 * TICKS, { amplifier: 1, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("speed", 3 * TICKS, { amplifier: 0, showParticles: false });
+      } else if (wearsFullSet(gear, "ranger")) {
+        player.addEffect("speed", 3 * TICKS, { amplifier: 0, showParticles: false });
+        player.addEffect("jump_boost", 3 * TICKS, { amplifier: 0, showParticles: false });
       } else if (wearsFullSet(gear, "dragonscale")) {
         player.addEffect("fire_resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
@@ -1160,6 +1304,20 @@ world.afterEvents.entityHurt.subscribe((event) => {
     if (!gear || !wearsFullSet(gear, "dragonscale")) return;
     attacker.addEffect("slowness", 3 * TICKS, { amplifier: 2 });
     fx.spark(victim.dimension, add(attacker.location, { x: 0, y: 1, z: 0 }), "ice", 0.8);
+  } catch {
+    // attacker vanished
+  }
+});
+
+// Crimson Valkyrie armour: the wearer's melee blows drink a tenth of the damage they deal.
+world.afterEvents.entityHurt.subscribe((event) => {
+  try {
+    const attacker = event.damageSource.damagingEntity;
+    if (!attacker || !attacker.isValid || attacker.typeId !== "minecraft:player") return;
+    if (event.damageSource.cause !== EntityDamageCause.entityAttack) return;
+    const gear = attacker.getComponent("minecraft:equippable");
+    if (!gear || !wearsFullSet(gear, "crimson")) return;
+    heal(attacker, Math.max(0.5, event.damage * 0.1));
   } catch {
     // attacker vanished
   }

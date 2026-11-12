@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:ranger_chestplate"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "A A",
+      "AAA",
+      "AAA"
+    ],
+    "key": {
+      "A": {
+        "item": "minecraft:leather"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:leather"
+      }
+    ],
+    "result": {
+      "item": "overlord:ranger_chestplate",
+      "count": 1
+    }
+  }
+}
