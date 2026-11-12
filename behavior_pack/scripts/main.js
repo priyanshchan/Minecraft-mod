@@ -21,6 +21,7 @@ import {
 } from "./rpg.js";
 import { startRaid } from "./raid.js";
 import { castSelected, cycleSpell, openGrimoire } from "./spells.js";
+import * as fx from "./vfx.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -68,6 +69,29 @@ function wearsFullSet(gear, set) {
 
 // ------------------------------------------------------------------ helpers
 
+/**
+ * Visual flourish for item abilities, by cooldown category: [element, tier-like size, pose].
+ * Categories that are not listed (sigils, the rifle, the whip...) cast nothing visible.
+ * @type {Record<string, [string, number, fx.Pose]>}
+ */
+const FLOURISH = {
+  overlord_staff: ["fire", 3, "point"],
+  overlord_ring: ["arcane", 5, "self"],
+  overlord_ginnungagap: ["arcane", 6, "raise"],
+  overlord_tome: ["dark", 7, "raise"],
+  overlord_scroll: ["arcane", 4, "raise"],
+  overlord_sustenance: ["holy", 2, "self"],
+  overlord_yggdrasil: ["acid", 6, "raise"],
+  overlord_slash: ["arcane", 10, "point"],
+  overlord_fallen: ["holy", 11, "raise"],
+  overlord_frost: ["ice", 4, "point"],
+  overlord_lance: ["ice", 4, "point"],
+  overlord_fluder: ["fire", 5, "point"],
+  overlord_slam: ["none", 5, "raise"],
+  overlord_holy: ["holy", 5, "self"],
+  overlord_goblins: ["acid", 3, "raise"],
+};
+
 /** Own cooldown bookkeeping: `${playerId}|${category}` -> tick when usable again. */
 const cooldowns = new Map();
 
@@ -88,6 +112,8 @@ function tryCooldown(player, category, seconds, mana = 0) {
     return false;
   }
   if (!spendMana(player, mana)) return false;
+  const flourish = FLOURISH[category];
+  if (flourish) fx.castFx(player, flourish[0], flourish[1], flourish[2]);
   cooldowns.set(key, now + Math.round(seconds * TICKS));
   try {
     player.startItemCooldown(category, Math.round(seconds * TICKS));

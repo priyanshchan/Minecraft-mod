@@ -11,14 +11,14 @@ function mkPlayer(name) {
   const p = { id: name, name, typeId: "minecraft:player", isValid: true, location: { x: 0, y: 64, z: 0 }, msgs, inv, effects, bar: "",
     tags: new Set(), hasTag(t) { return this.tags.has(t); }, addTag(t) { this.tags.add(t); },
     getDynamicProperty: (k) => props.get(k), setDynamicProperty: (k, v) => props.set(k, v), props,
-    onScreenDisplay: { setActionBar(t) { p.bar = t; }, setTitle(t) { p.title = t; } }, sendMessage: (m) => msgs.push(m), playSound() {},
+    onScreenDisplay: { setActionBar(t) { p.bar = t; }, setTitle(t) { p.title = t; } }, sendMessage: (m) => msgs.push(m), playSound() {}, anims: [], playAnimation(n) { p.anims.push(n); }, fx: [],
     getEffect: (e) => effects.get(e), addEffect(e, d, o = {}) { effects.set(e, { duration: d, amplifier: o.amplifier ?? 0 }); }, removeEffect: (e) => effects.delete(e),
     health: { currentValue: 20, effectiveMax: 20, setCurrentValue(v) { this.currentValue = v; return true; } },
     getComponent(c) { if (c === "minecraft:health") return p.health; if (c === "minecraft:inventory") return { container: {
       addItem(s) { inv.push(s); }, get size() { return inv.length; }, getItem: (i) => inv[i], setItem(i, s) { if (s) inv[i] = s; else inv[i] = undefined; } } }; },
     aimed: [], getEntitiesFromViewDirection: () => p.aimed.map((entity) => ({ entity })), getBlockFromViewDirection: () => undefined,
     getHeadLocation: () => ({ x: 0, y: 65.6, z: 0 }), getViewDirection: () => ({ x: 0, y: 0, z: 1 }),
-    dimension: { id: "overworld", mobs: [], spawnParticle() {}, spawnItem() {}, getPlayers: () => players, playSound() {},
+    dimension: { id: "overworld", mobs: [], spawnParticle(effect, loc, vars) { p.fx.push({ effect, scale: vars?.v?.["variable.scale"], color: vars?.v?.["variable.color"] }); }, spawnItem() {}, getPlayers: () => players, playSound() {},
       getBlock: () => ({ isAir: true }),
       spawnEntity(typeId) { const e = { typeId, tags: new Set(), isValid: true, addTag(t) { this.tags.add(t); }, remove: () => { p.dimension.mobs = p.dimension.mobs.filter((m) => m !== e); } }; p.dimension.mobs.push(e); return e; },
       getEntities: (q) => p.dimension.mobs.filter((m) => (q.tags ?? []).every((t) => m.tags.has(t))) } };
@@ -124,8 +124,16 @@ assert.equal(pc.mana, rpg.maxMana(pc), "mana refunded when nothing is hit");
 const dummy = mob("minecraft:zombie", 100, ["undead"]); dummy.id = "d1"; dummy.setOnFire = () => {}; dummy.addEffect = () => {};
 dummy.applyDamage = function (n) { this.damaged.push(n); };
 c.aimed = [dummy];
+c.fx = []; c.anims = [];
 assert.equal(spells.castSelected(c), true); assert.deepEqual(dummy.damaged, [7]);
-assert.equal(spells.castSelected(c), false, "cooldown blocks an immediate recast");
+// visuals: a tinted magic circle under the caster, a beam of motes, an impact burst and a casting pose
+assert.ok(c.fx.some((f) => f.effect === "overlord:magic_circle" && f.color && f.scale > 1), "magic circle");
+assert.ok(c.fx.filter((f) => f.effect === "overlord:mote").length >= 2, "beam");
+assert.ok(c.fx.some((f) => f.effect === "overlord:spark") && c.fx.some((f) => f.effect === "overlord:ring"), "impact");
+assert.deepEqual(c.anims, ["animation.overlord.cast_point"]);
+c.fx = []; c.anims = []; c.aimed = []; assert.equal(spells.castSelected(c), false); advance(1);
+assert.equal(c.fx.length + c.anims.length, 0, "a failed cast shows nothing"); c.aimed = [dummy];
+advance(1); assert.equal(spells.castSelected(c), false, "cooldown blocks an immediate recast");
 // learning: level and crystal gates
 assert.ok(spells.learnSpell(c, "fireball").includes("needs level 13"));
 assert.ok(spells.learnSpell(c, "light_healing").includes("Learned"), "tier 1 is free");
@@ -158,6 +166,16 @@ assert.ok(spells.learnSpell(c, "sleep").includes("Learned")); pc.slots[3] = "sle
 const applied = []; dummy.addEffect = (e) => applied.push(e); dummy.damaged = [];
 assert.equal(spells.castSelected(c), true); assert.deepEqual(applied, ["slowness", "weakness"]); assert.equal(dummy.damaged.length, 0);
 for (const s of spells.SPELLS) assert.ok(s.mana > 0 && s.cooldown > 0 && s.tier >= 1 && typeof s.cast === "function", s.key);
+// cast every spell once with a target and a block in view: none may throw, each must draw something and pose
+dummy.applyKnockback = () => {}; dummy.isValid = true; dummy.health.currentValue = 1e9;
+c.getBlockFromViewDirection = () => ({ block: { location: { x: 3, y: 63, z: 3 } }, face: "Up" }); c.tryTeleport = () => true;
+c.dimension.getEntities = () => [dummy]; c.dimension.spawnEntity = () => ({ getComponent: () => ({ shoot() {} }), applyImpulse() {} });
+for (const s of spells.SPELLS) {
+  c.fx = []; c.anims = [];
+  const ok = s.cast(c, 1); advance(100);
+  assert.equal(ok, true, s.key); assert.ok(c.fx.some((f) => f.effect.startsWith("overlord:")), `${s.key} draws`);
+}
+c.dimension.getEntities = (q) => c.dimension.mobs.filter((m) => (q.tags ?? []).every((t) => m.tags.has(t)));
 // death penalty
 pc.xp = 100; world.afterEvents.entityDie.fire({ deadEntity: c, damageSource: {} }); assert.equal(pc.xp, 90);
 

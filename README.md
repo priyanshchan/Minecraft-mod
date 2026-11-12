@@ -180,6 +180,18 @@ gold ingot / stick in a column).
 Spell names and tiers follow the Overlord fan wiki's Tier Spells and character pages where it lists them;
 the in-game effects are this add-on's own interpretation.
 
+### Spell visuals
+
+Every spell and item ability has its own effects, drawn with five custom particles tinted by element
+(purple arcane, orange fire, pale-blue ice, yellow lightning, gold holy, green acid, violet dark):
+
+- a rotating **magic circle** under the caster, larger at higher tiers, and a stacked dome of circles for super-tier magic;
+- **beams** from the caster's hand, **impact bursts** and expanding **shock rings** on targets;
+- target circles that pulse while delayed spells charge, then something **falls from the sky** onto them;
+- **spirals and rising motes** around the caster for buffs and heals;
+- three **casting poses** on the player model (hand thrust, both arms raised, arms spread), visible in third
+  person and to other players.
+
 ### Combat mechanics
 
 - Hitting a mob shows its name and remaining health above the hotbar.
@@ -231,7 +243,7 @@ World Champion armour (matching Dark Warrior piece + diamond block + Guardian Cr
 
 ```
 behavior_pack/   entities, items, blocks, recipes, loot tables, spawn rules, trading, scripts/
-resource_pack/   models, textures, animations, attachables, sounds, texts
+resource_pack/   models, textures, animations, particles, attachables, sounds, texts
 dist/            packaged .mcaddon
 tools/gen/       generator for models, textures and JSON (Python + Pillow + NumPy)
 tools/validate.py  cross-reference checker
@@ -239,7 +251,7 @@ tools/build.py     validates, then packages dist/*.mcaddon
 tools/test_rpg.py  runs the script logic against a mock of the game API (needs Node.js)
 ```
 
-`behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic) and `raid.js` (Tomb Raid) are written by hand; everything else inside the two pack
+`behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals) and `raid.js` (Tomb Raid) are written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 
 ```bash

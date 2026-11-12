@@ -21,4 +21,6 @@ export const EntityDamageCause = { entityAttack: "entityAttack", magic: "magic" 
 export const Direction = { Up: "Up", Down: "Down", North: "North", South: "South", East: "East", West: "West" };
 export const EquipmentSlot = { Head: "Head", Chest: "Chest", Legs: "Legs", Feet: "Feet", Mainhand: "Mainhand" };
 export const GameMode = { Creative: "Creative" };
+export const emitted = [];
+export class MolangVariableMap { constructor() { this.v = {}; } setColorRGB(k, c) { this.v[k] = c; } setFloat(k, n) { this.v[k] = n; } }
 export class ItemStack { constructor(typeId, amount = 1) { this.typeId = typeId; this.amount = amount; } }

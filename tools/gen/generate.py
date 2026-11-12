@@ -21,7 +21,8 @@ import models  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 BP, RP = ROOT / "behavior_pack", ROOT / "resource_pack"
 BP_GENERATED = ["entities", "items", "blocks", "recipes", "loot_tables", "spawn_rules", "trading", "texts"]
-RP_GENERATED = ["entity", "models", "animations", "render_controllers", "attachables", "textures", "texts"]
+RP_GENERATED = ["entity", "models", "animations", "render_controllers", "attachables", "textures", "texts",
+                "particles"]
 
 
 def write_json(path: Path, data):
@@ -111,6 +112,11 @@ def main():
     write_json(RP / "blocks.json", content.blocks_json())
     write_json(RP / "sounds.json", content.sounds_json())
     write_json(RP / "animations/overlord.animation.json", content.animations_json())
+    write_json(RP / "animations/overlord_player.animation.json", content.player_animations_json())
+    for rel, data in content.particle_files().items():
+        write_json(RP / rel, data)
+    for name, draw in icons.PARTICLE_TEXTURES.items():
+        save_png(RP / f"textures/particle/{content.NS}/{name}.png", draw())
     write_json(RP / "render_controllers/overlord.render_controllers.json",
                content.render_controllers_json())
     for group in (content.client_entity_files(), content.attachable_files()):

@@ -6,6 +6,7 @@
 import { world, system, EntityDamageCause, Direction } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { giveItem, notify, profileOf, setHudExtra, spellPower, spendMana, restoreMana, touch } from "./rpg.js";
+import * as fx from "./vfx.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -132,24 +133,26 @@ function hurt(player, target, amount, element) {
   }
 }
 
-/** Particle trail between two points. @param {Player} player @param {Vector3} from @param {Vector3} to @param {string} effect */
-function trail(player, from, to, effect) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const dz = to.z - from.z;
-  const steps = Math.min(16, Math.max(1, Math.floor(Math.hypot(dx, dy, dz) / 1.5)));
-  for (let i = 1; i <= steps; i++) {
-    particle(player.dimension, effect, { x: from.x + (dx * i) / steps, y: from.y + (dy * i) / steps, z: from.z + (dz * i) / steps });
-  }
+/** Where a spell leaves the caster: roughly the outstretched hand. @param {Player} player */
+function hand(player) {
+  const head = player.getHeadLocation();
+  const dir = player.getViewDirection();
+  return { x: head.x + dir.x * 0.7, y: head.y - 0.25 + dir.y * 0.7, z: head.z + dir.z * 0.7 };
+}
+
+/** Beam plus impact burst on a target point. @param {Player} player @param {Vector3} from @param {Vector3} at @param {Element} element @param {string} accent */
+function strikeFx(player, from, at, element, accent) {
+  fx.beam(player.dimension, from, at, element);
+  fx.spark(player.dimension, at, element, 1.2);
+  fx.ring(player.dimension, add(at, { x: 0, y: -0.9, z: 0 }), element, 1.4);
+  particle(player.dimension, accent, at);
 }
 
 const SPARK = "minecraft:electric_spark_particle";
 const CRIT = "minecraft:critical_hit_emitter";
 const FLAME = "minecraft:basic_flame_particle";
 const FROST = "minecraft:blue_flame_particle";
-const HEART = "minecraft:heart_particle";
 const TOTEM = "minecraft:totem_particle";
-const ROAR = "minecraft:knockback_roar_particle";
 const SOUL = "minecraft:soul_particle";
 const SPORE = "minecraft:villager_happy";
 
@@ -162,7 +165,7 @@ function bolt(range, damage, element, effect, sound) {
     const target = aimedMob(player, range);
     if (!target) return false;
     const at = add(target.location, { x: 0, y: 1, z: 0 });
-    trail(player, player.getHeadLocation(), at, effect);
+    strikeFx(player, hand(player), at, element, effect);
     playSound(player.dimension, sound, at, 1.3);
     hurt(player, target, damage * power, element);
     return true;
@@ -173,18 +176,21 @@ function bolt(range, damage, element, effect, sound) {
 /** @param {number} length @param {number} damage @param {Element} element @param {string} effect @param {string} sound */
 function line(length, damage, element, effect, sound) {
   return (/** @type {Player} */ player, /** @type {number} */ power) => {
-    const origin = player.getHeadLocation();
+    const origin = hand(player);
     const dir = player.getViewDirection();
     const struck = new Set();
+    fx.beam(player.dimension, origin, add(origin, dir, length), element, 1.6);
     for (let step = 1; step <= length; step += 1.5) {
       const point = add(origin, dir, step);
-      particle(player.dimension, effect, point);
+      if (Math.round(step / 1.5) % 2 === 0) fx.spark(player.dimension, point, element, 0.8);
       for (const foe of foesNear(player.dimension, point, 1.8)) {
         if (struck.has(foe.id)) continue;
         struck.add(foe.id);
+        particle(player.dimension, effect, add(foe.location, { x: 0, y: 1, z: 0 }));
         hurt(player, foe, damage * power, element);
       }
     }
+    fx.ring(player.dimension, add(origin, dir, length), element, 2);
     playSound(player.dimension, sound, player.location, 1.4);
     return true;
   };
@@ -198,11 +204,11 @@ function chain(jumps, damage) {
     let target = aimedMob(player, 24);
     if (!target) return false;
     const struck = new Set();
-    let from = player.getHeadLocation();
+    let from = hand(player);
     for (let i = 0; i < jumps && target; i++) {
       struck.add(target.id);
       const at = add(target.location, { x: 0, y: 1, z: 0 });
-      trail(player, from, at, SPARK);
+      strikeFx(player, from, at, "lightning", SPARK);
       /** @type {Entity | undefined} */
       const next = foesNear(player.dimension, target.location, 7).find((f) => !struck.has(f.id));
       hurt(player, target, damage * power * Math.pow(0.85, i), "lightning");
@@ -221,10 +227,17 @@ function burst(radius, damage, element, options = {}) {
     const center = aimPoint(player, 40);
     if (!center) return false;
     const dimension = player.dimension;
-    const effect = options.effect ?? ROAR;
+    const accent = options.effect ?? CRIT;
     const strike = () => {
-      for (let h = 0; h <= 4; h += 2) particle(dimension, effect, add(center, { x: 0, y: h, z: 0 }));
-      particle(dimension, TOTEM, add(center, { x: 0, y: 1, z: 0 }));
+      fx.pillar(dimension, center, element, Math.min(12, 4 + radius), 1 + radius * 0.12);
+      fx.ring(dimension, center, element, radius);
+      fx.ring(dimension, add(center, { x: 0, y: 0.6, z: 0 }), element, radius * 0.6);
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const rim = { x: center.x + Math.cos(angle) * radius * 0.7, y: center.y + 0.5, z: center.z + Math.sin(angle) * radius * 0.7 };
+        fx.spark(dimension, rim, element, 1.3);
+        particle(dimension, accent, rim);
+      }
       playSound(dimension, options.sound ?? "random.explode", center, 0.7);
       if (!player.isValid) return;
       for (const foe of foesNear(dimension, center, radius)) {
@@ -246,10 +259,19 @@ function burst(radius, damage, element, options = {}) {
         }
       }
     };
+    fx.circle(dimension, center, element, radius);
     if (options.delay) {
-      particle(dimension, TOTEM, add(center, { x: 0, y: 1, z: 0 }));
+      // Telegraph: the target circle pulses while the spell gathers, then something falls from the sky.
+      const ticks = options.delay * TICKS;
+      for (let t = 0; t < ticks; t += 20) {
+        system.runTimeout(() => {
+          fx.circle(dimension, center, element, radius);
+          fx.rise(dimension, center, element, radius * 0.8);
+        }, t);
+      }
+      system.runTimeout(() => fx.fall(dimension, center, element, 10), Math.max(0, ticks - 10));
       playSound(dimension, "beacon.activate", center, 1.2);
-      system.runTimeout(strike, options.delay * TICKS);
+      system.runTimeout(strike, ticks);
     } else strike();
     return true;
   };
@@ -266,13 +288,16 @@ function cone(radius, damage, element, push) {
       const len = Math.hypot(dx, dz) || 1;
       if ((dx / len) * view.x + (dz / len) * view.z < 0.3) continue;
       hurt(player, foe, damage * power, element);
+      fx.spark(player.dimension, add(foe.location, { x: 0, y: 1, z: 0 }), element);
       try {
         if (foe.isValid) foe.applyKnockback({ x: (dx / len) * push, z: (dz / len) * push }, 0.4);
       } catch {
         // immovable
       }
     }
-    particle(player.dimension, ROAR, add(player.getHeadLocation(), view, 2));
+    for (let d = 1; d <= radius; d += 1.5) {
+      system.runTimeout(() => fx.ring(player.dimension, add(player.location, { x: view.x * d, y: 0.6, z: view.z * d }), element, 0.8 + d * 0.5), Math.round(d));
+    }
     playSound(player.dimension, "mob.irongolem.throw", player.location, 0.8);
     return true;
   };
@@ -288,8 +313,11 @@ function healing(amount, radius) {
       if (health && health.currentValue > 0) {
         health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + amount * power));
       }
-      particle(player.dimension, HEART, add(ally.location, { x: 0, y: 2, z: 0 }));
+      fx.rise(player.dimension, ally.location, "holy", 0.8);
+      fx.circle(player.dimension, ally.location, "holy", 1.0);
+      particle(player.dimension, "minecraft:heart_particle", add(ally.location, { x: 0, y: 2, z: 0 }));
     }
+    if (radius > 0) fx.ring(player.dimension, player.location, "holy", radius);
     playSound(player.dimension, "random.orb", player.location, 0.9);
     return true;
   };
@@ -302,7 +330,8 @@ function curse(range, effects, sound) {
     const target = aimedMob(player, range);
     if (!target) return false;
     for (const [effect, seconds, amplifier] of effects) target.addEffect(effect, seconds * TICKS, { amplifier });
-    trail(player, player.getHeadLocation(), add(target.location, { x: 0, y: 1, z: 0 }), SOUL);
+    strikeFx(player, hand(player), add(target.location, { x: 0, y: 1, z: 0 }), "dark", SOUL);
+    fx.circle(player.dimension, target.location, "dark", 1.2);
     playSound(player.dimension, sound, target.location, 1.2);
     return true;
   };
@@ -314,7 +343,11 @@ function drain(damage, healShare, mana) {
   return (/** @type {Player} */ player, /** @type {number} */ power) => {
     const target = aimedMob(player, 24);
     if (!target) return false;
-    trail(player, add(target.location, { x: 0, y: 1, z: 0 }), player.getHeadLocation(), SOUL);
+    const at = add(target.location, { x: 0, y: 1, z: 0 });
+    fx.spark(player.dimension, at, "dark", 1.2);
+    fx.beam(player.dimension, at, hand(player), "dark");
+    fx.rise(player.dimension, player.location, "dark", 0.7);
+    particle(player.dimension, SOUL, at);
     hurt(player, target, damage * power, "dark");
     const health = player.getComponent("minecraft:health");
     if (health && health.currentValue > 0) {
@@ -327,13 +360,14 @@ function drain(damage, healShare, mana) {
 }
 
 /** Self buff. */
-/** @param {[string, number, number][]} effects [effect, seconds, amplifier] */
-function buff(effects) {
+/** @param {[string, number, number][]} effects [effect, seconds, amplifier] @param {Element} [color] */
+function buff(effects, color = "none") {
   return (/** @type {Player} */ player) => {
     for (const [effect, seconds, amplifier] of effects) {
       player.addEffect(effect, seconds * TICKS, { amplifier, showParticles: false });
     }
-    particle(player.dimension, TOTEM, add(player.location, { x: 0, y: 1, z: 0 }));
+    fx.spiral(player.dimension, () => (player.isValid ? player.location : undefined), color);
+    fx.rise(player.dimension, player.location, color, 0.8);
     playSound(player.dimension, "random.orb", player.location, 1.3);
     return true;
   };
@@ -350,6 +384,8 @@ function castFireball(player) {
     projectile.owner = player;
     projectile.shoot(velocity, { uncertainty: 0 });
   } else ball.applyImpulse(velocity);
+  fx.spark(player.dimension, origin, "fire", 1.2);
+  fx.ring(player.dimension, add(origin, { x: 0, y: -0.2, z: 0 }), "fire", 0.9);
   playSound(player.dimension, "mob.ghast.fireball", origin, 1.1);
   return true;
 }
@@ -374,7 +410,11 @@ function castDimensionalMove(player) {
   if (!player.tryTeleport(to, { checkForBlocks: true }) && !player.tryTeleport(add(to, { x: 0, y: 1, z: 0 }), { checkForBlocks: true })) {
     return false;
   }
-  particle(player.dimension, TOTEM, add(from, { x: 0, y: 1, z: 0 }));
+  for (const spot of [from, to]) {
+    fx.circle(player.dimension, spot, "arcane", 1.3);
+    fx.pillar(player.dimension, spot, "arcane", 2.4, 1);
+    fx.ring(player.dimension, spot, "arcane", 2);
+  }
   playSound(player.dimension, "mob.endermen.portal", to, 1);
   return true;
 }
@@ -384,7 +424,9 @@ function castGraspHeart(player, power) {
   const target = aimedMob(player, 24);
   if (!target) return false;
   const at = add(target.location, { x: 0, y: 1, z: 0 });
-  trail(player, player.getHeadLocation(), at, SOUL);
+  strikeFx(player, hand(player), at, "dark", SOUL);
+  fx.circle(player.dimension, target.location, "dark", 1.4);
+  fx.spark(player.dimension, at, "fire", 0.8); // the crushed heart
   playSound(player.dimension, "mob.wither.hurt", at, 0.6);
   hurt(player, target, 75 * power, "dark");
   try {
@@ -397,17 +439,30 @@ function castGraspHeart(player, power) {
 
 /** @param {Player} player */
 function castTimeStop(player) {
-  for (const foe of foesNear(player.dimension, player.location, 14)) {
+  const dimension = player.dimension;
+  const center = player.location;
+  for (const foe of foesNear(dimension, center, 14)) {
     try {
       foe.addEffect("slowness", 8 * TICKS, { amplifier: 6 });
       foe.addEffect("weakness", 8 * TICKS, { amplifier: 5 });
+      fx.circle(dimension, foe.location, "none", 1.0);
     } catch {
       // immune
     }
   }
-  playSound(player.dimension, "beacon.activate", player.location, 0.5);
+  for (let i = 0; i < 4; i++) {
+    system.runTimeout(() => fx.ring(dimension, center, "none", 4 + i * 3.4), i * 3);
+  }
+  fx.circle(dimension, center, "none", 6);
+  playSound(dimension, "beacon.activate", center, 0.5);
   return true;
 }
+
+/** Casting pose per spell; anything not listed points at its target. */
+/** @type {Record<string, fx.Pose>} */
+const POSE = {};
+for (const key of ["light_healing", "heal", "reinforce_armor", "lesser_strength", "haste", "fly", "regenerate", "full_potential", "dimensional_move"]) POSE[key] = "self";
+for (const key of ["fire_rain", "ice_pillar", "napalm", "holy_smite", "gravity_maelstrom", "sand_field_all", "meteor_fall", "nuclear_blast", "time_stop", "shock_wave"]) POSE[key] = "raise";
 
 // -------------------------------------------------------------------- spells
 
@@ -421,16 +476,16 @@ export const SPELLS = [
   { key: "sleep", name: "Sleep", tier: 1, mana: 6, cooldown: 6, element: "none", help: "Makes one mob drowsy: it can barely move or fight for 6 seconds.", cast: curse(20, [["slowness", 6, 6], ["weakness", 6, 5]], "random.orb") },
   { key: "acid_arrow", name: "Acid Arrow", tier: 2, mana: 5, cooldown: 1.2, element: "acid", help: "Bolt of acid that poisons.", cast: bolt(24, 5, "acid", SPORE, "random.fizz") },
   { key: "shock_wave", name: "Shock Wave", tier: 2, mana: 8, cooldown: 3, element: "arcane", help: "Cone of force that throws mobs back.", cast: cone(6, 6, "arcane", 2.2) },
-  { key: "reinforce_armor", name: "Reinforce Armor", tier: 2, mana: 12, cooldown: 20, element: "none", help: "Resistance I for 60 seconds.", cast: buff([["resistance", 60, 0]]) },
-  { key: "lesser_strength", name: "Lesser Strength", tier: 2, mana: 12, cooldown: 20, element: "none", help: "Strength I for 60 seconds.", cast: buff([["strength", 60, 0]]) },
+  { key: "reinforce_armor", name: "Reinforce Armor", tier: 2, mana: 12, cooldown: 20, element: "none", help: "Resistance I for 60 seconds.", cast: buff([["resistance", 60, 0]], "arcane") },
+  { key: "lesser_strength", name: "Lesser Strength", tier: 2, mana: 12, cooldown: 20, element: "none", help: "Strength I for 60 seconds.", cast: buff([["strength", 60, 0]], "fire") },
   { key: "thunderlance", name: "Thunderlance", tier: 2, mana: 7, cooldown: 1.5, element: "lightning", help: "Lance of lightning at one mob.", cast: bolt(26, 9, "lightning", SPARK, "ambient.weather.lightning.impact") },
   { key: "fireball", name: "Fireball", tier: 3, mana: 8, cooldown: 1.5, element: "fire", help: "Explosive ball of fire.", cast: castFireball },
   { key: "lightning", name: "Lightning", tier: 3, mana: 9, cooldown: 1.5, element: "lightning", help: "Bolt that stuns for a moment.", cast: bolt(28, 13, "lightning", SPARK, "ambient.weather.lightning.impact") },
   { key: "freezing_bullet", name: "Freezing Bullet", tier: 3, mana: 9, cooldown: 1.5, element: "ice", help: "Bolt of ice that slows.", cast: bolt(28, 11, "ice", FROST, "random.glass") },
-  { key: "haste", name: "Haste", tier: 3, mana: 12, cooldown: 20, element: "none", help: "Speed II for 30 seconds.", cast: buff([["speed", 30, 1]]) },
+  { key: "haste", name: "Haste", tier: 3, mana: 12, cooldown: 20, element: "none", help: "Speed II for 30 seconds.", cast: buff([["speed", 30, 1]], "lightning") },
   { key: "fly", name: "Fly", tier: 3, mana: 15, cooldown: 12, element: "none", help: "Lifts you up, then lets you glide.", cast: buff([["levitation", 6, 2], ["slow_falling", 25, 0]]) },
   { key: "ice_lance", name: "Ice Lance", tier: 4, mana: 11, cooldown: 2, element: "ice", help: "Piercing lance of ice that slows.", cast: line(16, 14, "ice", FROST, "random.glass") },
-  { key: "regenerate", name: "Regenerate", tier: 4, mana: 16, cooldown: 15, element: "none", help: "Regeneration II for 12 seconds.", cast: buff([["regeneration", 12, 1]]) },
+  { key: "regenerate", name: "Regenerate", tier: 4, mana: 16, cooldown: 15, element: "none", help: "Regeneration II for 12 seconds.", cast: buff([["regeneration", 12, 1]], "holy") },
   { key: "holy_ray", name: "Holy Ray", tier: 4, mana: 12, cooldown: 2, element: "holy", help: "Ray of holy light; strong against undead.", cast: bolt(28, 17, "holy", TOTEM, "random.orb") },
   { key: "dragon_lightning", name: "Dragon Lightning", tier: 5, mana: 16, cooldown: 3, element: "lightning", help: "Lightning that jumps to 4 mobs.", cast: chain(4, 16) },
   { key: "dimensional_move", name: "Dimensional Move", tier: 5, mana: 14, cooldown: 3, element: "none", help: "Teleport to the block you look at (32 blocks).", cast: castDimensionalMove },
@@ -445,7 +500,7 @@ export const SPELLS = [
   { key: "hell_flame", name: "Hell Flame", tier: 7, mana: 28, cooldown: 5, element: "fire", help: "A small black flame that consumes one mob.", cast: bolt(30, 42, "fire", FLAME, "mob.ghast.fireball") },
   { key: "holy_smite", name: "Holy Smite", tier: 7, mana: 28, cooldown: 5, element: "holy", help: "Pillar of holy light where you aim (4 blocks).", cast: burst(4, 30, "holy", { effect: TOTEM, sound: "beacon.activate" }) },
   { key: "gravity_maelstrom", name: "Gravity Maelstrom", tier: 8, mana: 32, cooldown: 6, element: "arcane", help: "Crushing sphere that drags mobs in (5 blocks).", cast: burst(5, 32, "arcane", { pull: true }) },
-  { key: "full_potential", name: "Greater Full Potential", tier: 8, mana: 30, cooldown: 45, element: "none", help: "Strength II and Speed II for 30 seconds.", cast: buff([["strength", 30, 1], ["speed", 30, 1]]) },
+  { key: "full_potential", name: "Greater Full Potential", tier: 8, mana: 30, cooldown: 45, element: "none", help: "Strength II and Speed II for 30 seconds.", cast: buff([["strength", 30, 1], ["speed", 30, 1]], "holy") },
   { key: "death", name: "Death", tier: 8, mana: 36, cooldown: 8, element: "dark", help: "Negative energy that withers one mob (weak against undead).", cast: bolt(28, 52, "dark", SOUL, "mob.wither.hurt") },
   { key: "energy_drain", name: "Energy Drain", tier: 8, mana: 30, cooldown: 6, element: "dark", help: "Drains one mob: heals you and returns some mana.", cast: drain(38, 0.3, 10) },
   { key: "vermilion_nova", name: "Vermilion Nova", tier: 9, mana: 40, cooldown: 6, element: "fire", help: "Column of flame on a single mob.", cast: bolt(32, 60, "fire", FLAME, "mob.ghast.fireball") },
@@ -546,6 +601,7 @@ export function castSelected(player) {
     notify(player, `§7${spell.name}: no target`);
     return false;
   }
+  fx.castFx(player, spell.element, spell.tier, POSE[spell.key] ?? "point");
   ready.set(key, system.currentTick + Math.round(spell.cooldown * TICKS));
   const before = masteryOf(player, spell.key);
   p.casts[spell.key] = (p.casts[spell.key] ?? 0) + 1;

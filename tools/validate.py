@@ -416,6 +416,40 @@ def main():
                     for f in (BP / "items").glob("*.json")}
         check(category in declared, f"main.js: cooldown category {category} is not declared by any item")
 
+    # ------------------------------------------------- particles and player poses
+    own_particles = set()
+    for f in sorted((RP / "particles").glob("*.json")):
+        d = load(f)["particle_effect"]
+        ident = d["description"]["identifier"]
+        check(ident == f"{NS}:{f.stem}", f"{rel(f)}: identifier does not match file name")
+        own_particles.add(ident)
+        params = d["description"]["basic_render_parameters"]
+        check(params["material"] in {"particles_blend", "particles_alpha"}, f"{rel(f)}: unknown material")
+        tex = params["texture"]
+        used_textures.add(tex)
+        if check(png(tex).is_file(), f"{rel(f)}: missing texture {tex}.png"):
+            uv = d["components"]["minecraft:particle_appearance_billboard"]["uv"]
+            size = Image.open(png(tex)).size
+            check(size == (uv["texture_width"], uv["texture_height"]), f"{rel(f)}: texture is {size}, uv expects otherwise")
+        text = json.dumps(d)
+        check(text.count("(") == text.count(")"), f"{rel(f)}: unbalanced parentheses in an expression")
+        for var in set(re.findall(r"variable\.([a-z_]+)", text)):
+            check(var in {"color", "scale", "particle_age", "particle_lifetime"}, f"{rel(f)}: unexpected variable.{var}")
+    for ident in set(re.findall(r'"(overlord:[a-z_]+)"', script)) & {f"{NS}:{p.stem}" for p in (RP / "particles").glob("*.json")} | \
+            set(re.findall(r'emit\([^,]+, "([a-z_]+)"', script)):
+        name = ident.split(":")[-1]
+        check(f"{NS}:{name}" in own_particles, f"scripts: unknown particle {ident}")
+    player_bones = {"head", "body", "rightArm", "leftArm", "rightLeg", "leftLeg"}
+    for anim_id in set(re.findall(r'"(animation\.overlord\.[a-z_]+)"', script)):
+        if check(anim_id in animations, f"scripts: animation {anim_id} is not defined"):
+            anim = animations[anim_id]
+            check(set(anim["bones"]) <= player_bones, f"{anim_id}: uses bones the player model does not have")
+            for bone, channels in anim["bones"].items():
+                for frames in channels.values():
+                    times = [float(t) for t in frames]
+                    check(times == sorted(times) and times[-1] <= anim["animation_length"] + 1e-6,
+                          f"{anim_id}: keyframes of {bone} are out of order or past the end")
+
     # ---------------------------------------------------------- orphan textures
     for f in sorted((RP / "textures").rglob("*.png")):
         tex = str(f.relative_to(RP).with_suffix("")).replace("\\", "/")

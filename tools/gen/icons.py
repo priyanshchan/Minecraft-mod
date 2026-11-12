@@ -1,6 +1,7 @@
 """Item icons, spawn-egg icons, block textures and armour textures (all original art)."""
 from __future__ import annotations
 
+import math
 import random
 
 from PIL import Image
@@ -998,6 +999,75 @@ def mask_layer():
         f.hline(3, "#3a2a1e")
     sheet.paste(head.img, (0, 0))
     return sheet
+
+
+# ------------------------------------------------------- particle textures
+# Drawn in white so the particle definitions can tint them per element.
+def particle_glow():
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y in range(16):
+        for x in range(16):
+            d = math.hypot(x - 7.5, y - 7.5) / 7.5
+            if d < 1:
+                img.putpixel((x, y), (255, 255, 255, int(255 * min(1.0, (1 - d) ** 1.5 * 1.6))))
+    return img
+
+
+def particle_ring():
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    for y in range(32):
+        for x in range(32):
+            d = math.hypot(x - 15.5, y - 15.5)
+            if 12.5 <= d <= 15:
+                img.putpixel((x, y), (255, 255, 255, 255))
+            elif 10.5 <= d < 12.5:
+                img.putpixel((x, y), (255, 255, 255, 110))
+    return img
+
+
+def particle_magic_circle():
+    n = 64
+    img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    c = (n - 1) / 2
+
+    def dot(x, y, a=255):
+        xi, yi = int(round(x)), int(round(y))
+        if 0 <= xi < n and 0 <= yi < n:
+            img.putpixel((xi, yi), (255, 255, 255, a))
+
+    def circle(r, a=255):
+        for i in range(720):
+            t = math.radians(i / 2)
+            dot(c + math.cos(t) * r, c + math.sin(t) * r, a)
+
+    def segment(p, q, a=255):
+        steps = int(max(abs(q[0] - p[0]), abs(q[1] - p[1])) * 2) + 1
+        for i in range(steps + 1):
+            dot(p[0] + (q[0] - p[0]) * i / steps, p[1] + (q[1] - p[1]) * i / steps, a)
+
+    for r in (30.5, 29.5, 24, 11):
+        circle(r)
+    circle(17.5, 150)
+    for k in range(2):  # hexagram
+        pts = [(c + math.cos(math.radians(90 + 180 * k + 120 * i)) * 24, c + math.sin(math.radians(90 + 180 * k + 120 * i)) * 24)
+               for i in range(3)]
+        for i in range(3):
+            segment(pts[i], pts[(i + 1) % 3])
+    for i in range(24):  # rune ticks in the outer band
+        t = math.radians(i * 15 + 7.5)
+        r0, r1 = (25.5, 28.5) if i % 2 == 0 else (26.5, 27.5)
+        segment((c + math.cos(t) * r0, c + math.sin(t) * r0), (c + math.cos(t) * r1, c + math.sin(t) * r1), 220)
+    for i in range(6):  # small glyph circles on the hexagram points
+        t = math.radians(30 + i * 60)
+        for j in range(60):
+            u = math.radians(j * 6)
+            dot(c + math.cos(t) * 24 + math.cos(u) * 2.5, c + math.sin(t) * 24 + math.sin(u) * 2.5)
+    for dx, dy in ((0, 0), (1, 0), (0, 1), (1, 1)):
+        dot(c - 0.5 + dx, c - 0.5 + dy)
+    return img
+
+
+PARTICLE_TEXTURES = {"glow": particle_glow, "ring": particle_ring, "magic_circle": particle_magic_circle}
 
 
 BLOCK_TEXTURES = {

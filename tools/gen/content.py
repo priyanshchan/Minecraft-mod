@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [2, 3, 0]
+VERSION = [2, 4, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v2.3.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v2.4.0"
 
 
 def oid(name):
@@ -1476,6 +1476,126 @@ ENTITY_ANIMS = {
     "fireball": ["projectile.spin"],
     "negative_burst": ["projectile.spin"],
 }
+
+# ---------------------------------------------------------------- particles
+# Every spell effect is drawn with these five emitters.  The script passes
+# variable.color (element colour) and variable.scale (size) with each spawn.
+def particle_files():
+    tint = ["variable.color.r", "variable.color.g", "variable.color.b"]
+    life = "variable.particle_age / variable.particle_lifetime"
+
+    def effect(name, texture, tex_size, components):
+        return {
+            "format_version": "1.10.0",
+            "particle_effect": {
+                "description": {
+                    "identifier": oid(name),
+                    "basic_render_parameters": {"material": "particles_blend",
+                                                "texture": f"textures/particle/{NS}/{texture}"},
+                },
+                "components": {
+                    "minecraft:emitter_lifetime_once": {"active_time": 0.1},
+                    **components,
+                },
+            },
+        }
+
+    def billboard(size, mode, tex_size):
+        return {"size": [size, size], "facing_camera_mode": mode,
+                "uv": {"texture_width": tex_size, "texture_height": tex_size, "uv": [0, 0],
+                       "uv_size": [tex_size, tex_size]}}
+
+    out = {
+        # burst of glowing motes flying outwards (impacts)
+        "spark": effect("spark", "glow", 16, {
+            "minecraft:emitter_rate_instant": {"num_particles": 14},
+            "minecraft:emitter_shape_sphere": {"radius": 0.2, "direction": "outwards"},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": "math.random(0.35, 0.8)"},
+            "minecraft:particle_initial_speed": "math.random(1.5, 4.0) * variable.scale",
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, -2.0, 0],
+                                                  "linear_drag_coefficient": 2.5},
+            "minecraft:particle_appearance_billboard": billboard(
+                f"0.12 * variable.scale * (1.0 - {life})", "lookat_xyz", 16),
+            "minecraft:particle_appearance_tinting": {"color": [*tint, 1.0]},
+        }),
+        # one still mote (beams and trails are drawn as rows of these)
+        "mote": effect("mote", "glow", 16, {
+            "minecraft:emitter_rate_instant": {"num_particles": 1},
+            "minecraft:emitter_shape_point": {},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": 0.45},
+            "minecraft:particle_appearance_billboard": billboard(
+                f"0.2 * variable.scale * (1.0 - 0.7 * {life})", "lookat_xyz", 16),
+            "minecraft:particle_appearance_tinting": {"color": [*tint, f"1.0 - {life}"]},
+        }),
+        # motes rising from a disc on the ground (heals, buffs, charging spells)
+        "rise": effect("rise", "glow", 16, {
+            "minecraft:emitter_rate_instant": {"num_particles": 16},
+            "minecraft:emitter_shape_disc": {"radius": "variable.scale", "plane_normal": [0, 1, 0],
+                                             "direction": [0, 1, 0]},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": "math.random(0.7, 1.4)"},
+            "minecraft:particle_initial_speed": "math.random(1.0, 2.6)",
+            "minecraft:particle_motion_dynamic": {"linear_drag_coefficient": 0.8},
+            "minecraft:particle_appearance_billboard": billboard(
+                f"0.1 * (1.0 - {life})", "lookat_xyz", 16),
+            "minecraft:particle_appearance_tinting": {"color": [*tint, 1.0]},
+        }),
+        # flat rotating magic circle
+        "magic_circle": effect("magic_circle", "magic_circle", 64, {
+            "minecraft:emitter_rate_instant": {"num_particles": 1},
+            "minecraft:emitter_shape_point": {},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": 1.3},
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)", "rotation_rate": 80},
+            "minecraft:particle_appearance_billboard": billboard("variable.scale", "emitter_transform_xz", 64),
+            "minecraft:particle_appearance_tinting": {"color": [
+                *tint, "math.clamp(math.min(variable.particle_age * 6.0, "
+                       "(variable.particle_lifetime - variable.particle_age) * 3.0), 0.0, 1.0)"]},
+        }),
+        # flat ring that expands and fades (shock waves)
+        "ring": effect("ring", "ring", 32, {
+            "minecraft:emitter_rate_instant": {"num_particles": 1},
+            "minecraft:emitter_shape_point": {},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": 0.55},
+            "minecraft:particle_appearance_billboard": billboard(
+                f"variable.scale * (0.15 + 0.85 * {life})", "emitter_transform_xz", 32),
+            "minecraft:particle_appearance_tinting": {"color": [*tint, f"1.0 - {life}"]},
+        }),
+    }
+    return {f"particles/{name}.json": data for name, data in out.items()}
+
+
+PARTICLES = ["spark", "mote", "rise", "magic_circle", "ring"]
+PLAYER_BONES = ["head", "body", "rightArm", "leftArm", "rightLeg", "leftLeg"]
+
+
+def player_animations_json():
+    """Casting poses played on the player with Entity.playAnimation."""
+    def keys(*frames):
+        return {f"{t:.2f}": list(v) for t, v in frames}
+
+    return {"format_version": "1.8.0", "animations": {
+        # one hand thrust at the target
+        "animation.overlord.cast_point": {"animation_length": 0.6, "bones": {
+            "rightArm": {"rotation": keys((0, (0, 0, 0)), (0.12, (-95, -8, 0)), (0.42, (-95, -8, 0)),
+                                          (0.6, (0, 0, 0)))},
+            "body": {"rotation": keys((0, (0, 0, 0)), (0.12, (0, 8, 0)), (0.42, (0, 8, 0)), (0.6, (0, 0, 0)))},
+        }},
+        # both arms raised to the sky (area and super-tier magic)
+        "animation.overlord.cast_raise": {"animation_length": 1.0, "bones": {
+            "rightArm": {"rotation": keys((0, (0, 0, 0)), (0.2, (-165, 0, 18)), (0.75, (-165, 0, 18)),
+                                          (1.0, (0, 0, 0)))},
+            "leftArm": {"rotation": keys((0, (0, 0, 0)), (0.2, (-165, 0, -18)), (0.75, (-165, 0, -18)),
+                                         (1.0, (0, 0, 0)))},
+            "head": {"rotation": keys((0, (0, 0, 0)), (0.2, (-18, 0, 0)), (0.75, (-18, 0, 0)), (1.0, (0, 0, 0)))},
+        }},
+        # arms spread wide (healing, buffs, self-targeted magic)
+        "animation.overlord.cast_self": {"animation_length": 0.8, "bones": {
+            "rightArm": {"rotation": keys((0, (0, 0, 0)), (0.2, (-20, 0, 75)), (0.6, (-20, 0, 75)),
+                                          (0.8, (0, 0, 0)))},
+            "leftArm": {"rotation": keys((0, (0, 0, 0)), (0.2, (-20, 0, -75)), (0.6, (-20, 0, -75)),
+                                         (0.8, (0, 0, 0)))},
+        }},
+    }}
+
 
 RENDER_CONTROLLER = "controller.render.overlord.entity"
 
