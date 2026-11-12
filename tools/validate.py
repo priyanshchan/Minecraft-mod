@@ -67,7 +67,7 @@ VANILLA = {
         "note.bell", "mob.irongolem.throw", "dig.grass", "random.fizz", "crossbow.shoot",
         "beacon.activate", "item.trident.riptide_1", "ambient.weather.thunder", "random.glass",
         "random.levelup", "mob.zombie.say", "mob.wither.shoot", "mob.ravager.ambient", "raid.horn",
-        "mob.ravager.roar", "random.totem", "horn.call.0",
+        "mob.ravager.roar", "random.totem", "horn.call.0", "random.anvil_land",
     },
     # verified against the vanilla particle definitions
     "particle": {

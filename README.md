@@ -165,17 +165,20 @@ gold ingot / stick in a column).
 
 | Tier | Spells |
 | --- | --- |
-| 1 | Magic Arrow, Light Healing, Acid Arrow |
-| 2 | Shock Wave, Reinforce Armor, Lesser Strength |
-| 3 | Fireball, Lightning, Freezing Bullet |
-| 4 | Fly, Ice Lance, Regenerate |
-| 5 | Dragon Lightning (jumps to 4 mobs), Dimensional Move, Fire Rain |
-| 6 | Heal (you and nearby players), Thousand Bone Lance, Ice Pillar |
-| 7 | Chain Dragon Lightning (8 mobs), Napalm, Hell Flame |
-| 8 | Gravity Maelstrom (drags mobs in), Greater Full Potential, Death |
-| 9 | Vermilion Nova, Call Greater Thunder |
-| 10 | Reality Slash, Time Stop, Meteor Fall, Nuclear Blast |
-| Super | Fallen Down, Ia Shub-Niggurath |
+| 1 | Magic Arrow, Light Healing, Sleep |
+| 2 | Shock Wave, Reinforce Armor, Lesser Strength, Acid Arrow, Thunderlance |
+| 3 | Fireball, Lightning, Freezing Bullet, Fly, Haste |
+| 4 | Ice Lance, Regenerate, Holy Ray |
+| 5 | Dragon Lightning (jumps to 4 mobs), Dimensional Move, Fire Rain, Sand Field: All |
+| 6 | Heal (you and nearby players), Thousand Bone Lance, Ice Pillar, Wall of Hell |
+| 7 | Chain Dragon Lightning (8 mobs), Napalm, Hell Flame, Holy Smite |
+| 8 | Gravity Maelstrom (drags mobs in), Greater Full Potential, Death, Energy Drain |
+| 9 | Vermilion Nova, Call Greater Thunder, Grasp Heart |
+| 10 | Reality Slash, Time Stop, Meteor Fall, Nuclear Blast, Implosion |
+| Super | Fallen Down, Ia Shub-Niggurath, Sword of Damocles |
+
+Spell names and tiers follow the Overlord fan wiki's Tier Spells and character pages where it lists them;
+the in-game effects are this add-on's own interpretation.
 
 ### Combat mechanics
 

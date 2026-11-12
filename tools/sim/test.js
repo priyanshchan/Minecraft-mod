@@ -144,12 +144,19 @@ assert.equal(spells.masteryOf(c, "magic_arrow"), 2);
 advance(20); dummy.damaged = []; spells.castSelected(c); assert.deepEqual(dummy.damaged, [8], "7 * 1.08 rounds to 8");
 // every spell is castable without throwing and has sane data
 assert.equal(new Set(spells.SPELLS.map((s) => s.key)).size, spells.SPELLS.length);
-assert.equal(spells.SPELLS.length, 32);
-for (let tier = 1; tier <= 11; tier++) assert.ok(spells.SPELLS.filter((s) => s.tier === tier).length >= 2, `tier ${tier}`);
+assert.equal(spells.SPELLS.length, 43);
+for (let tier = 1; tier <= 11; tier++) assert.ok(spells.SPELLS.filter((s) => s.tier === tier).length >= 3, `tier ${tier}`);
 // dark magic is weak against undead: Death (52) on an undead dummy deals a quarter
 pc.level = 100; c.inv.push(new ItemStack("overlord:data_crystal", 64)); assert.ok(spells.learnSpell(c, "death").includes("Learned"));
 pc.slots[3] = "death"; pc.slot = 3; rpg.restoreMana(c, 1e6); dummy.damaged = []; assert.equal(spells.castSelected(c), true);
 assert.deepEqual(dummy.damaged, [13]);
+// Energy Drain heals the caster; Sleep applies effects without damage
+assert.ok(spells.learnSpell(c, "energy_drain").includes("Learned")); pc.slots[3] = "energy_drain";
+c.health.currentValue = 5; dummy.damaged = []; assert.equal(spells.castSelected(c), true);
+assert.equal(dummy.damaged.length, 1); assert.ok(c.health.currentValue > 5, "drain heals");
+assert.ok(spells.learnSpell(c, "sleep").includes("Learned")); pc.slots[3] = "sleep";
+const applied = []; dummy.addEffect = (e) => applied.push(e); dummy.damaged = [];
+assert.equal(spells.castSelected(c), true); assert.deepEqual(applied, ["slowness", "weakness"]); assert.equal(dummy.damaged.length, 0);
 for (const s of spells.SPELLS) assert.ok(s.mana > 0 && s.cooldown > 0 && s.tier >= 1 && typeof s.cast === "function", s.key);
 // death penalty
 pc.xp = 100; world.afterEvents.entityDie.fire({ deadEntity: c, damageSource: {} }); assert.equal(pc.xp, 90);
