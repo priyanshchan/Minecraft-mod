@@ -159,22 +159,23 @@ gold ingot / stick in a column).
 - **Casting:** assign up to four spells to slots. Use the wand to cast the selected one; sneak + use switches
   slot. The selected spell is shown on the status bar.
 - **Mastery:** every spell gains mastery with use (levels at 10, 30, 70 and 150 casts), +8% power per level.
-- **Elements:** fire ignites, ice slows, lightning briefly stuns, and holy deals +50% to undead. Some
+- **Elements:** fire ignites, ice slows, lightning briefly stuns, acid poisons, dark withers (but does only a
+  quarter damage to undead), and holy deals +50% to undead. Some
   creatures are weak or resistant — e.g. Cocytus shrugs off ice but takes +50% from fire, Demiurge the reverse.
 
 | Tier | Spells |
 | --- | --- |
-| 1 | Magic Arrow, Light Healing |
-| 2 | Shock Wave, Reinforce Armor |
-| 3 | Fireball, Lightning |
-| 4 | Fly, Ice Lance |
-| 5 | Dragon Lightning (jumps to 4 mobs), Dimensional Move |
-| 6 | Heal (you and nearby players), Thousand Bone Lance |
-| 7 | Chain Dragon Lightning (8 mobs), Napalm |
-| 8 | Gravity Maelstrom (drags mobs in), Greater Full Potential |
-| 9 | Vermilion Nova |
-| 10 | Reality Slash, Time Stop, Meteor Fall |
-| Super | Fallen Down |
+| 1 | Magic Arrow, Light Healing, Acid Arrow |
+| 2 | Shock Wave, Reinforce Armor, Lesser Strength |
+| 3 | Fireball, Lightning, Freezing Bullet |
+| 4 | Fly, Ice Lance, Regenerate |
+| 5 | Dragon Lightning (jumps to 4 mobs), Dimensional Move, Fire Rain |
+| 6 | Heal (you and nearby players), Thousand Bone Lance, Ice Pillar |
+| 7 | Chain Dragon Lightning (8 mobs), Napalm, Hell Flame |
+| 8 | Gravity Maelstrom (drags mobs in), Greater Full Potential, Death |
+| 9 | Vermilion Nova, Call Greater Thunder |
+| 10 | Reality Slash, Time Stop, Meteor Fall, Nuclear Blast |
+| Super | Fallen Down, Ia Shub-Niggurath |
 
 ### Combat mechanics
 

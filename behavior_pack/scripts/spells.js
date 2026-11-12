@@ -16,7 +16,7 @@ const CRYSTAL = id("data_crystal");
 /** @typedef {import("@minecraft/server").Player} Player */
 /** @typedef {import("@minecraft/server").Entity} Entity */
 /** @typedef {import("@minecraft/server").Vector3} Vector3 */
-/** @typedef {"arcane" | "fire" | "ice" | "lightning" | "holy" | "none"} Element */
+/** @typedef {"arcane" | "fire" | "ice" | "lightning" | "holy" | "acid" | "dark" | "none"} Element */
 /**
  * @typedef {{
  *   key: string, name: string, tier: number, mana: number, cooldown: number, element: Element,
@@ -116,6 +116,7 @@ function hurt(player, target, amount, element) {
     if (!target.isValid) return;
     let factor = AFFINITY[target.typeId]?.[element] ?? 1;
     if (element === "holy" && target.matches({ families: ["undead"] })) factor *= 1.5;
+    if (element === "dark" && target.matches({ families: ["undead"] })) factor *= 0.25; // negative energy barely harms the dead
     target.applyDamage(Math.max(1, Math.round(amount * factor)), {
       cause: element === "fire" ? EntityDamageCause.fire : EntityDamageCause.magic,
       damagingEntity: player,
@@ -124,6 +125,8 @@ function hurt(player, target, amount, element) {
     if (element === "fire") target.setOnFire(4, true);
     else if (element === "ice") target.addEffect("slowness", 4 * TICKS, { amplifier: 2 });
     else if (element === "lightning") target.addEffect("slowness", 1 * TICKS, { amplifier: 6 });
+    else if (element === "acid") target.addEffect("poison", 5 * TICKS, { amplifier: 1 });
+    else if (element === "dark") target.addEffect("wither", 4 * TICKS, { amplifier: 1 });
   } catch {
     // target died or left mid-spell
   }
@@ -147,6 +150,8 @@ const FROST = "minecraft:blue_flame_particle";
 const HEART = "minecraft:heart_particle";
 const TOTEM = "minecraft:totem_particle";
 const ROAR = "minecraft:knockback_roar_particle";
+const SOUL = "minecraft:soul_particle";
+const SPORE = "minecraft:villager_happy";
 
 // --------------------------------------------------------------- spell kinds
 
@@ -361,25 +366,36 @@ const SUPER = 11;
 export const SPELLS = [
   { key: "magic_arrow", name: "Magic Arrow", tier: 1, mana: 4, cooldown: 0.8, element: "arcane", help: "Bolt of force at the mob you look at.", cast: bolt(24, 7, "arcane", CRIT, "random.orb") },
   { key: "light_healing", name: "Light Healing", tier: 1, mana: 8, cooldown: 4, element: "holy", help: "Restores 3 hearts.", cast: healing(6, 0) },
+  { key: "acid_arrow", name: "Acid Arrow", tier: 1, mana: 5, cooldown: 1.2, element: "acid", help: "Bolt of acid that poisons.", cast: bolt(24, 5, "acid", SPORE, "random.fizz") },
   { key: "shock_wave", name: "Shock Wave", tier: 2, mana: 8, cooldown: 3, element: "arcane", help: "Cone of force that throws mobs back.", cast: cone(6, 6, "arcane", 2.2) },
   { key: "reinforce_armor", name: "Reinforce Armor", tier: 2, mana: 12, cooldown: 20, element: "none", help: "Resistance I for 60 seconds.", cast: buff([["resistance", 60, 0]]) },
+  { key: "lesser_strength", name: "Lesser Strength", tier: 2, mana: 12, cooldown: 20, element: "none", help: "Strength I for 60 seconds.", cast: buff([["strength", 60, 0]]) },
   { key: "fireball", name: "Fireball", tier: 3, mana: 8, cooldown: 1.5, element: "fire", help: "Explosive ball of fire.", cast: castFireball },
   { key: "lightning", name: "Lightning", tier: 3, mana: 9, cooldown: 1.5, element: "lightning", help: "Bolt that stuns for a moment.", cast: bolt(28, 13, "lightning", SPARK, "ambient.weather.lightning.impact") },
+  { key: "freezing_bullet", name: "Freezing Bullet", tier: 3, mana: 9, cooldown: 1.5, element: "ice", help: "Bolt of ice that slows.", cast: bolt(28, 11, "ice", FROST, "random.glass") },
   { key: "fly", name: "Fly", tier: 4, mana: 15, cooldown: 12, element: "none", help: "Lifts you up, then lets you glide.", cast: buff([["levitation", 6, 2], ["slow_falling", 25, 0]]) },
   { key: "ice_lance", name: "Ice Lance", tier: 4, mana: 11, cooldown: 2, element: "ice", help: "Piercing lance of ice that slows.", cast: line(16, 14, "ice", FROST, "random.glass") },
+  { key: "regenerate", name: "Regenerate", tier: 4, mana: 16, cooldown: 15, element: "none", help: "Regeneration II for 12 seconds.", cast: buff([["regeneration", 12, 1]]) },
   { key: "dragon_lightning", name: "Dragon Lightning", tier: 5, mana: 16, cooldown: 3, element: "lightning", help: "Lightning that jumps to 4 mobs.", cast: chain(4, 16) },
   { key: "dimensional_move", name: "Dimensional Move", tier: 5, mana: 14, cooldown: 3, element: "none", help: "Teleport to the block you look at (32 blocks).", cast: castDimensionalMove },
+  { key: "fire_rain", name: "Fire Rain", tier: 5, mana: 18, cooldown: 4, element: "fire", help: "Burning rain where you aim (4 blocks).", cast: burst(4, 16, "fire", { effect: FLAME, sound: "mob.ghast.fireball" }) },
   { key: "heal", name: "Heal", tier: 6, mana: 22, cooldown: 8, element: "holy", help: "Restores 10 hearts to you and players within 8 blocks.", cast: healing(20, 8) },
   { key: "bone_lance", name: "Thousand Bone Lance", tier: 6, mana: 18, cooldown: 3, element: "arcane", help: "Volley of lances through everything ahead.", cast: line(20, 24, "arcane", CRIT, "item.trident.riptide_1") },
+  { key: "ice_pillar", name: "Ice Pillar", tier: 6, mana: 20, cooldown: 4, element: "ice", help: "Pillar of ice where you aim (4 blocks).", cast: burst(4, 22, "ice", { effect: FROST, sound: "random.glass" }) },
   { key: "chain_dragon_lightning", name: "Chain Dragon Lightning", tier: 7, mana: 26, cooldown: 4, element: "lightning", help: "Lightning that jumps to 8 mobs.", cast: chain(8, 24) },
   { key: "napalm", name: "Napalm", tier: 7, mana: 24, cooldown: 4, element: "fire", help: "Pillar of fire where you aim (4 blocks).", cast: burst(4, 22, "fire", { effect: FLAME }) },
+  { key: "hell_flame", name: "Hell Flame", tier: 7, mana: 28, cooldown: 5, element: "fire", help: "A small black flame that consumes one mob.", cast: bolt(30, 42, "fire", FLAME, "mob.ghast.fireball") },
   { key: "gravity_maelstrom", name: "Gravity Maelstrom", tier: 8, mana: 32, cooldown: 6, element: "arcane", help: "Crushing sphere that drags mobs in (5 blocks).", cast: burst(5, 32, "arcane", { pull: true }) },
   { key: "full_potential", name: "Greater Full Potential", tier: 8, mana: 30, cooldown: 45, element: "none", help: "Strength II and Speed II for 30 seconds.", cast: buff([["strength", 30, 1], ["speed", 30, 1]]) },
+  { key: "death", name: "Death", tier: 8, mana: 36, cooldown: 8, element: "dark", help: "Negative energy that withers one mob (weak against undead).", cast: bolt(28, 52, "dark", SOUL, "mob.wither.hurt") },
   { key: "vermilion_nova", name: "Vermilion Nova", tier: 9, mana: 40, cooldown: 6, element: "fire", help: "Column of flame on a single mob.", cast: bolt(32, 60, "fire", FLAME, "mob.ghast.fireball") },
+  { key: "call_greater_thunder", name: "Call Greater Thunder", tier: 9, mana: 42, cooldown: 6, element: "lightning", help: "Heavy lightning that jumps to 3 mobs.", cast: chain(3, 46) },
   { key: "reality_slash", name: "Reality Slash", tier: 10, mana: 45, cooldown: 8, element: "arcane", help: "Cuts space itself along 24 blocks.", cast: line(24, 48, "arcane", CRIT, "item.trident.riptide_1") },
   { key: "time_stop", name: "Time Stop", tier: 10, mana: 50, cooldown: 40, element: "none", help: "Freezes mobs within 14 blocks for 8 seconds.", cast: castTimeStop },
   { key: "meteor_fall", name: "Meteor Fall", tier: 10, mana: 60, cooldown: 15, element: "fire", help: "A meteor lands where you aim after 2 seconds (7 blocks).", cast: burst(7, 60, "fire", { delay: 2, effect: FLAME }) },
+  { key: "nuclear_blast", name: "Nuclear Blast", tier: 10, mana: 65, cooldown: 15, element: "fire", help: "Vast explosion where you aim (8 blocks).", cast: burst(8, 55, "fire", { effect: FLAME }) },
   { key: "fallen_down", name: "Fallen Down", tier: SUPER, mana: 120, cooldown: 120, element: "holy", help: "Super-tier: a pillar of light after 3 seconds (9 blocks).", cast: burst(9, 120, "holy", { delay: 3, sound: "ambient.weather.thunder" }) },
+  { key: "ia_shub_niggurath", name: "Ia Shub-Niggurath", tier: SUPER, mana: 140, cooldown: 150, element: "dark", help: "Super-tier: a black wind of death after 4 seconds (10 blocks).", cast: burst(10, 140, "dark", { delay: 4, effect: SOUL, sound: "mob.wither.spawn" }) },
 ];
 
 /** Level needed to learn a tier. @param {number} tier */
