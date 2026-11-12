@@ -243,6 +243,25 @@
         }
       }
     },
+    "animation.overlord.dragon_wings": {
+      "loop": true,
+      "bones": {
+        "rightWing": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 140.0) * 12.0"
+          ]
+        },
+        "leftWing": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-math.sin(query.life_time * 140.0) * 12.0"
+          ]
+        }
+      }
+    },
     "animation.overlord.projectile.spin": {
       "loop": true,
       "bones": {

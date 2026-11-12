@@ -44,6 +44,18 @@
     "overlord_death_knight_sword": {
       "textures": "textures/items/overlord/death_knight_sword"
     },
+    "overlord_dragonscale_boots": {
+      "textures": "textures/items/overlord/dragonscale_boots"
+    },
+    "overlord_dragonscale_chestplate": {
+      "textures": "textures/items/overlord/dragonscale_chestplate"
+    },
+    "overlord_dragonscale_helmet": {
+      "textures": "textures/items/overlord/dragonscale_helmet"
+    },
+    "overlord_dragonscale_leggings": {
+      "textures": "textures/items/overlord/dragonscale_leggings"
+    },
     "overlord_egg_adventurer": {
       "textures": "textures/items/overlord/egg_adventurer"
     },
@@ -80,6 +92,9 @@
     "overlord_egg_demiurge": {
       "textures": "textures/items/overlord/egg_demiurge"
     },
+    "overlord_egg_dwarf": {
+      "textures": "textures/items/overlord/egg_dwarf"
+    },
     "overlord_egg_elder_lich": {
       "textures": "textures/items/overlord/egg_elder_lich"
     },
@@ -91,6 +106,9 @@
     },
     "overlord_egg_fluder": {
       "textures": "textures/items/overlord/egg_fluder"
+    },
+    "overlord_egg_frost_dragon": {
+      "textures": "textures/items/overlord/egg_frost_dragon"
     },
     "overlord_egg_gargantua": {
       "textures": "textures/items/overlord/egg_gargantua"
@@ -158,14 +176,26 @@
     "overlord_egg_soul_eater": {
       "textures": "textures/items/overlord/egg_soul_eater"
     },
+    "overlord_egg_vampire_bride": {
+      "textures": "textures/items/overlord/egg_vampire_bride"
+    },
+    "overlord_egg_war_troll": {
+      "textures": "textures/items/overlord/egg_war_troll"
+    },
     "overlord_egg_yuri": {
       "textures": "textures/items/overlord/egg_yuri"
     },
     "overlord_egg_zaryusu": {
       "textures": "textures/items/overlord/egg_zaryusu"
     },
+    "overlord_fang_dagger": {
+      "textures": "textures/items/overlord/fang_dagger"
+    },
     "overlord_fluder_staff": {
       "textures": "textures/items/overlord/fluder_staff"
+    },
+    "overlord_frost_dragon_scale": {
+      "textures": "textures/items/overlord/frost_dragon_scale"
     },
     "overlord_frost_pain": {
       "textures": "textures/items/overlord/frost_pain"
@@ -236,6 +266,9 @@
     "overlord_ring_of_sustenance": {
       "textures": "textures/items/overlord/ring_of_sustenance"
     },
+    "overlord_runic_hammer": {
+      "textures": "textures/items/overlord/runic_hammer"
+    },
     "overlord_scroll_of_explosion": {
       "textures": "textures/items/overlord/scroll_of_explosion"
     },
@@ -287,6 +320,9 @@
     "overlord_sigil_of_entoma": {
       "textures": "textures/items/overlord/sigil_of_entoma"
     },
+    "overlord_sigil_of_frost_dragon": {
+      "textures": "textures/items/overlord/sigil_of_frost_dragon"
+    },
     "overlord_sigil_of_gargantua": {
       "textures": "textures/items/overlord/sigil_of_gargantua"
     },
@@ -337,6 +373,15 @@
     },
     "overlord_tome_reality_slash": {
       "textures": "textures/items/overlord/tome_reality_slash"
+    },
+    "overlord_troll_blood": {
+      "textures": "textures/items/overlord/troll_blood"
+    },
+    "overlord_troll_elixir": {
+      "textures": "textures/items/overlord/troll_elixir"
+    },
+    "overlord_vampire_fang": {
+      "textures": "textures/items/overlord/vampire_fang"
     },
     "overlord_world_champion_boots": {
       "textures": "textures/items/overlord/world_champion_boots"

@@ -51,6 +51,7 @@ const SIGILS = {
   [id("sigil_of_solution")]: id("solution"),
   [id("sigil_of_yuri")]: id("yuri"),
   [id("sigil_of_gargantua")]: id("gargantua"),
+  [id("sigil_of_frost_dragon")]: id("frost_dragon"),
 };
 
 /** @type {[EquipmentSlot, string][]} */
@@ -93,6 +94,7 @@ const FLOURISH = {
   overlord_slam: ["none", 5, "raise"],
   overlord_holy: ["holy", 5, "self"],
   overlord_goblins: ["acid", 3, "raise"],
+  overlord_rune: ["lightning", 6, "raise"],
 };
 
 /** Own cooldown bookkeeping: `${playerId}|${category}` -> tick when usable again. */
@@ -836,6 +838,28 @@ function castGroundSlam(player) {
   actionBar(player, count > 0 ? `§7Ground Slam stunned ${count}!` : "§7Ground Slam!");
 }
 
+/** Dwarven Runic Hammer: Rune Burst - lightning leaps from the struck ground. @param {import("@minecraft/server").Player} player */
+function castRuneBurst(player) {
+  if (!tryCooldown(player, "overlord_rune", 8.0, 22)) return;
+  const damage = Math.round(14 * spellPower(player));
+  let count = 0;
+  for (const foe of foesNear(player.dimension, player.location, 5)) {
+    try {
+      const at = add(foe.location, { x: 0, y: 1, z: 0 });
+      fx.beam(player.dimension, add(player.location, { x: 0, y: 0.3, z: 0 }), at, "lightning");
+      fx.spark(player.dimension, at, "lightning", 1.1);
+      foe.applyDamage(damage, { cause: EntityDamageCause.magic, damagingEntity: player });
+      if (foe.isValid) foe.addEffect("slowness", 1 * TICKS, { amplifier: 6 });
+      count++;
+    } catch {
+      // already dead
+    }
+  }
+  fx.ring(player.dimension, player.location, "lightning", 5);
+  playSound(player.dimension, "ambient.weather.lightning.impact", player.location, 1.3);
+  actionBar(player, count > 0 ? `§eRune Burst shocked ${count}!` : "§eRune Burst!");
+}
+
 /** Scroll: Rebirth - refunds all stat points. @param {import("@minecraft/server").Player} player */
 function castRebirth(player) {
   if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
@@ -927,6 +951,8 @@ world.afterEvents.itemUse.subscribe((event) => {
       castGroundSlam(player);
     } else if (item === id("scroll_of_rebirth")) {
       castRebirth(player);
+    } else if (item === id("runic_hammer")) {
+      castRuneBurst(player);
     } else if (item === id("holy_staff")) {
       castHolyLight(player);
     } else if (item === id("shooting_star")) {
@@ -987,6 +1013,13 @@ world.afterEvents.itemCompleteUse.subscribe((event) => {
     actionBar(event.source, "§b+80 mana");
     return;
   }
+  if (event.itemStack.typeId === id("troll_elixir")) {
+    event.source.addEffect("regeneration", 20 * TICKS, { amplifier: 3 });
+    event.source.addEffect("strength", 60 * TICKS, { amplifier: 0 });
+    playSound(event.source.dimension, "random.orb", event.source.location, 0.7);
+    actionBar(event.source, "§aTroll's vigour courses through you");
+    return;
+  }
   if (event.itemStack.typeId !== id("red_potion")) return;
   try {
     const player = event.source;
@@ -1005,6 +1038,10 @@ world.afterEvents.entityHurt.subscribe((event) => {
     const victim = event.hurtEntity;
     if (!attacker || !attacker.isValid || event.damageSource.cause !== EntityDamageCause.entityAttack) return;
 
+    if (attacker.typeId === id("vampire_bride")) {
+      heal(attacker, Math.max(1, event.damage * 0.4)); // she drinks what she spills
+      return;
+    }
     if (attacker.typeId === id("shalltear")) {
       heal(attacker, Math.max(2, event.damage * 0.5)); // blood drain
       return;
@@ -1024,6 +1061,8 @@ world.afterEvents.entityHurt.subscribe((event) => {
       const dz = victim.location.z - attacker.location.z;
       const len = Math.hypot(dx, dz) || 1;
       victim.applyKnockback({ x: (dx / len) * 2.4, z: (dz / len) * 2.4 }, 0.55); // dragon-fist punch
+    } else if (held === id("fang_dagger")) {
+      heal(attacker, Math.max(1, event.damage * 0.15));
     } else if (held === id("blade_bug") && victim.isValid) {
       victim.addEffect("poison", 5 * TICKS, { amplifier: 1 });
     } else if (held === id("stiletto") && victim.isValid) {
@@ -1093,6 +1132,9 @@ system.runInterval(() => {
         player.addEffect("strength", 3 * TICKS, { amplifier: 1, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("speed", 3 * TICKS, { amplifier: 0, showParticles: false });
+      } else if (wearsFullSet(gear, "dragonscale")) {
+        player.addEffect("fire_resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
+        player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
       } else if (wearsFullSet(gear, "dark_warrior")) {
         player.addEffect("strength", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
@@ -1105,3 +1147,19 @@ system.runInterval(() => {
     }
   }
 }, 2 * TICKS);
+
+// Dragonscale armour: whoever strikes the wearer in melee is chilled.
+world.afterEvents.entityHurt.subscribe((event) => {
+  try {
+    const victim = event.hurtEntity;
+    const attacker = event.damageSource.damagingEntity;
+    if (victim.typeId !== "minecraft:player" || !attacker || !attacker.isValid || attacker.typeId === "minecraft:player") return;
+    if (event.damageSource.cause !== EntityDamageCause.entityAttack) return;
+    const gear = victim.getComponent("minecraft:equippable");
+    if (!gear || !wearsFullSet(gear, "dragonscale")) return;
+    attacker.addEffect("slowness", 3 * TICKS, { amplifier: 2 });
+    fx.spark(victim.dimension, add(attacker.location, { x: 0, y: 1, z: 0 }), "ice", 0.8);
+  } catch {
+    // attacker vanished
+  }
+});

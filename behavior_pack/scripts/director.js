@@ -23,6 +23,8 @@ export const SPAWN_GATE = {
   [id("elder_lich")]: 5,
   [id("death_knight")]: 8,
   [id("clementine")]: 10,
+  [id("vampire_bride")]: 10,
+  [id("war_troll")]: 14,
   [id("soul_eater")]: 12,
   [id("fluder")]: 15,
 };
@@ -120,6 +122,7 @@ function onSpawn(mob) {
       mob.remove(); // too dangerous for everyone nearby: it never appears
       return;
     }
+    if (mob.typeId === id("war_troll")) mob.addEffect("regeneration", LONG, { amplifier: 1, showParticles: false }); // trolls knit themselves back together
     if (health.effectiveMax >= 200) return; // bosses keep their own numbers
     applyLevel(mob, mobLevelFor(Math.max(...levels), Math.random()));
   } catch {

@@ -41,6 +41,8 @@ VANILLA = {
         "oak_log", "oak_fence", "spruce_fence", "spruce_planks", "mangrove_log", "campfire", "soul_campfire",
         "chest", "barrel", "crafting_table", "target", "lantern", "bone_block", "stone_bricks",
         "cobblestone_wall", "white_wool", "blue_wool", "red_wool", "brown_wool", "green_wool", "black_wool",
+        "furnace", "anvil", "gold_block", "blue_ice", "packed_ice", "cobblestone", "mossy_cobblestone",
+        "deepslate_bricks", "iron_bars", "smooth_stone",
     },
     "script_entity": {"minecraft:villager_v2", "minecraft:zombie", "minecraft:lightning_bolt"},
     # verified against @minecraft/vanilla-data 1.26.60
@@ -59,7 +61,8 @@ VANILLA = {
         "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
         "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
         "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
-        "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool",
+        "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool", "minecraft:blue_ice",
+        "minecraft:coal",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
     "sound": {

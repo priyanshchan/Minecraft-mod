@@ -58,6 +58,10 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 | **Kingdom Archer** | 24 | Bowman who garrisons Kingdom camps | Arrows |
 | **Imperial Knight** | 45 | Baharuth Empire knight; garrisons Empire outposts, fights monsters and the Kingdom | Iron, Gold Coins |
 | **Bandit** | 30 | Hostile outlaw; roams at night in groups and holds bandit camps | Gold Coins, Bread, Iron |
+| **Frost Dragon** (boss bar) | 700 | Guards a Dragon's Hoard; bursts of slowing frost breath at range, chilling bite up close; nearly immune to ice, weak to fire | Frost Dragon Scales, Guardian Crests, Diamonds |
+| **War Troll** | 120 | Huge brute in hills, taiga and forests; regenerates constantly | Troll Blood, Gold Coins, Leather |
+| **Vampire Bride** | 60 | Fast night stalker that heals itself with every hit | Vampire Fangs, Gold Coins |
+| **Dwarf Runesmith** | 40 | Peaceful merchant found at Dwarven Forges; sells adamantite, iron and the Runic Hammer | — |
 | **Brain Unglaus** | 110 | Neutral swordsman found in taiga; hunts monsters | Brain's Katana |
 | **Zaryusu Shasha** | 100 | Neutral lizardman found in swamps; hunts monsters, chilling strikes | Frost Pain |
 | **Nfirea Bareare** | 30 | Peaceful herbalist found in plains; trades potions and ingredients for Gold Coins | — |
@@ -112,6 +116,10 @@ Every mob has its own spawn egg.
 | **Horn of the Tomb Raid** | Starts a Tomb Raid (see below) |
 | **Scroll: Rebirth** | Single use: refunds all spent stat points |
 | **Overlord's Regalia** | Caster armour set made from Soul Fragments. Full set: +25% spell power and +50% mana recovery |
+| **Dwarven Runic Hammer** | 11 damage. Use: *Rune Burst* — lightning strikes every mob within 5 blocks. Sold by the Dwarf Runesmith |
+| **Fang Dagger** | 7 damage, heals you for 15% of the damage dealt. Two Vampire Fangs above a stick |
+| **Troll Blood Elixir** | Drink for Regeneration IV (20 s) and Strength (60 s). Glass bottle + Troll Blood + data crystal |
+| **Dragonscale armour** | Made from Frost Dragon Scales (netherite-level). Full set: Fire Resistance, Resistance, and melee attackers are chilled |
 | **Tome: Create Undead** | Summons a Death Knight that follows and defends you for 5 minutes (max. 3) |
 | **Minor Healing Potion** | Drink for instant health and regeneration |
 | **Dark Warrior armour** | Helmet, chestplate, leggings, boots (netherite-level protection). Full set grants Strength and Resistance |
@@ -147,7 +155,7 @@ character menu.
 - **Class skills:** sneak and use the plate to trigger your class's active skill (45 s cooldown) — Fortress
   (Warrior: Resistance II), Mana Surge (Magic Caster: refills mana), Shadow Step (Assassin: invisible and
   fast), Sanctuary (Cleric: heals you and nearby players).
-- **Guild quests:** 25 kill requests, one at a time, paying Gold Coins and XP. Completed quests raise your
+- **Guild quests:** 28 kill requests, one at a time, paying Gold Coins and XP. Completed quests raise your
   adventurer rank — Copper, Iron, Silver, Gold, Platinum, Mithril, Orichalcum, Adamantite — which unlocks
   harder requests, up to defeating Ainz Ooal Gown.
 - **Party play:** players within 24 blocks of a kill receive half its XP and quest credit.
@@ -182,7 +190,8 @@ sticks in a flag shape).
 - **Reputation:** the Kingdom, the Empire, the Adventurers' Guild and the Lizardman Tribes each track their
   opinion of you (−100 to 100). Killing their people costs 15; at −30 their troops attack you on sight.
   Grudges fade by 1 a minute. Guild quests (+3), slain bandits (+1) and cleared camps (+5) raise it.
-- **Clearing camps:** defeat every defender of a Goblin Camp, Bandit Camp or Nazarick Outpost to clear it for
+- **Clearing camps:** defeat every defender of a Goblin Camp, Bandit Camp, Nazarick Outpost, Troll Den or
+  Dragon's Hoard to clear it for
   Gold Coins and XP (more at higher levels). A cleared camp stays quiet for twenty minutes instead of ten.
 
 ### Living world
@@ -221,6 +230,9 @@ guards and soldiers will sometimes tell you where the nearest undiscovered one l
 | **Empire Outpost** | Stone watchtower, low wall, banner, chest | 4–6 Imperial Knights |
 | **Nazarick Outpost** | Dais with pillars, lamps and an altar, crystal chest | Old Guarders and Skeleton Mages; Death Knights, Elder Liches and a Soul Eater at higher levels |
 | **Lizardman Village** | Three mud huts, campfire, fish chest | 5 Lizardman Warriors |
+| **Dwarven Forge** | Deepslate smithy with furnaces and an anvil, ore chest | 1 Dwarf Runesmith (merchant) |
+| **Troll Den** | Ring of boulders, bones, campfire, loot chest | 1 War Troll; more trolls and Ogres at higher levels |
+| **Dragon's Hoard** | Ice spires around a pile of gold, rich treasure chest | Skeleton Mages below level 20; the Frost Dragon from level 20 |
 
 Sites are placed by script rather than by world generation, so they also appear in terrain you have already
 explored. They avoid water, steep ground and the area within 120 blocks of the world spawn, and they are not
@@ -290,7 +302,7 @@ with Guardian Crests and Soul Fragments at the higher tiers). The raid fails if 
 3. Craft a **guardian sigil**: 4 data crystals in the corners, 1 gold coin in the centre and 4 of the guardian's material on the edges —
    obsidian (Albedo), redstone block (Shalltear), packed ice (Cocytus), magma block (Demiurge), iron block (Sebas),
    copper block (Narberal Gamma), gold block (Pandora's Actor), oak log (Aura), moss block (Mare), gunpowder (CZ2128 Delta), bone block (Lupusregina), string (Entoma),
-   slime ball (Solution), iron ingot (Yuri), stone (Gargantua).
+   slime ball (Solution), iron ingot (Yuri), stone (Gargantua), blue ice (Frost Dragon).
 4. Defeat the guardians for their weapons and **Guardian Crests**.
 5. Craft the **Sigil of Ainz Ooal Gown** (4 crests in the corners, 4 data crystals on the edges, diamond block in the centre) and face the Overlord.
 

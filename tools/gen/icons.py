@@ -321,6 +321,7 @@ SIGIL_COLORS = {
     "solution": ("#ecca5c", "#1f1e28", "#3f8fe0", "#bfe8ff"),
     "yuri": ("#3f6fb0", "#1b1a22", "#3d8a3f", "#f4f3f5"),
     "gargantua": ("#8f95a3", "#16171c", "#454954", "#ff5a3d"),
+    "frost_dragon": ("#bfe3f5", "#15202b", "#5f8fb8", "#f2c21b"),
 }
 
 
@@ -805,6 +806,69 @@ def champion_layers():
     return armor_layers("#cfd6e2", "#f4f7fb", "#8f98aa", "#d4202a", GOLD="#3f7fe0", GOLD_D="#2a5aa8")
 
 
+def scale():
+    return sprite16([
+        "................",
+        "................",
+        "......SSSS......",
+        ".....SLLLLS.....",
+        "....SLLWLLLS....",
+        "....SLWLLLDS....",
+        "....SLLLLLDS....",
+        "....SLLLLDDS....",
+        "....SLLLDDDS....",
+        ".....SLDDDS.....",
+        ".....SLDDDS.....",
+        "......SDDS......",
+        ".......SS.......",
+        "................",
+        "................",
+        "................",
+    ], {"S": "#7fb4d6", "L": "#bfe3f5", "W": "#ffffff", "D": "#5f8fb8"})
+
+
+def fang():
+    return sprite16([
+        "................",
+        "................",
+        "....WWWW........",
+        "....WWWWW.......",
+        ".....WWWw.......",
+        ".....WWWw.......",
+        "......WWw.......",
+        "......WWw.......",
+        ".......Ww.......",
+        ".......Ww.......",
+        "........w.......",
+        "........r.......",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], {"W": "#f4f1ea", "w": "#c9c3b5", "r": "#c2171d"})
+
+
+def rune_hammer():
+    s = Sprite()
+    s.shaft(1, 14, 9, "#8a6238", "#5b3d22")
+    s.stamp([
+        ".MMMM.",
+        "MmmmMD",
+        "MmRmMD",
+        "MmmmMD",
+        "MMMMDD",
+        ".DDDD.",
+    ], {"M": "#9aa0aa", "m": "#c9ced6", "D": "#5d626c", "R": "#ff7a1a"}, 8, 1)
+    return s.outline().img
+
+
+DRAGON_PAL = {"K": "#3f6a8a", "k": "#bfe3f5", "l": "#ffffff", "G": "#5f8fb8", "g": "#3f6a8a", "R": "#f2c21b"}
+
+
+def dragonscale_layers():
+    return armor_layers("#a8d4ec", "#eaf7ff", "#5f8fb8", "#f2c21b", GOLD="#5f8fb8", GOLD_D="#3f6a8a")
+
+
 def gauntlets():
     return sprite16([
         "................",
@@ -1146,6 +1210,10 @@ EGG_COLORS = {
     "archer": ("#5f7a4a", "#3f66a8"),
     "imperial_knight": ("#3a3a44", "#a8262a"),
     "bandit": ("#3a3028", "#c99a78"),
+    "war_troll": ("#5f7f6a", "#4a3323"),
+    "vampire_bride": ("#e9e6ee", "#a3121f"),
+    "dwarf": ("#7a4a2a", "#b5651d"),
+    "frost_dragon": ("#bfe3f5", "#5f8fb8"),
 }
 
 
@@ -1195,6 +1263,16 @@ def all_item_icons():
         "magic_rifle": rifle(),
         "adventurer_plate": plate(),
         "command_banner": banner(),
+        "frost_dragon_scale": scale(),
+        "vampire_fang": fang(),
+        "runic_hammer": rune_hammer(),
+        "troll_blood": potion("#3f8a4a"),
+        "troll_elixir": potion("#c9d43f"),
+        "fang_dagger": blade_icon("#3a0d12", "#1f070a", "#a3121f", "#f4f1ea", "#c9c3b5", "#8a8478", length=6),
+        "dragonscale_helmet": helmet(DRAGON_PAL),
+        "dragonscale_chestplate": chestplate(DRAGON_PAL),
+        "dragonscale_leggings": leggings(DRAGON_PAL),
+        "dragonscale_boots": boots(DRAGON_PAL),
         "magic_wand": wand(),
         "grimoire": tome("#1f5c3a", "#143f27", "#f6d968", "#c05bff"),
         "tome_crystal_lance": tome("#2a5a7a", "#1c4058", "#e6f6ff", "#bfe8ff"),

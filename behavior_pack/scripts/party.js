@@ -36,6 +36,8 @@ const WEAK_TO = {
   [id("cocytus")]: "fire",
   [id("soul_eater")]: "fire",
   [id("solution")]: "fire",
+  [id("frost_dragon")]: "fire",
+  [id("war_troll")]: "fire",
   [id("demiurge")]: "ice",
   [id("fluder")]: "ice",
   "minecraft:blaze": "ice",

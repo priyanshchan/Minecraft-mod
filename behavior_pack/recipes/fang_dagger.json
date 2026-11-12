@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:fang_dagger"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "F",
+      "F",
+      "S"
+    ],
+    "key": {
+      "F": {
+        "item": "overlord:vampire_fang"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:vampire_fang"
+      }
+    ],
+    "result": {
+      "item": "overlord:fang_dagger",
+      "count": 1
+    }
+  }
+}

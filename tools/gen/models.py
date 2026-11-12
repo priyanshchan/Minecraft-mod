@@ -2141,8 +2141,15 @@ def goblin():
 
 
 def ogre():
-    m = Model("ogre", bounds=(4.5, 5, 1.5))
-    o, o_l, o_d = "#b08a5a", "#cba878", "#7d5f3a"
+    return _brute()
+
+
+def war_troll():
+    return _brute("war_troll", "#5f7f6a", "#7fa088", "#3d5546")
+
+
+def _brute(name="ogre", o="#b08a5a", o_l="#cba878", o_d="#7d5f3a"):
+    m = Model(name, bounds=(4.5, 5, 1.5))
     pal = {"O": o, "o": o_l, "D": o_d, "e": "#d4202a", "K": "#15130f", "T": "#f1eee0", "L": "#4a3323",
            "l": "#6b4a32"}
     body = m.bone("body", (0, 24, 0))
@@ -2549,6 +2556,13 @@ def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, 
         quiver = body.cube((-2, 14, 2), (4, 9, 2))
         quiver.fill("#6b4a36", noise=5)
         quiver.top.fill("#e9e6dc")
+    elif weapon_kind == "hammer":
+        haft = weapon.cube((-6.5, 12.5, -12), (1, 1, 10))
+        haft.fill("#6b4a2a", noise=5)
+        head_ = weapon.cube((-8, 10.5, -17), (4, 5, 5))
+        head_.fill(armor, noise=6)
+        for f in head_.faces:
+            f.px(1, 2, orb)
     elif weapon_kind == "staff":
         shaft = weapon.cube((-6.5, 1, -3.5), (1, 30, 1))
         shaft.fill("#6b4a2a", noise=5)
@@ -2633,6 +2647,103 @@ def _retainer(n):
 RETAINERS = [_retainer(n) for n in range(len(RETAINER_LOOKS))]
 
 
+def vampire_bride():
+    m, head, body, pal = _pleiades("vampire_bride", "#eee6ea", "#1b1a22", "#35323f", "#e0202c",
+                                   dress="#e9e6ee", accent="#a3121f", bun=False)
+    veil = body.cube((-4, 12, 2), (8, 12, 1))
+    veil.fill("#1b1a22")
+    for x in (1, 4, 6):
+        veil.back.vline(x, "#35323f", 0, 11)
+    veil.back.ragged_bottom(2, seed=9)
+    return m
+
+
+def dwarf():
+    return _soldier("dwarf", "#d9a07a", "#b5651d", "#6b6f7a", "#9aa0aa", "#454852", "#7a4a2a", "#55301a",
+                    helmet=True, weapon_kind="hammer", mask="#b5651d", orb="#ff7a1a")
+
+
+def frost_dragon():
+    m = Model("frost_dragon", bounds=(7, 6, 2.0))
+    sc, sc_l, sc_d, belly = "#bfe3f5", "#eaf7ff", "#7fb4d6", "#5f8fb8"
+    pal = {"S": sc, "s": sc_l, "D": sc_d, "B": belly, "e": "#f2c21b", "K": "#15202b", "T": "#ffffff"}
+    body = m.bone("body", (0, 12, 0))
+    b = body.cube((-6, 8, -10), (12, 10, 20))
+    b.fill(sc, noise=6)
+    b.bottom.fill(belly)
+    for f in (b.right, b.left):
+        f.fill(belly, 0, 8, None, 10)
+        for x in range(2, f.w, 4):
+            f.vline(x, sc_d, 1, 8)
+    b.top.vline(5, sc_d, 0, 20).vline(6, sc_l, 0, 20)
+    for z in (-8, -3, 2, 7):
+        spine = body.cube((-1, 18, z), (2, 3, 2))
+        spine.fill(sc_l)
+        spine.band(0, 1, "#ffffff")
+    neck = body.cube((-3, 13, -18), (6, 7, 9))
+    neck.fill(sc, noise=6)
+    neck.bottom.fill(belly)
+    head = m.bone("head", (0, 17, -17), parent="body")
+    h = head.cube((-4, 15, -26), (8, 7, 9))
+    h.fill(sc, noise=5)
+    art(h.front, ["SsSSSSsS", "SDDSSDDS", "SeKSSKeS", "SSSSSSSS", "DSSSSSSD", "SSSSSSSS", "DSSSSSSD"], pal)
+    for f in (h.right, h.left):
+        f.px(2, 2, "#f2c21b")
+        f.px(3, 2, "#15202b")
+    snout = head.cube((-3, 15, -32), (6, 4, 6))
+    snout.fill(sc_l, noise=5)
+    art(snout.front, ["sKssKs", "ssssss", "TKTTKT", "BBBBBB"], pal)
+    for f in (snout.right, snout.left):
+        f.hline(2, "#ffffff")
+        f.hline(3, belly)
+    for sx in (-4, 2):
+        horn = head.cube((sx, 22, -20), (2, 5, 2))
+        horn.fill("#ffffff")
+        horn.band(3, 5, sc_d)
+    for name, x, z in (("leg0", -8, -9), ("leg1", 4, -9), ("leg2", -8, 5), ("leg3", 4, 5)):
+        leg = m.bone(name, (x + 2, 9, z + 2), parent="body").cube((x, 0, z), (4, 9, 4))
+        leg.fill(sc, noise=5)
+        leg.band(7, 9, sc_d)
+        for f in leg.sides:
+            f.px(0, 8, "#ffffff")
+            f.px(2, 8, "#ffffff")
+    tail = m.bone("tail", (0, 13, 10), parent="body")
+    t1 = tail.cube((-3, 10, 10), (6, 6, 10))
+    t2 = m.bone("tail2", (0, 13, 20), parent="tail").cube((-2, 11, 20), (4, 4, 10))
+    t3 = m.bone("tail3", (0, 13, 30), parent="tail2").cube((-1, 12, 30), (2, 2, 8))
+    for c in (t1, t2, t3):
+        c.fill(sc, noise=5)
+        c.bottom.fill(belly)
+        for f in (c.right, c.left, c.top):
+            for x in range(2, f.w, 3):
+                f.vline(x, sc_d)
+    for name, x, pivot, rz in (("rightWing", -22, (-6, 17, -4), 18), ("leftWing", 6, (6, 17, -4), -18)):
+        wing = m.bone(name, pivot, parent="body", rotation=(0, 0, rz)).cube((x, 17, -8), (16, 1, 14))
+        wing.fill(sc_d, noise=5)
+        for f in (wing.top, wing.bottom):
+            for xx in range(0, 16, 5):
+                f.vline(xx, sc_l)
+            f.hline(0, sc_l)
+            for xx in range(16):
+                if (xx // 3) % 2:
+                    f.px(xx, 13, None)
+    return m
+
+
+def frost_breath():
+    m = Model("frost_breath", bounds=(1, 1, 0.25))
+    body = m.bone("body", (0, 2, 0))
+    c = body.cube((-2, 0, -2), (4, 4, 4))
+    pal = {"C": "#bfe8ff", "W": "#ffffff", "D": "#6fb4de"}
+    for f in c.faces:
+        art(f, ["DCCD", "CWWC", "CWWC", "DCCD"], pal)
+    a = body.cube((-3, 1, -1), (6, 2, 2))
+    a.fill("#e6f6ff", noise=8)
+    b2 = body.cube((-1, 1, -3), (2, 2, 6))
+    b2.fill("#bfe8ff", noise=8)
+    return m
+
+
 def lightning_bolt():
     m = Model("lightning_bolt", bounds=(1, 1, 0.25))
     body = m.bone("body", (0, 2, 0))
@@ -2655,4 +2766,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        lupusregina, entoma, solution, yuri, goblin, ogre,
        skeleton_mage, lizardman, evileye, fluder, gargantua, soul_eater, quagoa, adventurer, guard,
        soldier, archer, imperial_knight, bandit, *RETAINERS,
+       war_troll, vampire_bride, dwarf, frost_dragon, frost_breath,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

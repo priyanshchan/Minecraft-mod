@@ -514,6 +514,60 @@
           "shoot": "random.bow"
         }
       },
+      "overlord:war_troll": {
+        "volume": 1.0,
+        "pitch": [
+          0.45,
+          0.55
+        ],
+        "events": {
+          "ambient": "mob.zombie.say",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.irongolem.walk"
+        }
+      },
+      "overlord:vampire_bride": {
+        "volume": 1.0,
+        "pitch": [
+          1.3,
+          1.45
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:dwarf": {
+        "volume": 1.0,
+        "pitch": [
+          0.7,
+          0.8
+        ],
+        "events": {
+          "hurt": "mob.villager.hit",
+          "death": "mob.villager.death",
+          "step": "mob.zombie.step",
+          "haggle": "mob.villager.haggle",
+          "haggle.yes": "mob.villager.yes",
+          "haggle.no": "mob.villager.no"
+        }
+      },
+      "overlord:frost_dragon": {
+        "volume": 1.0,
+        "pitch": [
+          0.9,
+          1.0
+        ],
+        "events": {
+          "ambient": "mob.ravager.ambient",
+          "hurt": "mob.irongolem.hit",
+          "death": "mob.wither.death",
+          "step": "mob.irongolem.walk",
+          "shoot": "random.glass"
+        }
+      },
       "overlord:hamsuke": {
         "volume": 1.0,
         "pitch": [

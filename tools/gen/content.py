@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [4, 0, 0]
+VERSION = [4, 1, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v4.0.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v4.1.0"
 
 
 def oid(name):
@@ -104,6 +104,7 @@ SIGILS = {
     "solution": ("Solution Epsilon", "minecraft:slime_ball"),
     "yuri": ("Yuri Alpha", "minecraft:iron_ingot"),
     "gargantua": ("Gargantua", "minecraft:stone"),
+    "frost_dragon": ("the Frost Dragon", "minecraft:blue_ice"),
 }
 
 ITEMS = {
@@ -201,6 +202,27 @@ ITEMS = {
     "magic_rifle": ("CZ's Magic Rifle", "equipment", _weapon(3, _cooldown("overlord_rifle", 0.6),
                                                             rarity="rare")),
     "adventurer_plate": ("Adventurer's Plate", "equipment", {"minecraft:max_stack_size": 1}),
+    "frost_dragon_scale": ("Frost Dragon Scale", "items", {"minecraft:max_stack_size": 64,
+                                                            "minecraft:rarity": "rare"}),
+    "vampire_fang": ("Vampire Fang", "items", {"minecraft:max_stack_size": 64}),
+    "troll_blood": ("Troll Blood", "items", {"minecraft:max_stack_size": 16}),
+    "troll_elixir": ("Troll Blood Elixir", "items", {
+        "minecraft:max_stack_size": 16,
+        "minecraft:use_animation": "drink",
+        "minecraft:use_modifiers": {"use_duration": 1.6, "movement_modifier": 0.35},
+        "minecraft:food": {"can_always_eat": True, "nutrition": 0, "saturation_modifier": 0.0,
+                           "using_converts_to": "minecraft:glass_bottle"},
+        "minecraft:rarity": "rare",
+    }),
+    "runic_hammer": ("Dwarven Runic Hammer", "equipment", _weapon(11, _cooldown("overlord_rune", 8.0),
+                                                                 rarity="rare")),
+    "fang_dagger": ("Fang Dagger", "equipment", _weapon(7, rarity="rare")),
+    "dragonscale_helmet": ("Dragonscale Helm", "equipment", _armor("slot.armor.head", 3, 520, "armor_head")),
+    "dragonscale_chestplate": ("Dragonscale Mail", "equipment",
+                               _armor("slot.armor.chest", 8, 760, "armor_torso")),
+    "dragonscale_leggings": ("Dragonscale Greaves", "equipment",
+                             _armor("slot.armor.legs", 6, 710, "armor_legs")),
+    "dragonscale_boots": ("Dragonscale Boots", "equipment", _armor("slot.armor.feet", 3, 615, "armor_feet")),
     "command_banner": ("Command Banner", "equipment", {"minecraft:max_stack_size": 1,
                                                        "minecraft:hand_equipped": True}),
     "grimoire": ("Grimoire", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "rare"}),
@@ -250,6 +272,9 @@ ITEMS = {
 }
 for _piece in ("helmet", "chestplate", "leggings", "boots"):
     ITEMS[f"world_champion_{_piece}"][2]["minecraft:rarity"] = "epic"
+    ITEMS[f"dragonscale_{_piece}"][2]["minecraft:rarity"] = "epic"
+    ITEMS[f"dragonscale_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
+        {"items": [oid("frost_dragon_scale")], "repair_amount": "query.max_durability * 0.25"}]}
     ITEMS[f"regalia_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
         {"items": [oid("soul_fragment")], "repair_amount": "query.max_durability * 0.25"}]}
 for _who, (_name, _mat) in SIGILS.items():
@@ -465,6 +490,16 @@ def recipe_files():
                                   oid("glacier_bricks"), 4),
         "shooting_star": _shaped("shooting_star", ["EEE", "EGE", "EEE"], {
             "E": oid("pleiades_emblem"), "G": "minecraft:gold_block"}, oid("shooting_star")),
+        "dragonscale_helmet": _shaped("dragonscale_helmet", ["AAA", "A A"], {"A": oid("frost_dragon_scale")}, oid("dragonscale_helmet")),
+        "dragonscale_chestplate": _shaped("dragonscale_chestplate", ["A A", "AAA", "AAA"], {"A": oid("frost_dragon_scale")},
+                                          oid("dragonscale_chestplate")),
+        "dragonscale_leggings": _shaped("dragonscale_leggings", ["AAA", "A A", "A A"], {"A": oid("frost_dragon_scale")},
+                                        oid("dragonscale_leggings")),
+        "dragonscale_boots": _shaped("dragonscale_boots", ["A A", "A A"], {"A": oid("frost_dragon_scale")}, oid("dragonscale_boots")),
+        "troll_elixir": _shapeless("troll_elixir", [
+            "minecraft:glass_bottle", oid("troll_blood"), cry], oid("troll_elixir")),
+        "fang_dagger": _shaped("fang_dagger", ["F", "F", "S"], {
+            "F": oid("vampire_fang"), "S": "minecraft:stick"}, oid("fang_dagger")),
         "command_banner": _shaped("command_banner", ["WW", "SW", "S "], {
             "W": "minecraft:red_wool", "S": "minecraft:stick"}, oid("command_banner")),
         "grimoire": _shapeless("grimoire", ["minecraft:book", cry], oid("grimoire")),
@@ -497,7 +532,8 @@ VANILLA_ITEMS_USED = [
     "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
     "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
     "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
-    "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool",
+    "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool", "minecraft:blue_ice",
+    "minecraft:coal",
 ]
 
 
@@ -578,6 +614,12 @@ def loot_files():
         "quagoa": [_pool(_entry("minecraft:raw_iron", 0, 2)), _pool(_entry(coin, 0, 2))],
         "goblin": [_pool(_entry(coin, 0, 1)), _pool(_entry("minecraft:rotten_flesh", 0, 1))],
         "ogre": [_pool(_entry(coin, 1, 3)), _pool(_entry("minecraft:leather", 0, 2))],
+        "frost_dragon": [_pool(_entry(oid("frost_dragon_scale"), 8, 12, looting=False)),
+                         _pool(_entry(crest, 2, 2, looting=False)), _pool(_entry(cry, 8, 14)),
+                         _pool(_entry(coin, 40, 64)), _pool(_entry("minecraft:diamond", 2, 5))],
+        "war_troll": [_pool(_entry(oid("troll_blood"), 1, 2)), _pool(_entry(coin, 2, 5)),
+                      _pool(_entry("minecraft:leather", 0, 2))],
+        "vampire_bride": [_pool(_entry(oid("vampire_fang"), 0, 2)), _pool(_entry(coin, 1, 3))],
         "adventurer": [_pool(_entry(coin, 1, 3)), _pool(_entry("minecraft:iron_ingot", 0, 1))],
         "guard": [_pool(_entry("minecraft:iron_ingot", 0, 2))],
         "soldier": [_pool(_entry("minecraft:iron_ingot", 0, 1)), _pool(_entry("minecraft:bread", 0, 1))],
@@ -987,6 +1029,63 @@ def entity_files():
     c["minecraft:behavior.panic"] = {"priority": 3, "speed_multiplier": 1.4}
     out["nfirea"] = _entity("nfirea", c)
 
+    # --------------------------------------------------- Dwarf runesmith
+    c = _mob("dwarf", ["dwarf", "merchant", "mob"], 40, 0.25, (0.6, 1.9), xp=0, scale=0.78, persistent=True)
+    del c["minecraft:behavior.hurt_by_target"]
+    c["minecraft:economy_trade_table"] = {
+        "display_name": f"entity.{oid('dwarf')}.name",
+        "table": f"trading/{NS}/dwarf.json", "new_screen": True}
+    c["minecraft:behavior.trade_with_player"] = {"priority": 1, "filters": {"all_of": [
+        {"test": "in_water", "value": False}, {"test": "on_ground", "value": True}]}}
+    c["minecraft:behavior.look_at_trading_player"] = {"priority": 2}
+    c["minecraft:behavior.panic"] = {"priority": 3, "speed_multiplier": 1.4}
+    out["dwarf"] = _entity("dwarf", c)
+
+    # ------------------------------------- War Troll, Vampire Bride, Frost Dragon
+    c = _mob("war_troll", ["war_troll", "monster", "mob"], 120, 0.26, (0.9, 2.0), loot="war_troll", xp=40,
+             scale=1.5, kb=0.8)
+    c["minecraft:attack"] = {"damage": 13}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally])
+    out["war_troll"] = _entity("war_troll", c)
+
+    c = _mob("vampire_bride", ["vampire_bride", "nazarick", "undead", "monster", "mob"], 60, 0.36, (0.6, 1.9),
+             loot="vampire_bride", xp=25, kb=0.2, undead=True)
+    c["minecraft:attack"] = {"damage": 8}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally])
+    out["vampire_bride"] = _entity("vampire_bride", c)
+
+    c = _mob("frost_dragon", ["frost_dragon", "dragon", "monster", "mob"], 700, 0.26, (2.0, 2.2), loot="frost_dragon",
+             xp=600, scale=1.4, kb=1.0, follow=48, persistent=True)
+    del c["minecraft:can_climb"]
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": False}
+    c["minecraft:damage_sensor"] = {"triggers": [
+        {"cause": "fall", "deals_damage": False}, {"cause": "freezing", "deals_damage": False}]}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(48, [ally])
+    out["frost_dragon"] = _entity("frost_dragon", c, {
+        "overlord:mode_switcher": {"minecraft:target_nearby_sensor": {
+            "inside_range": 4.5, "outside_range": 6.5, "must_see": True,
+            "on_inside_range": {"event": "overlord:switch_to_melee", "target": "self"},
+            "on_outside_range": {"event": "overlord:switch_to_ranged", "target": "self"}}},
+        "overlord:ranged_mode": {
+            "minecraft:shooter": {"def": oid("frost_breath")},
+            "minecraft:behavior.ranged_attack": {
+                "priority": 3, "burst_shots": 3, "burst_interval": 0.25, "attack_interval_min": 2.5,
+                "attack_interval_max": 4.0, "attack_radius": 26.0, "speed_multiplier": 1.0}},
+        "overlord:melee_mode": {
+            "minecraft:attack": {"damage": 18, "effect_name": "slowness", "effect_duration": 4},
+            "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.2,
+                                                    "track_target": True}},
+    }, {
+        "minecraft:entity_spawned": {"add": {"component_groups": ["overlord:mode_switcher",
+                                                                   "overlord:ranged_mode"]}},
+        "overlord:switch_to_melee": {"remove": {"component_groups": ["overlord:ranged_mode"]},
+                                     "add": {"component_groups": ["overlord:melee_mode"]}},
+        "overlord:switch_to_ranged": {"remove": {"component_groups": ["overlord:melee_mode"]},
+                                      "add": {"component_groups": ["overlord:ranged_mode"]}},
+    })
+
     # ----------------------------------------------------- Nazarick maid
     c = _mob("nazarick_maid", ["nazarick_maid", "mob"], 40, 0.25, (0.6, 1.9), xp=0, persistent=True)
     del c["minecraft:behavior.hurt_by_target"]
@@ -1291,6 +1390,12 @@ def entity_files():
     out["retainer"] = _entity("retainer", c, groups, events, spawnable=False)
 
     _apply_ai(out)
+    out["frost_breath"] = projectile("frost_breath", 0.4, {
+        "impact_damage": {"damage": 10, "knockback": True, "semi_random_diff_damage": False},
+        "mob_effect": {"effect": "slowness", "durationeasy": 60, "durationnormal": 100,
+                       "durationhard": 140, "amplifier": 2},
+        "remove_on_hit": {},
+    }, {}, {})
     out["lightning_bolt"] = projectile("lightning_bolt", 0.3, {
         "impact_damage": {"damage": 9, "knockback": True, "semi_random_diff_damage": False},
         "remove_on_hit": {},
@@ -1307,7 +1412,8 @@ def _apply_ai(out):
     # Factions: monsters and Nazarick's rank and file also hunt the human NPCs.
     for name, group in (("death_knight", "overlord:wild"), ("goblin", "overlord:wild"), ("old_guarder", None),
                         ("elder_lich", None), ("skeleton_mage", None), ("soul_eater", None), ("ogre", None),
-                        ("quagoa", None), ("clementine", None)):
+                        ("quagoa", None), ("clementine", None), ("war_troll", None),
+                        ("vampire_bride", None)):
         parts(name, group)["minecraft:behavior.nearest_attackable_target"]["entity_types"].append(
             {"filters": _is_family("human"), "max_dist": 16})
 
@@ -1364,8 +1470,9 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
         "nazarick_maid", "brain", "zaryusu", "cz_delta", "nfirea",
         "lupusregina", "entoma", "solution", "yuri", "goblin", "ogre",
         "skeleton_mage", "lizardman", "evileye", "fluder", "gargantua", "soul_eater", "quagoa",
-        "adventurer", "guard", "soldier", "archer", "imperial_knight", "bandit"]
-PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard"]
+        "adventurer", "guard", "soldier", "archer", "imperial_knight", "bandit",
+        "war_troll", "vampire_bride", "dwarf", "frost_dragon"]
+PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard", "frost_breath"]
 
 ENTITY_NAMES = {
     "ainz": "Ainz Ooal Gown", "albedo": "Albedo", "shalltear": "Shalltear Bloodfallen",
@@ -1381,6 +1488,8 @@ ENTITY_NAMES = {
     "skeleton_mage": "Skeleton Mage", "lizardman": "Lizardman Warrior", "evileye": "Evileye",
     "fluder": "Fluder Paradyne", "gargantua": "Gargantua", "soul_eater": "Soul Eater",
     "quagoa": "Quagoa", "crystal_shard": "Crystal Lance", "adventurer": "Adventurer",
+    "war_troll": "War Troll", "vampire_bride": "Vampire Bride", "dwarf": "Dwarf Runesmith",
+    "frost_dragon": "Frost Dragon", "frost_breath": "Frost Breath",
     "retainer": "Retainer", "guard": "Kingdom Guard", "soldier": "Kingdom Soldier", "archer": "Kingdom Archer",
     "imperial_knight": "Imperial Knight", "bandit": "Bandit",
     "fireball": "Fireball", "negative_burst": "Negative Burst", "lightning_bolt": "Lightning",
@@ -1415,10 +1524,17 @@ def trade_files():
         buy("minecraft:nether_wart", 8, 3), buy("minecraft:wheat", 16, 2),
         buy("minecraft:glass_bottle", 8, 2), buy("minecraft:apple", 6, 2),
     ]
+    forge = [
+        sell(oid("adamantite_ingot"), 20), sell(oid("runic_hammer"), 60), sell("minecraft:iron_ingot", 6, qty=4),
+        sell(oid("data_crystal"), 6), sell(oid("gilded_nazarick_bricks"), 8, qty=8),
+        buy("minecraft:raw_iron", 8, 3), buy("minecraft:coal", 16, 2), buy("minecraft:diamond", 1, 7),
+        buy("minecraft:gold_ingot", 4, 5),
+    ]
     table = lambda t: {"tiers": [{"total_exp_required": 0,
                                   "groups": [{"num_to_select": len(t), "trades": t}]}]}
     return {f"trading/{NS}/nazarick_maid.json": table(trades),
-            f"trading/{NS}/nfirea.json": table(herbs)}
+            f"trading/{NS}/nfirea.json": table(herbs),
+            f"trading/{NS}/dwarf.json": table(forge)}
 
 
 # ============================================================ spawn rules
@@ -1488,6 +1604,8 @@ def spawn_rule_files():
             "adventurer", ["plains", "forest", "taiga", "savanna"], 4, herd=(2, 3)),
         "spawn_rules/bandit.json": monster("bandit", 6, herd=(2, 3),
                                             biomes=["forest", "plains", "taiga", "savanna"]),
+        "spawn_rules/war_troll.json": monster("war_troll", 2, biomes=["extreme_hills", "taiga", "forest"]),
+        "spawn_rules/vampire_bride.json": monster("vampire_bride", 3),
         "spawn_rules/clementine.json": monster("clementine", 2),
         "spawn_rules/goblin.json": monster("goblin", 10, herd=(2, 4), biomes=["forest", "plains", "taiga"]),
         "spawn_rules/skeleton_mage.json": monster("skeleton_mage", 6),
@@ -1611,6 +1729,16 @@ SOUNDS = {
                                  "step": "mob.zombie.step"}),
     "retainer": (1.0, [0.95, 1.1], {"hurt": "game.player.hurt", "death": "game.player.die",
                                     "step": "mob.zombie.step", "shoot": "random.bow"}),
+    "war_troll": (1.0, [0.45, 0.55], {"ambient": "mob.zombie.say", "hurt": "mob.husk.hurt",
+                                     "death": "mob.husk.death", "step": "mob.irongolem.walk"}),
+    "vampire_bride": (1.0, [1.3, 1.45], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                         "step": "mob.zombie.step"}),
+    "dwarf": (1.0, [0.7, 0.8], {"hurt": "mob.villager.hit", "death": "mob.villager.death",
+                                "step": "mob.zombie.step", "haggle": "mob.villager.haggle",
+                                "haggle.yes": "mob.villager.yes", "haggle.no": "mob.villager.no"}),
+    "frost_dragon": (1.0, [0.9, 1.0], {"ambient": "mob.ravager.ambient", "hurt": "mob.irongolem.hit",
+                                       "death": "mob.wither.death", "step": "mob.irongolem.walk",
+                                       "shoot": "random.glass"}),
     "hamsuke": (1.0, [0.6, 0.8], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
                                   "death": "mob.rabbit.death", "step": "mob.polarbear.step"}),
 }
@@ -1674,6 +1802,9 @@ def animations_json():
             "tail3": {"rotation": [0.0, "math.sin(query.life_time * 100.0 - 120.0) * 16.0", 0.0]}}},
         "animation.overlord.hamsuke.attack": {"loop": True, "bones": {
             "head": {"rotation": [f"-{swing} * 25.0", 0.0, 0.0]}}},
+        "animation.overlord.dragon_wings": {"loop": True, "bones": {
+            "rightWing": {"rotation": [0.0, 0.0, "math.sin(query.life_time * 140.0) * 12.0"]},
+            "leftWing": {"rotation": [0.0, 0.0, "-math.sin(query.life_time * 140.0) * 12.0"]}}},
         "animation.overlord.projectile.spin": {"loop": True, "bones": {
             "body": {"rotation": ["query.life_time * 420.0", "query.life_time * 300.0", 0.0]}}},
     }
@@ -1722,6 +1853,11 @@ ENTITY_ANIMS = {
     "archer": ["look_at_target", "idle", "walk", "attack"],
     "imperial_knight": ["look_at_target", "idle", "walk", "attack"],
     "bandit": ["look_at_target", "idle", "walk", "attack"],
+    "war_troll": ["look_at_target", "idle", "walk", "attack"],
+    "vampire_bride": ["look_at_target", "idle", "robe_walk", "attack"],
+    "dwarf": ["look_at_target", "idle", "walk"],
+    "frost_dragon": ["look_at_target", "hamsuke.walk", "hamsuke.tail", "hamsuke.attack", "dragon_wings"],
+    "frost_breath": ["projectile.spin"],
     "retainer": ["look_at_target", "idle", "walk", "attack"],
     "crystal_shard": ["projectile.spin"],
     "magic_bullet": ["projectile.spin"],
@@ -1916,6 +2052,7 @@ WEARABLES = {
     **{f"world_champion_{piece}": (piece, f"{NS}_world_champion_{layer}")
        for piece, (layer, _s) in ARMOR.items()},
     **{f"regalia_{piece}": (piece, f"{NS}_regalia_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    **{f"dragonscale_{piece}": (piece, f"{NS}_dragonscale_{layer}") for piece, (layer, _s) in ARMOR.items()},
 }
 
 

@@ -231,6 +231,59 @@ export const SITES = [
     },
     garrison: () => [[id("lizardman"), 5]],
   },
+  {
+    key: "dwarven_forge", name: "Dwarven Forge", weight: 8, radius: 6, pad: mc("smooth_stone"),
+    build(b) {
+      b.walls(-3, 0, -3, 3, 3, 3, mc("deepslate_bricks"));
+      b.fill(-3, 4, -3, 3, 4, 3, mc("stone_bricks")); // roof
+      b.fill(0, 0, -3, 0, 1, -3, mc("air")); // doorway
+      b.fill(-3, 1, 0, -3, 2, 0, mc("iron_bars")); // windows
+      b.fill(3, 1, 0, 3, 2, 0, mc("iron_bars"));
+      b.set(-2, 0, 2, mc("furnace"));
+      b.set(-1, 0, 2, mc("furnace"));
+      b.set(2, 0, 2, mc("anvil"));
+      b.set(2, 0, 0, mc("barrel"));
+      b.set(0, 3, 0, mc("lantern"));
+      b.set(-5, 0, -4, mc("cobblestone")); // ore pile
+      b.set(-5, 0, -5, mc("cobblestone"));
+      b.set(-4, 0, -5, mc("cobblestone"));
+      b.chest(0, 0, 2, [[mc("iron_ingot"), 3, 7], [mc("coal"), 4, 10], [mc("gold_ingot"), 0, 3], [id("adamantite_ingot"), 0, 2]]);
+    },
+    garrison: () => [[id("dwarf"), 1]],
+  },
+  {
+    key: "troll_den", name: "Troll Den", weight: 8, radius: 7, pad: mc("coarse_dirt"),
+    build(b) {
+      for (let i = 0; i < 12; i++) { // ring of boulders with a gap at the front
+        if (i === 9) continue;
+        const a = (i / 12) * Math.PI * 2;
+        const x = Math.round(Math.cos(a) * 6);
+        const z = Math.round(Math.sin(a) * 6);
+        b.fill(x, 0, z, x, i % 3 === 0 ? 2 : 1, z, i % 2 ? mc("mossy_cobblestone") : mc("cobblestone"));
+      }
+      b.campfire(0, 0);
+      for (const [x, z] of [[-3, 2], [3, -2], [2, 3], [-2, -3]]) b.set(x, 0, z, mc("bone_block"));
+      b.set(-3, 1, 2, mc("bone_block"));
+      b.chest(0, 0, 4, [[id("yggdrasil_gold_coin"), 4, 10], [mc("leather"), 2, 5], [mc("bone"), 2, 6], [mc("iron_ingot"), 1, 4], [id("troll_blood"), 0, 1]]);
+    },
+    garrison: (tier) => (tier === 0 ? [[id("war_troll"), 1]] : [[id("war_troll"), tier], [id("ogre"), 2]]),
+  },
+  {
+    key: "dragon_hoard", name: "Dragon's Hoard", weight: 4, radius: 8, pad: mc("packed_ice"),
+    build(b) {
+      for (const [x, z] of [[-6, -6], [6, -6], [-6, 6], [6, 6], [0, -7], [0, 7], [-7, 0], [7, 0]]) {
+        b.fill(x, 0, z, x, 2 + ((x + z) & 1) * 2, z, mc("blue_ice")); // ring of ice spires
+      }
+      b.fill(-1, 0, -1, 1, 0, 1, mc("gold_block")); // the hoard
+      b.set(0, 1, 0, mc("gold_block"));
+      b.set(-2, 0, 1, id("data_crystal_block"));
+      b.set(2, 0, -1, id("glacier_bricks"));
+      b.set(3, 0, 2, mc("bone_block"));
+      b.chest(0, 0, 3, [[mc("diamond"), 2, 5], [mc("gold_ingot"), 4, 10], [id("data_crystal"), 4, 8], [id("adamantite_ingot"), 1, 4], [id("yggdrasil_gold_coin"), 10, 24]]);
+    },
+    // The dragon only stirs for those strong enough to be worth its attention.
+    garrison: (tier) => (tier === 0 ? [[id("skeleton_mage"), 3]] : [[id("frost_dragon"), 1]]),
+  },
 ];
 
 // ------------------------------------------------------------- site lookup
@@ -377,7 +430,7 @@ const manned = new Map();
 /** @type {Map<string, { size: number, tier: number, slain: number }>} */
 const sieges = new Map();
 /** Sites whose garrison is hostile: clearing them out is rewarded. */
-const HOSTILE_SITES = new Set(["goblin_camp", "bandit_camp", "nazarick_outpost"]);
+const HOSTILE_SITES = new Set(["goblin_camp", "bandit_camp", "nazarick_outpost", "troll_den", "dragon_hoard"]);
 
 /** @param {number} level */
 function tierFor(level) {
