@@ -22,7 +22,7 @@
           "max": 48
         },
         "minecraft:weight": {
-          "default": 20
+          "default": 12
         },
         "minecraft:herd": {
           "min_size": 1,

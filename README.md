@@ -52,6 +52,8 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 | **Skeleton Mage** | 30 | Night caster that fires magic bullets | Bones, sometimes a Soul Fragment |
 | **Lizardman Warrior** | 40 | Neutral swamp tribe; hunts monsters | Gold Coins, Cod |
 | **Quagoa** | 35 | Clawed mole-men that spawn underground in the dark | Raw Iron, Gold Coins |
+| **Adventurer** | 50 | Neutral parties of 2–3 in plains, forests, taiga and savanna; hunt monsters. Pay YGGDRASIL Gold Coins to hire one for 10 minutes | Gold Coins |
+| **Kingdom Guard** | 60 | Posted automatically at villages (two per village); stays near its post and fights monsters | Iron |
 | **Brain Unglaus** | 110 | Neutral swordsman found in taiga; hunts monsters | Brain's Katana |
 | **Zaryusu Shasha** | 100 | Neutral lizardman found in swamps; hunts monsters, chilling strikes | Frost Pain |
 | **Nfirea Bareare** | 30 | Peaceful herbalist found in plains; trades potions and ingredients for Gold Coins | — |
@@ -148,6 +150,26 @@ character menu.
 - **Status bar:** level, class, mana, XP and quest progress above the hotbar (can be hidden from the menu).
 
 Progress is saved per player in the world.
+
+### Living world
+
+- **Mob levels:** monsters that spawn near you take a level close to yours (70–120% of the highest-level player
+  within 64 blocks). Every 10 levels adds 2 hearts, levels 30/60/90 add Strength I/II/III, and each level adds
+  3% XP. The level shows next to the mob's name when you hit it. Bosses keep their own numbers.
+- **Level-gated spawns:** dangerous mobs only appear once someone nearby is strong enough — Skeleton Mage 3,
+  Ogre 4, Elder Lich 5, Death Knight 8, Clementine 10, Soul Eater 12, Fluder 15. Raids, patrols, summons and
+  creative-mode spawning are not affected.
+- **Night patrols:** from level 5, each night has a 35% chance that Nazarick sends a patrol towards you. Its
+  make-up follows your level (5+, 20+, 50+).
+- **Factions:** monsters and Nazarick's rank and file attack human NPCs as well as players; adventurers,
+  guards, Gazef, Brain, Evileye and the lizardmen hunt monsters.
+- **Behaviour:** goblins, Old Guarders, Quagoa, lizardmen, adventurers and guards call their pack when one is
+  hit; goblins flee when badly hurt; Elder Liches, Skeleton Mages and Fluder back away when you close in;
+  Soul Eaters leap; Old Guarders and Skeleton Mages burn in daylight; a Death Knight's shield halves
+  projectile damage and its human victims rise as zombies.
+- **Biomes:** goblins keep to forests, plains and taiga; ogres to plains, forests, hills and savanna; lizardmen
+  to swamps; Quagoa underground.
+- **Dialogue:** talk to adventurers, guards, Gazef, Brain, Zaryusu or Evileye for a line of advice.
 
 ### Tier magic
 
@@ -251,7 +273,8 @@ tools/build.py     validates, then packages dist/*.mcaddon
 tools/test_rpg.py  runs the script logic against a mock of the game API (needs Node.js)
 ```
 
-`behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals) and `raid.js` (Tomb Raid) are written by hand; everything else inside the two pack
+`behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid) and `director.js` (mob levels, gated
+spawns, patrols, guards) are written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 
 ```bash

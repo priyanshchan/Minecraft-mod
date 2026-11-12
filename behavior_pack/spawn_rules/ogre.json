@@ -18,7 +18,7 @@
           "max": "hard"
         },
         "minecraft:weight": {
-          "default": 6
+          "default": 4
         },
         "minecraft:density_limit": {
           "surface": 2
@@ -38,6 +38,30 @@
               "test": "has_biome_tag",
               "operator": "==",
               "value": "overworld"
+            },
+            {
+              "any_of": [
+                {
+                  "test": "has_biome_tag",
+                  "operator": "==",
+                  "value": "plains"
+                },
+                {
+                  "test": "has_biome_tag",
+                  "operator": "==",
+                  "value": "forest"
+                },
+                {
+                  "test": "has_biome_tag",
+                  "operator": "==",
+                  "value": "extreme_hills"
+                },
+                {
+                  "test": "has_biome_tag",
+                  "operator": "==",
+                  "value": "savanna"
+                }
+              ]
             }
           ]
         }

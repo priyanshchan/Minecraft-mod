@@ -4,12 +4,13 @@ import { script, shown } from "@minecraft/server-ui";
 import * as rpg from "./rpg.js";
 import * as raid from "./raid.js";
 import * as spells from "./spells.js";
+import * as director from "./director.js";
 await import("./main.js"); // must load without touching the world
 
 function mkPlayer(name) {
   const props = new Map(), effects = new Map(), msgs = [], inv = [];
   const p = { id: name, name, typeId: "minecraft:player", isValid: true, location: { x: 0, y: 64, z: 0 }, msgs, inv, effects, bar: "",
-    tags: new Set(), hasTag(t) { return this.tags.has(t); }, addTag(t) { this.tags.add(t); },
+    tags: new Set(), hasTag(t) { return this.tags.has(t); }, addTag(t) { this.tags.add(t); }, getGameMode: () => "Survival",
     getDynamicProperty: (k) => props.get(k), setDynamicProperty: (k, v) => props.set(k, v), props,
     onScreenDisplay: { setActionBar(t) { p.bar = t; }, setTitle(t) { p.title = t; } }, sendMessage: (m) => msgs.push(m), playSound() {}, anims: [], playAnimation(n) { p.anims.push(n); }, fx: [],
     getEffect: (e) => effects.get(e), addEffect(e, d, o = {}) { effects.set(e, { duration: d, amplifier: o.amplifier ?? 0 }); }, removeEffect: (e) => effects.delete(e),
@@ -19,12 +20,12 @@ function mkPlayer(name) {
     aimed: [], getEntitiesFromViewDirection: () => p.aimed.map((entity) => ({ entity })), getBlockFromViewDirection: () => undefined,
     getHeadLocation: () => ({ x: 0, y: 65.6, z: 0 }), getViewDirection: () => ({ x: 0, y: 0, z: 1 }),
     dimension: { id: "overworld", mobs: [], spawnParticle(effect, loc, vars) { p.fx.push({ effect, scale: vars?.v?.["variable.scale"], color: vars?.v?.["variable.color"] }); }, spawnItem() {}, getPlayers: () => players, playSound() {},
-      getBlock: () => ({ isAir: true }),
+      getBlock: () => ({ isAir: true }), getTopmostBlock: ({ x, z }) => ({ location: { x, y: 63, z } }),
       spawnEntity(typeId) { const e = { typeId, tags: new Set(), isValid: true, addTag(t) { this.tags.add(t); }, remove: () => { p.dimension.mobs = p.dimension.mobs.filter((m) => m !== e); } }; p.dimension.mobs.push(e); return e; },
       getEntities: (q) => p.dimension.mobs.filter((m) => (q.tags ?? []).every((t) => m.tags.has(t))) } };
   players.push(p); return p;
 }
-const mob = (typeId, hp = 20, fam = []) => ({ typeId, isValid: true, location: { x: 1, y: 64, z: 1 }, health: { currentValue: hp, effectiveMax: hp, setCurrentValue(v) { this.currentValue = v; } },
+const mob = (typeId, hp = 20, fam = []) => ({ typeId, isValid: true, location: { x: 1, y: 64, z: 1 }, health: { currentValue: hp, effectiveMax: hp, defaultValue: hp, setCurrentValue(v) { this.currentValue = v; } },
   getComponent(c) { return c === "minecraft:health" ? this.health : undefined; }, matches: (q) => q.families.every((f) => fam.includes(f)), damaged: [], applyDamage(n) { this.damaged.push(n); this.health.currentValue = 0; } });
 const kill = (player, m) => world.afterEvents.entityDie.fire({ deadEntity: m, damageSource: { damagingEntity: player } });
 
@@ -178,6 +179,56 @@ for (const s of spells.SPELLS) {
 c.dimension.getEntities = (q) => c.dimension.mobs.filter((m) => (q.tags ?? []).every((t) => m.tags.has(t)));
 // death penalty
 pc.xp = 100; world.afterEvents.entityDie.fire({ deadEntity: c, damageSource: {} }); assert.equal(pc.xp, 90);
+
+// ---- world director ----
+// a spawned monster near players: a full mock with tags, effects and dynamic properties
+const spawnMob = (typeId, hp, where, fam = ["monster"], tags = []) => {
+  const m = mob(typeId, hp, fam); const props = new Map(); m.effects = new Map(); m.removed = false; m.tags = new Set(tags);
+  Object.assign(m, { dimension: where.dimension, location: { x: 2, y: 64, z: 2 }, hasTag: (t) => m.tags.has(t), addTag: (t) => m.tags.add(t),
+    getDynamicProperty: (k) => props.get(k), setDynamicProperty: (k, v) => props.set(k, v),
+    addEffect: (e, d, o = {}) => m.effects.set(e, o.amplifier ?? 0), remove() { m.removed = true; m.isValid = false; } });
+  world.afterEvents.entitySpawn.fire({ entity: m, cause: "Spawned" }); advance(5); return m;
+};
+assert.equal(director.mobLevelFor(40, 0), 28); assert.equal(director.mobLevelFor(40, 1), 48); assert.equal(director.mobLevelFor(1, 0), 1);
+const d = mkPlayer("dana"); d.dimension.getPlayers = () => [d]; const pd = rpg.profileOf(d);
+// level gate: a Death Knight never appears next to a level 1 player, but scripted ones (raid, patrol) stay
+assert.equal(spawnMob("overlord:death_knight", 80, d).removed, true);
+assert.equal(spawnMob("overlord:death_knight", 80, d, ["monster"], ["overlord_raid"]).removed, false);
+assert.equal(spawnMob("overlord:goblin", 16, d).removed, false, "goblins are not gated");
+d.getGameMode = () => "Creative"; assert.equal(spawnMob("overlord:death_knight", 80, d).removed, false, "creative players can spawn anything");
+d.getGameMode = () => "Survival";
+// mob levels follow the player: level 40 -> 28..48, with health boost and strength; bosses and non-monsters are left alone
+pd.level = 40; const dk = spawnMob("overlord:death_knight", 80, d);
+const dkLevel = rpg.mobLevel(dk); assert.ok(dkLevel >= 28 && dkLevel <= 48, String(dkLevel));
+assert.equal(dk.effects.get("health_boost"), Math.floor(dkLevel / 10) - 1); assert.equal(dk.effects.get("strength"), dkLevel >= 30 ? 0 : undefined);
+assert.equal(rpg.mobLevel(spawnMob("overlord:ainz", 500, d)), 0, "bosses keep their own numbers");
+assert.equal(rpg.mobLevel(spawnMob("minecraft:cow", 10, d, ["mob"])), 0);
+// levelled mobs give more XP and show their level in the target frame
+const xpBefore = pd.xp, lvBefore = pd.level; world.afterEvents.entityDie.fire({ deadEntity: dk, damageSource: { damagingEntity: d } });
+assert.ok(pd.level > lvBefore || pd.xp - xpBefore === Math.round(60 * (1 + dkLevel * 0.03)), "bonus XP");
+const lv = spawnMob("minecraft:zombie", 20, d); world.afterEvents.entityHurt.fire({ hurtEntity: lv, damage: 4, damageSource: { damagingEntity: d, cause: "entityAttack" } });
+assert.ok(d.bar.includes(`Lv.${rpg.mobLevel(lv)}`), d.bar);
+// patrols: only at night, once per in-game day, tier by level
+d.dimension.id = "minecraft:overworld"; d.dimension.mobs = []; const realRandom = Math.random; Math.random = () => 0.1;
+world.clock.time = 6000; advance(200); assert.equal(d.dimension.mobs.length, 0, "no patrols by day");
+world.clock.time = 15000; world.clock.day = 3; advance(200);
+assert.equal(d.dimension.mobs.length, 5, "tier 2 patrol: death knight, 3 guarders, elder lich");
+assert.ok(d.dimension.mobs.every((m) => m.tags.has("overlord_patrol")) && d.msgs.some((m) => m.includes("patrol")));
+advance(400); assert.equal(d.dimension.mobs.length, 5, "one roll per night");
+world.clock.day = 4; advance(200); assert.equal(d.dimension.mobs.length, 10); Math.random = realRandom; world.clock.time = 6000;
+// village guards: two per village, none without villagers
+d.dimension.mobs = []; assert.equal(director.postGuards(d), 0);
+const villagers = [0, 1, 2].map((i) => ({ typeId: "minecraft:villager_v2", location: { x: i, y: 64, z: 0 } }));
+const baseQuery = d.dimension.getEntities;
+d.dimension.getEntities = (q) => (q.type === "minecraft:villager_v2" ? villagers : d.dimension.mobs.filter((m) => m.typeId === q.type));
+assert.equal(director.postGuards(d), 2); assert.equal(director.postGuards(d), 0, "capped at two"); d.dimension.getEntities = baseQuery;
+// squire zombie: a villager killed by a Death Knight rises again
+d.dimension.mobs = []; world.afterEvents.entityDie.fire({ deadEntity: { typeId: "minecraft:villager_v2", dimension: d.dimension, location: { x: 0, y: 64, z: 0 }, matches: () => false }, damageSource: { damagingEntity: { typeId: "overlord:death_knight" } } });
+assert.deepEqual(d.dimension.mobs.map((m) => m.typeId), ["minecraft:zombie"]);
+// dialogue: guards talk, with a short cooldown, and stay quiet while being paid
+d.msgs.length = 0; const talk = (item) => { world.beforeEvents.playerInteractWithEntity.fire({ player: d, target: { typeId: "overlord:guard", isValid: true, nameTag: "" }, itemStack: item }); advance(2); };
+talk(); assert.equal(d.msgs.length, 1); assert.ok(d.msgs[0].startsWith("§e<Guard>"));
+talk(); assert.equal(d.msgs.length, 1, "cooldown"); advance(60); talk({ typeId: "overlord:yggdrasil_gold_coin" }); assert.equal(d.msgs.length, 1);
 
 // persistence: saved profile is restored after leaving
 advance(100);

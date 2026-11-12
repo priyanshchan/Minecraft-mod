@@ -1,0 +1,265 @@
+// Overlord: Tomb of Nazarick - world director.
+// Controls how the world fights back: mob levels that follow nearby players,
+// level-gated spawns, Nazarick night patrols, guards for villages, Death Knight
+// squire zombies and small talk from the human NPCs.
+import { world, system, EntityInitializationCause, GameMode } from "@minecraft/server";
+import { profileOf } from "./rpg.js";
+
+const NS = "overlord";
+const id = (/** @type {string} */ name) => `${NS}:${name}`;
+const TICKS = 20;
+const LONG = 20000000;
+export const LEVEL_KEY = "overlord:lvl";
+
+/** Tags of mobs the add-on spawned on purpose; they are never removed by the level gate. */
+const SCRIPTED_TAGS = ["overlord_raid", "overlord_patrol", "overlord_summoned", "overlord_guard"];
+
+/** Naturally spawning mobs that only appear once a nearby player has reached this level. */
+export const SPAWN_GATE = {
+  [id("skeleton_mage")]: 3,
+  [id("ogre")]: 4,
+  [id("elder_lich")]: 5,
+  [id("death_knight")]: 8,
+  [id("clementine")]: 10,
+  [id("soul_eater")]: 12,
+  [id("fluder")]: 15,
+};
+
+/** Night patrols by tier (player level 5+, 20+, 50+): [entity, count]. */
+const PATROLS = [
+  [[id("old_guarder"), 3], [id("skeleton_mage"), 1]],
+  [[id("death_knight"), 1], [id("old_guarder"), 3], [id("elder_lich"), 1]],
+  [[id("death_knight"), 2], [id("soul_eater"), 1], [id("elder_lich"), 2]],
+];
+const PATROL_MIN_LEVEL = 5;
+const PATROL_CHANCE = 0.35; // per player, once per night
+const PATROL_DISTANCE = 28;
+
+const VILLAGER = "minecraft:villager_v2";
+const GUARDS_PER_VILLAGE = 2;
+
+/** Things the human NPCs say when a player talks to them. */
+const DIALOGUE = {
+  [id("adventurer")]: [
+    "Offer me YGGDRASIL gold and my sword is yours for a while.",
+    "They say a Death Knight was seen on the plains at night. Don't go alone.",
+    "Goblins run once you bloody them. Ogres don't.",
+    "Skeleton mages back away when you get close. Rush them or bring a bow.",
+    "Copper plate, eh? Take guild requests from your plate to climb the ranks.",
+  ],
+  [id("guard")]: [
+    "Stay inside the village after dark. Patrols from the Tomb have been seen nearby.",
+    "We hold the line for the villagers. Monsters won't get past us.",
+    "If you see undead marching in formation, that is no ordinary pack. Run or fight well.",
+  ],
+  [id("gazef")]: ["I am Gazef Stronoff, Warrior-Captain of the Kingdom. These lands are under my protection."],
+  [id("brain")]: ["I am looking for an opponent worth my blade. You are not there yet."],
+  [id("zaryusu")]: ["The tribes stand together now. Leave our swamp in peace and we will do the same."],
+  [id("evileye")]: ["Hmph. Do not get in my way, and do not die where I have to see it."],
+};
+
+// ------------------------------------------------------------- mob levels
+
+/**
+ * Level given to a mob that spawns near a player of the given level.
+ * @param {number} playerLevel @param {number} roll 0..1
+ */
+export function mobLevelFor(playerLevel, roll) {
+  return Math.max(1, Math.min(100, Math.round(playerLevel * (0.7 + roll * 0.5))));
+}
+
+/**
+ * @param {import("@minecraft/server").Entity} mob
+ * @param {number} level
+ */
+function applyLevel(mob, level) {
+  mob.setDynamicProperty(LEVEL_KEY, level);
+  const hearts = Math.floor(level / 10); // +2 hearts per 10 levels
+  const might = Math.floor(level / 30); // Strength I at 30, II at 60, III at 90
+  if (hearts > 0) mob.addEffect("health_boost", LONG, { amplifier: hearts - 1, showParticles: false });
+  if (might > 0) mob.addEffect("strength", LONG, { amplifier: might - 1, showParticles: false });
+  if (hearts > 0) {
+    system.runTimeout(() => {
+      try {
+        const health = mob.isValid ? mob.getComponent("minecraft:health") : undefined;
+        if (health) health.setCurrentValue(health.effectiveMax);
+      } catch {
+        // mob is gone
+      }
+    }, 2);
+  }
+}
+
+/** @param {import("@minecraft/server").Entity} mob */
+function onSpawn(mob) {
+  try {
+    if (!mob.isValid || mob.typeId === "minecraft:player") return;
+    if (mob.getDynamicProperty(LEVEL_KEY) !== undefined) return;
+    if (!mob.matches({ families: ["monster"] })) return;
+    const health = mob.getComponent("minecraft:health");
+    if (!health) return;
+    const players = mob.dimension.getPlayers({ location: mob.location, maxDistance: 64 });
+    if (players.length === 0) return;
+    const levels = players.map((p) => profileOf(p).level);
+    const scripted = SCRIPTED_TAGS.some((tag) => mob.hasTag(tag));
+
+    const needed = SPAWN_GATE[mob.typeId];
+    if (needed && !scripted && Math.max(...levels) < needed && !players.some((p) => p.getGameMode() === GameMode.Creative)) {
+      mob.remove(); // too dangerous for everyone nearby: it never appears
+      return;
+    }
+    if (health.effectiveMax >= 200) return; // bosses keep their own numbers
+    applyLevel(mob, mobLevelFor(Math.max(...levels), Math.random()));
+  } catch {
+    // the mob vanished while we were looking at it
+  }
+}
+
+world.afterEvents.entitySpawn.subscribe((event) => {
+  if (event.cause !== EntityInitializationCause.Spawned) return;
+  const mob = event.entity;
+  // Wait two ticks so tags added by raids, patrols and summons are already in place.
+  system.runTimeout(() => onSpawn(mob), 2);
+});
+
+// --------------------------------------------------------------- patrols
+
+/** Last in-game day a patrol roll was made for each player. */
+const patrolDay = new Map();
+
+/** @param {number} level */
+function patrolTier(level) {
+  return level >= 50 ? 2 : level >= 20 ? 1 : 0;
+}
+
+/**
+ * Sends a Nazarick patrol towards the player. Returns how many mobs were spawned.
+ * @param {import("@minecraft/server").Player} player
+ */
+export function spawnPatrol(player) {
+  const angle = Math.random() * Math.PI * 2;
+  const x = player.location.x + Math.cos(angle) * PATROL_DISTANCE;
+  const z = player.location.z + Math.sin(angle) * PATROL_DISTANCE;
+  const ground = player.dimension.getTopmostBlock({ x, z });
+  if (!ground) return 0;
+  const tier = patrolTier(profileOf(player).level);
+  let count = 0;
+  for (const [type, amount] of PATROLS[tier]) {
+    for (let i = 0; i < Number(amount); i++) {
+      try {
+        const mob = player.dimension.spawnEntity(String(type), { x: x + (count % 3) - 1, y: ground.location.y + 1, z: z + Math.floor(count / 3) - 1 });
+        mob.addTag("overlord_patrol");
+        count++;
+      } catch {
+        // that spot is not loaded; skip this member
+      }
+    }
+  }
+  if (count > 0) {
+    player.sendMessage("§6[Overlord] §cA patrol from the Great Tomb of Nazarick has been sighted nearby.");
+    try {
+      player.playSound("mob.wither.ambient", { volume: 0.7, pitch: 0.6 });
+    } catch {
+      // cosmetic only
+    }
+  }
+  return count;
+}
+
+system.runInterval(() => {
+  let time = 0;
+  let day = 0;
+  try {
+    time = world.getTimeOfDay();
+    day = world.getDay();
+  } catch {
+    return; // world not ready
+  }
+  if (time < 13500 || time > 22000) return; // night only
+  for (const player of world.getAllPlayers()) {
+    try {
+      if (patrolDay.get(player.id) === day) continue;
+      patrolDay.set(player.id, day);
+      if (player.dimension.id !== "minecraft:overworld") continue;
+      if (profileOf(player).level < PATROL_MIN_LEVEL || Math.random() > PATROL_CHANCE) continue;
+      spawnPatrol(player);
+    } catch {
+      // player is leaving
+    }
+  }
+}, 10 * TICKS);
+
+// ---------------------------------------------------------- village guards
+
+/**
+ * Posts guards near villagers around the player. Returns how many were spawned.
+ * @param {import("@minecraft/server").Player} player
+ */
+export function postGuards(player) {
+  const dimension = player.dimension;
+  const villagers = dimension.getEntities({ type: VILLAGER, location: player.location, maxDistance: 48 });
+  if (villagers.length < 3) return 0;
+  const guards = dimension.getEntities({ type: id("guard"), location: villagers[0].location, maxDistance: 64 });
+  let spawned = 0;
+  for (let i = guards.length; i < GUARDS_PER_VILLAGE; i++) {
+    const post = villagers[(i * 2) % villagers.length].location;
+    const guard = dimension.spawnEntity(id("guard"), post);
+    guard.addTag("overlord_guard");
+    spawned++;
+  }
+  return spawned;
+}
+
+system.runInterval(() => {
+  for (const player of world.getAllPlayers()) {
+    try {
+      postGuards(player);
+    } catch {
+      // villagers unloaded mid-check
+    }
+  }
+}, 30 * TICKS);
+
+// ----------------------------------------------------- squires and dialogue
+
+world.afterEvents.entityDie.subscribe((event) => {
+  try {
+    const killer = event.damageSource.damagingEntity;
+    const dead = event.deadEntity;
+    if (!killer || killer.typeId !== id("death_knight")) return;
+    if (dead.typeId !== VILLAGER && !dead.matches({ families: ["human"] })) return;
+    // Those slain by a Death Knight rise again as its squire zombies.
+    const squire = dead.dimension.spawnEntity("minecraft:zombie", dead.location);
+    squire.addTag("overlord_summoned");
+  } catch {
+    // the corpse is already gone
+  }
+});
+
+/** Tick before which a player will not get another line of dialogue. */
+const talkReady = new Map();
+
+world.beforeEvents.playerInteractWithEntity.subscribe((event) => {
+  const lines = DIALOGUE[event.target.typeId];
+  if (!lines) return;
+  const player = event.player;
+  const speaker = event.target;
+  if (event.itemStack?.typeId === id("yggdrasil_gold_coin")) return; // paying, not chatting
+  if (system.currentTick < (talkReady.get(player.id) ?? 0)) return;
+  talkReady.set(player.id, system.currentTick + 2 * TICKS);
+  const line = lines[Math.floor(Math.random() * lines.length)];
+  system.run(() => {
+    try {
+      if (!player.isValid || !speaker.isValid) return;
+      const name = speaker.nameTag || speaker.typeId.split(":")[1].split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+      player.sendMessage(`§e<${name}>§f ${line}`);
+    } catch {
+      // someone left
+    }
+  });
+});
+
+world.afterEvents.playerLeave.subscribe((event) => {
+  patrolDay.delete(event.playerId);
+  talkReady.delete(event.playerId);
+});

@@ -433,17 +433,32 @@ export function useClassSkill(player) {
   }
 }
 
+/**
+ * Level the world director gave a mob (0 when it has none).
+ * @param {import("@minecraft/server").Entity} mob
+ */
+export function mobLevel(mob) {
+  try {
+    const level = mob.getDynamicProperty("overlord:lvl");
+    return typeof level === "number" ? level : 0;
+  } catch {
+    return 0;
+  }
+}
+
 /** @param {import("@minecraft/server").Entity} dead */
 function killXp(dead) {
+  const bonus = 1 + mobLevel(dead) * 0.03; // levelled mobs are worth more
   const fixed = KILL_XP[dead.typeId];
-  if (fixed !== undefined) return fixed;
+  if (fixed !== undefined) return Math.round(fixed * bonus);
   try {
     const health = dead.getComponent("minecraft:health");
-    if (health) return Math.max(1, Math.round(health.effectiveMax / 2));
+    // health boosts from levelling are not counted twice: use the base value
+    if (health) return Math.max(1, Math.round((health.defaultValue / 2) * bonus));
   } catch {
     // entity data is gone
   }
-  return 5;
+  return Math.round(5 * bonus);
 }
 
 /**
@@ -537,6 +552,8 @@ export function showTarget(player, victim, health, max) {
   if (!name) {
     name = victim.typeId.split(":")[1].split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
   }
+  const level = mobLevel(victim);
+  if (level > 0) name = `§7Lv.${level} §f${name}`;
   const ratio = max > 0 ? health / max : 0;
   const color = ratio > 0.5 ? "§a" : ratio > 0.2 ? "§e" : "§c";
   notify(player, `§f${name} ${color}${Math.ceil(health)}§7/${Math.round(max)} HP`);
@@ -806,6 +823,7 @@ function openHelp(player) {
         `${POINTS_PER_LEVEL} stat points (max level ${MAX_LEVEL}).\n\n` +
         STAT_KEYS.map((k) => `${STATS[k].color}${STATS[k].name}§r: ${STATS[k].help}`).join("\n") +
         "\n\n§eMana§r: staff, ring, tome and weapon abilities cost mana, which recovers over time. Scrolls and potions cost none; Healing Potions also restore mana.\n\n" +
+        "§eWorld§r: monsters that spawn near you take a level close to yours (more health, harder hits, more XP). The most dangerous ones only appear once someone nearby is strong enough, and from level 5 Nazarick may send a patrol after you at night.\n\n" +
         "§eCombat§r: hitting a mob shows its remaining health. Agility adds a 0.4% critical chance per point (+50% damage). Dying costs a tenth of the XP gathered towards your next level.\n\n" +
         "§eSpells§r: open the Grimoire to learn tier magic with Data Crystals and assign up to four spells; cast them with the Magic Wand (sneak + use switches spell). Each spell grows stronger with use.\n\n" +
         `§eClasses§r: each class gives a permanent bonus and an active skill - sneak and use the plate to trigger it (${SKILL_COOLDOWN} s cooldown).\n\n` +

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [2, 4, 0]
+VERSION = [3, 0, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v2.4.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v3.0.0"
 
 
 def oid(name):
@@ -574,6 +574,8 @@ def loot_files():
         "quagoa": [_pool(_entry("minecraft:raw_iron", 0, 2)), _pool(_entry(coin, 0, 2))],
         "goblin": [_pool(_entry(coin, 0, 1)), _pool(_entry("minecraft:rotten_flesh", 0, 1))],
         "ogre": [_pool(_entry(coin, 1, 3)), _pool(_entry("minecraft:leather", 0, 2))],
+        "adventurer": [_pool(_entry(coin, 1, 3)), _pool(_entry("minecraft:iron_ingot", 0, 1))],
+        "guard": [_pool(_entry("minecraft:iron_ingot", 0, 2))],
         "empty": [],
     }
     return {f"loot_tables/entities/{NS}/{k}.json": {"pools": v} for k, v in t.items()}
@@ -965,7 +967,7 @@ def entity_files():
     out["ogre"] = _entity("ogre", c)
 
     # ------------------------------------------------- Nfirea (herbalist)
-    c = _mob("nfirea", ["nfirea", "human", "mob"], 30, 0.25, (0.6, 1.9), xp=0)
+    c = _mob("nfirea", ["nfirea", "merchant", "mob"], 30, 0.25, (0.6, 1.9), xp=0)
     del c["minecraft:behavior.hurt_by_target"]
     c["minecraft:economy_trade_table"] = {
         "display_name": f"entity.{oid('nfirea')}.name",
@@ -1132,6 +1134,48 @@ def entity_files():
         "impact_damage": {"damage": 7, "knockback": True, "semi_random_diff_damage": False},
         "remove_on_hit": {},
     }, {}, {})
+    # ------------------------------------------- everyday NPCs: adventurer, guard
+    hunt = {"priority": 2, "must_see": True, "reselect_targets": True,
+            "entity_types": [{"filters": _is_family("monster"), "max_dist": 18}]}
+    c = _mob("adventurer", ["adventurer", "human", "mob"], 50, 0.3, (0.7, 2.0), loot="adventurer", xp=10, kb=0.3)
+    del c["minecraft:despawn"]
+    c["minecraft:attack"] = {"damage": 7}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.25, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = hunt
+    exp_groups, exp_events = _expire_parts()
+    out["adventurer"] = _entity("adventurer", c, {
+        "overlord:free": {
+            "minecraft:despawn": {"despawn_from_distance": {}},
+            "minecraft:tameable": {"probability": 0.34, "tame_items": [oid("yggdrasil_gold_coin")],
+                                   "tame_event": {"event": "overlord:hired", "target": "self"}},
+        },
+        "overlord:hired": {
+            "minecraft:is_tamed": {},
+            "minecraft:persistent": {},
+            "minecraft:behavior.follow_owner": {"priority": 4, "speed_multiplier": 1.2,
+                                                "start_distance": 10, "stop_distance": 3},
+            "minecraft:behavior.owner_hurt_by_target": {"priority": 1},
+            "minecraft:behavior.owner_hurt_target": {"priority": 2},
+            "minecraft:timer": {"looping": False, "time": 600,
+                                "time_down_event": {"event": "overlord:expire", "target": "self"}},
+        },
+        **exp_groups,
+    }, {
+        "minecraft:entity_spawned": {"add": {"component_groups": ["overlord:free"]}},
+        "overlord:hired": {"remove": {"component_groups": ["overlord:free"]},
+                           "add": {"component_groups": ["overlord:hired"]}},
+        **exp_events,
+    })
+
+    c = _mob("guard", ["guard", "human", "mob"], 60, 0.3, (0.7, 2.0), loot="guard", xp=10, kb=0.5,
+             persistent=True)
+    c["minecraft:attack"] = {"damage": 8}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.25, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = hunt
+    c["minecraft:home"] = {"restriction_radius": 24}
+    out["guard"] = _entity("guard", c)
+
+    _apply_ai(out)
     out["lightning_bolt"] = projectile("lightning_bolt", 0.3, {
         "impact_damage": {"damage": 9, "knockback": True, "semi_random_diff_damage": False},
         "remove_on_hit": {},
@@ -1139,11 +1183,59 @@ def entity_files():
     return {f"entities/{k}.json": v for k, v in out.items()}
 
 
+def _apply_ai(out):
+    """Faction and behaviour tweaks layered over the basic definitions."""
+    def parts(name, group=None):
+        entity = out[name]["minecraft:entity"]
+        return entity["component_groups"][group] if group else entity["components"]
+
+    # Factions: monsters and Nazarick's rank and file also hunt the human NPCs.
+    for name, group in (("death_knight", "overlord:wild"), ("goblin", "overlord:wild"), ("old_guarder", None),
+                        ("elder_lich", None), ("skeleton_mage", None), ("soul_eater", None), ("ogre", None),
+                        ("quagoa", None), ("clementine", None)):
+        parts(name, group)["minecraft:behavior.nearest_attackable_target"]["entity_types"].append(
+            {"filters": _is_family("human"), "max_dist": 16})
+
+    # Packs: hitting one member brings the others.
+    for name in ("goblin", "old_guarder", "quagoa", "lizardman", "adventurer", "guard"):
+        parts(name)["minecraft:behavior.hurt_by_target"] = {"priority": 1, "alert_same_type": True}
+
+    # Casters back away when the player closes in, then resume firing.
+    for name in ("elder_lich", "skeleton_mage", "fluder"):
+        parts(name)["minecraft:behavior.avoid_mob_type"] = {"priority": 2, "entity_types": [{
+            "filters": _is_family("player"), "max_dist": 4, "walk_speed_multiplier": 1.2,
+            "sprint_speed_multiplier": 1.3}]}
+
+    # Lesser skeletons burn in daylight like vanilla ones, so they do not pile up by day.
+    for name in ("old_guarder", "skeleton_mage"):
+        parts(name)["minecraft:burns_in_daylight"] = {}
+
+    parts("soul_eater")["minecraft:behavior.leap_at_target"] = {"priority": 2, "yd": 0.4,
+                                                                "must_be_on_ground": True}
+    # The Death Knight's tower shield turns aside half of all projectile damage.
+    parts("death_knight")["minecraft:damage_sensor"]["triggers"].append(
+        {"cause": "projectile", "damage_multiplier": 0.5})
+
+    # Goblins lose their nerve and run once badly hurt.
+    goblin = out["goblin"]["minecraft:entity"]
+    goblin["component_groups"]["overlord:brave"] = {"minecraft:environment_sensor": {"triggers": [{
+        "filters": {"test": "actor_health", "subject": "self", "operator": "<", "value": 6},
+        "event": "overlord:flee", "target": "self"}]}}
+    goblin["component_groups"]["overlord:fleeing"] = {"minecraft:behavior.avoid_mob_type": {
+        "priority": 1, "entity_types": [{
+            "filters": {"any_of": [_is_family("player"), _is_family("human")]}, "max_dist": 10,
+            "walk_speed_multiplier": 1.3, "sprint_speed_multiplier": 1.4}]}}
+    goblin["events"]["minecraft:entity_spawned"]["add"]["component_groups"].append("overlord:brave")
+    goblin["events"]["overlord:flee"] = {"remove": {"component_groups": ["overlord:brave"]},
+                                         "add": {"component_groups": ["overlord:fleeing"]}}
+
+
 MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_knight", "elder_lich",
         "hamsuke", "narberal", "pandoras_actor", "old_guarder", "aura", "mare", "gazef", "clementine",
         "nazarick_maid", "brain", "zaryusu", "cz_delta", "nfirea",
         "lupusregina", "entoma", "solution", "yuri", "goblin", "ogre",
-        "skeleton_mage", "lizardman", "evileye", "fluder", "gargantua", "soul_eater", "quagoa"]
+        "skeleton_mage", "lizardman", "evileye", "fluder", "gargantua", "soul_eater", "quagoa",
+        "adventurer", "guard"]
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard"]
 
 ENTITY_NAMES = {
@@ -1159,7 +1251,8 @@ ENTITY_NAMES = {
     "solution": "Solution Epsilon", "yuri": "Yuri Alpha", "goblin": "Goblin", "ogre": "Ogre",
     "skeleton_mage": "Skeleton Mage", "lizardman": "Lizardman Warrior", "evileye": "Evileye",
     "fluder": "Fluder Paradyne", "gargantua": "Gargantua", "soul_eater": "Soul Eater",
-    "quagoa": "Quagoa", "crystal_shard": "Crystal Lance",
+    "quagoa": "Quagoa", "crystal_shard": "Crystal Lance", "adventurer": "Adventurer",
+    "guard": "Kingdom Guard",
     "fireball": "Fireball", "negative_burst": "Negative Burst", "lightning_bolt": "Lightning",
 }
 
@@ -1200,7 +1293,12 @@ def trade_files():
 
 # ============================================================ spawn rules
 def spawn_rule_files():
-    def monster(name, weight, herd=(1, 1)):
+    def monster(name, weight, herd=(1, 1), biomes=None):
+        biome_tests = [{"test": "has_biome_tag", "operator": "==", "value": "monster"},
+                       {"test": "has_biome_tag", "operator": "==", "value": "overworld"}]
+        if biomes:
+            biome_tests.append({"any_of": [{"test": "has_biome_tag", "operator": "==", "value": b}
+                                           for b in biomes]})
         return {
             "format_version": "1.8.0",
             "minecraft:spawn_rules": {
@@ -1212,9 +1310,7 @@ def spawn_rule_files():
                     "minecraft:weight": {"default": weight},
                     "minecraft:density_limit": {"surface": max(2, herd[1])},
                     "minecraft:herd": {"min_size": herd[0], "max_size": herd[1]},
-                    "minecraft:biome_filter": {"all_of": [
-                        {"test": "has_biome_tag", "operator": "==", "value": "monster"},
-                        {"test": "has_biome_tag", "operator": "==", "value": "overworld"}]},
+                    "minecraft:biome_filter": {"all_of": biome_tests},
                 }],
             },
         }
@@ -1234,7 +1330,9 @@ def spawn_rule_files():
             }],
         },
     }
-    def day_creature(name, biome, weight=2):
+    def day_creature(name, biome, weight=2, herd=(1, 1)):
+        biomes = [biome] if isinstance(biome, str) else list(biome)
+        tests = [{"test": "has_biome_tag", "operator": "==", "value": b} for b in biomes]
         return {
             "format_version": "1.8.0",
             "minecraft:spawn_rules": {
@@ -1244,9 +1342,9 @@ def spawn_rule_files():
                     "minecraft:spawns_on_block_filter": "minecraft:grass_block",
                     "minecraft:brightness_filter": {"min": 7, "max": 15, "adjust_for_weather": False},
                     "minecraft:weight": {"default": weight},
-                    "minecraft:density_limit": {"surface": 1},
-                    "minecraft:herd": {"min_size": 1, "max_size": 1},
-                    "minecraft:biome_filter": {"test": "has_biome_tag", "operator": "==", "value": biome},
+                    "minecraft:density_limit": {"surface": herd[1]},
+                    "minecraft:herd": {"min_size": herd[0], "max_size": herd[1]},
+                    "minecraft:biome_filter": tests[0] if len(tests) == 1 else {"any_of": tests},
                 }],
             },
         }
@@ -1256,11 +1354,13 @@ def spawn_rule_files():
         "spawn_rules/brain.json": day_creature("brain", "taiga"),
         "spawn_rules/zaryusu.json": day_creature("zaryusu", "swamp", 3),
         "spawn_rules/nfirea.json": day_creature("nfirea", "plains"),
-        "spawn_rules/clementine.json": monster("clementine", 3),
-        "spawn_rules/goblin.json": monster("goblin", 14, herd=(2, 4)),
-        "spawn_rules/skeleton_mage.json": monster("skeleton_mage", 8),
-        "spawn_rules/soul_eater.json": monster("soul_eater", 4),
-        "spawn_rules/fluder.json": monster("fluder", 2),
+        "spawn_rules/adventurer.json": day_creature(
+            "adventurer", ["plains", "forest", "taiga", "savanna"], 4, herd=(2, 3)),
+        "spawn_rules/clementine.json": monster("clementine", 2),
+        "spawn_rules/goblin.json": monster("goblin", 10, herd=(2, 4), biomes=["forest", "plains", "taiga"]),
+        "spawn_rules/skeleton_mage.json": monster("skeleton_mage", 6),
+        "spawn_rules/soul_eater.json": monster("soul_eater", 3),
+        "spawn_rules/fluder.json": monster("fluder", 1),
         "spawn_rules/lizardman.json": day_creature("lizardman", "swamp", 4),
         "spawn_rules/evileye.json": day_creature("evileye", "extreme_hills"),
         "spawn_rules/quagoa.json": {
@@ -1272,7 +1372,7 @@ def spawn_rule_files():
                     "minecraft:brightness_filter": {"min": 0, "max": 7, "adjust_for_weather": True},
                     "minecraft:difficulty_filter": {"min": "easy", "max": "hard"},
                     "minecraft:height_filter": {"min": -60, "max": 48},
-                    "minecraft:weight": {"default": 20},
+                    "minecraft:weight": {"default": 12},
                     "minecraft:herd": {"min_size": 1, "max_size": 3},
                     "minecraft:biome_filter": {"all_of": [
                         {"test": "has_biome_tag", "operator": "==", "value": "monster"},
@@ -1280,10 +1380,10 @@ def spawn_rule_files():
                 }],
             },
         },
-        "spawn_rules/ogre.json": monster("ogre", 6),
-        "spawn_rules/death_knight.json": monster("death_knight", 8),
-        "spawn_rules/elder_lich.json": monster("elder_lich", 8),
-        "spawn_rules/old_guarder.json": monster("old_guarder", 12, herd=(2, 3)),
+        "spawn_rules/ogre.json": monster("ogre", 4, biomes=["plains", "forest", "extreme_hills", "savanna"]),
+        "spawn_rules/death_knight.json": monster("death_knight", 5),
+        "spawn_rules/elder_lich.json": monster("elder_lich", 5),
+        "spawn_rules/old_guarder.json": monster("old_guarder", 10, herd=(2, 3)),
         "spawn_rules/hamsuke.json": hamsuke,
     }
 
@@ -1365,6 +1465,10 @@ SOUNDS = {
                                      "death": "mob.husk.death", "step": "mob.zombie.step"}),
     "quagoa": (1.0, [0.9, 1.1], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
                                  "death": "mob.rabbit.death", "step": "mob.zombie.step"}),
+    "adventurer": (1.0, [0.95, 1.1], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                      "step": "mob.zombie.step"}),
+    "guard": (1.0, [0.85, 0.95], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                  "step": "mob.zombie.step"}),
     "hamsuke": (1.0, [0.6, 0.8], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
                                   "death": "mob.rabbit.death", "step": "mob.polarbear.step"}),
 }
@@ -1470,6 +1574,8 @@ ENTITY_ANIMS = {
     "gargantua": ["look_at_target", "idle", "walk", "attack"],
     "soul_eater": ["look_at_target", "hamsuke.walk", "hamsuke.attack"],
     "quagoa": ["look_at_target", "idle", "walk", "attack"],
+    "adventurer": ["look_at_target", "idle", "walk", "attack"],
+    "guard": ["look_at_target", "idle", "walk", "attack"],
     "crystal_shard": ["projectile.spin"],
     "magic_bullet": ["projectile.spin"],
     "lightning_bolt": ["projectile.spin"],

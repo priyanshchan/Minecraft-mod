@@ -18,7 +18,7 @@
           "max": "hard"
         },
         "minecraft:weight": {
-          "default": 14
+          "default": 10
         },
         "minecraft:density_limit": {
           "surface": 4
@@ -38,6 +38,25 @@
               "test": "has_biome_tag",
               "operator": "==",
               "value": "overworld"
+            },
+            {
+              "any_of": [
+                {
+                  "test": "has_biome_tag",
+                  "operator": "==",
+                  "value": "forest"
+                },
+                {
+                  "test": "has_biome_tag",
+                  "operator": "==",
+                  "value": "plains"
+                },
+                {
+                  "test": "has_biome_tag",
+                  "operator": "==",
+                  "value": "taiga"
+                }
+              ]
             }
           ]
         }

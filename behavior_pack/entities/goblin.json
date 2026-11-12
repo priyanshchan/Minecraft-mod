@@ -38,6 +38,14 @@
                 "value": "nazarick_ally"
               },
               "max_dist": 20
+            },
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "human"
+              },
+              "max_dist": 16
             }
           ]
         }
@@ -105,6 +113,48 @@
       },
       "overlord:despawn": {
         "minecraft:instant_despawn": {}
+      },
+      "overlord:brave": {
+        "minecraft:environment_sensor": {
+          "triggers": [
+            {
+              "filters": {
+                "test": "actor_health",
+                "subject": "self",
+                "operator": "<",
+                "value": 6
+              },
+              "event": "overlord:flee",
+              "target": "self"
+            }
+          ]
+        }
+      },
+      "overlord:fleeing": {
+        "minecraft:behavior.avoid_mob_type": {
+          "priority": 1,
+          "entity_types": [
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "human"
+                  }
+                ]
+              },
+              "max_dist": 10,
+              "walk_speed_multiplier": 1.3,
+              "sprint_speed_multiplier": 1.4
+            }
+          ]
+        }
       }
     },
     "components": {
@@ -156,7 +206,8 @@
         "priority": 0
       },
       "minecraft:behavior.hurt_by_target": {
-        "priority": 1
+        "priority": 1,
+        "alert_same_type": true
       },
       "minecraft:behavior.random_stroll": {
         "priority": 6,
@@ -186,7 +237,8 @@
       "minecraft:entity_spawned": {
         "add": {
           "component_groups": [
-            "overlord:wild"
+            "overlord:wild",
+            "overlord:brave"
           ]
         }
       },
@@ -206,6 +258,18 @@
         "add": {
           "component_groups": [
             "overlord:despawn"
+          ]
+        }
+      },
+      "overlord:flee": {
+        "remove": {
+          "component_groups": [
+            "overlord:brave"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:fleeing"
           ]
         }
       }

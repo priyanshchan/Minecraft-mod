@@ -114,8 +114,21 @@
               "value": "nazarick_ally"
             },
             "max_dist": 28
+          },
+          {
+            "filters": {
+              "test": "is_family",
+              "subject": "other",
+              "value": "human"
+            },
+            "max_dist": 16
           }
         ]
+      },
+      "minecraft:behavior.leap_at_target": {
+        "priority": 2,
+        "yd": 0.4,
+        "must_be_on_ground": true
       }
     },
     "events": {}

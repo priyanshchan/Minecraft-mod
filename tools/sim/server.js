@@ -4,18 +4,22 @@ export const system = {
   get currentTick() { return tick; },
   runTimeout: (f, t = 0) => { timers.push({ at: tick + t, f }); return 1; },
   runInterval: (f, t = 1) => { timers.push({ every: t, f }); return 1; },
+  run: (f) => { timers.push({ at: tick + 1, f }); return 1; },
 };
 export function advance(n) { for (let i = 0; i < n; i++) { tick++; for (const t of [...timers]) { if (t.every ? tick % t.every === 0 : t.at === tick) { t.f(); if (!t.every) timers.splice(timers.indexOf(t), 1); } } } }
 export const players = [];
 const objectives = new Map();
 export const world = {
-  afterEvents: { entityDie: sig(), entityHurt: sig(), playerSpawn: sig(), playerLeave: sig(), worldLoad: sig(), itemUse: sig(), itemCompleteUse: sig(), projectileHitEntity: sig(), projectileHitBlock: sig() },
+  beforeEvents: { playerInteractWithEntity: sig() },
+  clock: { time: 6000, day: 0 }, getTimeOfDay() { return this.clock.time; }, getDay() { return this.clock.day; },
+  afterEvents: { entitySpawn: sig(), entityDie: sig(), entityHurt: sig(), playerSpawn: sig(), playerLeave: sig(), worldLoad: sig(), itemUse: sig(), itemCompleteUse: sig(), projectileHitEntity: sig(), projectileHitBlock: sig() },
   getAllPlayers: () => players,
   scoreboard: {
     getObjective: (n) => objectives.get(n), addObjective: (n) => { const o = { scores: new Map(), setScore(p, v) { this.scores.set(p.id, v); } }; objectives.set(n, o); return o; },
     setObjectiveAtDisplaySlot: () => {}, objectives,
   },
 };
+export const EntityInitializationCause = { Spawned: "Spawned", Loaded: "Loaded", Born: "Born", Event: "Event", Transformed: "Transformed" };
 export const DisplaySlotId = { BelowName: "BelowName" };
 export const EntityDamageCause = { entityAttack: "entityAttack", magic: "magic" };
 export const Direction = { Up: "Up", Down: "Down", North: "North", South: "South", East: "East", West: "West" };

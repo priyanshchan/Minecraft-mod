@@ -18,7 +18,7 @@
           "max": "hard"
         },
         "minecraft:weight": {
-          "default": 8
+          "default": 6
         },
         "minecraft:density_limit": {
           "surface": 2

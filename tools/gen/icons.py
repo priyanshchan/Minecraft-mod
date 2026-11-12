@@ -1119,6 +1119,8 @@ EGG_COLORS = {
     "gargantua": ("#6f7480", "#ff5a3d"),
     "soul_eater": ("#1c2026", "#59e0c8"),
     "quagoa": ("#6b4d34", "#e9e3cf"),
+    "adventurer": ("#8a6a4a", "#3f6a45"),
+    "guard": ("#8d939f", "#2f4f8f"),
 }
 
 

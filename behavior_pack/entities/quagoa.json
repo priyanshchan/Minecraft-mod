@@ -60,7 +60,8 @@
         "priority": 0
       },
       "minecraft:behavior.hurt_by_target": {
-        "priority": 1
+        "priority": 1,
+        "alert_same_type": true
       },
       "minecraft:behavior.random_stroll": {
         "priority": 6,
@@ -111,6 +112,14 @@
               "value": "nazarick_ally"
             },
             "max_dist": 20
+          },
+          {
+            "filters": {
+              "test": "is_family",
+              "subject": "other",
+              "value": "human"
+            },
+            "max_dist": 16
           }
         ]
       }

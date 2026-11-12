@@ -2461,6 +2461,109 @@ def crystal_shard():
     return m
 
 
+# ------------------------------------------------ everyday NPCs: adventurer, guard
+def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, spear):
+    m = Model(name, bounds=(3, 3.5, 1.25))
+    skin_d = shade(skin, 0.85)
+    pal = {"S": skin, "s": skin_d, "H": hair, "h": shade(hair, 1.4), "e": "#2b2118", "M": armor, "m": armor_l,
+           "D": armor_d, "C": cloth, "c": cloth_d, "G": GOLD, "W": "#e9e6dc", "b": "#6b4a36"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(armor)
+    art(torso.front, [
+        "MmCSSCmM",
+        "MCCCCCCM",
+        "DCcCCcCD",
+        "DCCGGCCD",
+        "DCCGGCCD",
+        "MCcCCcCM",
+        "MMCCCCMM",
+        "DMMCCMMD",
+        "bbbGGbbb",
+        "CcCCCCcC",
+        "CCcCCcCC",
+        "cCCCCCCc",
+    ], pal)
+    torso.band(8, 9, "#6b4a36")
+    art(torso.front, ["bbbGGbbb"], pal, 0, 8)
+    torso.band(9, 12, cloth)
+    for f in (torso.right, torso.left, torso.back):
+        f.hline(4, armor_d)
+    torso.back.fill(cloth, 1, 0, 7, 8)
+    torso.back.vline(3, cloth_d, 0, 8)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(skin, noise=3)
+    art(hd.front, [
+        "HHHHHHHH",
+        "HhHHHHhH",
+        "HSSSSSSH",
+        "SSSSSSSS",
+        "SeSSSSeS",
+        "SSSssSSS",
+        "SSSSSSSS",
+        "SSsbbsSS",
+    ], pal)
+    for f in (hd.right, hd.left):
+        f.fill(hair, 0, 0, None, 3)
+    hd.right.fill(hair, 0, 3, 4, 5)
+    hd.left.fill(hair, 4, 3, 8, 5)
+    hd.back.fill(hair, 0, 0, None, 6)
+    hd.top.fill(hair)
+    if helmet:
+        cap = head.cube((-4, 28, -4), (8, 4, 8), inflate=0.5)
+        cap.fill(armor)
+        cap.band(3, 4, armor_d)
+        cap.band(0, 1, armor_l)
+        cap.top.border(armor_l)
+        cap.front.vline(3, armor_d, 3, 4).vline(4, armor_l, 0, 4)
+        cap.bottom.fill(None)
+    for bname, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(bname, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(cloth)
+        arm.band(0, 3, armor)
+        arm.band(2, 3, armor_d)
+        arm.band(8, 11, "#6b4a36")
+        arm.band(11, 12, skin)
+    for bname, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(bname, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill("#4a3f36")
+        leg.band(4, 6, armor)
+        leg.band(8, 12, "#3a2a1e")
+    weapon = m.bone("weapon", (-6, 13, -2), parent="rightArm")
+    if spear:
+        shaft = weapon.cube((-6.5, 1, -3.5), (1, 32, 1))
+        shaft.fill("#6b4a2a", noise=5)
+        tip = weapon.cube((-6.5, 33, -3.5), (1, 5, 1))
+        tip.fill("#d5dae2", noise=3)
+        collar = weapon.cube((-7, 32, -4), (2, 1, 2))
+        collar.fill(armor_d)
+    else:
+        grip = weapon.cube((-6.5, 12.5, -5), (1, 1, 3))
+        grip.fill("#3a2a1f", noise=2)
+        guard = weapon.cube((-8, 12, -6), (4, 2, 1))
+        guard.fill(armor_d)
+        blade = weapon.cube((-6.5, 12, -19), (1, 2, 13))
+        blade.fill("#c9ced6", noise=4)
+        for f in (blade.right, blade.left):
+            f.hline(1, "#8a8f98")
+        shield = m.bone("shield", (5, 14, -2), parent="leftArm").cube((3, 9, -3), (6, 8, 1))
+        shield.fill("#6b4a36", noise=6)
+        shield.front.border(armor)
+        shield.front.fill(cloth, 2, 2, 4, 6)
+    return m
+
+
+def adventurer():
+    return _soldier("adventurer", "#e0b48c", "#5a3d28", "#8a6a4a", "#a8855f", "#5f4630", "#3f6a45", "#2a4a2f",
+                    helmet=False, spear=False)
+
+
+def guard():
+    return _soldier("guard", "#dcae88", "#3a2a1f", "#8d939f", "#b9c0cc", "#5d626c", "#2f4f8f", "#1f3766",
+                    helmet=True, spear=True)
+
+
 def lightning_bolt():
     m = Model("lightning_bolt", bounds=(1, 1, 0.25))
     body = m.bone("body", (0, 2, 0))
@@ -2481,4 +2584,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        narberal, pandoras_actor, old_guarder, aura, mare, gazef, clementine, nazarick_maid,
        brain, zaryusu, cz_delta, nfirea,
        lupusregina, entoma, solution, yuri, goblin, ogre,
-       skeleton_mage, lizardman, evileye, fluder, gargantua, soul_eater, quagoa, crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]
+       skeleton_mage, lizardman, evileye, fluder, gargantua, soul_eater, quagoa, adventurer, guard,
+       crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

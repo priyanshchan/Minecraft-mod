@@ -30,9 +30,11 @@ VANILLA = {
     "material": {"entity_alphatest", "armor", "armor_enchanted"},
     "texture": {"textures/misc/enchanted_actor_glint"},
     "entity": {"minecraft:small_fireball", "minecraft:player", "minecraft:lightning_bolt",
-               "minecraft:arrow", "minecraft:evocation_fang"},
+               "minecraft:arrow", "minecraft:evocation_fang", "minecraft:zombie",
+               "minecraft:villager_v2"},
     "block_geometry": {"minecraft:geometry.full_block"},
     "quest_target": {"minecraft:zombie", "minecraft:skeleton"},
+    "script_entity": {"minecraft:villager_v2", "minecraft:zombie", "minecraft:lightning_bolt"},
     # verified against @minecraft/vanilla-data 1.26.60
     "item": {
         "minecraft:iron_ingot", "minecraft:diamond", "minecraft:redstone", "minecraft:glass_bottle",
@@ -399,6 +401,8 @@ def main():
     for armor_set in re.findall(r'wearsFullSet\(gear, "([a-z_]+)"\)', script):
         for piece in ("helmet", "chestplate", "leggings", "boots"):
             check(f"{NS}:{armor_set}_{piece}" in items, f"main.js: unknown armour piece {armor_set}_{piece}")
+    for ident in re.findall(r'const [A-Z]+ = "(minecraft:[a-z_0-9]+)";', script):
+        check(ident in VANILLA["script_entity"] or ident in VANILLA["particle"], f"scripts: unknown vanilla id {ident}")
     for ident in re.findall(r'spawnEntity\("([^"]+)"', script):
         check(ident in known_entities, f"main.js: unknown entity {ident}")
     for sound in re.findall(r'playSound\([^,]+,\s*"([^"]+)"', script):

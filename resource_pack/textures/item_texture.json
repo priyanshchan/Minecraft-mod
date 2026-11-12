@@ -41,6 +41,9 @@
     "overlord_death_knight_sword": {
       "textures": "textures/items/overlord/death_knight_sword"
     },
+    "overlord_egg_adventurer": {
+      "textures": "textures/items/overlord/egg_adventurer"
+    },
     "overlord_egg_ainz": {
       "textures": "textures/items/overlord/egg_ainz"
     },
@@ -88,6 +91,9 @@
     },
     "overlord_egg_goblin": {
       "textures": "textures/items/overlord/egg_goblin"
+    },
+    "overlord_egg_guard": {
+      "textures": "textures/items/overlord/egg_guard"
     },
     "overlord_egg_hamsuke": {
       "textures": "textures/items/overlord/egg_hamsuke"
