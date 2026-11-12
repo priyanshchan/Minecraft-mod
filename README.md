@@ -45,6 +45,13 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 | **Yuri Alpha** | 230 | Captain of the Pleiades; heavy fists | Pleiades Emblems |
 | **Goblin** | 16 | Small raiders that spawn at night in groups of 2–4 | Gold Coins |
 | **Ogre** | 60 | Big, slow night monster that hits hard | Gold Coins, Leather |
+| **Gargantua** (boss bar) | 600 | Giant stone golem; very slow, 20 damage, halves projectile damage | Gargantua's Fist, Guardian Crest, Adamantite |
+| **Evileye** | 180 | Neutral masked caster found in mountains; fires Crystal Lances at monsters | Tome: Crystal Lance |
+| **Fluder Paradyne** | 160 | Hostile archmage, rare at night; hurls fireballs | Fluder's Staff |
+| **Soul Eater** | 70 | Fast undead beast at night; withering bite | Soul Fragments |
+| **Skeleton Mage** | 30 | Night caster that fires magic bullets | Bones, sometimes a Soul Fragment |
+| **Lizardman Warrior** | 40 | Neutral swamp tribe; hunts monsters | Gold Coins, Cod |
+| **Quagoa** | 35 | Clawed mole-men that spawn underground in the dark | Raw Iron, Gold Coins |
 | **Brain Unglaus** | 110 | Neutral swordsman found in taiga; hunts monsters | Brain's Katana |
 | **Zaryusu Shasha** | 100 | Neutral lizardman found in swamps; hunts monsters, chilling strikes | Frost Pain |
 | **Nfirea Bareare** | 30 | Peaceful herbalist found in plains; trades potions and ingredients for Gold Coins | — |
@@ -92,13 +99,20 @@ Every mob has its own spawn egg.
 | **Entoma's Blade Bug** | 8 damage, poisons the target |
 | **Pleiades Emblem** | Dropped by all six Pleiades maids (Narberal and CZ included) |
 | **Shooting Star** | Single use: grants one level and a full heal. Crafted from 8 Pleiades Emblems around a gold block |
+| **Tome: Crystal Lance** | Reusable: fires a fast crystal shard for 14 damage (1.5 s cooldown) |
+| **Fluder's Staff** | 5 damage. Use: three fireballs in a fan |
+| **Gargantua's Fist** | 13 damage. Use: *Ground Slam* — damages, launches and stuns mobs within 5 blocks |
+| **Horn of the Goblin General** | Use: three goblin soldiers fight for you for 5 minutes (2 min cooldown) |
+| **Horn of the Tomb Raid** | Starts a Tomb Raid (see below) |
+| **Scroll: Rebirth** | Single use: refunds all spent stat points |
+| **Overlord's Regalia** | Caster armour set made from Soul Fragments. Full set: +25% spell power and +50% mana recovery |
 | **Tome: Create Undead** | Summons a Death Knight that follows and defends you for 5 minutes (max. 3) |
 | **Minor Healing Potion** | Drink for instant health and regeneration |
 | **Dark Warrior armour** | Helmet, chestplate, leggings, boots (netherite-level protection). Full set grants Strength and Resistance |
 | **Guardian sigils** | Use to summon the matching Floor Guardian or Ainz himself |
 | Data Crystal, YGGDRASIL Gold Coin, Guardian Crest, Adamantite Ingot | Crafting materials |
 
-Blocks: **Nazarick Bricks**, **Nazarick Tiles**, **Nazarick Pillar**, **Nazarick Lamp** (full light),
+Blocks: **Nazarick Bricks** (plus **Gilded** and **Cracked** variants), **Glacier Bricks**, **Nazarick Tiles**, **Nazarick Pillar**, **Nazarick Lamp** (full light),
 **Block of Adamantite** and **Block of Data Crystal** (glows).
 
 ### Trading
@@ -127,13 +141,21 @@ character menu.
 - **Class skills:** sneak and use the plate to trigger your class's active skill (45 s cooldown) — Fortress
   (Warrior: Resistance II), Mana Surge (Magic Caster: refills mana), Shadow Step (Assassin: invisible and
   fast), Sanctuary (Cleric: heals you and nearby players).
-- **Guild quests:** 19 kill requests, one at a time, paying Gold Coins and XP. Completed quests raise your
+- **Guild quests:** 24 kill requests, one at a time, paying Gold Coins and XP. Completed quests raise your
   adventurer rank — Copper, Iron, Silver, Gold, Platinum, Mithril, Orichalcum, Adamantite — which unlocks
   harder requests, up to defeating Ainz Ooal Gown.
 - **Party play:** players within 24 blocks of a kill receive half its XP and quest credit.
 - **Status bar:** level, class, mana, XP and quest progress above the hotbar (can be hidden from the menu).
 
 Progress is saved per player in the world.
+
+### Tomb Raid
+
+Blow the **Horn of the Tomb Raid** to start a five-wave battle around you. The tier follows your level
+(1–19, 20–49, 50+): tier 1 ends with Death Knights, tier 2 with a random Pleiades maid, tier 3 with a random
+Floor Guardian. Clear every wave to earn Gold Coins, Data Crystals and XP (24/6/600, 48/12/2000 or 96/24/6000,
+with Guardian Crests and Soul Fragments at the higher tiers). The raid fails if you die, move more than
+48 blocks away or take longer than four minutes on a wave.
 
 ### Survival progression
 
@@ -142,7 +164,7 @@ Progress is saved per player in the world.
 3. Craft a **guardian sigil**: 4 data crystals in the corners, 1 gold coin in the centre and 4 of the guardian's material on the edges —
    obsidian (Albedo), redstone block (Shalltear), packed ice (Cocytus), magma block (Demiurge), iron block (Sebas),
    copper block (Narberal Gamma), gold block (Pandora's Actor), oak log (Aura), moss block (Mare), gunpowder (CZ2128 Delta), bone block (Lupusregina), string (Entoma),
-   slime ball (Solution), iron ingot (Yuri).
+   slime ball (Solution), iron ingot (Yuri), stone (Gargantua).
 4. Defeat the guardians for their weapons and **Guardian Crests**.
 5. Craft the **Sigil of Ainz Ooal Gown** (4 crests in the corners, 4 data crystals on the edges, diamond block in the centre) and face the Overlord.
 
@@ -160,6 +182,12 @@ Scroll: Explosion (paper + gunpowder + data crystal → 2), Scroll: Time Stop (p
 Scroll: Heavy Recover (paper + glistering melon slice + data crystal → 2),
 Tome: Reality Slash (book surrounded by 4 data crystals and 4 amethyst shards),
 Tome: Fallen Down (book surrounded by 4 data crystals and 4 diamond blocks),
+Overlord's Regalia (the usual armour shapes with Soul Fragments),
+Horn of the Tomb Raid (bone / data crystal / bone, bone / gold ingot / bone, one bone below),
+Horn of the Goblin General (same shape with an emerald in place of the crystal),
+Scroll: Rebirth (paper + golden apple + data crystal),
+Gilded Nazarick Bricks (3 Nazarick Bricks + gold ingot in a 2×2 → 3), Cracked Nazarick Bricks (brick + gunpowder),
+Glacier Bricks (2×2 packed ice → 4),
 World Champion armour (matching Dark Warrior piece + diamond block + Guardian Crest, any arrangement).
 
 ## Repository layout
@@ -174,7 +202,7 @@ tools/build.py     validates, then packages dist/*.mcaddon
 tools/test_rpg.py  runs the script logic against a mock of the game API (needs Node.js)
 ```
 
-`behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests) are written by hand; everything else inside the two pack
+`behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests) and `raid.js` (Tomb Raid) are written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 
 ```bash

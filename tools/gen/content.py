@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [1, 5, 0]
+VERSION = [2, 0, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v1.5.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v2.0.0"
 
 
 def oid(name):
@@ -103,6 +103,7 @@ SIGILS = {
     "entoma": ("Entoma Vasilissa Zeta", "minecraft:string"),
     "solution": ("Solution Epsilon", "minecraft:slime_ball"),
     "yuri": ("Yuri Alpha", "minecraft:iron_ingot"),
+    "gargantua": ("Gargantua", "minecraft:stone"),
 }
 
 ITEMS = {
@@ -200,6 +201,29 @@ ITEMS = {
     "magic_rifle": ("CZ's Magic Rifle", "equipment", _weapon(3, _cooldown("overlord_rifle", 0.6),
                                                             rarity="rare")),
     "adventurer_plate": ("Adventurer's Plate", "equipment", {"minecraft:max_stack_size": 1}),
+    "tome_crystal_lance": ("Tome: Crystal Lance", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "rare", "minecraft:glint": True,
+        **_cooldown("overlord_lance", 1.5)}),
+    "fluder_staff": ("Fluder's Staff", "equipment", _weapon(
+        5, {**_cooldown("overlord_fluder", 4.0), "minecraft:glint": True})),
+    "golem_fist": ("Gargantua's Fist", "equipment", _weapon(13, _cooldown("overlord_slam", 8.0))),
+    "scroll_of_rebirth": ("Scroll: Rebirth", "items", {
+        "minecraft:max_stack_size": 16, "minecraft:rarity": "rare",
+        **_cooldown("overlord_scroll", 1.5)}),
+    "raid_horn": ("Horn of the Tomb Raid", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True}),
+    "goblin_horn": ("Horn of the Goblin General", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "rare",
+        **_cooldown("overlord_goblins", 120.0)}),
+    "soul_fragment": ("Soul Fragment", "items", {"minecraft:max_stack_size": 64}),
+    "regalia_helmet": ("Overlord's Regalia Hood", "equipment",
+                       _armor("slot.armor.head", 2, 363, "armor_head")),
+    "regalia_chestplate": ("Overlord's Regalia Robe", "equipment",
+                           _armor("slot.armor.chest", 6, 528, "armor_torso")),
+    "regalia_leggings": ("Overlord's Regalia Leggings", "equipment",
+                         _armor("slot.armor.legs", 5, 495, "armor_legs")),
+    "regalia_boots": ("Overlord's Regalia Boots", "equipment",
+                      _armor("slot.armor.feet", 2, 429, "armor_feet")),
     "holy_staff": ("Lupusregina's Holy Staff", "equipment", _weapon(
         7, {**_cooldown("overlord_holy", 12.0), "minecraft:glint": True}, rarity="rare")),
     "blade_bug": ("Entoma's Blade Bug", "equipment", _weapon(8, rarity="rare")),
@@ -220,6 +244,8 @@ ITEMS = {
 }
 for _piece in ("helmet", "chestplate", "leggings", "boots"):
     ITEMS[f"world_champion_{_piece}"][2]["minecraft:rarity"] = "epic"
+    ITEMS[f"regalia_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
+        {"items": [oid("soul_fragment")], "repair_amount": "query.max_durability * 0.25"}]}
 for _who, (_name, _mat) in SIGILS.items():
     ITEMS[f"sigil_of_{_who}"] = (f"Sigil of {_name}", "items", {
         "minecraft:max_stack_size": 16, "minecraft:rarity": "rare", "minecraft:glint": True})
@@ -271,6 +297,14 @@ BLOCKS = {
         "minecraft:destructible_by_explosion": {"explosion_resistance": 60},
         "minecraft:map_color": "#55618a",
     }),
+    **{name: (title, sound, {
+        "minecraft:destructible_by_mining": {"seconds_to_destroy": 2.0},
+        "minecraft:destructible_by_explosion": {"explosion_resistance": 30},
+        "minecraft:map_color": color})
+       for name, title, sound, color in (
+           ("gilded_nazarick_bricks", "Gilded Nazarick Bricks", "stone", "#d9a92b"),
+           ("cracked_nazarick_bricks", "Cracked Nazarick Bricks", "stone", "#3a3346"),
+           ("glacier_bricks", "Glacier Bricks", "glass", "#9fd4ef"))},
     "nazarick_pillar": ("Nazarick Pillar", "stone", {
         "minecraft:destructible_by_mining": {"seconds_to_destroy": 2.0},
         "minecraft:destructible_by_explosion": {"explosion_resistance": 30},
@@ -402,6 +436,27 @@ def recipe_files():
             "C": cry, "D": "minecraft:amethyst_shard", "B": "minecraft:book"}, oid("tome_reality_slash")),
         "tome_fallen_down": _shaped("tome_fallen_down", ["DCD", "CBC", "DCD"], {
             "C": cry, "D": "minecraft:diamond_block", "B": "minecraft:book"}, oid("tome_fallen_down")),
+        "regalia_helmet": _shaped("regalia_helmet", ["AAA", "A A"], {"A": oid("soul_fragment")},
+                                  oid("regalia_helmet")),
+        "regalia_chestplate": _shaped("regalia_chestplate", ["A A", "AAA", "AAA"],
+                                      {"A": oid("soul_fragment")}, oid("regalia_chestplate")),
+        "regalia_leggings": _shaped("regalia_leggings", ["AAA", "A A", "A A"], {"A": oid("soul_fragment")},
+                                    oid("regalia_leggings")),
+        "regalia_boots": _shaped("regalia_boots", ["A A", "A A"], {"A": oid("soul_fragment")},
+                                 oid("regalia_boots")),
+        "raid_horn": _shaped("raid_horn", ["BCB", "BGB", " B "], {
+            "B": "minecraft:bone", "C": cry, "G": "minecraft:gold_ingot"}, oid("raid_horn"), unlock=cry),
+        "goblin_horn": _shaped("goblin_horn", ["BEB", "BGB", " B "], {
+            "B": "minecraft:bone", "E": "minecraft:emerald", "G": "minecraft:gold_ingot"},
+            oid("goblin_horn"), unlock="minecraft:emerald"),
+        "scroll_of_rebirth": _shapeless("scroll_of_rebirth", [
+            "minecraft:paper", "minecraft:golden_apple", cry], oid("scroll_of_rebirth")),
+        "gilded_nazarick_bricks": _shaped("gilded_nazarick_bricks", ["SS", "SG"], {
+            "S": oid("nazarick_bricks"), "G": "minecraft:gold_ingot"}, oid("gilded_nazarick_bricks"), 3),
+        "cracked_nazarick_bricks": _shapeless("cracked_nazarick_bricks", [
+            "minecraft:gunpowder", oid("nazarick_bricks")], oid("cracked_nazarick_bricks")),
+        "glacier_bricks": _shaped("glacier_bricks", ["II", "II"], {"I": "minecraft:packed_ice"},
+                                  oid("glacier_bricks"), 4),
         "shooting_star": _shaped("shooting_star", ["EEE", "EGE", "EEE"], {
             "E": oid("pleiades_emblem"), "G": "minecraft:gold_block"}, oid("shooting_star")),
         "adventurer_plate": _shapeless("adventurer_plate", [
@@ -430,7 +485,8 @@ VANILLA_ITEMS_USED = [
     "minecraft:gunpowder", "minecraft:clock", "minecraft:glistering_melon_slice",
     "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
     "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
-    "minecraft:rotten_flesh",
+    "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
+    "minecraft:cod",
 ]
 
 
@@ -500,6 +556,15 @@ def loot_files():
                      _pool(_entry("minecraft:slime_ball", 3, 8)), _pool(_entry(coin, 6, 12))],
         "yuri": [_pool(_entry(oid("pleiades_emblem"), 1, 2, looting=False)), _pool(_entry(cry, 3, 5)),
                  _pool(_entry(coin, 8, 14))],
+        "skeleton_mage": [_pool(_entry("minecraft:bone", 0, 2)), _pool(_entry(coin, 0, 2)),
+                          _pool(_entry(oid("soul_fragment"), 0, 1))],
+        "lizardman": [_pool(_entry(coin, 0, 2)), _pool(_entry("minecraft:cod", 0, 2))],
+        "evileye": [one(oid("tome_crystal_lance")), _pool(_entry(cry, 2, 5)), _pool(_entry(coin, 6, 12))],
+        "fluder": [one(oid("fluder_staff")), _pool(_entry(cry, 2, 5)), _pool(_entry(coin, 6, 12))],
+        "gargantua": [one(oid("golem_fist")), one(crest), _pool(_entry(cry, 6, 10)),
+                      _pool(_entry(coin, 24, 40)), _pool(_entry(oid("adamantite_ingot"), 4, 8))],
+        "soul_eater": [_pool(_entry(oid("soul_fragment"), 1, 3)), _pool(_entry(coin, 1, 3))],
+        "quagoa": [_pool(_entry("minecraft:raw_iron", 0, 2)), _pool(_entry(coin, 0, 2))],
         "goblin": [_pool(_entry(coin, 0, 1)), _pool(_entry("minecraft:rotten_flesh", 0, 1))],
         "ogre": [_pool(_entry(coin, 1, 3)), _pool(_entry("minecraft:leather", 0, 2))],
         "empty": [],
@@ -798,11 +863,94 @@ def entity_files():
     out["yuri"] = _entity("yuri", guardian("yuri", 230, 0.34, 12, (0.7, 2.0), kb=0.7, xp=100))
 
     # ------------------------------------------------------ goblin / ogre
-    c = _mob("goblin", ["goblin", "monster", "mob"], 16, 0.3, (0.6, 1.9), loot="goblin", xp=4, scale=0.7)
+    c = _mob("goblin", ["goblin", "monster", "mob"], 16, 0.3, (0.6, 1.9), xp=4, scale=0.7)
+    del c["minecraft:despawn"], c["minecraft:experience_reward"]
     c["minecraft:attack"] = {"damage": 3}
     c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
-    c["minecraft:behavior.nearest_attackable_target"] = _target_players(20)
-    out["goblin"] = _entity("goblin", c)
+    exp_groups, exp_events = _expire_parts()
+    out["goblin"] = _entity("goblin", c, {
+        "overlord:wild": {
+            "minecraft:despawn": {"despawn_from_distance": {}},
+            "minecraft:loot": {"table": loot_path("goblin")},
+            "minecraft:experience_reward": {"on_death": "query.last_hit_by_player ? 4 : 0"},
+            "minecraft:behavior.nearest_attackable_target": _target_players(20, [ally]),
+        },
+        "overlord:summoned": {
+            "minecraft:type_family": {"family": ["goblin", ally, "mob"]},
+            "minecraft:persistent": {},
+            "minecraft:loot": {"table": loot_path("empty")},
+            "minecraft:health": {"value": 30, "max": 30},
+            "minecraft:attack": {"damage": 6},
+            "minecraft:tameable": {"probability": 1.0, "tame_items": ["minecraft:emerald"]},
+            "minecraft:behavior.follow_owner": {"priority": 4, "speed_multiplier": 1.2,
+                                                "start_distance": 10, "stop_distance": 3},
+            "minecraft:behavior.owner_hurt_by_target": {"priority": 1},
+            "minecraft:behavior.owner_hurt_target": {"priority": 2},
+            "minecraft:behavior.nearest_attackable_target": {
+                "priority": 3, "must_see": True, "reselect_targets": True,
+                "entity_types": [{"filters": _is_family("monster"), "max_dist": 16}]},
+            "minecraft:timer": {"looping": False, "time": 300,
+                                "time_down_event": {"event": "overlord:expire", "target": "self"}},
+        },
+        **exp_groups,
+    }, {
+        "minecraft:entity_spawned": {"add": {"component_groups": ["overlord:wild"]}},
+        "overlord:become_summoned": {"remove": {"component_groups": ["overlord:wild"]},
+                                     "add": {"component_groups": ["overlord:summoned"]}},
+        **exp_events,
+    })
+
+    # ------------------------------------- mega batch: casters, beasts, golem
+    c = _mob("skeleton_mage", ["skeleton_mage", "nazarick", "undead", "skeleton", "monster", "mob"], 30,
+             0.25, (0.6, 1.9), loot="skeleton_mage", xp=10, undead=True)
+    c["minecraft:shooter"] = {"def": oid("magic_bullet")}
+    c["minecraft:behavior.ranged_attack"] = {
+        "priority": 3, "attack_interval_min": 1.5, "attack_interval_max": 2.5, "attack_radius": 16.0,
+        "speed_multiplier": 1.0}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally])
+    out["skeleton_mage"] = _entity("skeleton_mage", c)
+
+    out["lizardman"] = hunter("lizardman", "lizardman", 40, 0.3, 6)
+
+    c = _mob("evileye", ["evileye", "human", "mob"], 180, 0.32, (0.6, 1.9), loot="evileye", xp=80, scale=0.85,
+             kb=0.4)
+    c["minecraft:shooter"] = {"def": oid("crystal_shard")}
+    c["minecraft:behavior.ranged_attack"] = {
+        "priority": 3, "attack_interval_min": 1.2, "attack_interval_max": 2.0, "attack_radius": 20.0,
+        "speed_multiplier": 1.0}
+    c["minecraft:behavior.nearest_attackable_target"] = {
+        "priority": 2, "must_see": True, "reselect_targets": True,
+        "entity_types": [{"filters": _is_family("monster"), "max_dist": 20}]}
+    out["evileye"] = _entity("evileye", c)
+
+    c = _mob("fluder", ["fluder", "human", "monster", "mob"], 160, 0.27, (0.7, 2.0), loot="fluder", xp=80,
+             kb=0.3, fire_immune=True)
+    c["minecraft:shooter"] = {"def": oid("fireball")}
+    c["minecraft:behavior.ranged_attack"] = {
+        "priority": 3, "attack_interval_min": 2.0, "attack_interval_max": 3.5, "attack_radius": 24.0,
+        "speed_multiplier": 1.0}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(32, [ally])
+    out["fluder"] = _entity("fluder", c)
+
+    c = guardian("gargantua", 600, 0.22, 20, (1.4, 2.6), scale=1.6, kb=1.0, xp=300,
+                 sensor={"cause": "projectile", "damage_multiplier": 0.5})
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": False}
+    out["gargantua"] = _entity("gargantua", c)
+
+    c = _mob("soul_eater", ["soul_eater", "nazarick", "undead", "monster", "mob"], 70, 0.34, (1.0, 1.3),
+             loot="soul_eater", xp=25, kb=0.4, undead=True)
+    del c["minecraft:can_climb"]
+    c["minecraft:attack"] = {"damage": 9, "effect_name": "wither", "effect_duration": 3}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(28, [ally])
+    out["soul_eater"] = _entity("soul_eater", c)
+
+    c = _mob("quagoa", ["quagoa", "monster", "mob"], 35, 0.3, (0.7, 2.0), loot="quagoa", xp=10, kb=0.2)
+    c["minecraft:attack"] = {"damage": 7}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(20, [ally])
+    out["quagoa"] = _entity("quagoa", c)
+
     c = _mob("ogre", ["ogre", "monster", "mob"], 60, 0.24, (0.9, 2.0), loot="ogre", xp=15, scale=1.4, kb=0.7)
     c["minecraft:attack"] = {"damage": 10}
     c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
@@ -969,6 +1117,10 @@ def entity_files():
                        "durationhard": 200, "amplifier": 1},
         "remove_on_hit": {},
     }, {}, {})
+    out["crystal_shard"] = projectile("crystal_shard", 0.3, {
+        "impact_damage": {"damage": 14, "knockback": True, "semi_random_diff_damage": False},
+        "remove_on_hit": {},
+    }, {}, {})
     out["magic_bullet"] = projectile("magic_bullet", 0.25, {
         "impact_damage": {"damage": 7, "knockback": True, "semi_random_diff_damage": False},
         "remove_on_hit": {},
@@ -983,8 +1135,9 @@ def entity_files():
 MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_knight", "elder_lich",
         "hamsuke", "narberal", "pandoras_actor", "old_guarder", "aura", "mare", "gazef", "clementine",
         "nazarick_maid", "brain", "zaryusu", "cz_delta", "nfirea",
-        "lupusregina", "entoma", "solution", "yuri", "goblin", "ogre"]
-PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet"]
+        "lupusregina", "entoma", "solution", "yuri", "goblin", "ogre",
+        "skeleton_mage", "lizardman", "evileye", "fluder", "gargantua", "soul_eater", "quagoa"]
+PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard"]
 
 ENTITY_NAMES = {
     "ainz": "Ainz Ooal Gown", "albedo": "Albedo", "shalltear": "Shalltear Bloodfallen",
@@ -997,6 +1150,9 @@ ENTITY_NAMES = {
     "nfirea": "Nfirea Bareare", "magic_bullet": "Magic Bullet",
     "lupusregina": "Lupusregina Beta", "entoma": "Entoma Vasilissa Zeta",
     "solution": "Solution Epsilon", "yuri": "Yuri Alpha", "goblin": "Goblin", "ogre": "Ogre",
+    "skeleton_mage": "Skeleton Mage", "lizardman": "Lizardman Warrior", "evileye": "Evileye",
+    "fluder": "Fluder Paradyne", "gargantua": "Gargantua", "soul_eater": "Soul Eater",
+    "quagoa": "Quagoa", "crystal_shard": "Crystal Lance",
     "fireball": "Fireball", "negative_burst": "Negative Burst", "lightning_bolt": "Lightning",
 }
 
@@ -1019,7 +1175,8 @@ def trade_files():
         sell(oid("scroll_of_teleportation"), 12), sell(oid("nazarick_bricks"), 4, qty=16),
         sell(oid("nazarick_lamp"), 6, qty=4), sell("minecraft:golden_apple", 16),
         sell(oid("adamantite_ingot"), 24), sell(oid("scroll_of_explosion"), 10),
-        sell(oid("scroll_of_time_stop"), 14),
+        sell(oid("scroll_of_time_stop"), 14), sell(oid("scroll_of_rebirth"), 20),
+        sell(oid("soul_fragment"), 5),
         buy("minecraft:diamond", 1, 6), buy("minecraft:gold_ingot", 4, 5), buy("minecraft:bone", 16, 2),
     ]
     herbs = [
@@ -1094,6 +1251,28 @@ def spawn_rule_files():
         "spawn_rules/nfirea.json": day_creature("nfirea", "plains"),
         "spawn_rules/clementine.json": monster("clementine", 3),
         "spawn_rules/goblin.json": monster("goblin", 14, herd=(2, 4)),
+        "spawn_rules/skeleton_mage.json": monster("skeleton_mage", 8),
+        "spawn_rules/soul_eater.json": monster("soul_eater", 4),
+        "spawn_rules/fluder.json": monster("fluder", 2),
+        "spawn_rules/lizardman.json": day_creature("lizardman", "swamp", 4),
+        "spawn_rules/evileye.json": day_creature("evileye", "extreme_hills"),
+        "spawn_rules/quagoa.json": {
+            "format_version": "1.8.0",
+            "minecraft:spawn_rules": {
+                "description": {"identifier": oid("quagoa"), "population_control": "monster"},
+                "conditions": [{
+                    "minecraft:spawns_underground": {},
+                    "minecraft:brightness_filter": {"min": 0, "max": 7, "adjust_for_weather": True},
+                    "minecraft:difficulty_filter": {"min": "easy", "max": "hard"},
+                    "minecraft:height_filter": {"min": -60, "max": 48},
+                    "minecraft:weight": {"default": 20},
+                    "minecraft:herd": {"min_size": 1, "max_size": 3},
+                    "minecraft:biome_filter": {"all_of": [
+                        {"test": "has_biome_tag", "operator": "==", "value": "monster"},
+                        {"test": "has_biome_tag", "operator": "==", "value": "overworld"}]},
+                }],
+            },
+        },
         "spawn_rules/ogre.json": monster("ogre", 6),
         "spawn_rules/death_knight.json": monster("death_knight", 8),
         "spawn_rules/elder_lich.json": monster("elder_lich", 8),
@@ -1164,6 +1343,21 @@ SOUNDS = {
                                  "death": "mob.husk.death", "step": "mob.zombie.step"}),
     "ogre": (1.0, [0.5, 0.6], {"ambient": "mob.zombie.say", "hurt": "mob.husk.hurt",
                                "death": "mob.husk.death", "step": "mob.irongolem.walk"}),
+    "skeleton_mage": (1.0, [1.0, 1.2], {"ambient": "mob.skeleton.say", "hurt": "mob.skeleton.hurt",
+                                        "death": "mob.skeleton.death", "step": "mob.skeleton.step",
+                                        "shoot": "mob.shulker.shoot"}),
+    "lizardman": (1.0, [0.7, 0.8], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                    "step": "mob.zombie.step"}),
+    "evileye": (1.0, [1.4, 1.5], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                  "step": "mob.zombie.step", "shoot": "random.glass"}),
+    "fluder": (1.0, [0.7, 0.8], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                 "step": "mob.zombie.step", "shoot": "mob.ghast.fireball"}),
+    "gargantua": (1.0, [0.5, 0.6], {"ambient": "mob.ravager.ambient", "hurt": "mob.irongolem.hit",
+                                    "death": "mob.irongolem.death", "step": "mob.irongolem.walk"}),
+    "soul_eater": (1.0, [0.6, 0.8], {"ambient": "mob.wither.ambient", "hurt": "mob.husk.hurt",
+                                     "death": "mob.husk.death", "step": "mob.zombie.step"}),
+    "quagoa": (1.0, [0.9, 1.1], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
+                                 "death": "mob.rabbit.death", "step": "mob.zombie.step"}),
     "hamsuke": (1.0, [0.6, 0.8], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
                                   "death": "mob.rabbit.death", "step": "mob.polarbear.step"}),
 }
@@ -1262,6 +1456,14 @@ ENTITY_ANIMS = {
     "yuri": ["look_at_target", "idle", "robe_walk", "attack"],
     "goblin": ["look_at_target", "idle", "walk", "attack"],
     "ogre": ["look_at_target", "idle", "walk", "attack"],
+    "skeleton_mage": ["look_at_target", "idle", "robe_walk", "attack"],
+    "lizardman": ["look_at_target", "idle", "walk", "attack", "tail"],
+    "evileye": ["look_at_target", "idle", "walk", "attack"],
+    "fluder": ["look_at_target", "idle", "robe_walk", "attack"],
+    "gargantua": ["look_at_target", "idle", "walk", "attack"],
+    "soul_eater": ["look_at_target", "hamsuke.walk", "hamsuke.attack"],
+    "quagoa": ["look_at_target", "idle", "walk", "attack"],
+    "crystal_shard": ["projectile.spin"],
     "magic_bullet": ["projectile.spin"],
     "lightning_bolt": ["projectile.spin"],
     "fireball": ["projectile.spin"],
@@ -1313,6 +1515,7 @@ WEARABLES = {
     "mask_of_envy": ("helmet", f"{NS}_mask_of_envy"),
     **{f"world_champion_{piece}": (piece, f"{NS}_world_champion_{layer}")
        for piece, (layer, _s) in ARMOR.items()},
+    **{f"regalia_{piece}": (piece, f"{NS}_regalia_{layer}") for piece, (layer, _s) in ARMOR.items()},
 }
 
 

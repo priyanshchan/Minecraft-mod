@@ -102,6 +102,9 @@ def main():
     layer1, layer2 = icons.champion_layers()
     save_png(RP / f"textures/models/armor/{content.NS}_world_champion_1.png", layer1)
     save_png(RP / f"textures/models/armor/{content.NS}_world_champion_2.png", layer2)
+    layer1, layer2 = icons.regalia_layers()
+    save_png(RP / f"textures/models/armor/{content.NS}_regalia_1.png", layer1)
+    save_png(RP / f"textures/models/armor/{content.NS}_regalia_2.png", layer2)
 
     write_json(RP / "textures/item_texture.json", content.item_texture_json(item_icons))
     write_json(RP / "textures/terrain_texture.json", content.terrain_texture_json())

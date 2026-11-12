@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "overlord:cracked_nazarick_bricks"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:gunpowder"
+      },
+      {
+        "item": "overlord:nazarick_bricks"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "overlord:nazarick_bricks"
+      }
+    ],
+    "result": {
+      "item": "overlord:cracked_nazarick_bricks",
+      "count": 1
+    }
+  }
+}

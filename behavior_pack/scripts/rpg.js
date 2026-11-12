@@ -68,8 +68,11 @@ const QUESTS = [
   { key: "old_guarders", title: "Guards of the Tomb", target: id("old_guarder"), what: "Nazarick Old Guarders", count: 8, coins: 10, xp: 120, rank: 0 },
   { key: "goblins", title: "Goblin Raiders", target: id("goblin"), what: "Goblins", count: 12, coins: 8, xp: 90, rank: 0 },
   { key: "ogres", title: "Ogre Trouble", target: id("ogre"), what: "Ogres", count: 5, coins: 12, xp: 160, rank: 1 },
+  { key: "quagoa", title: "Claws in the Dark", target: id("quagoa"), what: "Quagoa", count: 8, coins: 12, xp: 160, rank: 1 },
+  { key: "skeleton_mages", title: "Arcane Bones", target: id("skeleton_mage"), what: "Skeleton Mages", count: 6, coins: 12, xp: 160, rank: 1 },
   { key: "elder_liches", title: "Silence the Liches", target: id("elder_lich"), what: "Elder Liches", count: 5, coins: 14, xp: 200, rank: 1 },
   { key: "death_knights", title: "Knights of Death", target: id("death_knight"), what: "Death Knights", count: 5, coins: 20, xp: 350, rank: 2 },
+  { key: "soul_eaters", title: "Devourers of Souls", target: id("soul_eater"), what: "Soul Eaters", count: 5, coins: 22, xp: 400, rank: 2 },
   { key: "clementine", title: "The Fallen Scripture", target: id("clementine"), what: "Clementine", count: 1, coins: 24, xp: 400, rank: 2 },
   { key: "narberal", title: "Storm Maid", target: id("narberal"), what: "Narberal Gamma", count: 1, coins: 32, xp: 700, rank: 3 },
   { key: "cz_delta", title: "Silent Sniper", target: id("cz_delta"), what: "CZ2128 Delta", count: 1, coins: 32, xp: 700, rank: 3 },
@@ -77,6 +80,8 @@ const QUESTS = [
   { key: "entoma", title: "Spider's Whisper", target: id("entoma"), what: "Entoma Vasilissa Zeta", count: 1, coins: 32, xp: 700, rank: 3 },
   { key: "solution", title: "The Hungry Slime", target: id("solution"), what: "Solution Epsilon", count: 1, coins: 32, xp: 700, rank: 3 },
   { key: "yuri", title: "Captain of the Pleiades", target: id("yuri"), what: "Yuri Alpha", count: 1, coins: 36, xp: 800, rank: 4 },
+  { key: "fluder", title: "The Triad Caster", target: id("fluder"), what: "Fluder Paradyne", count: 1, coins: 36, xp: 800, rank: 3 },
+  { key: "gargantua", title: "The Stone Colossus", target: id("gargantua"), what: "Gargantua", count: 1, coins: 56, xp: 1500, rank: 5 },
   { key: "cocytus", title: "Ruler of the Frozen Glacier", target: id("cocytus"), what: "Cocytus", count: 1, coins: 48, xp: 1200, rank: 4 },
   { key: "shalltear", title: "The Bloody Valkyrie", target: id("shalltear"), what: "Shalltear Bloodfallen", count: 1, coins: 48, xp: 1200, rank: 4 },
   { key: "demiurge", title: "Jaldabaoth", target: id("demiurge"), what: "Demiurge", count: 1, coins: 48, xp: 1200, rank: 5 },
@@ -97,6 +102,10 @@ const KILL_XP = {
   [id("pandoras_actor")]: 450,
   [id("narberal")]: 300,
   [id("cz_delta")]: 300,
+  [id("gargantua")]: 700,
+  [id("fluder")]: 250,
+  [id("evileye")]: 250,
+  [id("soul_eater")]: 40,
   [id("lupusregina")]: 300,
   [id("entoma")]: 300,
   [id("solution")]: 300,
@@ -181,9 +190,25 @@ export function maxMana(p) {
   return Math.round(base * factor);
 }
 
-/** Mana recovered per second. @param {Profile} p */
-function manaRegen(p) {
-  return (1 + p.int * 0.1) * (p.cls === "caster" ? 1.5 : 1);
+/** Players currently wearing the full Overlord's Regalia (set by main.js). */
+const regalia = new Set();
+
+/**
+ * @param {import("@minecraft/server").Player} player
+ * @param {boolean} wearing
+ */
+export function setRegalia(player, wearing) {
+  if (wearing) regalia.add(player.id);
+  else regalia.delete(player.id);
+}
+
+/**
+ * Mana recovered per second.
+ * @param {Profile} p
+ * @param {string} playerId
+ */
+function manaRegen(p, playerId) {
+  return (1 + p.int * 0.1) * (p.cls === "caster" ? 1.5 : 1) * (regalia.has(playerId) ? 1.5 : 1);
 }
 
 /**
@@ -192,7 +217,7 @@ function manaRegen(p) {
  */
 export function spellPower(player) {
   const p = profileOf(player);
-  return 1 + p.int * 0.02 + (p.cls === "caster" ? 0.3 : 0);
+  return 1 + p.int * 0.02 + (p.cls === "caster" ? 0.3 : 0) + (regalia.has(player.id) ? 0.25 : 0);
 }
 
 /** @param {Profile} p */
@@ -333,6 +358,22 @@ export function grantLevel(player) {
   return true;
 }
 
+/**
+ * Refunds every spent stat point (Scroll: Rebirth). Returns how many were refunded.
+ * @param {import("@minecraft/server").Player} player
+ */
+export function resetStats(player) {
+  const p = profileOf(player);
+  const spent = p.str + p.vit + p.int + p.agi;
+  if (spent === 0) return 0;
+  p.points += spent;
+  p.str = p.vit = p.int = p.agi = 0;
+  p.mana = Math.min(p.mana, maxMana(p));
+  save(player);
+  applyPassives(player);
+  return spent;
+}
+
 /** Tick at which each player's class skill is ready again. */
 const skillReady = new Map();
 
@@ -429,7 +470,7 @@ function advanceQuest(player, typeId) {
  * @param {string} itemId
  * @param {number} amount
  */
-function giveItem(player, itemId, amount) {
+export function giveItem(player, itemId, amount) {
   try {
     let left = amount;
     const container = player.getComponent("minecraft:inventory")?.container;
@@ -533,8 +574,10 @@ function holdEffect(player, effect, tier) {
     if (current && current.duration > LONG / 2) player.removeEffect(effect);
     return;
   }
-  if (current && current.amplifier === tier - 1 && current.duration > LONG / 2) return;
-  if (current && current.amplifier > tier - 1) return; // a stronger source is active
+  const ours = current !== undefined && current.duration > LONG / 2;
+  if (ours && current.amplifier === tier - 1) return;
+  if (current && !ours && current.amplifier > tier - 1) return; // a stronger outside source is active
+  if (ours) player.removeEffect(effect); // our own tier changed (e.g. stats were reset)
   player.addEffect(effect, LONG, { amplifier: tier - 1, showParticles: false });
 }
 
@@ -712,7 +755,8 @@ function openHelp(player) {
         "\n\n§eMana§r: staff, ring, tome and weapon abilities cost mana, which recovers over time. Scrolls and potions cost none; Healing Potions also restore mana.\n\n" +
         `§eClasses§r: each class gives a permanent bonus and an active skill - sneak and use the plate to trigger it (${SKILL_COOLDOWN} s cooldown).\n\n` +
         "§eGuild quests§r: accept a request, defeat the targets and earn Gold Coins and XP. Completed quests raise your adventurer rank from Copper to Adamantite and unlock harder requests.\n\n" +
-        `§eParty§r: players within ${PARTY_RANGE} blocks of a kill receive half its XP and quest credit.`
+        `§eParty§r: players within ${PARTY_RANGE} blocks of a kill receive half its XP and quest credit.\n\n` +
+        "§eTomb Raid§r: blow a Horn of the Tomb Raid to fight five waves. The raid tier follows your level (1-19, 20-49, 50+) and pays coins, crystals and XP."
     )
     .button("Back");
   show(form, player, () => openMenu(player));
@@ -744,6 +788,7 @@ world.afterEvents.playerLeave.subscribe((event) => {
   profiles.delete(event.playerId);
   dirty.delete(event.playerId);
   hudHold.delete(event.playerId);
+  regalia.delete(event.playerId);
   skillReady.delete(event.playerId);
 });
 
@@ -763,7 +808,7 @@ system.runInterval(() => {
     try {
       const p = profileOf(player);
       const cap = maxMana(p);
-      if (p.mana < cap) p.mana = Math.min(cap, p.mana + manaRegen(p) / 2);
+      if (p.mana < cap) p.mana = Math.min(cap, p.mana + manaRegen(p, player.id) / 2);
       drawHud(player);
     } catch {
       // player is leaving

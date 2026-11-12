@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:gilded_nazarick_bricks"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "SS",
+      "SG"
+    ],
+    "key": {
+      "S": {
+        "item": "overlord:nazarick_bricks"
+      },
+      "G": {
+        "item": "minecraft:gold_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:nazarick_bricks"
+      }
+    ],
+    "result": {
+      "item": "overlord:gilded_nazarick_bricks",
+      "count": 3
+    }
+  }
+}

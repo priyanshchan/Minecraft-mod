@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:raid_horn"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "BCB",
+      "BGB",
+      " B "
+    ],
+    "key": {
+      "B": {
+        "item": "minecraft:bone"
+      },
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "G": {
+        "item": "minecraft:gold_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:data_crystal"
+      }
+    ],
+    "result": {
+      "item": "overlord:raid_horn",
+      "count": 1
+    }
+  }
+}

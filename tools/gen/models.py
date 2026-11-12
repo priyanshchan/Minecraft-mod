@@ -136,10 +136,17 @@ def ainz():
 
 # -------------------------------------------------------------- Elder Lich
 def elder_lich():
-    m = Model("elder_lich", bounds=(3, 4, 1.25))
-    robe, robe_l, robe_d = "#4a2020", "#643030", "#2e1212"
-    trim_c = "#8a6d2b"
-    pal = {"B": "#d8d0b4", "b": "#a59c7e", "d": "#140d0d", "K": "#080606", "Y": "#b6ff4a",
+    return _lich()
+
+
+def skeleton_mage():
+    return _lich("skeleton_mage", "#22335c", "#34497a", "#141f3a", "#8a8fa8", "#59d0ff")
+
+
+def _lich(name="elder_lich", robe="#4a2020", robe_l="#643030", robe_d="#2e1212", trim_c="#8a6d2b",
+          eye="#b6ff4a"):
+    m = Model(name, bounds=(3, 4, 1.25))
+    pal = {"B": "#d8d0b4", "b": "#a59c7e", "d": "#140d0d", "K": "#080606", "Y": eye,
            "P": robe, "p": robe_l, "G": trim_c, "T": "#c9c1a4", "t": "#6e664c", "H": robe_d}
 
     body = m.bone("body", (0, 24, 0))
@@ -1670,8 +1677,16 @@ def brain():
 
 
 def zaryusu():
-    m = Model("zaryusu", bounds=(3.5, 3.5, 1.25))
-    sc, sc_l, sc_d, belly = "#3f7a4a", "#5fa068", "#27502f", "#c9c58f"
+    return _lizard()
+
+
+def lizardman():
+    return _lizard("lizardman", "#5a7a3a", "#7a9c55", "#3a5226", "#d2c79a", ("#8a8f98", "#c9ced6"))
+
+
+def _lizard(name="zaryusu", sc="#3f7a4a", sc_l="#5fa068", sc_d="#27502f", belly="#c9c58f",
+            blade_c=("#bfe8ff", "#f4fbff")):
+    m = Model(name, bounds=(3.5, 3.5, 1.25))
     pal = {"G": sc, "g": sc_l, "D": sc_d, "Y": belly, "y": "#a8a472", "e": "#f2c21b", "K": "#15130f",
            "T": "#f1eee0", "L": "#6b4226", "l": "#8a5a36"}
     body = m.bone("body", (0, 24, 0))
@@ -1754,10 +1769,10 @@ def zaryusu():
         "sSSSSSSSSSSSSs",
         "..sSSsSSsSSss.",
     ]
-    ipal = {"s": "#bfe8ff", "S": "#f4fbff", ".": None}
+    ipal = {"s": blade_c[0], "S": blade_c[1], ".": None}
     art(blade.right, ice, ipal)
     art(blade.left, [r[::-1] for r in ice], ipal)
-    blade.top.fill("#bfe8ff")
+    blade.top.fill(blade_c[0])
     return m
 
 
@@ -2183,6 +2198,269 @@ def ogre():
     return m
 
 
+# ---------------------------------- Evileye / Fluder / Gargantua / beasts
+def evileye():
+    m = Model("evileye", bounds=(3, 3.5, 1.25))
+    red, red_l, red_d = "#8f1a1f", "#b5333a", "#5a0d11"
+    pal = {"R": red, "r": red_l, "D": red_d, "W": "#f1ede4", "w": "#c9c3b5", "K": "#15131a", "J": "#e0202c",
+           "H": "#ecd06a", "B": "#1b1a22", "G": GOLD}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(red)
+    art(torso.front, [
+        "RrBBBBrR",
+        "RrRBBRrR",
+        "RRrGGrRR",
+        "DRRrrRRD",
+        "RRRRRRRR",
+        "RrRRRRrR",
+        "DRRRRRRD",
+        "RRrRRrRR",
+        "BBBGGBBB",
+        "RrRRRRrR",
+        "DRRRRRRD",
+        "DDRRRRDD",
+    ], pal)
+    cape = body.cube((-5, 2, 2), (10, 22, 1))
+    cape.fill(red)
+    for f in (cape.front, cape.back):
+        f.vshade(1.0, 0.75)
+        for x in (2, 5, 7):
+            f.vline(x, red_d, 1, 21)
+        f.ragged_bottom(3, seed=6)
+    cape.bottom.fill(None)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill("#ecd06a", noise=4)
+    art(hd.front, [
+        "HHHHHHHH",
+        "WWWWWWWW",
+        "WWWJJWWW",
+        "WKKWWKKW",
+        "WWWWWWWW",
+        "WWwWWwWW",
+        "wWWWWWWw",
+        ".wWWWWw.",
+    ], pal)
+    hood = head.cube((-4, 24, -4), (8, 8, 8), inflate=0.75)
+    hood.fill(red)
+    hood.front.fill(None, 1, 1, 7, 8)
+    hood.bottom.fill(None)
+    for f in (hood.right, hood.left, hood.back):
+        f.vshade(1.05, 0.8)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(red)
+        arm.band(8, 9, red_d)
+        arm.band(9, 12, "#1b1a22")
+    for name, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill("#1b1a22")
+        leg.band(8, 12, red_d)
+    return m
+
+
+def fluder():
+    m = Model("fluder", bounds=(3, 4, 1.25))
+    robe, robe_l, robe_d = "#e9e6dc", "#fbfaf5", "#b9b4a4"
+    skin = "#e2bfa3"
+    pal = {"W": robe, "w": robe_d, "L": robe_l, "S": skin, "s": "#c29c80", "B": "#f6f6f2", "b": "#cfcfc8",
+           "e": "#2b2b33", "G": GOLD, "P": "#5a2a8a", "p": "#7d49b3"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(robe)
+    art(torso.front, [
+        "WPBBBBPW",
+        "WPBBBBPW",
+        "WPpBBpPW",
+        "WWPBBPWW",
+        "WWPbbPWW",
+        "WWPPPPWW",
+        "WwWPPWwW",
+        "WWWPPWWW",
+        "GGGGGGGG",
+        "WwWPPWwW",
+        "WWWPPWWW",
+        "wWWPPWWw",
+    ], pal)
+    torso.band(8, 9, GOLD)
+    skirt = m.bone("robe", (0, 12, 0), parent="body").cube((-5, 0, -3), (10, 12, 6))
+    skirt.fill(robe)
+    for f in skirt.sides:
+        f.vshade(1.0, 0.85)
+        for x in range(1, f.w, 3):
+            f.vline(x, robe_d, 1, 11)
+    skirt.front.fill("#5a2a8a", 4, 0, 6, 11)
+    skirt.band(11, 12, GOLD)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(skin, noise=3)
+    art(hd.front, [
+        "BBBBBBBB",
+        "BSSSSSSB",
+        "SBBSSBBS",
+        "SeSSSSeS",
+        "SSSssSSS",
+        "BBBBBBBB",
+        "BBbBBbBB",
+        "BBBBBBBB",
+    ], pal)
+    for f in (hd.right, hd.left, hd.back):
+        f.fill("#f6f6f2", 0, 0, None, 2)
+        f.fill("#f6f6f2", 0, 5, None, 8)
+    hd.back.fill("#f6f6f2")
+    hd.top.fill(skin)
+    hd.top.border("#f6f6f2")
+    beard = head.cube((-3, 17, -5), (6, 8, 1))
+    beard.fill("#f6f6f2", noise=5)
+    beard.front.ragged_bottom(3, seed=2)
+    for x in (1, 4):
+        beard.front.vline(x, "#cfcfc8", 0, 6)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(robe)
+        arm.band(8, 9, GOLD)
+        arm.band(9, 10, "#5a2a8a")
+        arm.band(10, 12, skin)
+    staff = m.bone("staff", (-6, 13, -3), parent="rightArm")
+    shaft = staff.cube((-6.5, 1, -3.5), (1, 31, 1))
+    shaft.fill("#6b4a2a", noise=5)
+    orb = staff.cube((-7.5, 32, -4.5), (3, 3, 3))
+    orb.fill("#e0202c", noise=4)
+    for f in orb.faces:
+        f.px(0, 0, "#ffb0a8")
+    return m
+
+
+def gargantua():
+    m = Model("gargantua", bounds=(6, 7, 2.5))
+    st, st_l, st_d = "#6f7480", "#8f95a3", "#454954"
+    rune = "#ff5a3d"
+    pal = {"S": st, "s": st_l, "D": st_d, "R": rune, "K": "#16171c"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-7, 10, -4), (14, 14, 8))
+    torso.fill(st, noise=8)
+    art(torso.front, [
+        "sSSSSSSSSSSSSs",
+        "SsSSDSSSSDSSsS",
+        "SSSDSSRRSSDSSS",
+        "SSDSSRSSRSSDSS",
+        "SSSSRSKKSRSSSS",
+        "SSSSRSKKSRSSSS",
+        "SSDSSRSSRSSDSS",
+        "SSSDSSRRSSDSSS",
+        "DSSSSSSSSSSSSD",
+        "DDSSSDSSDSSSDD",
+        "SDDSSSSSSSSDDS",
+        "SSDDDDDDDDDDSS",
+        "DSSSSSSSSSSSSD",
+        "DDSSSSSSSSSSDD",
+    ], pal)
+    for f in (torso.right, torso.left, torso.back):
+        for y in (4, 9):
+            f.hline(y, st_d)
+    torso.back.vline(6, rune, 1, 9).vline(7, rune, 1, 9)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 6, 8))
+    hd.fill(st, noise=8)
+    art(hd.front, ["sSSSSSSs", "SDDSSDDS", "SRRDDRRS", "SSSSSSSS", "DSDSDSDS", "DDDDDDDD"], pal)
+    for name, x, px in (("rightArm", -13, -10), ("leftArm", 7, 10)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 4, -3), (6, 20, 6))
+        arm.fill(st, noise=8)
+        arm.band(0, 2, st_l)
+        arm.band(8, 9, st_d)
+        arm.band(14, 15, rune)
+        arm.band(15, 20, st_d)
+    for name, x, px in (("rightLeg", -7, -3.5), ("leftLeg", 1, 3.5)):
+        leg = m.bone(name, (px, 10, 0)).cube((x, 0, -3), (6, 10, 6))
+        leg.fill(st, noise=8)
+        leg.band(4, 5, st_d)
+        leg.band(8, 10, st_d)
+    return m
+
+
+def soul_eater():
+    m = Model("soul_eater", bounds=(3.5, 3, 0.9))
+    dark, dark_l, glow = "#1c2026", "#343b45", "#59e0c8"
+    pal = {"K": dark, "k": dark_l, "B": BONE, "b": BONE_D, "G": glow, "g": "#b8fff2", "N": "#07080a",
+           "T": "#d6cfb6"}
+    body = m.bone("body", (0, 12, 0))
+    b = body.cube((-4, 8, -8), (8, 8, 16))
+    b.fill(dark, noise=5)
+    for f in (b.right, b.left):
+        art(f, ["................", ".B.B.B.B.B.B.B..", ".B.B.B.B.B.B.B..", ".b.b.b.b.b.b.b..", "..G...G...G.....",
+                "................"], pal, 0, 1)
+    b.top.vline(3, BONE, 0, 16).vline(4, BONE_D, 0, 16)
+    b.bottom.fill(glow, 2, 3, 6, 13)
+    mane = body.cube((-2, 16, -8), (4, 3, 12))
+    mane.fill(glow, noise=14)
+    mane.bottom.fill(None)
+    head = m.bone("head", (0, 13, -8), parent="body")
+    h = head.cube((-3, 9, -14), (6, 7, 6))
+    h.fill(BONE, noise=4)
+    art(h.front, ["BBBBBB", "BBBBBB", "NGBBGN", "NNBBNN", "BBNNBB", "TNTTNT", "bTNNTb"], pal)
+    for f in (h.right, h.left):
+        f.fill(BONE_D, 0, 5, None, 7)
+    for sx in (-4, 2):
+        horn = head.cube((sx, 15, -11), (2, 4, 2))
+        horn.fill(dark_l)
+        horn.band(0, 1, glow)
+    for name, x, z in (("leg0", -4, -7), ("leg1", 1, -7), ("leg2", -4, 4), ("leg3", 1, 4)):
+        leg = m.bone(name, (x + 1.5, 8, z + 1.5), parent="body").cube((x, 0, z), (3, 8, 3))
+        leg.fill(dark)
+        stripes(leg, BONE_D, every=3, start=1)
+        leg.band(7, 8, glow)
+    return m
+
+
+def quagoa():
+    m = Model("quagoa", bounds=(3, 3.5, 1.25))
+    fur, fur_l, fur_d = "#6b4d34", "#8a684a", "#45301f"
+    pal = {"F": fur, "f": fur_l, "D": fur_d, "e": "#e0202c", "K": "#15130f", "N": "#e89aa8", "T": "#f1eee0",
+           "C": "#e9e3cf"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -3), (8, 12, 6))
+    torso.fill(fur, noise=8)
+    torso.front.fill(fur_l, 2, 2, 6, 10)
+    torso.front.noise(8, 3)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(fur, noise=8)
+    art(hd.front, ["FfFFFFfF", "FFFFFFFF", "FeKFFKeF", "FFFFFFFF", "DFFFFFFD", "FFFFFFFF", "DFFFFFFD", "FDFFFFDF"], pal)
+    snout = head.cube((-2, 24, -7), (4, 4, 3))
+    snout.fill(fur_l, noise=5)
+    art(snout.front, ["fNNf", "ffff", "TKKT", "ffff"], pal)
+    for sx in (-5, 3):
+        ear = head.cube((sx, 31, -1), (2, 2, 1))
+        ear.fill(fur_d)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(fur, noise=8)
+        arm.band(10, 12, fur_d)
+        for f in arm.sides:
+            for xx in (0, 2):
+                f.px(xx, 11, "#e9e3cf")
+    for name, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill(fur, noise=8)
+        leg.band(10, 12, fur_d)
+    return m
+
+
+def crystal_shard():
+    m = Model("crystal_shard", bounds=(1, 1, 0.25))
+    body = m.bone("body", (0, 1.5, 0))
+    c = body.cube((-1.5, 0, -1.5), (3, 3, 3))
+    pal = {"C": "#bfe8ff", "W": "#ffffff", "D": "#6fb4de"}
+    for f in c.faces:
+        art(f, ["DCD", "CWC", "DCD"], pal)
+    a = body.cube((-0.5, 1, -5), (1, 1, 10))
+    a.fill("#e6f6ff", noise=6)
+    b2 = body.cube((-3, 1, -0.5), (6, 1, 1))
+    b2.fill("#bfe8ff", noise=6)
+    return m
+
+
 def lightning_bolt():
     m = Model("lightning_bolt", bounds=(1, 1, 0.25))
     body = m.bone("body", (0, 2, 0))
@@ -2202,4 +2480,5 @@ def lightning_bolt():
 ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_lich, hamsuke,
        narberal, pandoras_actor, old_guarder, aura, mare, gazef, clementine, nazarick_maid,
        brain, zaryusu, cz_delta, nfirea,
-       lupusregina, entoma, solution, yuri, goblin, ogre, fireball, negative_burst, lightning_bolt, magic_bullet]
+       lupusregina, entoma, solution, yuri, goblin, ogre,
+       skeleton_mage, lizardman, evileye, fluder, gargantua, soul_eater, quagoa, crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

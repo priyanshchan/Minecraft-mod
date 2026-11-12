@@ -1,0 +1,28 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:crystal_shard",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/crystal_shard"
+      },
+      "geometry": {
+        "default": "geometry.overlord.crystal_shard"
+      },
+      "scripts": {
+        "animate": [
+          "projectile_spin"
+        ]
+      },
+      "animations": {
+        "projectile_spin": "animation.overlord.projectile.spin"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ]
+    }
+  }
+}

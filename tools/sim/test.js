@@ -2,6 +2,7 @@ import assert from "node:assert";
 import { world, system, players, advance, ItemStack } from "@minecraft/server";
 import { script, shown } from "@minecraft/server-ui";
 import * as rpg from "./rpg.js";
+import * as raid from "./raid.js";
 await import("./main.js"); // must load without touching the world
 
 function mkPlayer(name) {
@@ -9,11 +10,14 @@ function mkPlayer(name) {
   const p = { id: name, name, typeId: "minecraft:player", isValid: true, location: { x: 0, y: 64, z: 0 }, msgs, inv, effects, bar: "",
     tags: new Set(), hasTag(t) { return this.tags.has(t); }, addTag(t) { this.tags.add(t); },
     getDynamicProperty: (k) => props.get(k), setDynamicProperty: (k, v) => props.set(k, v), props,
-    onScreenDisplay: { setActionBar(t) { p.bar = t; } }, sendMessage: (m) => msgs.push(m), playSound() {},
+    onScreenDisplay: { setActionBar(t) { p.bar = t; }, setTitle(t) { p.title = t; } }, sendMessage: (m) => msgs.push(m), playSound() {},
     getEffect: (e) => effects.get(e), addEffect(e, d, o = {}) { effects.set(e, { duration: d, amplifier: o.amplifier ?? 0 }); }, removeEffect: (e) => effects.delete(e),
     health: { currentValue: 20, effectiveMax: 20, setCurrentValue(v) { this.currentValue = v; return true; } },
     getComponent(c) { if (c === "minecraft:health") return p.health; if (c === "minecraft:inventory") return { container: { addItem(s) { inv.push(s); } } }; },
-    dimension: { spawnParticle() {}, spawnItem() {}, getPlayers: () => players, playSound() {} } };
+    dimension: { id: "overworld", mobs: [], spawnParticle() {}, spawnItem() {}, getPlayers: () => players, playSound() {},
+      getBlock: () => ({ isAir: true }),
+      spawnEntity(typeId) { const e = { typeId, tags: new Set(), isValid: true, addTag(t) { this.tags.add(t); }, remove: () => { p.dimension.mobs = p.dimension.mobs.filter((m) => m !== e); } }; p.dimension.mobs.push(e); return e; },
+      getEntities: (q) => p.dimension.mobs.filter((m) => (q.tags ?? []).every((t) => m.tags.has(t))) } };
   players.push(p); return p;
 }
 const mob = (typeId, hp = 20, fam = []) => ({ typeId, isValid: true, location: { x: 1, y: 64, z: 1 }, health: { currentValue: hp, effectiveMax: hp, setCurrentValue(v) { this.currentValue = v; } },
@@ -82,12 +86,36 @@ a.effects.delete("resistance"); rpg.useClassSkill(a); assert.ok(!a.effects.has("
 assert.equal(rpg.grantLevel(a), false, "no level past the cap");
 const lvl = pb.level; assert.equal(rpg.grantLevel(b), true); assert.equal(pb.level, lvl + 1);
 
+// Scroll: Rebirth refunds stat points
+const spentBefore = pa.str + pa.vit + pa.int + pa.agi, pointsBefore = pa.points;
+assert.equal(rpg.resetStats(a), spentBefore); assert.equal(pa.points, pointsBefore + spentBefore); assert.equal(pa.str, 0);
+assert.ok(!a.effects.has("health_boost") || a.effects.get("health_boost").amplifier === 0, "only the warrior heart remains");
+
+// Tomb Raid: level 100 -> tier 3, five waves, rewards on clear
+const coinsBefore = a.inv.filter((s) => s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0);
+raid.startRaid(a); assert.ok(raid.inRaid(a));
+for (let wave = 0; wave < 5; wave++) {
+  assert.ok(a.dimension.mobs.length >= 3, `wave ${wave} spawned ${a.dimension.mobs.length}`);
+  assert.ok(a.dimension.mobs.every((m) => m.tags.has("overlord_raid_alice") && m.typeId.startsWith("overlord:")));
+  assert.ok(String(a.title).includes(`Wave ${wave + 1}/5`), String(a.title));
+  advance(40); assert.ok(raid.inRaid(a), "raid waits while mobs live");
+  a.dimension.mobs = []; advance(40);
+}
+assert.ok(!raid.inRaid(a), "raid ends after wave 5");
+assert.equal(a.inv.filter((s) => s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0) - coinsBefore, 96);
+// leaving the area fails the raid and removes its mobs
+raid.startRaid(a); a.location = { x: 100, y: 64, z: 0 }; advance(40);
+assert.ok(!raid.inRaid(a)); assert.equal(a.dimension.mobs.length, 0); a.location = { x: 0, y: 64, z: 0 };
+// dying fails the raid
+raid.startRaid(a); world.afterEvents.entityDie.fire({ deadEntity: a, damageSource: {} });
+assert.ok(!raid.inRaid(a)); assert.equal(a.dimension.mobs.length, 0);
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);
 world.afterEvents.playerLeave.fire({ playerId: "alice" });
 const again = rpg.profileOf(a);
-assert.notStrictEqual(again, pa); assert.equal(again.level, 100); assert.equal(again.cls, "warrior"); assert.equal(again.str, 3); assert.equal(again.done, 1);
+assert.notStrictEqual(again, pa); assert.equal(again.level, 100); assert.equal(again.cls, "warrior"); assert.equal(again.str, 0); assert.equal(again.done, 1);
 // corrupt save does not break the player
 a.props.set("overlord:rpg", "{not json"); world.afterEvents.playerLeave.fire({ playerId: "alice" });
 assert.equal(rpg.profileOf(a).level, 1);

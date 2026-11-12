@@ -7,8 +7,17 @@
     "overlord_adamantite_block": {
       "textures": "textures/blocks/overlord/adamantite_block"
     },
+    "overlord_cracked_nazarick_bricks": {
+      "textures": "textures/blocks/overlord/cracked_nazarick_bricks"
+    },
     "overlord_data_crystal_block": {
       "textures": "textures/blocks/overlord/data_crystal_block"
+    },
+    "overlord_gilded_nazarick_bricks": {
+      "textures": "textures/blocks/overlord/gilded_nazarick_bricks"
+    },
+    "overlord_glacier_bricks": {
+      "textures": "textures/blocks/overlord/glacier_bricks"
     },
     "overlord_nazarick_bricks": {
       "textures": "textures/blocks/overlord/nazarick_bricks"

@@ -74,6 +74,15 @@
     "overlord_egg_entoma": {
       "textures": "textures/items/overlord/egg_entoma"
     },
+    "overlord_egg_evileye": {
+      "textures": "textures/items/overlord/egg_evileye"
+    },
+    "overlord_egg_fluder": {
+      "textures": "textures/items/overlord/egg_fluder"
+    },
+    "overlord_egg_gargantua": {
+      "textures": "textures/items/overlord/egg_gargantua"
+    },
     "overlord_egg_gazef": {
       "textures": "textures/items/overlord/egg_gazef"
     },
@@ -82,6 +91,9 @@
     },
     "overlord_egg_hamsuke": {
       "textures": "textures/items/overlord/egg_hamsuke"
+    },
+    "overlord_egg_lizardman": {
+      "textures": "textures/items/overlord/egg_lizardman"
     },
     "overlord_egg_lupusregina": {
       "textures": "textures/items/overlord/egg_lupusregina"
@@ -107,14 +119,23 @@
     "overlord_egg_pandoras_actor": {
       "textures": "textures/items/overlord/egg_pandoras_actor"
     },
+    "overlord_egg_quagoa": {
+      "textures": "textures/items/overlord/egg_quagoa"
+    },
     "overlord_egg_sebas": {
       "textures": "textures/items/overlord/egg_sebas"
     },
     "overlord_egg_shalltear": {
       "textures": "textures/items/overlord/egg_shalltear"
     },
+    "overlord_egg_skeleton_mage": {
+      "textures": "textures/items/overlord/egg_skeleton_mage"
+    },
     "overlord_egg_solution": {
       "textures": "textures/items/overlord/egg_solution"
+    },
+    "overlord_egg_soul_eater": {
+      "textures": "textures/items/overlord/egg_soul_eater"
     },
     "overlord_egg_yuri": {
       "textures": "textures/items/overlord/egg_yuri"
@@ -122,14 +143,23 @@
     "overlord_egg_zaryusu": {
       "textures": "textures/items/overlord/egg_zaryusu"
     },
+    "overlord_fluder_staff": {
+      "textures": "textures/items/overlord/fluder_staff"
+    },
     "overlord_frost_pain": {
       "textures": "textures/items/overlord/frost_pain"
     },
     "overlord_ginnungagap": {
       "textures": "textures/items/overlord/ginnungagap"
     },
+    "overlord_goblin_horn": {
+      "textures": "textures/items/overlord/goblin_horn"
+    },
     "overlord_god_slaying_emperor_blade": {
       "textures": "textures/items/overlord/god_slaying_emperor_blade"
+    },
+    "overlord_golem_fist": {
+      "textures": "textures/items/overlord/golem_fist"
     },
     "overlord_guardian_crest": {
       "textures": "textures/items/overlord/guardian_crest"
@@ -152,11 +182,26 @@
     "overlord_pleiades_emblem": {
       "textures": "textures/items/overlord/pleiades_emblem"
     },
+    "overlord_raid_horn": {
+      "textures": "textures/items/overlord/raid_horn"
+    },
     "overlord_razor_edge": {
       "textures": "textures/items/overlord/razor_edge"
     },
     "overlord_red_potion": {
       "textures": "textures/items/overlord/red_potion"
+    },
+    "overlord_regalia_boots": {
+      "textures": "textures/items/overlord/regalia_boots"
+    },
+    "overlord_regalia_chestplate": {
+      "textures": "textures/items/overlord/regalia_chestplate"
+    },
+    "overlord_regalia_helmet": {
+      "textures": "textures/items/overlord/regalia_helmet"
+    },
+    "overlord_regalia_leggings": {
+      "textures": "textures/items/overlord/regalia_leggings"
     },
     "overlord_ring_of_ainz_ooal_gown": {
       "textures": "textures/items/overlord/ring_of_ainz_ooal_gown"
@@ -178,6 +223,9 @@
     },
     "overlord_scroll_of_lightning": {
       "textures": "textures/items/overlord/scroll_of_lightning"
+    },
+    "overlord_scroll_of_rebirth": {
+      "textures": "textures/items/overlord/scroll_of_rebirth"
     },
     "overlord_scroll_of_teleportation": {
       "textures": "textures/items/overlord/scroll_of_teleportation"
@@ -212,6 +260,9 @@
     "overlord_sigil_of_entoma": {
       "textures": "textures/items/overlord/sigil_of_entoma"
     },
+    "overlord_sigil_of_gargantua": {
+      "textures": "textures/items/overlord/sigil_of_gargantua"
+    },
     "overlord_sigil_of_lupusregina": {
       "textures": "textures/items/overlord/sigil_of_lupusregina"
     },
@@ -236,6 +287,9 @@
     "overlord_sigil_of_yuri": {
       "textures": "textures/items/overlord/sigil_of_yuri"
     },
+    "overlord_soul_fragment": {
+      "textures": "textures/items/overlord/soul_fragment"
+    },
     "overlord_spuit_lance": {
       "textures": "textures/items/overlord/spuit_lance"
     },
@@ -247,6 +301,9 @@
     },
     "overlord_tome_create_undead": {
       "textures": "textures/items/overlord/tome_create_undead"
+    },
+    "overlord_tome_crystal_lance": {
+      "textures": "textures/items/overlord/tome_crystal_lance"
     },
     "overlord_tome_fallen_down": {
       "textures": "textures/items/overlord/tome_fallen_down"

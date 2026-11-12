@@ -199,7 +199,7 @@ def potion(liquid="#e0202c"):
         "w": mix(liquid, "#ffffff", 0.75), "D": shade(liquid, 0.65)})
 
 
-def crystal():
+def crystal(c="#43d6e8", light="#8ff0f7", shine="#ecffff", dark="#1c8fb0"):
     return sprite16([
         "................",
         ".......cC.......",
@@ -217,7 +217,7 @@ def crystal():
         "......cDDc......",
         ".......DD.......",
         "................",
-    ], {"C": "#43d6e8", "c": "#8ff0f7", "W": "#ecffff", "D": "#1c8fb0"})
+    ], {"C": c, "c": light, "W": shine, "D": dark})
 
 
 def coin():
@@ -319,6 +319,7 @@ SIGIL_COLORS = {
     "entoma": ("#c9608f", "#3a2a4a", "#f3ead8", "#d4202a"),
     "solution": ("#ecca5c", "#1f1e28", "#3f8fe0", "#bfe8ff"),
     "yuri": ("#3f6fb0", "#1b1a22", "#3d8a3f", "#f4f3f5"),
+    "gargantua": ("#8f95a3", "#16171c", "#454954", "#ff5a3d"),
 }
 
 
@@ -872,6 +873,83 @@ def emblem():
     ], {"G": "#7d8bb3", "L": "#c9d4f2", "W": "#ffffff"})
 
 
+def horn(body, tip, band=GOLD):
+    return sprite16([
+        "................",
+        "............TT..",
+        "...........TTt..",
+        "..........BBt...",
+        ".........BBb....",
+        "........BBBb....",
+        ".......GGBb.....",
+        "......BBGGb.....",
+        ".....BBBBb......",
+        "....BBBBBb......",
+        "...BBBBBb.......",
+        "..GGBBBb........",
+        "..BGGBb.........",
+        "..bBBb..........",
+        "...bb...........",
+        "................",
+    ], {"B": body, "b": shade(body, 0.7), "T": tip, "t": shade(tip, 0.75), "G": band})
+
+
+def golem_fist():
+    return sprite16([
+        "................",
+        "..........ww....",
+        ".........wHHd...",
+        "........wHHd....",
+        ".......wHHd.....",
+        "..sssswHHd......",
+        ".sSSSSSHd.......",
+        ".sSRSSSSd.......",
+        ".sSSSRSSSd......",
+        ".sSRSSSRSd......",
+        ".sSSSSSSSd......",
+        ".sSSRSSSSd......",
+        "..dSSSSSd.......",
+        "...ddddd........",
+        "................",
+        "................",
+    ], {"S": "#6f7480", "s": "#8f95a3", "d": "#454954", "R": "#ff5a3d", "H": "#6b4a2a", "w": "#8a6238"})
+
+
+def fluder_staff():
+    s = Sprite()
+    s.shaft(1, 14, 10, "#8a6238", "#5b3d22")
+    s.stamp([".rRr.", "rRWRr", "RWRRR", "rRRRr", ".rRr."], {"R": "#e0202c", "r": "#9a0f1a", "W": "#ffb0a8"}, 10, 0)
+    return s.outline().img
+
+
+def bricks(base, mortar, speck, seed, cracks=False):
+    rnd = random.Random(seed)
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            off = 0 if (y // 4) % 2 == 0 else 4
+            is_mortar = (y % 4 == 3) or ((x + off) % 8 == 7)
+            r, g, b, a = rgba(mortar if is_mortar else base)
+            d = rnd.randint(-7, 7)
+            if not is_mortar and y % 4 == 0:
+                r, g, b = r + 12, g + 12, b + 14
+            img.putpixel((x, y), (max(0, min(255, r + d)), max(0, min(255, g + d)), max(0, min(255, b + d)), 255))
+    for x, y in ((2, 1), (11, 5), (5, 9), (13, 13)):
+        img.putpixel((x, y), rgba(speck))
+    if cracks:
+        for x, y in ((3, 0), (4, 1), (4, 2), (5, 2), (10, 4), (9, 5), (9, 6), (8, 6), (12, 8), (13, 9), (13, 10),
+                     (2, 12), (3, 13), (3, 14), (6, 5), (7, 9), (7, 10)):
+            img.putpixel((x, y), rgba(shade(mortar, 0.6)))
+    return img
+
+
+REGALIA_PAL = {"K": "#140c1e", "k": "#3b2450", "l": "#5a3a80", "G": GOLD, "g": GOLD_D, "R": "#e0202c"}
+
+
+def regalia_layers():
+    return armor_layers("#2b1a3d", "#412a5c", "#1c1029", "#e0202c")
+
+
 def plate():
     return sprite16([
         "................",
@@ -922,6 +1000,9 @@ BLOCK_TEXTURES = {
     "adamantite_block": adamantite_block,
     "nazarick_pillar_side": pillar_side,
     "nazarick_pillar_top": pillar_top,
+    "gilded_nazarick_bricks": lambda: bricks("#3a3346", "#d9a92b", "#f6d968", 71),
+    "cracked_nazarick_bricks": lambda: bricks("#3a3346", "#1d1924", "#6b4fa0", 72, cracks=True),
+    "glacier_bricks": lambda: bricks("#9fd4ef", "#5f9fc6", "#ffffff", 73),
 }
 
 
@@ -953,6 +1034,13 @@ EGG_COLORS = {
     "yuri": ("#1b1a22", "#3d8a3f"),
     "goblin": ("#6f9a3f", "#6b4226"),
     "ogre": ("#b08a5a", "#4a3323"),
+    "skeleton_mage": ("#22335c", "#59d0ff"),
+    "lizardman": ("#5a7a3a", "#d2c79a"),
+    "evileye": ("#8f1a1f", "#f1ede4"),
+    "fluder": ("#e9e6dc", "#5a2a8a"),
+    "gargantua": ("#6f7480", "#ff5a3d"),
+    "soul_eater": ("#1c2026", "#59e0c8"),
+    "quagoa": ("#6b4d34", "#e9e3cf"),
 }
 
 
@@ -1001,6 +1089,17 @@ def all_item_icons():
         "iron_gauntlets": gauntlets(),
         "magic_rifle": rifle(),
         "adventurer_plate": plate(),
+        "tome_crystal_lance": tome("#2a5a7a", "#1c4058", "#e6f6ff", "#bfe8ff"),
+        "fluder_staff": fluder_staff(),
+        "golem_fist": golem_fist(),
+        "scroll_of_rebirth": scroll("#f6d968"),
+        "raid_horn": horn("#3b2450", "#e9e3cf"),
+        "goblin_horn": horn("#6f9a3f", "#f6d968", "#6b4226"),
+        "soul_fragment": crystal("#59e0c8", "#b8fff2", "#ffffff", "#1f7a6a"),
+        "regalia_helmet": helmet(REGALIA_PAL),
+        "regalia_chestplate": chestplate(REGALIA_PAL),
+        "regalia_leggings": leggings(REGALIA_PAL),
+        "regalia_boots": boots(REGALIA_PAL),
         "holy_staff": holy_staff(),
         "blade_bug": blade_icon("#3a2a4a", "#22182c", "#c9608f", "#d9f2a0", "#8fbf4a", "#5a8a2a", length=8),
         "pleiades_emblem": emblem(),

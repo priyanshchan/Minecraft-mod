@@ -8,7 +8,18 @@ import {
   EquipmentSlot,
   GameMode,
 } from "@minecraft/server";
-import { grantLevel, notify, openMenu, restoreMana, spellPower, spendMana, useClassSkill } from "./rpg.js";
+import {
+  grantLevel,
+  notify,
+  openMenu,
+  resetStats,
+  restoreMana,
+  setRegalia,
+  spellPower,
+  spendMana,
+  useClassSkill,
+} from "./rpg.js";
+import { startRaid } from "./raid.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -34,6 +45,7 @@ const SIGILS = {
   [id("sigil_of_entoma")]: id("entoma"),
   [id("sigil_of_solution")]: id("solution"),
   [id("sigil_of_yuri")]: id("yuri"),
+  [id("sigil_of_gargantua")]: id("gargantua"),
 };
 
 /** @type {[EquipmentSlot, string][]} */
@@ -730,6 +742,110 @@ function useShootingStar(player) {
   playSound(player.dimension, "beacon.activate", player.location, 1.6);
 }
 
+/**
+ * Spawns a projectile owned by the player and launches it.
+ * @param {import("@minecraft/server").Player} player
+ * @param {string} type
+ * @param {import("@minecraft/server").Vector3} dir
+ * @param {number} speed
+ */
+function launch(player, type, dir, speed) {
+  const origin = add(player.getHeadLocation(), dir, 1.3);
+  const shot = player.dimension.spawnEntity(type, origin);
+  const velocity = { x: dir.x * speed, y: dir.y * speed, z: dir.z * speed };
+  const projectile = shot.getComponent("minecraft:projectile");
+  if (projectile) {
+    projectile.owner = player;
+    projectile.shoot(velocity, { uncertainty: 0 });
+  } else {
+    shot.applyImpulse(velocity);
+  }
+  return origin;
+}
+
+/** Tome: Crystal Lance. @param {import("@minecraft/server").Player} player */
+function castCrystalLance(player) {
+  if (!tryCooldown(player, "overlord_lance", 1.5, 10)) return;
+  const origin = launch(player, id("crystal_shard"), player.getViewDirection(), 2.6);
+  playSound(player.dimension, "random.glass", origin, 1.6);
+  actionBar(player, "§bCrystal Lance!");
+}
+
+/** Fluder's Staff: three fireballs in a fan. @param {import("@minecraft/server").Player} player */
+function castTripleFireball(player) {
+  if (!tryCooldown(player, "overlord_fluder", 4.0, 18)) return;
+  const view = player.getViewDirection();
+  let origin = player.location;
+  for (const turn of [-0.18, 0, 0.18]) {
+    const cos = Math.cos(turn);
+    const sin = Math.sin(turn);
+    origin = launch(player, id("fireball"), { x: view.x * cos - view.z * sin, y: view.y, z: view.x * sin + view.z * cos }, 1.8);
+  }
+  playSound(player.dimension, "mob.ghast.fireball", origin, 0.9);
+  actionBar(player, "§6Triple Fireball!");
+}
+
+/** Gargantua's Fist: Ground Slam. @param {import("@minecraft/server").Player} player */
+function castGroundSlam(player) {
+  if (!tryCooldown(player, "overlord_slam", 8.0, 20)) return;
+  let count = 0;
+  for (const foe of foesNear(player.dimension, player.location, 5)) {
+    try {
+      foe.applyDamage(12, { cause: EntityDamageCause.entityAttack, damagingEntity: player });
+      if (foe.isValid) {
+        foe.addEffect("slowness", 4 * TICKS, { amplifier: 5 });
+        foe.applyKnockback({ x: 0, z: 0 }, 0.7);
+      }
+      count++;
+    } catch {
+      // already dead
+    }
+  }
+  particle(player.dimension, "minecraft:knockback_roar_particle", add(player.location, { x: 0, y: 0.5, z: 0 }));
+  playSound(player.dimension, "random.explode", player.location, 0.5);
+  actionBar(player, count > 0 ? `§7Ground Slam stunned ${count}!` : "§7Ground Slam!");
+}
+
+/** Scroll: Rebirth - refunds all stat points. @param {import("@minecraft/server").Player} player */
+function castRebirth(player) {
+  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  const refunded = resetStats(player);
+  if (refunded === 0) {
+    actionBar(player, "§7Rebirth: you have no spent stat points");
+    return;
+  }
+  consumeHeldItem(player);
+  playSound(player.dimension, "random.levelup", player.location, 0.7);
+  actionBar(player, `§dRebirth: ${refunded} stat points refunded`);
+}
+
+/** Horn of the Goblin General: three goblin soldiers fight for you. @param {import("@minecraft/server").Player} player */
+function callGoblins(player) {
+  if (!tryCooldown(player, "overlord_goblins", 120.0, 30)) return;
+  const spot = placementSpot(player, 4);
+  /** @type {import("@minecraft/server").Entity[]} */
+  const troop = [];
+  for (let i = 0; i < 3; i++) {
+    const goblin = player.dimension.spawnEntity(id("goblin"), add(spot, { x: (i - 1) * 0.8, y: 0, z: 0 }), {
+      spawnEvent: id("become_summoned"),
+    });
+    goblin.addTag(SUMMON_TAG);
+    goblin.nameTag = `${player.name}'s Goblin`;
+    troop.push(goblin);
+  }
+  system.runTimeout(() => {
+    for (const goblin of troop) {
+      try {
+        if (goblin.isValid && player.isValid) goblin.getComponent("minecraft:tameable")?.tame(player);
+      } catch {
+        // the goblin still fights monsters even if it could not be bound
+      }
+    }
+  }, 2);
+  playSound(player.dimension, "horn.call.0", player.location, 1);
+  actionBar(player, "§aThe goblin troop answers the horn!");
+}
+
 /** @param {import("@minecraft/server").Player} player */
 function ownerTag(player) {
   return `overlord_owner_${player.id}`;
@@ -761,6 +877,18 @@ world.afterEvents.itemUse.subscribe((event) => {
     if (item === id("adventurer_plate")) {
       if (player.isSneaking) useClassSkill(player);
       else openMenu(player);
+    } else if (item === id("raid_horn")) {
+      startRaid(player);
+    } else if (item === id("goblin_horn")) {
+      callGoblins(player);
+    } else if (item === id("tome_crystal_lance")) {
+      castCrystalLance(player);
+    } else if (item === id("fluder_staff")) {
+      castTripleFireball(player);
+    } else if (item === id("golem_fist")) {
+      castGroundSlam(player);
+    } else if (item === id("scroll_of_rebirth")) {
+      castRebirth(player);
     } else if (item === id("holy_staff")) {
       castHolyLight(player);
     } else if (item === id("shooting_star")) {
@@ -922,6 +1050,7 @@ system.runInterval(() => {
     try {
       const gear = player.getComponent("minecraft:equippable");
       if (!gear) continue;
+      setRegalia(player, wearsFullSet(gear, "regalia"));
       if (wearsFullSet(gear, "world_champion")) {
         player.addEffect("strength", 3 * TICKS, { amplifier: 1, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });

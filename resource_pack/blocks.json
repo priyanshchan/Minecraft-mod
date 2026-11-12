@@ -15,6 +15,15 @@
   "overlord:adamantite_block": {
     "sound": "metal"
   },
+  "overlord:gilded_nazarick_bricks": {
+    "sound": "stone"
+  },
+  "overlord:cracked_nazarick_bricks": {
+    "sound": "stone"
+  },
+  "overlord:glacier_bricks": {
+    "sound": "glass"
+  },
   "overlord:nazarick_pillar": {
     "sound": "stone"
   }
