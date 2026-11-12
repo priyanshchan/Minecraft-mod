@@ -8,6 +8,9 @@
     "overlord_aura_whip": {
       "textures": "textures/items/overlord/aura_whip"
     },
+    "overlord_brain_katana": {
+      "textures": "textures/items/overlord/brain_katana"
+    },
     "overlord_dark_warrior_boots": {
       "textures": "textures/items/overlord/dark_warrior_boots"
     },
@@ -38,11 +41,17 @@
     "overlord_egg_aura": {
       "textures": "textures/items/overlord/egg_aura"
     },
+    "overlord_egg_brain": {
+      "textures": "textures/items/overlord/egg_brain"
+    },
     "overlord_egg_clementine": {
       "textures": "textures/items/overlord/egg_clementine"
     },
     "overlord_egg_cocytus": {
       "textures": "textures/items/overlord/egg_cocytus"
+    },
+    "overlord_egg_cz_delta": {
+      "textures": "textures/items/overlord/egg_cz_delta"
     },
     "overlord_egg_death_knight": {
       "textures": "textures/items/overlord/egg_death_knight"
@@ -68,6 +77,9 @@
     "overlord_egg_nazarick_maid": {
       "textures": "textures/items/overlord/egg_nazarick_maid"
     },
+    "overlord_egg_nfirea": {
+      "textures": "textures/items/overlord/egg_nfirea"
+    },
     "overlord_egg_old_guarder": {
       "textures": "textures/items/overlord/egg_old_guarder"
     },
@@ -80,6 +92,12 @@
     "overlord_egg_shalltear": {
       "textures": "textures/items/overlord/egg_shalltear"
     },
+    "overlord_egg_zaryusu": {
+      "textures": "textures/items/overlord/egg_zaryusu"
+    },
+    "overlord_frost_pain": {
+      "textures": "textures/items/overlord/frost_pain"
+    },
     "overlord_ginnungagap": {
       "textures": "textures/items/overlord/ginnungagap"
     },
@@ -88,6 +106,12 @@
     },
     "overlord_guardian_crest": {
       "textures": "textures/items/overlord/guardian_crest"
+    },
+    "overlord_iron_gauntlets": {
+      "textures": "textures/items/overlord/iron_gauntlets"
+    },
+    "overlord_magic_rifle": {
+      "textures": "textures/items/overlord/magic_rifle"
     },
     "overlord_maid_bell": {
       "textures": "textures/items/overlord/maid_bell"
@@ -107,8 +131,14 @@
     "overlord_ring_of_sustenance": {
       "textures": "textures/items/overlord/ring_of_sustenance"
     },
+    "overlord_scroll_of_explosion": {
+      "textures": "textures/items/overlord/scroll_of_explosion"
+    },
     "overlord_scroll_of_fly": {
       "textures": "textures/items/overlord/scroll_of_fly"
+    },
+    "overlord_scroll_of_heavy_recover": {
+      "textures": "textures/items/overlord/scroll_of_heavy_recover"
     },
     "overlord_scroll_of_invisibility": {
       "textures": "textures/items/overlord/scroll_of_invisibility"
@@ -118,6 +148,9 @@
     },
     "overlord_scroll_of_teleportation": {
       "textures": "textures/items/overlord/scroll_of_teleportation"
+    },
+    "overlord_scroll_of_time_stop": {
+      "textures": "textures/items/overlord/scroll_of_time_stop"
     },
     "overlord_shadow_of_yggdrasil": {
       "textures": "textures/items/overlord/shadow_of_yggdrasil"
@@ -133,6 +166,9 @@
     },
     "overlord_sigil_of_cocytus": {
       "textures": "textures/items/overlord/sigil_of_cocytus"
+    },
+    "overlord_sigil_of_cz_delta": {
+      "textures": "textures/items/overlord/sigil_of_cz_delta"
     },
     "overlord_sigil_of_demiurge": {
       "textures": "textures/items/overlord/sigil_of_demiurge"
@@ -163,6 +199,12 @@
     },
     "overlord_tome_create_undead": {
       "textures": "textures/items/overlord/tome_create_undead"
+    },
+    "overlord_tome_fallen_down": {
+      "textures": "textures/items/overlord/tome_fallen_down"
+    },
+    "overlord_tome_reality_slash": {
+      "textures": "textures/items/overlord/tome_reality_slash"
     },
     "overlord_world_champion_boots": {
       "textures": "textures/items/overlord/world_champion_boots"

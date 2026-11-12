@@ -1600,6 +1600,322 @@ def nazarick_maid():
     return m
 
 
+# ------------------------------------- Brain / Zaryusu / CZ Delta / Nfirea
+def brain():
+    m = Model("brain", bounds=(3, 3.5, 1.25))
+    skin, skin_d = "#e0b390", "#bd8f6c"
+    hair, hair_l = "#3b5a8c", "#5b7db3"
+    coat, coat_l, coat_d = "#2d3a4a", "#44566b", "#1b2530"
+    pal = {"S": skin, "s": skin_d, "H": hair, "h": hair_l, "e": "#2b2118", "C": coat, "c": coat_l,
+           "D": coat_d, "W": "#d9d4c8", "B": "#5a3d28", "G": GOLD_D, "b": "#7c6a5c"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(coat)
+    art(torso.front, [
+        "CcWSSWcC",
+        "CcWWWWcC",
+        "CCcWWcCC",
+        "CCcWWcCC",
+        "DCCcWCCD",
+        "DCCcCCCD",
+        "CCCCCCCC",
+        "CcCCCCcC",
+        "BBBGGBBB",
+        "CcCCCCcC",
+        "DCCCCCCD",
+        "DDCCCCDD",
+    ], pal)
+    torso.band(8, 9, "#5a3d28")
+    art(torso.front, ["BBBGGBBB"], pal, 0, 8)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(skin, noise=3)
+    art(hd.front, [
+        "HHHHHHHH",
+        "HhHHHhHH",
+        "HHSHSSHH",
+        "HSSSSSSH",
+        "SeSSSSeS",
+        "SSSssSSS",
+        "SSSSSSSS",
+        "bSSbbSSb",
+    ], pal)
+    for f in (hd.right, hd.left):
+        f.fill(hair, 0, 0, None, 4)
+    hd.right.fill(hair, 0, 4, 4, 6)
+    hd.left.fill(hair, 4, 4, 8, 6)
+    hd.back.fill(hair, 0, 0, None, 7)
+    hd.top.fill(hair)
+    for x in (1, 3, 6):
+        hd.top.vline(x, hair_l)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(coat)
+        arm.band(8, 9, coat_d)
+        arm.band(9, 12, skin)
+        for f in arm.sides:
+            f.vline(0, coat_l, 0, 8)
+    for name, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill("#3a3530")
+        leg.band(9, 12, "#5a3d28")
+    sword = m.bone("weapon", (-6, 13, -2), parent="rightArm")
+    grip = sword.cube((-6.5, 12.5, -5), (1, 1, 3))
+    grip.fill("#1b1b22", noise=2)
+    guard = sword.cube((-7.5, 12, -6), (3, 2, 1))
+    guard.fill(GOLD_D)
+    blade = sword.cube((-6.5, 12.5, -23), (1, 1, 17))
+    blade.fill("#e9eef5", noise=3)
+    return m
+
+
+def zaryusu():
+    m = Model("zaryusu", bounds=(3.5, 3.5, 1.25))
+    sc, sc_l, sc_d, belly = "#3f7a4a", "#5fa068", "#27502f", "#c9c58f"
+    pal = {"G": sc, "g": sc_l, "D": sc_d, "Y": belly, "y": "#a8a472", "e": "#f2c21b", "K": "#15130f",
+           "T": "#f1eee0", "L": "#6b4226", "l": "#8a5a36"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(sc)
+    art(torso.front, [
+        "GgYYYYgG",
+        "GYYyyYYG",
+        "DYYYYYYD",
+        "GYyYYyYG",
+        "GYYYYYYG",
+        "DYYyyYYD",
+        "GgYYYYgG",
+        "GGgYYgGG",
+        "LLLLLLLL",
+        "LlLLLLlL",
+        "lLlLLlLl",
+        "LlLlLlLL",
+    ], pal)
+    torso.band(8, 9, "#4a2d18")
+    torso.band(9, 12, "#6b4226")
+    for f in (torso.right, torso.left, torso.back):
+        for y in (2, 5):
+            f.hline(y, sc_d)
+    torso.back.vline(3, sc_l, 0, 8).vline(4, sc_d, 0, 8)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(sc, noise=5)
+    art(hd.front, [
+        "GgGGGGgG",
+        "GGDGGDGG",
+        "GeKGGKeG",
+        "GGGGGGGG",
+        "DGGGGGGD",
+        "GGGGGGGG",
+        "DGGGGGGD",
+        "GDGGGGDG",
+    ], pal)
+    for f in (hd.right, hd.left, hd.back):
+        f.hline(3, sc_d)
+    snout = head.cube((-3, 24, -8), (6, 4, 4))
+    snout.fill(sc_l)
+    art(snout.front, ["gKggKg", "gggggg", "TKTTKT", "YYYYYY"], pal)
+    for f in (snout.right, snout.left):
+        f.hline(2, "#f1eee0")
+        f.hline(3, belly)
+    snout.bottom.fill(belly)
+    for sx in (-3, 2):
+        crest = head.cube((sx, 32, 0), (1, 2, 3))
+        crest.fill(sc_d)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(sc)
+        stripes(arm, sc_d, every=4, start=3)
+        arm.band(10, 12, sc_d)
+    for name, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill(sc)
+        leg.band(0, 4, "#6b4226")
+        stripes(leg, sc_d, every=4, start=6)
+        leg.band(10, 12, sc_d)
+    tail = m.bone("tail", (0, 13, 2), parent="body", rotation=(-30, 0, 0))
+    t1 = tail.cube((-2, 11, 2), (4, 4, 7))
+    t1.fill(sc)
+    t2 = tail.cube((-1, 12, 9), (2, 2, 7))
+    t2.fill(sc_d)
+    for f in (t1.right, t1.left, t1.top):
+        for x in range(2, f.w, 3):
+            f.vline(x, sc_d)
+    t1.bottom.fill(belly)
+    sword = m.bone("weapon", (-6, 13, -2), parent="rightArm")
+    grip = sword.cube((-6.5, 12.5, -5), (1, 1, 3))
+    grip.fill("#3d5f7a", noise=2)
+    guard = sword.cube((-8, 12, -6), (4, 2, 1))
+    guard.fill("#8ccdf0")
+    blade = sword.cube((-6.5, 11.5, -20), (1, 3, 14))
+    blade.fill(None, noise=0)
+    ice = [
+        "...ssssssssss.",
+        "sSSSSSSSSSSSSs",
+        "..sSSsSSsSSss.",
+    ]
+    ipal = {"s": "#bfe8ff", "S": "#f4fbff", ".": None}
+    art(blade.right, ice, ipal)
+    art(blade.left, [r[::-1] for r in ice], ipal)
+    blade.top.fill("#bfe8ff")
+    return m
+
+
+def cz_delta():
+    m = Model("cz_delta", bounds=(3, 3.5, 1.25))
+    skin, skin_d = "#f6e2d4", "#dcc0ad"
+    hair, hair_d = "#f0a8a0", "#cf7f78"
+    dress, dress_l = "#2a3324", "#3f4a36"
+    camo, camo_d = "#6b7a4a", "#4a5633"
+    white, white_d = "#f2f1f3", "#c8c6cf"
+    pal = {"S": skin, "s": skin_d, "H": hair, "h": hair_d, "K": dress, "k": dress_l, "W": white,
+           "w": white_d, "e": "#3fbf7a", "P": "#15131a", "m": "#c0606f", "C": camo, "c": camo_d,
+           "G": GOLD}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(dress)
+    art(torso.front, [
+        "CcCCCcCC",
+        "cCCcCCcC",
+        "KKWWWWKK",
+        "KkWWWWkK",
+        "KKWGGWKK",
+        "KkWWWWkK",
+        "KKWWWWKK",
+        "KkWWWWkK",
+        "CCcCCcCC",
+        "wWWWWWWw",
+        "KWWWWWWK",
+        "KkWWWWkK",
+    ], pal)
+    torso.band(0, 2, camo)
+    for f in torso.sides:
+        f.px(1, 0, camo_d)
+        f.px(2, 1, camo_d)
+    skirt = m.bone("robe", (0, 12, 0), parent="body").cube((-5, 0, -3), (10, 12, 6))
+    skirt.fill(dress)
+    for f in skirt.sides:
+        f.vshade(1.0, 0.85)
+        for x in range(1, f.w, 3):
+            f.vline(x, dress_l, 1, 11)
+    skirt.front.fill(white, 2, 0, 8, 8)
+    skirt.band(11, 12, camo)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(hair, noise=4)
+    art(hd.front, [
+        "WwWWWWwW",
+        "HHHHHHHH",
+        "HhHHHHhH",
+        "HSSSSHHH",
+        "HeSSSPPH",
+        "HSSSSSSH",
+        "HSSmmSSH",
+        "HHSSSSHH",
+    ], pal)
+    for f in (hd.right, hd.left, hd.back):
+        f.hline(0, white)
+        for x in (2, 5):
+            f.vline(x, hair_d, 1, 8)
+    hd.left.hline(4, "#15131a")
+    hd.back.hline(4, "#15131a")
+    hd.top.hline(7, white)
+    hd.bottom.fill(skin_d)
+    hair_back = body.cube((-4, 13, 2), (8, 11, 1))
+    hair_back.fill(hair)
+    for x in (1, 4, 6):
+        hair_back.back.vline(x, hair_d, 0, 10)
+    hair_back.back.ragged_bottom(2, seed=7)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(dress)
+        arm.band(0, 2, camo)
+        arm.band(8, 9, white)
+        arm.band(9, 12, "#15131a")
+    gun = m.bone("weapon", (-6, 13, -2), parent="rightArm")
+    stock = gun.cube((-7, 11, -3), (2, 3, 4))
+    stock.fill("#4a321b", noise=5)
+    barrel = gun.cube((-6.5, 12.5, -15), (1, 1, 12))
+    barrel.fill("#2b2f38", noise=3)
+    body_g = gun.cube((-7, 12, -8), (2, 2, 5))
+    body_g.fill("#3c424e", noise=3)
+    scope = gun.cube((-6.5, 14, -8), (1, 1, 4))
+    scope.fill("#15131a")
+    scope.front.fill("#3fbf7a")
+    return m
+
+
+def nfirea():
+    m = Model("nfirea", bounds=(3, 3.5, 1.25))
+    skin, skin_d = "#f0d2b8", "#d0ab8e"
+    hair, hair_d = "#e6c463", "#b99338"
+    shirt, shirt_d = "#7a8f5a", "#566741"
+    apron, apron_d = "#d9cfb8", "#b3a88f"
+    pal = {"S": skin, "s": skin_d, "H": hair, "h": hair_d, "T": shirt, "t": shirt_d, "A": apron,
+           "a": apron_d, "m": "#b9606a", "B": "#5a3d28", "R": "#e0202c", "g": "#43d6e8"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(shirt)
+    art(torso.front, [
+        "TtSSSStT",
+        "TTtSStTT",
+        "TAAAAAAT",
+        "TAaAAaAT",
+        "TAAAAAAT",
+        "TARAAgAT",
+        "TAAAAAAT",
+        "TAaAAaAT",
+        "BBBBBBBB",
+        "TAAAAAAT",
+        "TAaAAaAT",
+        "tAAAAAAt",
+    ], pal)
+    torso.band(8, 9, "#5a3d28")
+    for f in (torso.right, torso.left, torso.back):
+        f.vshade(1.0, 0.9)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(hair, noise=4)
+    art(hd.front, [
+        "HHHHHHHH",
+        "HhHHHHhH",
+        "HHHhHHHH",
+        "HHhHHhHH",
+        "HhHHhHHh",
+        "SSSSSSSS",
+        "SSSmmSSS",
+        "SSSSSSSS",
+    ], pal)
+    for f in (hd.right, hd.left):
+        f.fill(skin, 0, 6, None, 8)
+        for x in (2, 5):
+            f.vline(x, hair_d, 0, 6)
+    hd.back.fill(skin, 0, 7, None, 8)
+    hd.bottom.fill(skin_d)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(shirt)
+        arm.band(6, 7, shirt_d)
+        arm.band(7, 12, skin)
+    for name, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill("#5a4a3a")
+        leg.band(9, 12, "#3a2a1e")
+    return m
+
+
+def magic_bullet():
+    m = Model("magic_bullet", bounds=(1, 1, 0.25))
+    body = m.bone("body", (0, 1.5, 0))
+    c = body.cube((-1.5, 0, -1.5), (3, 3, 3))
+    pal = {"G": "#3fbf7a", "W": "#eafff3", "D": "#1f7a48"}
+    for f in c.faces:
+        art(f, ["DGD", "GWG", "DGD"], pal)
+    a = body.cube((-0.5, 1, -4), (1, 1, 8))
+    a.fill("#9ff0c4", noise=6)
+    return m
+
+
 def lightning_bolt():
     m = Model("lightning_bolt", bounds=(1, 1, 0.25))
     body = m.bone("body", (0, 2, 0))
@@ -1618,4 +1934,4 @@ def lightning_bolt():
 
 ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_lich, hamsuke,
        narberal, pandoras_actor, old_guarder, aura, mare, gazef, clementine, nazarick_maid,
-       fireball, negative_burst, lightning_bolt]
+       brain, zaryusu, cz_delta, nfirea, fireball, negative_burst, lightning_bolt, magic_bullet]

@@ -38,6 +38,10 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 | **Mare Bello Fiore** | 260 | Earth magic: fangs erupt from the ground around or towards you | Shadow of Yggdrasil, Guardian Crest |
 | **Gazef Stronoff** | 120 | Neutral warrior found in plains; hunts monsters, fights back if attacked | Razor Edge |
 | **Clementine** | 100 | Very fast night assassin with poisoned strikes | Clementine's Stiletto |
+| **CZ2128 Delta** | 200 | Battle maid sniper: rapid magic bullets at range | CZ's Magic Rifle |
+| **Brain Unglaus** | 110 | Neutral swordsman found in taiga; hunts monsters | Brain's Katana |
+| **Zaryusu Shasha** | 100 | Neutral lizardman found in swamps; hunts monsters, chilling strikes | Frost Pain |
+| **Nfirea Bareare** | 30 | Peaceful herbalist found in plains; trades potions and ingredients for Gold Coins | — |
 | **Nazarick Maid** | 40 | Peaceful merchant who trades for YGGDRASIL Gold Coins | — |
 | **Death Knight** | 80 | Spawns at night on the surface; can be summoned as an ally | Data Crystals, Gold Coins, rarely its Flamberge |
 | **Elder Lich** | 40 | Spawns at night; casts fireballs | Data Crystals, Gold Coins, Bones |
@@ -69,6 +73,15 @@ Every mob has its own spawn egg.
 | **Scroll: Greater Teleportation** | Single use: returns you to your respawn point (bed) |
 | **Bell of Nazarick** | Use to call a Nazarick Maid merchant |
 | **World Champion armour** | Upgrade of the Dark Warrior set (stronger than netherite). Full set grants Strength II, Resistance and Speed |
+| **Frost Pain** | 8 damage, slows on hit. Use: *Icy Burst* — a cone of frost that damages and freezes mobs in front of you |
+| **Brain's Katana** | 9 damage. Use: *God Flash* — dash forward and cut everything in a 7-block line |
+| **Sebas's Iron Gauntlets** | 7 damage, punches send the target flying |
+| **CZ's Magic Rifle** | Use: fires a fast magic bullet (7 damage, 0.6 s between shots) |
+| **Scroll: Explosion** | Single use: explosion where you aim (up to 32 blocks); does not break blocks |
+| **Scroll: Time Stop** | Single use: mobs within 12 blocks are frozen and weakened for 6 seconds |
+| **Scroll: Heavy Recover** | Single use: large heal for you and nearby tamed allies |
+| **Tome: Reality Slash** | Reusable: piercing cut that hits every mob in an 18-block line for 22 magic damage (10 s cooldown) |
+| **Tome: Fallen Down** | Reusable super-tier spell: after 3 seconds, 60 magic damage to every mob within 7 blocks of where you aimed (60 s cooldown) |
 | **Tome: Create Undead** | Summons a Death Knight that follows and defends you for 5 minutes (max. 3) |
 | **Minor Healing Potion** | Drink for instant health and regeneration |
 | **Dark Warrior armour** | Helmet, chestplate, leggings, boots (netherite-level protection). Full set grants Strength and Resistance |
@@ -82,7 +95,10 @@ Blocks: **Nazarick Bricks**, **Nazarick Tiles**, **Nazarick Pillar**, **Nazarick
 
 Ring a **Bell of Nazarick** to call a **Nazarick Maid**. She sells Healing Potions, Data Crystals, all four
 spell scrolls, Nazarick Bricks and Lamps, Golden Apples and Adamantite Ingots for YGGDRASIL Gold Coins, and
-pays coins for diamonds, gold ingots and bones.
+pays coins for diamonds, gold ingots and bones. She also stocks Explosion and Time Stop scrolls.
+
+**Nfirea Bareare** wanders the plains and sells Healing Potions, Heavy Recover scrolls, golden carrots and
+glistering melon for coins; he buys nether wart, wheat, glass bottles and apples.
 
 ### Survival progression
 
@@ -90,7 +106,7 @@ pays coins for diamonds, gold ingots and bones.
 2. Craft **Adamantite Ingots** (2 iron ingots + diamond + data crystal → 2 ingots) and forge the Dark Warrior armour with the usual armour shapes.
 3. Craft a **guardian sigil**: 4 data crystals in the corners, 1 gold coin in the centre and 4 of the guardian's material on the edges —
    obsidian (Albedo), redstone block (Shalltear), packed ice (Cocytus), magma block (Demiurge), iron block (Sebas),
-   copper block (Narberal Gamma), gold block (Pandora's Actor), oak log (Aura), moss block (Mare).
+   copper block (Narberal Gamma), gold block (Pandora's Actor), oak log (Aura), moss block (Mare), gunpowder (CZ2128 Delta).
 4. Defeat the guardians for their weapons and **Guardian Crests**.
 5. Craft the **Sigil of Ainz Ooal Gown** (4 crests in the corners, 4 data crystals on the edges, diamond block in the centre) and face the Overlord.
 
@@ -104,6 +120,10 @@ Nazarick Pillar (2 Nazarick Bricks stacked → 2), Block of Adamantite (9 ingots
 Bell of Nazarick (gold ingot on top, then gold ingot / data crystal / gold ingot),
 Scroll: Invisibility (paper + fermented spider eye + data crystal → 2),
 Scroll: Greater Teleportation (paper + ender pearl + data crystal → 2),
+Scroll: Explosion (paper + gunpowder + data crystal → 2), Scroll: Time Stop (paper + clock + data crystal → 2),
+Scroll: Heavy Recover (paper + glistering melon slice + data crystal → 2),
+Tome: Reality Slash (book surrounded by 4 data crystals and 4 amethyst shards),
+Tome: Fallen Down (book surrounded by 4 data crystals and 4 diamond blocks),
 World Champion armour (matching Dark Warrior piece + diamond block + Guardian Crest, any arrangement).
 
 ## Repository layout

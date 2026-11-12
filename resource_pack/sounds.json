@@ -210,6 +210,58 @@
           "haggle.no": "mob.villager.no"
         }
       },
+      "overlord:brain": {
+        "volume": 1.0,
+        "pitch": [
+          0.85,
+          0.95
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:zaryusu": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.7
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:cz_delta": {
+        "volume": 1.0,
+        "pitch": [
+          1.25,
+          1.4
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "crossbow.shoot"
+        }
+      },
+      "overlord:nfirea": {
+        "volume": 1.0,
+        "pitch": [
+          1.0,
+          1.1
+        ],
+        "events": {
+          "hurt": "mob.villager.hit",
+          "death": "mob.villager.death",
+          "step": "mob.zombie.step",
+          "haggle": "mob.villager.haggle",
+          "haggle.yes": "mob.villager.yes",
+          "haggle.no": "mob.villager.no"
+        }
+      },
       "overlord:hamsuke": {
         "volume": 1.0,
         "pitch": [

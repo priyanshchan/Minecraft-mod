@@ -1,0 +1,190 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "overlord:cz_delta",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "overlord:mode_switcher": {
+        "minecraft:target_nearby_sensor": {
+          "inside_range": 3.0,
+          "outside_range": 4.5,
+          "must_see": true,
+          "on_inside_range": {
+            "event": "overlord:switch_to_melee",
+            "target": "self"
+          },
+          "on_outside_range": {
+            "event": "overlord:switch_to_ranged",
+            "target": "self"
+          }
+        }
+      },
+      "overlord:ranged_mode": {
+        "minecraft:shooter": {
+          "def": "overlord:magic_bullet"
+        },
+        "minecraft:behavior.ranged_attack": {
+          "priority": 3,
+          "attack_interval_min": 0.8,
+          "attack_interval_max": 1.5,
+          "attack_radius": 24.0,
+          "speed_multiplier": 1.0
+        }
+      },
+      "overlord:melee_mode": {
+        "minecraft:attack": {
+          "damage": 7
+        },
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 3,
+          "speed_multiplier": 1.25,
+          "track_target": true
+        }
+      }
+    },
+    "components": {
+      "minecraft:is_hidden_when_invisible": {},
+      "minecraft:type_family": {
+        "family": [
+          "cz_delta",
+          "nazarick",
+          "monster",
+          "mob"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.7,
+        "height": 2.0
+      },
+      "minecraft:health": {
+        "value": 200,
+        "max": 200
+      },
+      "minecraft:movement": {
+        "value": 0.3
+      },
+      "minecraft:follow_range": {
+        "value": 40,
+        "max": 40
+      },
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 100 : 0"
+      },
+      "minecraft:nameable": {},
+      "minecraft:movement.basic": {},
+      "minecraft:jump.static": {},
+      "minecraft:can_climb": {},
+      "minecraft:navigation.walk": {
+        "can_path_over_water": true,
+        "avoid_damage_blocks": true,
+        "can_pass_doors": true,
+        "can_open_doors": true
+      },
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": true,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0,
+        "breathes_water": false
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 6,
+        "speed_multiplier": 0.8
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 7,
+        "look_distance": 8.0,
+        "probability": 0.02
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 8
+      },
+      "minecraft:loot": {
+        "table": "loot_tables/entities/overlord/cz_delta.json"
+      },
+      "minecraft:knockback_resistance": {
+        "value": 0.4
+      },
+      "minecraft:persistent": {},
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "cause": "fall",
+            "deals_damage": false
+          }
+        ]
+      },
+      "minecraft:behavior.nearest_attackable_target": {
+        "priority": 2,
+        "must_see": true,
+        "reselect_targets": true,
+        "entity_types": [
+          {
+            "filters": {
+              "test": "is_family",
+              "subject": "other",
+              "value": "player"
+            },
+            "max_dist": 40
+          },
+          {
+            "filters": {
+              "test": "is_family",
+              "subject": "other",
+              "value": "nazarick_ally"
+            },
+            "max_dist": 40
+          }
+        ]
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": [
+            "overlord:mode_switcher",
+            "overlord:ranged_mode"
+          ]
+        }
+      },
+      "overlord:switch_to_melee": {
+        "remove": {
+          "component_groups": [
+            "overlord:ranged_mode"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:melee_mode"
+          ]
+        }
+      },
+      "overlord:switch_to_ranged": {
+        "remove": {
+          "component_groups": [
+            "overlord:melee_mode"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:ranged_mode"
+          ]
+        }
+      }
+    }
+  }
+}

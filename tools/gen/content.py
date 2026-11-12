@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [1, 2, 0]
+VERSION = [1, 3, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, Death Knights, legendary weapons and spells. §7v1.2.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, Death Knights, legendary weapons and spells. §7v1.3.0"
 
 
 def oid(name):
@@ -97,6 +97,7 @@ SIGILS = {
     "pandoras_actor": ("Pandora's Actor", "minecraft:gold_block"),
     "aura": ("Aura Bella Fiora", "minecraft:oak_log"),
     "mare": ("Mare Bello Fiore", "minecraft:moss_block"),
+    "cz_delta": ("CZ2128 Delta", "minecraft:gunpowder"),
 }
 
 ITEMS = {
@@ -176,6 +177,23 @@ ITEMS = {
                                 _armor("slot.armor.legs", 7, 832, "armor_legs")),
     "world_champion_boots": ("World Champion Boots", "equipment",
                              _armor("slot.armor.feet", 4, 721, "armor_feet")),
+    **{f"scroll_of_{key}": (f"Scroll: {title}", "items", {
+        "minecraft:max_stack_size": 16, "minecraft:rarity": "uncommon",
+        **_cooldown("overlord_scroll", 1.5)})
+       for key, title in (("explosion", "Explosion"), ("time_stop", "Time Stop"),
+                          ("heavy_recover", "Heavy Recover"))},
+    "tome_reality_slash": ("Tome: Reality Slash", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
+        **_cooldown("overlord_slash", 10.0)}),
+    "tome_fallen_down": ("Tome: Fallen Down", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
+        **_cooldown("overlord_fallen", 60.0)}),
+    "frost_pain": ("Frost Pain", "equipment", _weapon(8, _cooldown("overlord_frost", 6.0))),
+    "brain_katana": ("Brain's Katana", "equipment", _weapon(9, _cooldown("overlord_flash", 5.0),
+                                                           rarity="rare")),
+    "iron_gauntlets": ("Sebas's Iron Gauntlets", "equipment", _weapon(7, rarity="rare")),
+    "magic_rifle": ("CZ's Magic Rifle", "equipment", _weapon(3, _cooldown("overlord_rifle", 0.6),
+                                                            rarity="rare")),
     "sigil_of_ainz": ("Sigil of Ainz Ooal Gown", "items", {
         "minecraft:max_stack_size": 16, "minecraft:rarity": "epic", "minecraft:glint": True}),
 }
@@ -353,6 +371,16 @@ def recipe_files():
         **{f"world_champion_{piece}": _shapeless(f"world_champion_{piece}", [
             oid(f"dark_warrior_{piece}"), "minecraft:diamond_block", oid("guardian_crest")],
             oid(f"world_champion_{piece}")) for piece in ("helmet", "chestplate", "leggings", "boots")},
+        "scroll_of_explosion": _shapeless("scroll_of_explosion", [
+            "minecraft:paper", "minecraft:gunpowder", cry], oid("scroll_of_explosion"), 2),
+        "scroll_of_time_stop": _shapeless("scroll_of_time_stop", [
+            "minecraft:paper", "minecraft:clock", cry], oid("scroll_of_time_stop"), 2),
+        "scroll_of_heavy_recover": _shapeless("scroll_of_heavy_recover", [
+            "minecraft:paper", "minecraft:glistering_melon_slice", cry], oid("scroll_of_heavy_recover"), 2),
+        "tome_reality_slash": _shaped("tome_reality_slash", ["DCD", "CBC", "DCD"], {
+            "C": cry, "D": "minecraft:amethyst_shard", "B": "minecraft:book"}, oid("tome_reality_slash")),
+        "tome_fallen_down": _shaped("tome_fallen_down", ["DCD", "CBC", "DCD"], {
+            "C": cry, "D": "minecraft:diamond_block", "B": "minecraft:book"}, oid("tome_fallen_down")),
         "sigil_of_ainz": _shaped("sigil_of_ainz", ["KCK", "CDC", "KCK"], {
             "K": oid("guardian_crest"), "C": cry, "D": "minecraft:diamond_block"}, oid("sigil_of_ainz")),
     }
@@ -372,6 +400,8 @@ VANILLA_ITEMS_USED = [
     "minecraft:copper_ingot", "minecraft:feather", "minecraft:copper_block", "minecraft:gold_block",
     "minecraft:glowstone", "minecraft:gold_ingot", "minecraft:fermented_spider_eye",
     "minecraft:ender_pearl", "minecraft:oak_log", "minecraft:moss_block", "minecraft:golden_apple",
+    "minecraft:gunpowder", "minecraft:clock", "minecraft:glistering_melon_slice",
+    "minecraft:amethyst_shard", "minecraft:nether_wart",
 ]
 
 
@@ -409,7 +439,7 @@ def loot_files():
         "demiurge": [one(crest), _pool(_entry(cry, 4, 8)), _pool(_entry(coin, 12, 20)),
                      _pool(_entry("minecraft:blaze_rod", 2, 5))],
         "sebas": [one(crest), _pool(_entry(cry, 4, 8)), _pool(_entry(coin, 12, 20)),
-                  _pool(_entry(oid("red_potion"), 2, 4, looting=False))],
+                  _pool(_entry(oid("red_potion"), 2, 4, looting=False)), one(oid("iron_gauntlets"))],
         "ainz": [one(oid("staff_of_ainz_ooal_gown")), one(oid("ring_of_ainz_ooal_gown")),
                  _pool(_entry(cry, 8, 12)), _pool(_entry(coin, 24, 32)),
                  _pool(_entry(oid("tome_create_undead"), 1, 1, looting=False))],
@@ -429,6 +459,9 @@ def loot_files():
         "gazef": [one(oid("razor_edge")), _pool(_entry("minecraft:iron_ingot", 2, 5)),
                   _pool(_entry("minecraft:gold_ingot", 1, 3))],
         "clementine": [one(oid("stiletto")), _pool(_entry(coin, 4, 8)), _pool(_entry(cry, 1, 3))],
+        "brain": [one(oid("brain_katana")), _pool(_entry(coin, 4, 8))],
+        "zaryusu": [one(oid("frost_pain")), _pool(_entry(cry, 1, 3))],
+        "cz_delta": [one(oid("magic_rifle")), _pool(_entry(cry, 3, 5)), _pool(_entry(coin, 6, 12))],
         "empty": [],
     }
     return {f"loot_tables/entities/{NS}/{k}.json": {"pools": v} for k, v in t.items()}
@@ -682,6 +715,48 @@ def entity_files():
     c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally])
     out["clementine"] = _entity("clementine", c)
 
+    # ------------------------------------------- Brain / Zaryusu / CZ Delta
+    def hunter(name, family, health, speed, damage, attack_extra=None):
+        c = _mob(name, [name, family, "mob"], health, speed, (0.7, 2.0), loot=name, xp=40, kb=0.4)
+        c["minecraft:attack"] = {"damage": damage, **(attack_extra or {})}
+        c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.25,
+                                                    "track_target": True}
+        c["minecraft:behavior.nearest_attackable_target"] = {
+            "priority": 2, "must_see": True, "reselect_targets": True,
+            "entity_types": [{"filters": _is_family("monster"), "max_dist": 16}]}
+        return _entity(name, c)
+
+    out["brain"] = hunter("brain", "human", 110, 0.33, 10)
+    out["zaryusu"] = hunter("zaryusu", "lizardman", 100, 0.3, 9,
+                            {"effect_name": "slowness", "effect_duration": 3})
+
+    c = guardian("cz_delta", 200, 0.3, 7, (0.7, 2.0), kb=0.4, xp=100)
+    del c["minecraft:attack"], c["minecraft:behavior.melee_box_attack"]
+    out["cz_delta"] = _entity("cz_delta", c, {
+        "overlord:mode_switcher": groups["overlord:mode_switcher"],
+        "overlord:ranged_mode": {
+            "minecraft:shooter": {"def": oid("magic_bullet")},
+            "minecraft:behavior.ranged_attack": {
+                "priority": 3, "attack_interval_min": 0.8, "attack_interval_max": 1.5,
+                "attack_radius": 24.0, "speed_multiplier": 1.0}},
+        "overlord:melee_mode": {
+            "minecraft:attack": {"damage": 7},
+            "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.25,
+                                                    "track_target": True}},
+    }, dict(events))
+
+    # ------------------------------------------------- Nfirea (herbalist)
+    c = _mob("nfirea", ["nfirea", "human", "mob"], 30, 0.25, (0.6, 1.9), xp=0)
+    del c["minecraft:behavior.hurt_by_target"]
+    c["minecraft:economy_trade_table"] = {
+        "display_name": f"entity.{oid('nfirea')}.name",
+        "table": f"trading/{NS}/nfirea.json", "new_screen": True}
+    c["minecraft:behavior.trade_with_player"] = {"priority": 1, "filters": {"all_of": [
+        {"test": "in_water", "value": False}, {"test": "on_ground", "value": True}]}}
+    c["minecraft:behavior.look_at_trading_player"] = {"priority": 2}
+    c["minecraft:behavior.panic"] = {"priority": 3, "speed_multiplier": 1.4}
+    out["nfirea"] = _entity("nfirea", c)
+
     # ----------------------------------------------------- Nazarick maid
     c = _mob("nazarick_maid", ["nazarick_maid", "mob"], 40, 0.25, (0.6, 1.9), xp=0, persistent=True)
     del c["minecraft:behavior.hurt_by_target"]
@@ -830,6 +905,10 @@ def entity_files():
                        "durationhard": 200, "amplifier": 1},
         "remove_on_hit": {},
     }, {}, {})
+    out["magic_bullet"] = projectile("magic_bullet", 0.25, {
+        "impact_damage": {"damage": 7, "knockback": True, "semi_random_diff_damage": False},
+        "remove_on_hit": {},
+    }, {}, {})
     out["lightning_bolt"] = projectile("lightning_bolt", 0.3, {
         "impact_damage": {"damage": 9, "knockback": True, "semi_random_diff_damage": False},
         "remove_on_hit": {},
@@ -839,8 +918,8 @@ def entity_files():
 
 MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_knight", "elder_lich",
         "hamsuke", "narberal", "pandoras_actor", "old_guarder", "aura", "mare", "gazef", "clementine",
-        "nazarick_maid"]
-PROJECTILES = ["fireball", "negative_burst", "lightning_bolt"]
+        "nazarick_maid", "brain", "zaryusu", "cz_delta", "nfirea"]
+PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet"]
 
 ENTITY_NAMES = {
     "ainz": "Ainz Ooal Gown", "albedo": "Albedo", "shalltear": "Shalltear Bloodfallen",
@@ -849,6 +928,8 @@ ENTITY_NAMES = {
     "narberal": "Narberal Gamma", "pandoras_actor": "Pandora's Actor",
     "old_guarder": "Nazarick Old Guarder", "aura": "Aura Bella Fiora", "mare": "Mare Bello Fiore",
     "gazef": "Gazef Stronoff", "clementine": "Clementine", "nazarick_maid": "Nazarick Maid",
+    "brain": "Brain Unglaus", "zaryusu": "Zaryusu Shasha", "cz_delta": "CZ2128 Delta",
+    "nfirea": "Nfirea Bareare", "magic_bullet": "Magic Bullet",
     "fireball": "Fireball", "negative_burst": "Negative Burst", "lightning_bolt": "Lightning",
 }
 
@@ -870,12 +951,20 @@ def trade_files():
         sell(oid("scroll_of_lightning"), 8), sell(oid("scroll_of_invisibility"), 10),
         sell(oid("scroll_of_teleportation"), 12), sell(oid("nazarick_bricks"), 4, qty=16),
         sell(oid("nazarick_lamp"), 6, qty=4), sell("minecraft:golden_apple", 16),
-        sell(oid("adamantite_ingot"), 24),
+        sell(oid("adamantite_ingot"), 24), sell(oid("scroll_of_explosion"), 10),
+        sell(oid("scroll_of_time_stop"), 14),
         buy("minecraft:diamond", 1, 6), buy("minecraft:gold_ingot", 4, 5), buy("minecraft:bone", 16, 2),
     ]
-    return {f"trading/{NS}/nazarick_maid.json": {
-        "tiers": [{"total_exp_required": 0,
-                   "groups": [{"num_to_select": len(trades), "trades": trades}]}]}}
+    herbs = [
+        sell(oid("red_potion"), 3), sell(oid("scroll_of_heavy_recover"), 6),
+        sell("minecraft:golden_carrot", 3, qty=2), sell("minecraft:glistering_melon_slice", 4),
+        buy("minecraft:nether_wart", 8, 3), buy("minecraft:wheat", 16, 2),
+        buy("minecraft:glass_bottle", 8, 2), buy("minecraft:apple", 6, 2),
+    ]
+    table = lambda t: {"tiers": [{"total_exp_required": 0,
+                                  "groups": [{"num_to_select": len(t), "trades": t}]}]}
+    return {f"trading/{NS}/nazarick_maid.json": table(trades),
+            f"trading/{NS}/nfirea.json": table(herbs)}
 
 
 # ============================================================ spawn rules
@@ -914,23 +1003,28 @@ def spawn_rule_files():
             }],
         },
     }
-    gazef = {
-        "format_version": "1.8.0",
-        "minecraft:spawn_rules": {
-            "description": {"identifier": oid("gazef"), "population_control": "animal"},
-            "conditions": [{
-                "minecraft:spawns_on_surface": {},
-                "minecraft:spawns_on_block_filter": "minecraft:grass_block",
-                "minecraft:brightness_filter": {"min": 7, "max": 15, "adjust_for_weather": False},
-                "minecraft:weight": {"default": 2},
-                "minecraft:density_limit": {"surface": 1},
-                "minecraft:herd": {"min_size": 1, "max_size": 1},
-                "minecraft:biome_filter": {"test": "has_biome_tag", "operator": "==", "value": "plains"},
-            }],
-        },
-    }
+    def day_creature(name, biome, weight=2):
+        return {
+            "format_version": "1.8.0",
+            "minecraft:spawn_rules": {
+                "description": {"identifier": oid(name), "population_control": "animal"},
+                "conditions": [{
+                    "minecraft:spawns_on_surface": {},
+                    "minecraft:spawns_on_block_filter": "minecraft:grass_block",
+                    "minecraft:brightness_filter": {"min": 7, "max": 15, "adjust_for_weather": False},
+                    "minecraft:weight": {"default": weight},
+                    "minecraft:density_limit": {"surface": 1},
+                    "minecraft:herd": {"min_size": 1, "max_size": 1},
+                    "minecraft:biome_filter": {"test": "has_biome_tag", "operator": "==", "value": biome},
+                }],
+            },
+        }
+
     return {
-        "spawn_rules/gazef.json": gazef,
+        "spawn_rules/gazef.json": day_creature("gazef", "plains"),
+        "spawn_rules/brain.json": day_creature("brain", "taiga"),
+        "spawn_rules/zaryusu.json": day_creature("zaryusu", "swamp", 3),
+        "spawn_rules/nfirea.json": day_creature("nfirea", "plains"),
         "spawn_rules/clementine.json": monster("clementine", 3),
         "spawn_rules/death_knight.json": monster("death_knight", 8),
         "spawn_rules/elder_lich.json": monster("elder_lich", 8),
@@ -980,6 +1074,15 @@ SOUNDS = {
     "nazarick_maid": (1.0, [1.2, 1.35], {"hurt": "mob.villager.hit", "death": "mob.villager.death",
                                          "step": "mob.zombie.step", "haggle": "mob.villager.haggle",
                                          "haggle.yes": "mob.villager.yes", "haggle.no": "mob.villager.no"}),
+    "brain": (1.0, [0.85, 0.95], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                  "step": "mob.zombie.step"}),
+    "zaryusu": (1.0, [0.6, 0.7], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                  "step": "mob.zombie.step"}),
+    "cz_delta": (1.0, [1.25, 1.4], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                    "step": "mob.zombie.step", "shoot": "crossbow.shoot"}),
+    "nfirea": (1.0, [1.0, 1.1], {"hurt": "mob.villager.hit", "death": "mob.villager.death",
+                                 "step": "mob.zombie.step", "haggle": "mob.villager.haggle",
+                                 "haggle.yes": "mob.villager.yes", "haggle.no": "mob.villager.no"}),
     "hamsuke": (1.0, [0.6, 0.8], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
                                   "death": "mob.rabbit.death", "step": "mob.polarbear.step"}),
 }
@@ -1068,6 +1171,11 @@ ENTITY_ANIMS = {
     "gazef": ["look_at_target", "idle", "walk", "attack"],
     "clementine": ["look_at_target", "idle", "walk", "attack"],
     "nazarick_maid": ["look_at_target", "idle", "robe_walk"],
+    "brain": ["look_at_target", "idle", "walk", "attack"],
+    "zaryusu": ["look_at_target", "idle", "walk", "attack", "tail"],
+    "cz_delta": ["look_at_target", "idle", "robe_walk", "attack"],
+    "nfirea": ["look_at_target", "idle", "walk"],
+    "magic_bullet": ["projectile.spin"],
     "lightning_bolt": ["projectile.spin"],
     "fireball": ["projectile.spin"],
     "negative_burst": ["projectile.spin"],

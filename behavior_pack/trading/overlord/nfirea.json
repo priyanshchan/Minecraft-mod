@@ -1,0 +1,134 @@
+{
+  "tiers": [
+    {
+      "total_exp_required": 0,
+      "groups": [
+        {
+          "num_to_select": 8,
+          "trades": [
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 3
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:red_potion",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 6
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:scroll_of_heavy_recover",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 3
+                }
+              ],
+              "gives": [
+                {
+                  "item": "minecraft:golden_carrot",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 4
+                }
+              ],
+              "gives": [
+                {
+                  "item": "minecraft:glistering_melon_slice",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "minecraft:nether_wart",
+                  "quantity": 8
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 3
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "minecraft:wheat",
+                  "quantity": 16
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "minecraft:glass_bottle",
+                  "quantity": 8
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "minecraft:apple",
+                  "quantity": 6
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 32
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

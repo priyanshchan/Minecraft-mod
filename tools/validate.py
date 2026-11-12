@@ -44,6 +44,8 @@ VANILLA = {
         "minecraft:copper_block", "minecraft:gold_block", "minecraft:glowstone",
         "minecraft:gold_ingot", "minecraft:fermented_spider_eye", "minecraft:ender_pearl",
         "minecraft:oak_log", "minecraft:moss_block", "minecraft:golden_apple",
+        "minecraft:gunpowder", "minecraft:clock", "minecraft:glistering_melon_slice",
+        "minecraft:amethyst_shard", "minecraft:nether_wart",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
     "sound": {
@@ -58,7 +60,9 @@ VANILLA = {
         "ambient.weather.lightning.impact", "item.book.page_turn", "mob.bat.takeoff", "random.burp",
         "random.bow", "mob.evocation_illager.prepare_attack", "mob.villager.hit", "mob.villager.death",
         "mob.villager.haggle", "mob.villager.yes", "mob.villager.no", "mob.evocation_fangs.attack",
-        "note.bell", "mob.irongolem.throw", "dig.grass", "random.fizz",
+        "note.bell", "mob.irongolem.throw", "dig.grass", "random.fizz", "crossbow.shoot",
+        "beacon.activate", "item.trident.riptide_1", "ambient.weather.thunder", "random.glass",
+        "random.levelup",
     },
     # verified against the vanilla particle definitions
     "particle": {
@@ -68,7 +72,7 @@ VANILLA = {
     },
     "effect": {"slowness", "slow_falling", "instant_health", "regeneration", "strength", "resistance",
                "wither", "night_vision", "saturation", "levitation", "invisibility", "speed",
-               "fire_resistance", "poison"},
+               "fire_resistance", "poison", "weakness"},
 }
 
 errors: list[str] = []

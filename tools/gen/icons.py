@@ -155,7 +155,7 @@ def flamberge():
 
 
 # ------------------------------------------------------------------- misc
-def tome():
+def tome(cover="#3b2450", cover_d="#2b1a3d", glyph="#e9e3cf", band="#b3141c"):
     return sprite16([
         "................",
         "..KKKKKKKKKKK...",
@@ -173,8 +173,8 @@ def tome():
         ".KWWWWWWWWWWwK..",
         "..KKKKKKKKKKK...",
         "................",
-    ], {"K": "#120b18", "P": "#3b2450", "p": "#2b1a3d", "B": "#e9e3cf", "b": "#8d8468", "G": GOLD,
-        "R": "#b3141c", "W": "#e8e2d0", "w": "#b8b09a"}, outline=False)
+    ], {"K": "#120b18", "P": cover, "p": cover_d, "B": glyph, "b": shade(glyph, 0.6), "G": GOLD,
+        "R": band, "W": "#e8e2d0", "w": "#b8b09a"}, outline=False)
 
 
 def potion():
@@ -314,6 +314,7 @@ SIGIL_COLORS = {
     "pandoras_actor": ("#e0b955", "#1d1b20", "#f0e7cb", "#b3141c"),
     "aura": ("#d9534a", "#2a1e16", "#f2d66b", "#3fbf5f"),
     "mare": ("#62b85f", "#1d4a61", "#f2d66b", "#3f8fe0"),
+    "cz_delta": ("#6b7a4a", "#15131a", "#f0a8a0", "#3fbf7a"),
 }
 
 
@@ -798,6 +799,41 @@ def champion_layers():
     return armor_layers("#cfd6e2", "#f4f7fb", "#8f98aa", "#d4202a", GOLD="#3f7fe0", GOLD_D="#2a5aa8")
 
 
+def gauntlets():
+    return sprite16([
+        "................",
+        "................",
+        "...kkk....kkk...",
+        "..kMMMk..kMMMk..",
+        "..kMmMk..kMmMk..",
+        "..kGGGk..kGGGk..",
+        "..kMMMk..kMMMk..",
+        ".kMMmMMkkMMmMMk.",
+        ".kMmMmMkkMmMmMk.",
+        ".kMMMMMkkMMMMMk.",
+        ".kdMdMdkkdMdMdk.",
+        ".kMdMdMkkMdMdMk.",
+        "..kkkkk..kkkkk..",
+        "................",
+        "................",
+        "................",
+    ], {"k": "#3a3f4a", "M": "#9aa0aa", "m": "#d5dae2", "d": "#5d626c", "G": GOLD}, outline=False)
+
+
+def rifle():
+    s = Sprite()
+    s.stamp(["WW.", "WWW", ".WW"], {"W": "#6b4a2a"}, 1, 11)
+    s.px(1, 11, "#8a6238").px(2, 12, "#8a6238")
+    for i in range(11):
+        x, y = 4 + i, 11 - i
+        s.px(x, y, "#4a5160").px(x + 1, y, "#2b2f38")
+        if 1 <= i <= 4:
+            s.px(x, y - 1, "#6c7486").px(x + 1, y + 1, "#1c1f26")
+    s.px(7, 6, "#15131a").px(8, 5, "#15131a").px(9, 4, "#3fbf7a")
+    s.px(6, 11, "#1c1f26").px(6, 12, "#1c1f26")
+    return s.outline().img
+
+
 def mask_layer():
     """64x32 armour sheet that only paints the Mask of Envy on the face."""
     sheet = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
@@ -847,6 +883,10 @@ EGG_COLORS = {
     "gazef": ("#7a808c", "#7a1f1f"),
     "clementine": ("#18161c", "#eed27a"),
     "nazarick_maid": ("#f4f3f5", "#1f1e28"),
+    "brain": ("#2d3a4a", "#5b7db3"),
+    "zaryusu": ("#3f7a4a", "#c9c58f"),
+    "cz_delta": ("#f0a8a0", "#4a5633"),
+    "nfirea": ("#7a8f5a", "#e6c463"),
 }
 
 
@@ -884,6 +924,16 @@ def all_item_icons():
         "world_champion_chestplate": chestplate(CHAMPION_PAL),
         "world_champion_leggings": leggings(CHAMPION_PAL),
         "world_champion_boots": boots(CHAMPION_PAL),
+        "scroll_of_explosion": scroll("#ff6a1a"),
+        "scroll_of_time_stop": scroll("#2a2a3a"),
+        "scroll_of_heavy_recover": scroll("#3fbf5f"),
+        "tome_reality_slash": tome("#1d3a5c", "#132842", "#9fd4ff", "#f4fbff"),
+        "tome_fallen_down": tome("#5c4a12", "#3d310b", "#fff6c9", "#3ed0ff"),
+        "frost_pain": blade_icon("#3d5f7a", "#22384a", "#8ccdf0", "#f4fbff", "#bfe8ff", "#6fb4de",
+                                 length=9, glow="#ffffff"),
+        "brain_katana": blade_icon("#1b1b22", "#0c0c10", GOLD_D, "#f2f5f9", "#b9c2d0", "#7c8494"),
+        "iron_gauntlets": gauntlets(),
+        "magic_rifle": rifle(),
     }
     for who in SIGIL_COLORS:
         icons[f"sigil_of_{who}"] = sigil(who)

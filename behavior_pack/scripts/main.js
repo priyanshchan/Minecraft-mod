@@ -28,6 +28,7 @@ const SIGILS = {
   [id("sigil_of_pandoras_actor")]: id("pandoras_actor"),
   [id("sigil_of_aura")]: id("aura"),
   [id("sigil_of_mare")]: id("mare"),
+  [id("sigil_of_cz_delta")]: id("cz_delta"),
 };
 
 /** @type {[EquipmentSlot, string][]} */
@@ -469,6 +470,237 @@ function ringBell(player) {
   actionBar(player, "§eA maid of Nazarick answers the bell");
 }
 
+/**
+ * Mobs a spell may hurt around a point: living, not a player, not an ally or pet.
+ * @param {import("@minecraft/server").Dimension} dimension
+ * @param {import("@minecraft/server").Vector3} location
+ * @param {number} radius
+ */
+function foesNear(dimension, location, radius) {
+  const found = [];
+  try {
+    const entities = dimension.getEntities({
+      location,
+      maxDistance: radius,
+      excludeTypes: ["minecraft:player"],
+      excludeFamilies: ["nazarick_ally", "inanimate"],
+    });
+    for (const entity of entities) {
+      try {
+        if (!entity.getComponent("minecraft:health")) continue;
+        if (entity.getComponent("minecraft:is_tamed")) continue;
+        found.push(entity);
+      } catch {
+        // entity left the world
+      }
+    }
+  } catch {
+    // location is in an unloaded chunk
+  }
+  return found;
+}
+
+/**
+ * Damages every foe along a straight line once. Returns how many were hit.
+ * @param {import("@minecraft/server").Player} player
+ * @param {import("@minecraft/server").Vector3} origin
+ * @param {import("@minecraft/server").Vector3} dir
+ * @param {number} length
+ * @param {number} damage
+ * @param {EntityDamageCause} cause
+ * @param {string} trail
+ */
+function strikeLine(player, origin, dir, length, damage, cause, trail) {
+  const struck = new Set();
+  for (let step = 1; step <= length; step += 1.5) {
+    const point = add(origin, dir, step);
+    particle(player.dimension, trail, point);
+    for (const victim of foesNear(player.dimension, point, 1.8)) {
+      if (struck.has(victim.id)) continue;
+      struck.add(victim.id);
+      try {
+        victim.applyDamage(damage, { cause, damagingEntity: player });
+      } catch {
+        // already dead
+      }
+    }
+  }
+  return struck.size;
+}
+
+/**
+ * Where the player is aiming: a mob, else a block, else undefined.
+ * @param {import("@minecraft/server").Player} player
+ * @param {number} reach
+ * @returns {import("@minecraft/server").Vector3 | undefined}
+ */
+function aimPoint(player, reach) {
+  const entity = player
+    .getEntitiesFromViewDirection({ maxDistance: reach })
+    .map((h) => h.entity)
+    .find((e) => e.isValid && e.getComponent("minecraft:health"));
+  if (entity) return entity.location;
+  const hit = player.getBlockFromViewDirection({ maxDistance: reach });
+  if (!hit) return undefined;
+  const b = hit.block.location;
+  return { x: b.x + 0.5, y: b.y + 1, z: b.z + 0.5 };
+}
+
+/** Scroll: Explosion. @param {import("@minecraft/server").Player} player */
+function castExplosion(player) {
+  const target = aimPoint(player, 32);
+  if (!target) {
+    actionBar(player, "§7Explosion: nothing in range");
+    return;
+  }
+  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  player.dimension.createExplosion(target, 4, { breaksBlocks: false, causesFire: false, source: player });
+  consumeHeldItem(player);
+  actionBar(player, "§6Explosion!");
+}
+
+/** Scroll: Time Stop - freezes nearby foes. @param {import("@minecraft/server").Player} player */
+function castTimeStop(player) {
+  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  let count = 0;
+  for (const foe of foesNear(player.dimension, player.location, 12)) {
+    try {
+      foe.addEffect("slowness", 6 * TICKS, { amplifier: 6 });
+      foe.addEffect("weakness", 6 * TICKS, { amplifier: 5 });
+      count++;
+    } catch {
+      // immune or gone
+    }
+  }
+  consumeHeldItem(player);
+  playSound(player.dimension, "beacon.activate", player.location, 0.5);
+  actionBar(player, `§8Time Stop! §7(${count} frozen)`);
+}
+
+/** Scroll: Heavy Recover - heals the caster and nearby pets. @param {import("@minecraft/server").Player} player */
+function castHeavyRecover(player) {
+  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  player.addEffect("instant_health", 1, { amplifier: 3 });
+  player.addEffect("regeneration", 10 * TICKS, { amplifier: 2 });
+  for (const ally of player.dimension.getEntities({ location: player.location, maxDistance: 8 })) {
+    try {
+      if (ally.getComponent("minecraft:is_tamed")) {
+        heal(ally, 30);
+        particle(player.dimension, "minecraft:heart_particle", add(ally.location, { x: 0, y: 1.5, z: 0 }));
+      }
+    } catch {
+      // entity left the world
+    }
+  }
+  consumeHeldItem(player);
+  particle(player.dimension, "minecraft:heart_particle", add(player.location, { x: 0, y: 2, z: 0 }));
+  playSound(player.dimension, "random.levelup", player.location, 1.4);
+  actionBar(player, "§aHeavy Recover!");
+}
+
+/** Tome: Reality Slash - a piercing cut through everything ahead. @param {import("@minecraft/server").Player} player */
+function castRealitySlash(player) {
+  if (!tryCooldown(player, "overlord_slash", 10.0)) return;
+  const hits = strikeLine(player, player.getHeadLocation(), player.getViewDirection(), 18, 22,
+    EntityDamageCause.magic, "minecraft:critical_hit_emitter");
+  playSound(player.dimension, "item.trident.riptide_1", player.location, 1.4);
+  actionBar(player, hits > 0 ? `§bReality Slash cut ${hits}!` : "§bReality Slash!");
+}
+
+/** Tome: Fallen Down - a pillar of light after a short charge. @param {import("@minecraft/server").Player} player */
+function castFallenDown(player) {
+  const target = aimPoint(player, 40);
+  if (!target) {
+    actionBar(player, "§7Fallen Down: nothing in range");
+    return;
+  }
+  if (!tryCooldown(player, "overlord_fallen", 60.0)) return;
+  const dimension = player.dimension;
+  actionBar(player, "§eSuper-tier magic: Fallen Down...");
+  playSound(dimension, "beacon.activate", target, 1.2);
+  for (let i = 0; i < 3; i++) {
+    system.runTimeout(() => particle(dimension, "minecraft:totem_particle", add(target, { x: 0, y: 1, z: 0 })), i * TICKS);
+  }
+  system.runTimeout(() => {
+    try {
+      for (let h = 0; h <= 8; h += 2) {
+        particle(dimension, "minecraft:knockback_roar_particle", add(target, { x: 0, y: h, z: 0 }));
+      }
+      particle(dimension, "minecraft:totem_particle", add(target, { x: 0, y: 1, z: 0 }));
+      playSound(dimension, "ambient.weather.thunder", target, 0.7);
+      playSound(dimension, "random.explode", target, 0.5);
+      const caster = player.isValid ? player : undefined;
+      for (const foe of foesNear(dimension, target, 7)) {
+        try {
+          foe.applyDamage(60, { cause: EntityDamageCause.magic, damagingEntity: caster });
+        } catch {
+          // already dead
+        }
+      }
+    } catch (error) {
+      console.warn(`[Overlord] Fallen Down failed: ${error}`);
+    }
+  }, 3 * TICKS);
+}
+
+/** Frost Pain: Icy Burst - a cone of frost. @param {import("@minecraft/server").Player} player */
+function castIcyBurst(player) {
+  if (!tryCooldown(player, "overlord_frost", 6.0)) return;
+  const view = player.getViewDirection();
+  let count = 0;
+  for (const foe of foesNear(player.dimension, player.location, 6)) {
+    const dx = foe.location.x - player.location.x;
+    const dz = foe.location.z - player.location.z;
+    const len = Math.hypot(dx, dz) || 1;
+    if ((dx / len) * view.x + (dz / len) * view.z < 0.3) continue; // behind or beside the wielder
+    try {
+      foe.applyDamage(8, { cause: EntityDamageCause.magic, damagingEntity: player });
+      if (foe.isValid) {
+        foe.addEffect("slowness", 5 * TICKS, { amplifier: 4 });
+        particle(player.dimension, "minecraft:blue_flame_particle", add(foe.location, { x: 0, y: 1, z: 0 }));
+      }
+      count++;
+    } catch {
+      // already dead
+    }
+  }
+  playSound(player.dimension, "random.glass", player.location, 0.7);
+  actionBar(player, count > 0 ? `§bIcy Burst froze ${count}!` : "§bIcy Burst!");
+}
+
+/** Brain's Katana: God Flash - dash forward, cutting everything on the way. @param {import("@minecraft/server").Player} player */
+function castGodFlash(player) {
+  if (!tryCooldown(player, "overlord_flash", 5.0)) return;
+  const view = player.getViewDirection();
+  const len = Math.hypot(view.x, view.z) || 1;
+  const dir = { x: view.x / len, y: 0, z: view.z / len };
+  const hits = strikeLine(player, add(player.location, { x: 0, y: 1, z: 0 }), dir, 7, 14,
+    EntityDamageCause.entityAttack, "minecraft:critical_hit_emitter");
+  try {
+    player.applyKnockback({ x: dir.x * 2.6, z: dir.z * 2.6 }, 0.15);
+  } catch {
+    // dash is cosmetic
+  }
+  playSound(player.dimension, "item.trident.riptide_1", player.location, 1.8);
+  actionBar(player, hits > 0 ? `§fGod Flash cut ${hits}!` : "§fGod Flash!");
+}
+
+/** CZ's Magic Rifle: fires a magic bullet. @param {import("@minecraft/server").Player} player */
+function fireRifle(player) {
+  if (!tryCooldown(player, "overlord_rifle", 0.6)) return;
+  const dir = player.getViewDirection();
+  const origin = add(player.getHeadLocation(), dir, 1.2);
+  const bullet = player.dimension.spawnEntity(id("magic_bullet"), origin);
+  const projectile = bullet.getComponent("minecraft:projectile");
+  if (projectile) {
+    projectile.owner = player;
+    projectile.shoot({ x: dir.x * 3, y: dir.y * 3, z: dir.z * 3 }, { uncertainty: 0 });
+  } else {
+    bullet.applyImpulse({ x: dir.x * 3, y: dir.y * 3, z: dir.z * 3 });
+  }
+  playSound(player.dimension, "crossbow.shoot", origin, 1.5);
+}
+
 /** @param {import("@minecraft/server").Player} player */
 function ownerTag(player) {
   return `overlord_owner_${player.id}`;
@@ -522,6 +754,22 @@ world.afterEvents.itemUse.subscribe((event) => {
       castEarthSurge(player);
     } else if (item === id("maid_bell")) {
       ringBell(player);
+    } else if (item === id("scroll_of_explosion")) {
+      castExplosion(player);
+    } else if (item === id("scroll_of_time_stop")) {
+      castTimeStop(player);
+    } else if (item === id("scroll_of_heavy_recover")) {
+      castHeavyRecover(player);
+    } else if (item === id("tome_reality_slash")) {
+      castRealitySlash(player);
+    } else if (item === id("tome_fallen_down")) {
+      castFallenDown(player);
+    } else if (item === id("frost_pain")) {
+      castIcyBurst(player);
+    } else if (item === id("brain_katana")) {
+      castGodFlash(player);
+    } else if (item === id("magic_rifle")) {
+      fireRifle(player);
     } else if (item in SIGILS) {
       useSigil(player, SIGILS[item]);
     }
@@ -560,6 +808,13 @@ world.afterEvents.entityHurt.subscribe((event) => {
     } else if (held === id("god_slaying_emperor_blade") && victim.isValid) {
       victim.addEffect("slowness", 4 * TICKS, { amplifier: 2 });
       particle(victim.dimension, "minecraft:blue_flame_particle", add(victim.location, { x: 0, y: 1, z: 0 }));
+    } else if (held === id("frost_pain") && victim.isValid) {
+      victim.addEffect("slowness", 3 * TICKS, { amplifier: 1 });
+    } else if (held === id("iron_gauntlets") && victim.isValid) {
+      const dx = victim.location.x - attacker.location.x;
+      const dz = victim.location.z - attacker.location.z;
+      const len = Math.hypot(dx, dz) || 1;
+      victim.applyKnockback({ x: (dx / len) * 2.4, z: (dz / len) * 2.4 }, 0.55); // dragon-fist punch
     } else if (held === id("stiletto") && victim.isValid) {
       victim.setOnFire(4, true); // the stiletto carries a stored fire spell
     } else if (held === id("razor_edge") && victim.isValid) {
