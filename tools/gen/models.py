@@ -2462,7 +2462,7 @@ def crystal_shard():
 
 
 # ------------------------------------------------ everyday NPCs: adventurer, guard
-def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, spear):
+def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, weapon_kind, mask=None):
     m = Model(name, bounds=(3, 3.5, 1.25))
     skin_d = shade(skin, 0.85)
     pal = {"S": skin, "s": skin_d, "H": hair, "h": shade(hair, 1.4), "e": "#2b2118", "M": armor, "m": armor_l,
@@ -2510,6 +2510,10 @@ def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, 
     hd.left.fill(hair, 4, 3, 8, 5)
     hd.back.fill(hair, 0, 0, None, 6)
     hd.top.fill(hair)
+    if mask:
+        hd.front.fill(mask, 0, 5, None, 8)
+        for f in (hd.right, hd.left, hd.back):
+            f.fill(mask, 0, 5, None, 8)
     if helmet:
         cap = head.cube((-4, 28, -4), (8, 4, 8), inflate=0.5)
         cap.fill(armor)
@@ -2531,7 +2535,20 @@ def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, 
         leg.band(4, 6, armor)
         leg.band(8, 12, "#3a2a1e")
     weapon = m.bone("weapon", (-6, 13, -2), parent="rightArm")
-    if spear:
+    if weapon_kind == "bow":
+        grip = weapon.cube((-6.5, 9, -4), (1, 8, 1))
+        grip.fill("#6b4a2a", noise=5)
+        for y0 in (6, 17):
+            limb = weapon.cube((-6.5, y0, -3), (1, 3, 1))
+            limb.fill("#8a6238", noise=4)
+        string = weapon.cube((-6.5, 7, -2), (1, 12, 1))
+        string.fill(None, noise=0)
+        for f in (string.right, string.left):
+            f.vline(0, "#e9e6dc")
+        quiver = body.cube((-2, 14, 2), (4, 9, 2))
+        quiver.fill("#6b4a36", noise=5)
+        quiver.top.fill("#e9e6dc")
+    elif weapon_kind == "spear":
         shaft = weapon.cube((-6.5, 1, -3.5), (1, 32, 1))
         shaft.fill("#6b4a2a", noise=5)
         tip = weapon.cube((-6.5, 33, -3.5), (1, 5, 1))
@@ -2556,12 +2573,32 @@ def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, 
 
 def adventurer():
     return _soldier("adventurer", "#e0b48c", "#5a3d28", "#8a6a4a", "#a8855f", "#5f4630", "#3f6a45", "#2a4a2f",
-                    helmet=False, spear=False)
+                    helmet=False, weapon_kind="sword")
 
 
 def guard():
     return _soldier("guard", "#dcae88", "#3a2a1f", "#8d939f", "#b9c0cc", "#5d626c", "#2f4f8f", "#1f3766",
-                    helmet=True, spear=True)
+                    helmet=True, weapon_kind="spear")
+
+
+def soldier():
+    return _soldier("soldier", "#dcae88", "#6b4a2a", "#7a6a55", "#9a8a72", "#55483a", "#3f66a8", "#2a4a80",
+                    helmet=False, weapon_kind="spear")
+
+
+def archer():
+    return _soldier("archer", "#e3b894", "#c9a53c", "#5f7a4a", "#7d9a66", "#40552f", "#3f66a8", "#2a4a80",
+                    helmet=False, weapon_kind="bow")
+
+
+def imperial_knight():
+    return _soldier("imperial_knight", "#e0b48c", "#2a2018", "#3a3a44", "#5a5a68", "#1f1f26", "#a8262a", "#701519",
+                    helmet=True, weapon_kind="sword")
+
+
+def bandit():
+    return _soldier("bandit", "#c99a78", "#1f1a16", "#3a3028", "#52463a", "#231c16", "#4a4038", "#2f2822",
+                    helmet=False, weapon_kind="sword", mask="#2a2420")
 
 
 def lightning_bolt():
@@ -2585,4 +2622,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        brain, zaryusu, cz_delta, nfirea,
        lupusregina, entoma, solution, yuri, goblin, ogre,
        skeleton_mage, lizardman, evileye, fluder, gargantua, soul_eater, quagoa, adventurer, guard,
+       soldier, archer, imperial_knight, bandit,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

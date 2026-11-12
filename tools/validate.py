@@ -34,6 +34,14 @@ VANILLA = {
                "minecraft:villager_v2"},
     "block_geometry": {"minecraft:geometry.full_block"},
     "quest_target": {"minecraft:zombie", "minecraft:skeleton"},
+    # verified against @minecraft/vanilla-data 1.26.60 (MinecraftBlockTypes)
+    "script_block": {
+        "air", "dirt", "coarse_dirt", "grass_block", "grass_path", "podzol", "sand", "red_sand", "stone", "gravel",
+        "snow", "mycelium", "mud", "moss_block", "sandstone", "red_sandstone", "packed_mud", "hay_block",
+        "oak_log", "oak_fence", "spruce_fence", "spruce_planks", "mangrove_log", "campfire", "soul_campfire",
+        "chest", "barrel", "crafting_table", "target", "lantern", "bone_block", "stone_bricks",
+        "cobblestone_wall", "white_wool", "blue_wool", "red_wool", "brown_wool", "green_wool", "black_wool",
+    },
     "script_entity": {"minecraft:villager_v2", "minecraft:zombie", "minecraft:lightning_bolt"},
     # verified against @minecraft/vanilla-data 1.26.60
     "item": {
@@ -51,7 +59,7 @@ VANILLA = {
         "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
         "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
         "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
-        "minecraft:cod",
+        "minecraft:cod", "minecraft:bread", "minecraft:arrow",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
     "sound": {
@@ -397,7 +405,11 @@ def main():
     for name in sorted(set(re.findall(r'\bid\("([a-z0-9_]+)"\)', script))):
         ident = f"{NS}:{name}"
         events = {e for d in entities.values() for e in d.get("events", {})}
-        check(ident in items or ident in entities or ident in events, f"main.js: unknown identifier {ident}")
+        check(ident in items or ident in entities or ident in events or ident in blocks,
+              f"scripts: unknown identifier {ident}")
+    for name in sorted(set(re.findall(r'\bmc\("([a-z_]+)"\)', script))):
+        check(name in VANILLA["script_block"] or f"minecraft:{name}" in VANILLA["item"],
+              f"scripts: unverified vanilla block or item minecraft:{name}")
     for armor_set in re.findall(r'wearsFullSet\(gear, "([a-z_]+)"\)', script):
         for piece in ("helmet", "chestplate", "leggings", "boots"):
             check(f"{NS}:{armor_set}_{piece}" in items, f"main.js: unknown armour piece {armor_set}_{piece}")

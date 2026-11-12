@@ -1121,6 +1121,10 @@ EGG_COLORS = {
     "quagoa": ("#6b4d34", "#e9e3cf"),
     "adventurer": ("#8a6a4a", "#3f6a45"),
     "guard": ("#8d939f", "#2f4f8f"),
+    "soldier": ("#3f66a8", "#7a6a55"),
+    "archer": ("#5f7a4a", "#3f66a8"),
+    "imperial_knight": ("#3a3a44", "#a8262a"),
+    "bandit": ("#3a3028", "#c99a78"),
 }
 
 

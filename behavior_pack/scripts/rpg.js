@@ -67,6 +67,7 @@ const QUESTS = [
   { key: "zombies", title: "Restless Dead", target: "minecraft:zombie", what: "Zombies", count: 10, coins: 6, xp: 60, rank: 0 },
   { key: "skeletons", title: "Bone Collectors", target: "minecraft:skeleton", what: "Skeletons", count: 10, coins: 6, xp: 60, rank: 0 },
   { key: "old_guarders", title: "Guards of the Tomb", target: id("old_guarder"), what: "Nazarick Old Guarders", count: 8, coins: 10, xp: 120, rank: 0 },
+  { key: "bandits", title: "Clear the Roads", target: id("bandit"), what: "Bandits", count: 8, coins: 10, xp: 110, rank: 0 },
   { key: "goblins", title: "Goblin Raiders", target: id("goblin"), what: "Goblins", count: 12, coins: 8, xp: 90, rank: 0 },
   { key: "ogres", title: "Ogre Trouble", target: id("ogre"), what: "Ogres", count: 5, coins: 12, xp: 160, rank: 1 },
   { key: "quagoa", title: "Claws in the Dark", target: id("quagoa"), what: "Quagoa", count: 8, coins: 12, xp: 160, rank: 1 },
@@ -824,6 +825,7 @@ function openHelp(player) {
         STAT_KEYS.map((k) => `${STATS[k].color}${STATS[k].name}§r: ${STATS[k].help}`).join("\n") +
         "\n\n§eMana§r: staff, ring, tome and weapon abilities cost mana, which recovers over time. Scrolls and potions cost none; Healing Potions also restore mana.\n\n" +
         "§eWorld§r: monsters that spawn near you take a level close to yours (more health, harder hits, more XP). The most dangerous ones only appear once someone nearby is strong enough, and from level 5 Nazarick may send a patrol after you at night.\n\n" +
+        "§eCamps§r: the wilds hold camps and outposts of the factions - Kingdom, Empire, goblins, bandits, adventurers, lizardmen and Nazarick. Finding one gives XP; adventurers, guards and soldiers may tell you where the nearest lies. Cleared camps are re-manned after ten minutes.\n\n" +
         "§eCombat§r: hitting a mob shows its remaining health. Agility adds a 0.4% critical chance per point (+50% damage). Dying costs a tenth of the XP gathered towards your next level.\n\n" +
         "§eSpells§r: open the Grimoire to learn tier magic with Data Crystals and assign up to four spells; cast them with the Magic Wand (sneak + use switches spell). Each spell grows stronger with use.\n\n" +
         `§eClasses§r: each class gives a permanent bonus and an active skill - sneak and use the plate to trigger it (${SKILL_COOLDOWN} s cooldown).\n\n` +

@@ -50,8 +50,14 @@
     "overlord_egg_albedo": {
       "textures": "textures/items/overlord/egg_albedo"
     },
+    "overlord_egg_archer": {
+      "textures": "textures/items/overlord/egg_archer"
+    },
     "overlord_egg_aura": {
       "textures": "textures/items/overlord/egg_aura"
+    },
+    "overlord_egg_bandit": {
+      "textures": "textures/items/overlord/egg_bandit"
     },
     "overlord_egg_brain": {
       "textures": "textures/items/overlord/egg_brain"
@@ -98,6 +104,9 @@
     "overlord_egg_hamsuke": {
       "textures": "textures/items/overlord/egg_hamsuke"
     },
+    "overlord_egg_imperial_knight": {
+      "textures": "textures/items/overlord/egg_imperial_knight"
+    },
     "overlord_egg_lizardman": {
       "textures": "textures/items/overlord/egg_lizardman"
     },
@@ -136,6 +145,9 @@
     },
     "overlord_egg_skeleton_mage": {
       "textures": "textures/items/overlord/egg_skeleton_mage"
+    },
+    "overlord_egg_soldier": {
+      "textures": "textures/items/overlord/egg_soldier"
     },
     "overlord_egg_solution": {
       "textures": "textures/items/overlord/egg_solution"

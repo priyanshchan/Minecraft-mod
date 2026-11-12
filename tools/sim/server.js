@@ -11,6 +11,8 @@ export const players = [];
 const objectives = new Map();
 export const world = {
   beforeEvents: { playerInteractWithEntity: sig() },
+  props: new Map(), getDynamicProperty(k) { return this.props.get(k); }, setDynamicProperty(k, v) { this.props.set(k, v); },
+  getDefaultSpawnLocation: () => ({ x: 0, y: 64, z: 0 }),
   clock: { time: 6000, day: 0 }, getTimeOfDay() { return this.clock.time; }, getDay() { return this.clock.day; },
   afterEvents: { entitySpawn: sig(), entityDie: sig(), entityHurt: sig(), playerSpawn: sig(), playerLeave: sig(), worldLoad: sig(), itemUse: sig(), itemCompleteUse: sig(), projectileHitEntity: sig(), projectileHitBlock: sig() },
   getAllPlayers: () => players,
@@ -27,4 +29,5 @@ export const EquipmentSlot = { Head: "Head", Chest: "Chest", Legs: "Legs", Feet:
 export const GameMode = { Creative: "Creative" };
 export const emitted = [];
 export class MolangVariableMap { constructor() { this.v = {}; } setColorRGB(k, c) { this.v[k] = c; } setFloat(k, n) { this.v[k] = n; } }
+export class BlockVolume { constructor(from, to) { this.from = from; this.to = to; } }
 export class ItemStack { constructor(typeId, amount = 1) { this.typeId = typeId; this.amount = amount; } }

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [3, 0, 0]
+VERSION = [3, 1, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v3.0.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v3.1.0"
 
 
 def oid(name):
@@ -493,7 +493,7 @@ VANILLA_ITEMS_USED = [
     "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
     "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
     "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
-    "minecraft:cod",
+    "minecraft:cod", "minecraft:bread", "minecraft:arrow",
 ]
 
 
@@ -576,6 +576,11 @@ def loot_files():
         "ogre": [_pool(_entry(coin, 1, 3)), _pool(_entry("minecraft:leather", 0, 2))],
         "adventurer": [_pool(_entry(coin, 1, 3)), _pool(_entry("minecraft:iron_ingot", 0, 1))],
         "guard": [_pool(_entry("minecraft:iron_ingot", 0, 2))],
+        "soldier": [_pool(_entry("minecraft:iron_ingot", 0, 1)), _pool(_entry("minecraft:bread", 0, 1))],
+        "archer": [_pool(_entry("minecraft:arrow", 0, 4))],
+        "imperial_knight": [_pool(_entry("minecraft:iron_ingot", 0, 2)), _pool(_entry(coin, 0, 2))],
+        "bandit": [_pool(_entry(coin, 0, 3)), _pool(_entry("minecraft:bread", 0, 1)),
+                   _pool(_entry("minecraft:iron_ingot", 0, 1))],
         "empty": [],
     }
     return {f"loot_tables/entities/{NS}/{k}.json": {"pools": v} for k, v in t.items()}
@@ -1175,6 +1180,37 @@ def entity_files():
     c["minecraft:home"] = {"restriction_radius": 24}
     out["guard"] = _entity("guard", c)
 
+    # ---------------------------------------- low-level faction troops and bandits
+    def troop(name, faction, enemy, health, damage, ranged=False, speed=0.3):
+        c = _mob(name, [name, faction, "human", "mob"], health, speed, (0.7, 2.0), loot=name, xp=6, kb=0.2)
+        targets = {"priority": 2, "must_see": True, "reselect_targets": True, "entity_types": [
+            {"filters": _is_family("monster"), "max_dist": 16},
+            {"filters": _is_family(enemy), "max_dist": 16}]}
+        c["minecraft:behavior.nearest_attackable_target"] = targets
+        c["minecraft:behavior.hurt_by_target"] = {"priority": 1, "alert_same_type": True}
+        c["minecraft:home"] = {"restriction_radius": 20}
+        if ranged:
+            c["minecraft:shooter"] = {"def": "minecraft:arrow"}
+            c["minecraft:behavior.ranged_attack"] = {
+                "priority": 3, "attack_interval_min": 1.5, "attack_interval_max": 3.0,
+                "attack_radius": 15.0, "speed_multiplier": 1.0}
+        else:
+            c["minecraft:attack"] = {"damage": damage}
+            c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.25,
+                                                        "track_target": True}
+        return _entity(name, c)
+
+    out["soldier"] = troop("soldier", "kingdom", "empire", 30, 5)
+    out["archer"] = troop("archer", "kingdom", "empire", 24, 0, ranged=True)
+    out["imperial_knight"] = troop("imperial_knight", "empire", "kingdom", 45, 7)
+
+    c = _mob("bandit", ["bandit", "human", "monster", "mob"], 30, 0.32, (0.7, 2.0), loot="bandit", xp=8, kb=0.2)
+    c["minecraft:attack"] = {"damage": 5}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.25, "track_target": True}
+    c["minecraft:behavior.hurt_by_target"] = {"priority": 1, "alert_same_type": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(20, ["kingdom", "empire", "adventurer"])
+    out["bandit"] = _entity("bandit", c)
+
     _apply_ai(out)
     out["lightning_bolt"] = projectile("lightning_bolt", 0.3, {
         "impact_damage": {"damage": 9, "knockback": True, "semi_random_diff_damage": False},
@@ -1195,6 +1231,10 @@ def _apply_ai(out):
                         ("quagoa", None), ("clementine", None)):
         parts(name, group)["minecraft:behavior.nearest_attackable_target"]["entity_types"].append(
             {"filters": _is_family("human"), "max_dist": 16})
+
+    # Gazef and the village guards belong to the Kingdom, so Empire troops fight them too.
+    for name in ("guard", "gazef"):
+        parts(name)["minecraft:type_family"]["family"].insert(1, "kingdom")
 
     # Packs: hitting one member brings the others.
     for name in ("goblin", "old_guarder", "quagoa", "lizardman", "adventurer", "guard"):
@@ -1235,7 +1275,7 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
         "nazarick_maid", "brain", "zaryusu", "cz_delta", "nfirea",
         "lupusregina", "entoma", "solution", "yuri", "goblin", "ogre",
         "skeleton_mage", "lizardman", "evileye", "fluder", "gargantua", "soul_eater", "quagoa",
-        "adventurer", "guard"]
+        "adventurer", "guard", "soldier", "archer", "imperial_knight", "bandit"]
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard"]
 
 ENTITY_NAMES = {
@@ -1252,7 +1292,8 @@ ENTITY_NAMES = {
     "skeleton_mage": "Skeleton Mage", "lizardman": "Lizardman Warrior", "evileye": "Evileye",
     "fluder": "Fluder Paradyne", "gargantua": "Gargantua", "soul_eater": "Soul Eater",
     "quagoa": "Quagoa", "crystal_shard": "Crystal Lance", "adventurer": "Adventurer",
-    "guard": "Kingdom Guard",
+    "guard": "Kingdom Guard", "soldier": "Kingdom Soldier", "archer": "Kingdom Archer",
+    "imperial_knight": "Imperial Knight", "bandit": "Bandit",
     "fireball": "Fireball", "negative_burst": "Negative Burst", "lightning_bolt": "Lightning",
 }
 
@@ -1356,6 +1397,8 @@ def spawn_rule_files():
         "spawn_rules/nfirea.json": day_creature("nfirea", "plains"),
         "spawn_rules/adventurer.json": day_creature(
             "adventurer", ["plains", "forest", "taiga", "savanna"], 4, herd=(2, 3)),
+        "spawn_rules/bandit.json": monster("bandit", 6, herd=(2, 3),
+                                            biomes=["forest", "plains", "taiga", "savanna"]),
         "spawn_rules/clementine.json": monster("clementine", 2),
         "spawn_rules/goblin.json": monster("goblin", 10, herd=(2, 4), biomes=["forest", "plains", "taiga"]),
         "spawn_rules/skeleton_mage.json": monster("skeleton_mage", 6),
@@ -1469,6 +1512,14 @@ SOUNDS = {
                                       "step": "mob.zombie.step"}),
     "guard": (1.0, [0.85, 0.95], {"hurt": "game.player.hurt", "death": "game.player.die",
                                   "step": "mob.zombie.step"}),
+    "soldier": (1.0, [0.95, 1.05], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                   "step": "mob.zombie.step"}),
+    "archer": (1.0, [1.05, 1.15], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                  "step": "mob.zombie.step", "shoot": "random.bow"}),
+    "imperial_knight": (1.0, [0.8, 0.9], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                          "step": "mob.zombie.step"}),
+    "bandit": (1.0, [0.9, 1.0], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                 "step": "mob.zombie.step"}),
     "hamsuke": (1.0, [0.6, 0.8], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
                                   "death": "mob.rabbit.death", "step": "mob.polarbear.step"}),
 }
@@ -1576,6 +1627,10 @@ ENTITY_ANIMS = {
     "quagoa": ["look_at_target", "idle", "walk", "attack"],
     "adventurer": ["look_at_target", "idle", "walk", "attack"],
     "guard": ["look_at_target", "idle", "walk", "attack"],
+    "soldier": ["look_at_target", "idle", "walk", "attack"],
+    "archer": ["look_at_target", "idle", "walk", "attack"],
+    "imperial_knight": ["look_at_target", "idle", "walk", "attack"],
+    "bandit": ["look_at_target", "idle", "walk", "attack"],
     "crystal_shard": ["projectile.spin"],
     "magic_bullet": ["projectile.spin"],
     "lightning_bolt": ["projectile.spin"],

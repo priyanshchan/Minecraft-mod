@@ -5,6 +5,7 @@ import * as rpg from "./rpg.js";
 import * as raid from "./raid.js";
 import * as spells from "./spells.js";
 import * as director from "./director.js";
+import * as sites from "./structures.js";
 await import("./main.js"); // must load without touching the world
 
 function mkPlayer(name) {
@@ -229,6 +230,61 @@ assert.deepEqual(d.dimension.mobs.map((m) => m.typeId), ["minecraft:zombie"]);
 d.msgs.length = 0; const talk = (item) => { world.beforeEvents.playerInteractWithEntity.fire({ player: d, target: { typeId: "overlord:guard", isValid: true, nameTag: "" }, itemStack: item }); advance(2); };
 talk(); assert.equal(d.msgs.length, 1); assert.ok(d.msgs[0].startsWith("§e<Guard>"));
 talk(); assert.equal(d.msgs.length, 1, "cooldown"); advance(60); talk({ typeId: "overlord:yggdrasil_gold_coin" }); assert.equal(d.msgs.length, 1);
+
+// ---- camps and outposts ----
+// deterministic planning: same salt -> same site; about 40% of regions hold one; every type occurs
+assert.deepEqual(sites.siteOf(5, -3, 777), sites.siteOf(5, -3, 777));
+let planned = 0; const kinds = new Set();
+for (let rx = -15; rx < 15; rx++) for (let rz = -15; rz < 15; rz++) {
+  const site = sites.siteOf(rx, rz, 777); if (!site) continue; planned++; kinds.add(site.type.key);
+  assert.ok(site.x >= rx * sites.REGION + 24 && site.x < (rx + 1) * sites.REGION - 24 && site.z >= rz * sites.REGION + 24 && site.z < (rz + 1) * sites.REGION - 24);
+}
+assert.ok(planned > 900 * 0.3 && planned < 900 * 0.5, `planned ${planned}`); assert.equal(kinds.size, sites.SITES.length);
+// a flat grassy test world that records every block placed
+const makeLand = (opts = {}) => {
+  const placed = new Map(); const chests = new Map(); const k = (l) => `${Math.floor(l.x)},${l.y},${Math.floor(l.z)}`;
+  const land = { id: "minecraft:overworld", mobs: [], placed, chests, spawnParticle() {}, playSound() {}, spawnItem() {}, getPlayers: () => players,
+    heightAt: opts.heightAt ?? (() => 63),
+    getTopmostBlock: ({ x, z }) => (opts.unloaded ? undefined : { location: { x, y: land.heightAt(x, z), z } }),
+    getBlock(l) { const typeId = placed.get(k(l)) ?? (l.y <= land.heightAt(l.x, l.z) ? (opts.water ? "minecraft:water" : "minecraft:grass_block") : "minecraft:air");
+      return { typeId, isLiquid: typeId === "minecraft:water", isAir: typeId === "minecraft:air", location: l,
+        getComponent: (c) => (c === "minecraft:inventory" && typeId === "minecraft:chest" ? { container: { addItem(s) { (chests.get(k(l)) ?? chests.set(k(l), []).get(k(l))).push(s); } } } : undefined) }; },
+    setBlockType(l, t) { placed.set(k(l), t); },
+    fillBlocks(v, t) { for (let x = Math.min(v.from.x, v.to.x); x <= Math.max(v.from.x, v.to.x); x++) for (let y = Math.min(v.from.y, v.to.y); y <= Math.max(v.from.y, v.to.y); y++) for (let z = Math.min(v.from.z, v.to.z); z <= Math.max(v.from.z, v.to.z); z++) placed.set(`${x},${y},${z}`, t); },
+    spawnEntity(typeId, l) { const e = { typeId, location: l, tags: new Set(), isValid: true, addTag(t) { this.tags.add(t); } }; land.mobs.push(e); return e; },
+    getEntities: (q) => land.mobs.filter((m) => !q.type || m.typeId === q.type) };
+  return land;
+};
+// every site type builds on flat ground: pad, cleared air, at least one stocked chest, and only known blocks
+for (const type of sites.SITES) {
+  const land = makeLand(); const camp = sites.buildSite(land, { x: 1000, z: 1000, type }); advance(3);
+  assert.ok(camp && camp.y === 64, type.key);
+  assert.equal(land.placed.get("1000,63,1000") !== undefined, true, `${type.key} pad`);
+  const blocks = new Set(land.placed.values()); assert.ok(blocks.has("minecraft:chest") && blocks.has("minecraft:air"), type.key);
+  assert.ok([...land.chests.values()].some((items) => items.length > 0), `${type.key} chest is stocked`);
+  for (const [mobType, count] of type.garrison(2)) assert.ok(mobType.startsWith("overlord:") && count > 0);
+  assert.equal(sites.garrison(land, camp, 0), type.garrison(0).reduce((n, [, c]) => n + c, 0));
+  assert.equal(sites.garrison(land, camp, 0), 0, `${type.key} garrison is not doubled`);
+  assert.ok(land.mobs.every((m) => m.tags.has("overlord_camp")));
+}
+// unsuitable or unloaded places
+const camp0 = sites.SITES[0];
+assert.equal(sites.buildSite(makeLand({ water: true }), { x: 0, z: 0, type: camp0 }), null, "no camps on water");
+assert.equal(sites.buildSite(makeLand({ unloaded: true }), { x: 0, z: 0, type: camp0 }), undefined, "wait for chunks");
+assert.equal(sites.buildSite(makeLand({ heightAt: (x) => 63 + Math.floor(x / 2) }), { x: 0, z: 0, type: camp0 }), null, "too steep");
+// exploring: find a planned site, walk up to it, discover it once, garrison it once, and hear a rumour before
+let goal; for (let rx = 2; rx < 40 && !goal; rx++) { const site = sites.siteOf(rx, 2); if (site) goal = site; }
+assert.ok(goal, "a site exists somewhere east");
+const e = mkPlayer("eve"); const pe = rpg.profileOf(e); e.dimension = makeLand();
+e.location = { x: goal.x - 300, y: 64, z: goal.z }; const heard = sites.rumour(e);
+assert.ok(heard && /blocks to the/.test(heard), String(heard));
+e.location = { x: goal.x - 80, y: 64, z: goal.z }; sites.explore(e);
+assert.ok([...e.dimension.placed.values()].includes("minecraft:chest"), "built when in range"); assert.equal(e.dimension.mobs.length, 0, "not garrisoned yet");
+const built = e.dimension.placed.size; sites.explore(e); assert.equal(e.dimension.placed.size, built, "built once");
+e.location = { x: goal.x - 20, y: 64, z: goal.z }; const xpE = pe.xp; sites.explore(e);
+assert.ok(e.dimension.mobs.length >= 3 && e.bar.includes("Discovered"), e.bar); assert.ok(pe.level === 2 && pe.xp === xpE + 80 - rpg.xpForNext(1), "discovery XP (enough for level 2)");
+const manned = e.dimension.mobs.length; sites.explore(e); assert.equal(e.dimension.mobs.length, manned, "no refill before ten minutes");
+assert.ok([...world.props.keys()].some((key) => key.startsWith("overlord:site:")), "sites are saved in the world");
 
 // persistence: saved profile is restored after leaving
 advance(100);

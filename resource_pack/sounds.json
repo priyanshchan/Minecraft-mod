@@ -452,6 +452,55 @@
           "step": "mob.zombie.step"
         }
       },
+      "overlord:soldier": {
+        "volume": 1.0,
+        "pitch": [
+          0.95,
+          1.05
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:archer": {
+        "volume": 1.0,
+        "pitch": [
+          1.05,
+          1.15
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "random.bow"
+        }
+      },
+      "overlord:imperial_knight": {
+        "volume": 1.0,
+        "pitch": [
+          0.8,
+          0.9
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:bandit": {
+        "volume": 1.0,
+        "pitch": [
+          0.9,
+          1.0
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
       "overlord:hamsuke": {
         "volume": 1.0,
         "pitch": [

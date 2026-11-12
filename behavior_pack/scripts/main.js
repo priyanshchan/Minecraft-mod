@@ -23,6 +23,7 @@ import { startRaid } from "./raid.js";
 import { castSelected, cycleSpell, openGrimoire } from "./spells.js";
 import * as fx from "./vfx.js";
 import "./director.js";
+import "./structures.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;

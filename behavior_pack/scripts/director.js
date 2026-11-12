@@ -4,6 +4,7 @@
 // squire zombies and small talk from the human NPCs.
 import { world, system, EntityInitializationCause, GameMode } from "@minecraft/server";
 import { profileOf } from "./rpg.js";
+import { rumour } from "./structures.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -12,7 +13,7 @@ const LONG = 20000000;
 export const LEVEL_KEY = "overlord:lvl";
 
 /** Tags of mobs the add-on spawned on purpose; they are never removed by the level gate. */
-const SCRIPTED_TAGS = ["overlord_raid", "overlord_patrol", "overlord_summoned", "overlord_guard"];
+const SCRIPTED_TAGS = ["overlord_raid", "overlord_patrol", "overlord_summoned", "overlord_guard", "overlord_camp"];
 
 /** Naturally spawning mobs that only appear once a nearby player has reached this level. */
 export const SPAWN_GATE = {
@@ -51,6 +52,16 @@ const DIALOGUE = {
     "Stay inside the village after dark. Patrols from the Tomb have been seen nearby.",
     "We hold the line for the villagers. Monsters won't get past us.",
     "If you see undead marching in formation, that is no ordinary pack. Run or fight well.",
+  ],
+  [id("soldier")]: [
+    "Kingdom army, on campaign. Keep clear of the Empire's outposts unless you want trouble.",
+    "Bandits have been raiding the roads. Put a few down and the captain will be grateful.",
+    "We drill with spears all day and still the undead scare me more than the Empire does.",
+  ],
+  [id("archer")]: ["Stay out of my line of fire and we'll get along.", "I can drop a goblin at forty paces. An ogre takes a few more arrows."],
+  [id("imperial_knight")]: [
+    "This post belongs to the Baharuth Empire. State your business or move along.",
+    "The Emperor's knights do not fear the Kingdom's rabble.",
   ],
   [id("gazef")]: ["I am Gazef Stronoff, Warrior-Captain of the Kingdom. These lands are under my protection."],
   [id("brain")]: ["I am looking for an opponent worth my blade. You are not there yet."],
@@ -247,10 +258,12 @@ world.beforeEvents.playerInteractWithEntity.subscribe((event) => {
   if (event.itemStack?.typeId === id("yggdrasil_gold_coin")) return; // paying, not chatting
   if (system.currentTick < (talkReady.get(player.id) ?? 0)) return;
   talkReady.set(player.id, system.currentTick + 2 * TICKS);
-  const line = lines[Math.floor(Math.random() * lines.length)];
+  let line = lines[Math.floor(Math.random() * lines.length)];
+  const gossips = speaker.typeId === id("adventurer") || speaker.typeId === id("guard") || speaker.typeId === id("soldier");
   system.run(() => {
     try {
       if (!player.isValid || !speaker.isValid) return;
+      if (gossips && Math.random() < 0.5) line = rumour(player) ?? line; // half the time they share where a camp lies
       const name = speaker.nameTag || speaker.typeId.split(":")[1].split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
       player.sendMessage(`§e<${name}>§f ${line}`);
     } catch {

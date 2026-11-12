@@ -54,6 +54,10 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 | **Quagoa** | 35 | Clawed mole-men that spawn underground in the dark | Raw Iron, Gold Coins |
 | **Adventurer** | 50 | Neutral parties of 2–3 in plains, forests, taiga and savanna; hunt monsters. Pay YGGDRASIL Gold Coins to hire one for 10 minutes | Gold Coins |
 | **Kingdom Guard** | 60 | Posted automatically at villages (two per village); stays near its post and fights monsters | Iron |
+| **Kingdom Soldier** | 30 | Spearman of the Re-Estize army; garrisons Kingdom camps, fights monsters and the Empire | Iron, Bread |
+| **Kingdom Archer** | 24 | Bowman who garrisons Kingdom camps | Arrows |
+| **Imperial Knight** | 45 | Baharuth Empire knight; garrisons Empire outposts, fights monsters and the Kingdom | Iron, Gold Coins |
+| **Bandit** | 30 | Hostile outlaw; roams at night in groups and holds bandit camps | Gold Coins, Bread, Iron |
 | **Brain Unglaus** | 110 | Neutral swordsman found in taiga; hunts monsters | Brain's Katana |
 | **Zaryusu Shasha** | 100 | Neutral lizardman found in swamps; hunts monsters, chilling strikes | Frost Pain |
 | **Nfirea Bareare** | 30 | Peaceful herbalist found in plains; trades potions and ingredients for Gold Coins | — |
@@ -143,7 +147,7 @@ character menu.
 - **Class skills:** sneak and use the plate to trigger your class's active skill (45 s cooldown) — Fortress
   (Warrior: Resistance II), Mana Surge (Magic Caster: refills mana), Shadow Step (Assassin: invisible and
   fast), Sanctuary (Cleric: heals you and nearby players).
-- **Guild quests:** 24 kill requests, one at a time, paying Gold Coins and XP. Completed quests raise your
+- **Guild quests:** 25 kill requests, one at a time, paying Gold Coins and XP. Completed quests raise your
   adventurer rank — Copper, Iron, Silver, Gold, Platinum, Mithril, Orichalcum, Adamantite — which unlocks
   harder requests, up to defeating Ainz Ooal Gown.
 - **Party play:** players within 24 blocks of a kill receive half its XP and quest credit.
@@ -170,6 +174,27 @@ Progress is saved per player in the world.
 - **Biomes:** goblins keep to forests, plains and taiga; ogres to plains, forests, hills and savanna; lizardmen
   to swamps; Quagoa underground.
 - **Dialogue:** talk to adventurers, guards, Gazef, Brain, Zaryusu or Evileye for a line of advice.
+
+### Camps and outposts
+
+The overworld is divided into 192-block regions and about four in ten hold one faction site. A site is built
+the first time a player explores within about 110 blocks of it, its garrison is posted when you come within
+44 blocks, and a cleared site is re-manned after ten minutes. Finding a site gives 80 XP, and adventurers,
+guards and soldiers will sometimes tell you where the nearest undiscovered one lies.
+
+| Site | What is there | Garrison |
+| --- | --- | --- |
+| **Goblin Camp** | Spiked ring, two tents, campfire, loot chest | 5 Goblins, plus Ogres at higher levels |
+| **Bandit Camp** | Two tents, stolen barrels, loot chest | 4–6 Bandits |
+| **Adventurers' Camp** | Tent, campfire, crafting table, supply chest | 3 Adventurers (can be hired) |
+| **Kingdom Army Camp** | Three tents, banners, training yard, supply chest | 4 Kingdom Soldiers, 2 Kingdom Archers |
+| **Empire Outpost** | Stone watchtower, low wall, banner, chest | 4–6 Imperial Knights |
+| **Nazarick Outpost** | Dais with pillars, lamps and an altar, crystal chest | Old Guarders and Skeleton Mages; Death Knights, Elder Liches and a Soul Eater at higher levels |
+| **Lizardman Village** | Three mud huts, campfire, fish chest | 5 Lizardman Warriors |
+
+Sites are placed by script rather than by world generation, so they also appear in terrain you have already
+explored. They avoid water, steep ground and the area within 120 blocks of the world spawn, and they are not
+matched to biomes. Each one levels a small pad and clears the blocks above it.
 
 ### Tier magic
 
@@ -273,8 +298,8 @@ tools/build.py     validates, then packages dist/*.mcaddon
 tools/test_rpg.py  runs the script logic against a mock of the game API (needs Node.js)
 ```
 
-`behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid) and `director.js` (mob levels, gated
-spawns, patrols, guards) are written by hand; everything else inside the two pack
+`behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
+spawns, patrols, guards) and `structures.js` (camps and outposts) are written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 
 ```bash

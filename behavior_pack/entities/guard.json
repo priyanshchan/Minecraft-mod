@@ -13,6 +13,7 @@
       "minecraft:type_family": {
         "family": [
           "guard",
+          "kingdom",
           "human",
           "mob"
         ]

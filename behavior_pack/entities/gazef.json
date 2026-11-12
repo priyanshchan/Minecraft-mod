@@ -13,6 +13,7 @@
       "minecraft:type_family": {
         "family": [
           "gazef",
+          "kingdom",
           "human",
           "mob"
         ]
