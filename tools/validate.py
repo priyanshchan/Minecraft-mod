@@ -32,6 +32,7 @@ VANILLA = {
     "entity": {"minecraft:small_fireball", "minecraft:player", "minecraft:lightning_bolt",
                "minecraft:arrow", "minecraft:evocation_fang"},
     "block_geometry": {"minecraft:geometry.full_block"},
+    "quest_target": {"minecraft:zombie", "minecraft:skeleton"},
     # verified against @minecraft/vanilla-data 1.26.60
     "item": {
         "minecraft:iron_ingot", "minecraft:diamond", "minecraft:redstone", "minecraft:glass_bottle",
@@ -45,7 +46,7 @@ VANILLA = {
         "minecraft:gold_ingot", "minecraft:fermented_spider_eye", "minecraft:ender_pearl",
         "minecraft:oak_log", "minecraft:moss_block", "minecraft:golden_apple",
         "minecraft:gunpowder", "minecraft:clock", "minecraft:glistering_melon_slice",
-        "minecraft:amethyst_shard", "minecraft:nether_wart",
+        "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
     "sound": {
@@ -72,7 +73,7 @@ VANILLA = {
     },
     "effect": {"slowness", "slow_falling", "instant_health", "regeneration", "strength", "resistance",
                "wither", "night_vision", "saturation", "levitation", "invisibility", "speed",
-               "fire_resistance", "poison", "weakness"},
+               "fire_resistance", "poison", "weakness", "health_boost"},
 }
 
 errors: list[str] = []
@@ -375,7 +376,18 @@ def main():
             check(sound in VANILLA["sound"], f"sounds.json: {ident}.{event} uses unknown sound {sound}")
 
     # ------------------------------------------------------------------- script
-    script = (BP / script_mod["entry"]).read_text(encoding="utf-8")
+    script_dir = (BP / script_mod["entry"]).parent
+    script_files = sorted(script_dir.glob("*.js"))
+    script = "\n".join(f.read_text(encoding="utf-8") for f in script_files)
+    declared_modules = {d["module_name"] for d in bpm["dependencies"] if "module_name" in d}
+    for f in script_files:
+        for module in re.findall(r'from "([^"]+)"', f.read_text(encoding="utf-8")):
+            if module.startswith("."):
+                check((f.parent / module).is_file(), f"{rel(f)}: import {module} does not exist")
+            else:
+                check(module in declared_modules, f"{rel(f)}: module {module} is not declared in the manifest")
+    for target in re.findall(r'target: "(minecraft:[a-z_]+)"', script):
+        check(target in VANILLA["quest_target"], f"scripts: unknown quest target {target}")
     for name in sorted(set(re.findall(r'\bid\("([a-z0-9_]+)"\)', script))):
         ident = f"{NS}:{name}"
         events = {e for d in entities.values() for e in d.get("events", {})}

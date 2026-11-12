@@ -5,8 +5,14 @@
     "overlord_adamantite_ingot": {
       "textures": "textures/items/overlord/adamantite_ingot"
     },
+    "overlord_adventurer_plate": {
+      "textures": "textures/items/overlord/adventurer_plate"
+    },
     "overlord_aura_whip": {
       "textures": "textures/items/overlord/aura_whip"
+    },
+    "overlord_blue_potion": {
+      "textures": "textures/items/overlord/blue_potion"
     },
     "overlord_brain_katana": {
       "textures": "textures/items/overlord/brain_katana"

@@ -177,7 +177,7 @@ def tome(cover="#3b2450", cover_d="#2b1a3d", glyph="#e9e3cf", band="#b3141c"):
         "R": band, "W": "#e8e2d0", "w": "#b8b09a"}, outline=False)
 
 
-def potion():
+def potion(liquid="#e0202c"):
     return sprite16([
         "................",
         "......CcC.......",
@@ -195,8 +195,8 @@ def potion():
         "....WrDDDrW.....",
         ".....WWWWW......",
         "................",
-    ], {"C": "#9a6b3a", "c": "#6e4a26", "W": "#d7e6ee", "R": "#e0202c", "r": "#ff6a5e", "w": "#ffd0c8",
-        "D": "#9a0f1a"})
+    ], {"C": "#9a6b3a", "c": "#6e4a26", "W": "#d7e6ee", "R": liquid, "r": mix(liquid, "#ffffff", 0.35),
+        "w": mix(liquid, "#ffffff", 0.75), "D": shade(liquid, 0.65)})
 
 
 def crystal():
@@ -834,6 +834,28 @@ def rifle():
     return s.outline().img
 
 
+def plate():
+    return sprite16([
+        "................",
+        "......cc........",
+        ".....c..c.......",
+        ".....c..c.......",
+        "......cc........",
+        "...kkkkkkkkkk...",
+        "..kMMMMMMMMMMk..",
+        "..kMmmmmmmmmMk..",
+        "..kMmddddddmMk..",
+        "..kMmmmmmmmmMk..",
+        "..kMmdddmGGmMk..",
+        "..kMmmmmmGGmMk..",
+        "..kMMMMMMMMMMk..",
+        "...kkkkkkkkkk...",
+        "................",
+        "................",
+    ], {"c": "#8a6a4a", "k": "#5a3a22", "M": "#c9824a", "m": "#e3a66e", "d": "#8f552a", "G": GOLD_L},
+        outline=False)
+
+
 def mask_layer():
     """64x32 armour sheet that only paints the Mask of Envy on the face."""
     sheet = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
@@ -934,6 +956,8 @@ def all_item_icons():
         "brain_katana": blade_icon("#1b1b22", "#0c0c10", GOLD_D, "#f2f5f9", "#b9c2d0", "#7c8494"),
         "iron_gauntlets": gauntlets(),
         "magic_rifle": rifle(),
+        "adventurer_plate": plate(),
+        "blue_potion": potion("#2f7fe0"),
     }
     for who in SIGIL_COLORS:
         icons[f"sigil_of_{who}"] = sigil(who)

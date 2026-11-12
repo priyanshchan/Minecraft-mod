@@ -41,6 +41,8 @@ item.overlord.frost_pain.name=Frost Pain
 item.overlord.brain_katana.name=Brain's Katana
 item.overlord.iron_gauntlets.name=Sebas's Iron Gauntlets
 item.overlord.magic_rifle.name=CZ's Magic Rifle
+item.overlord.adventurer_plate.name=Adventurer's Plate
+item.overlord.blue_potion.name=Mana Potion
 item.overlord.sigil_of_ainz.name=Sigil of Ainz Ooal Gown
 item.overlord.sigil_of_albedo.name=Sigil of Albedo
 item.overlord.sigil_of_shalltear.name=Sigil of Shalltear Bloodfallen
@@ -109,4 +111,4 @@ item.spawn_egg.entity.overlord:cz_delta.name=CZ2128 Delta Spawn Egg
 item.spawn_egg.entity.overlord:nfirea.name=Nfirea Bareare Spawn Egg
 
 pack.name=Overlord: Tomb of Nazarick
-pack.description=Ainz Ooal Gown, the Floor Guardians, Death Knights, legendary weapons and spells. §7v1.3.0
+pack.description=Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v1.4.0

@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:blue_potion"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "LCL",
+      "BBB"
+    ],
+    "key": {
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "L": {
+        "item": "minecraft:lapis_lazuli"
+      },
+      "B": {
+        "item": "minecraft:glass_bottle"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:data_crystal"
+      }
+    ],
+    "result": {
+      "item": "overlord:blue_potion",
+      "count": 3
+    }
+  }
+}

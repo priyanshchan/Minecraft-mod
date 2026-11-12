@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [1, 3, 0]
+VERSION = [1, 4, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, Death Knights, legendary weapons and spells. §7v1.3.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v1.4.0"
 
 
 def oid(name):
@@ -37,6 +37,7 @@ def manifests():
         "dependencies": [
             {"uuid": UUID_RP, "version": VERSION},
             {"module_name": "@minecraft/server", "version": "2.0.0"},
+            {"module_name": "@minecraft/server-ui", "version": "2.0.0"},
         ],
         "metadata": {"authors": ["Overlord Add-on contributors"], "license": "MIT"},
     }
@@ -194,6 +195,15 @@ ITEMS = {
     "iron_gauntlets": ("Sebas's Iron Gauntlets", "equipment", _weapon(7, rarity="rare")),
     "magic_rifle": ("CZ's Magic Rifle", "equipment", _weapon(3, _cooldown("overlord_rifle", 0.6),
                                                             rarity="rare")),
+    "adventurer_plate": ("Adventurer's Plate", "equipment", {"minecraft:max_stack_size": 1}),
+    "blue_potion": ("Mana Potion", "items", {
+        "minecraft:max_stack_size": 16,
+        "minecraft:use_animation": "drink",
+        "minecraft:use_modifiers": {"use_duration": 1.6, "movement_modifier": 0.35},
+        "minecraft:food": {"can_always_eat": True, "nutrition": 0, "saturation_modifier": 0.0,
+                           "using_converts_to": "minecraft:glass_bottle"},
+        "minecraft:rarity": "uncommon",
+    }),
     "sigil_of_ainz": ("Sigil of Ainz Ooal Gown", "items", {
         "minecraft:max_stack_size": 16, "minecraft:rarity": "epic", "minecraft:glint": True}),
 }
@@ -381,6 +391,10 @@ def recipe_files():
             "C": cry, "D": "minecraft:amethyst_shard", "B": "minecraft:book"}, oid("tome_reality_slash")),
         "tome_fallen_down": _shaped("tome_fallen_down", ["DCD", "CBC", "DCD"], {
             "C": cry, "D": "minecraft:diamond_block", "B": "minecraft:book"}, oid("tome_fallen_down")),
+        "adventurer_plate": _shapeless("adventurer_plate", [
+            "minecraft:paper", "minecraft:copper_ingot"], oid("adventurer_plate")),
+        "blue_potion": _shaped("blue_potion", ["LCL", "BBB"], {
+            "C": cry, "L": "minecraft:lapis_lazuli", "B": "minecraft:glass_bottle"}, oid("blue_potion"), 3),
         "sigil_of_ainz": _shaped("sigil_of_ainz", ["KCK", "CDC", "KCK"], {
             "K": oid("guardian_crest"), "C": cry, "D": "minecraft:diamond_block"}, oid("sigil_of_ainz")),
     }
@@ -401,7 +415,7 @@ VANILLA_ITEMS_USED = [
     "minecraft:glowstone", "minecraft:gold_ingot", "minecraft:fermented_spider_eye",
     "minecraft:ender_pearl", "minecraft:oak_log", "minecraft:moss_block", "minecraft:golden_apple",
     "minecraft:gunpowder", "minecraft:clock", "minecraft:glistering_melon_slice",
-    "minecraft:amethyst_shard", "minecraft:nether_wart",
+    "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
 ]
 
 
@@ -947,7 +961,7 @@ def trade_files():
                 "gives": [{"item": coin, "quantity": coins}], "max_uses": uses}
 
     trades = [
-        sell(oid("red_potion"), 4), sell(oid("data_crystal"), 6), sell(oid("scroll_of_fly"), 8),
+        sell(oid("red_potion"), 4), sell(oid("blue_potion"), 5), sell(oid("data_crystal"), 6), sell(oid("scroll_of_fly"), 8),
         sell(oid("scroll_of_lightning"), 8), sell(oid("scroll_of_invisibility"), 10),
         sell(oid("scroll_of_teleportation"), 12), sell(oid("nazarick_bricks"), 4, qty=16),
         sell(oid("nazarick_lamp"), 6, qty=4), sell("minecraft:golden_apple", 16),
@@ -956,7 +970,7 @@ def trade_files():
         buy("minecraft:diamond", 1, 6), buy("minecraft:gold_ingot", 4, 5), buy("minecraft:bone", 16, 2),
     ]
     herbs = [
-        sell(oid("red_potion"), 3), sell(oid("scroll_of_heavy_recover"), 6),
+        sell(oid("red_potion"), 3), sell(oid("blue_potion"), 4), sell(oid("scroll_of_heavy_recover"), 6),
         sell("minecraft:golden_carrot", 3, qty=2), sell("minecraft:glistering_melon_slice", 4),
         buy("minecraft:nether_wart", 8, 3), buy("minecraft:wheat", 16, 2),
         buy("minecraft:glass_bottle", 8, 2), buy("minecraft:apple", 6, 2),

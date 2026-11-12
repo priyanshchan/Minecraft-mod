@@ -1,5 +1,5 @@
 // Overlord: Tomb of Nazarick - gameplay script (spells, item abilities, set bonus).
-// Uses only stable @minecraft/server 2.0.0 APIs.
+// Uses only stable @minecraft/server 2.0.0 APIs. Levels, mana, classes and quests live in rpg.js.
 import {
   world,
   system,
@@ -8,6 +8,7 @@ import {
   EquipmentSlot,
   GameMode,
 } from "@minecraft/server";
+import { notify, openMenu, restoreMana, spellPower, spendMana } from "./rpg.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -58,8 +59,9 @@ const cooldowns = new Map();
  * @param {import("@minecraft/server").Player} player
  * @param {string} category
  * @param {number} seconds
+ * @param {number} [mana] mana the ability costs (0 for scrolls and passive items)
  */
-function tryCooldown(player, category, seconds) {
+function tryCooldown(player, category, seconds, mana = 0) {
   const key = `${player.id}|${category}`;
   const now = system.currentTick;
   const readyAt = cooldowns.get(key) ?? 0;
@@ -68,6 +70,7 @@ function tryCooldown(player, category, seconds) {
     actionBar(player, `§7Recharging... §f${left}s`);
     return false;
   }
+  if (!spendMana(player, mana)) return false;
   cooldowns.set(key, now + Math.round(seconds * TICKS));
   try {
     player.startItemCooldown(category, Math.round(seconds * TICKS));
@@ -82,11 +85,7 @@ function tryCooldown(player, category, seconds) {
  * @param {string} text
  */
 function actionBar(player, text) {
-  try {
-    player.onScreenDisplay.setActionBar(text);
-  } catch {
-    // player left mid-tick
-  }
+  notify(player, text);
 }
 
 /**
@@ -194,7 +193,7 @@ const FACE_OFFSET = {
 
 /** Staff of Ainz Ooal Gown: Fireball. @param {import("@minecraft/server").Player} player */
 function castFireball(player) {
-  if (!tryCooldown(player, "overlord_staff", 1.0)) return;
+  if (!tryCooldown(player, "overlord_staff", 1.0, 6)) return;
   const dir = player.getViewDirection();
   const origin = add(player.getHeadLocation(), dir, 1.4);
   const fireball = player.dimension.spawnEntity(id("fireball"), origin);
@@ -217,9 +216,9 @@ function castGraspHeart(player) {
     actionBar(player, "§7Grasp Heart: no target in sight");
     return;
   }
-  if (!tryCooldown(player, "overlord_staff", 12.0)) return;
+  if (!tryCooldown(player, "overlord_staff", 12.0, 30)) return;
   const at = add(target.location, { x: 0, y: 1, z: 0 });
-  target.applyDamage(40, { cause: EntityDamageCause.magic, damagingEntity: player });
+  target.applyDamage(Math.round(40 * spellPower(player)), { cause: EntityDamageCause.magic, damagingEntity: player });
   if (target.isValid) {
     target.addEffect("slowness", 3 * TICKS, { amplifier: 3 });
   }
@@ -242,7 +241,7 @@ function castTeleport(player) {
   } else {
     destination = add(player.getHeadLocation(), player.getViewDirection(), 16);
   }
-  if (!tryCooldown(player, "overlord_ring", 3.0)) return;
+  if (!tryCooldown(player, "overlord_ring", 3.0, 15)) return;
   let moved = player.tryTeleport(destination, { checkForBlocks: true, keepVelocity: false });
   if (!moved) {
     moved = player.tryTeleport(add(destination, { x: 0, y: 1, z: 0 }), {
@@ -264,7 +263,7 @@ function castTeleport(player) {
 
 /** Ginnungagap: shockwave around the wielder. @param {import("@minecraft/server").Player} player */
 function castShockwave(player) {
-  if (!tryCooldown(player, "overlord_ginnungagap", 8.0)) return;
+  if (!tryCooldown(player, "overlord_ginnungagap", 8.0, 20)) return;
   const center = player.location;
   const victims = player.dimension.getEntities({
     location: center,
@@ -304,7 +303,7 @@ function castCreateUndead(player) {
     actionBar(player, `§7You already command ${MAX_SUMMONS} Death Knights`);
     return;
   }
-  if (!tryCooldown(player, "overlord_tome", 30.0)) return;
+  if (!tryCooldown(player, "overlord_tome", 30.0, 40)) return;
   const spot = placementSpot(player, 5);
   const knight = player.dimension.spawnEntity(id("death_knight"), spot, {
     spawnEvent: id("become_summoned"),
@@ -350,7 +349,7 @@ function castLightning(player) {
   }
   player.dimension.spawnEntity("minecraft:lightning_bolt", strike);
   if (entityHit && entityHit.isValid) {
-    entityHit.applyDamage(12, { cause: EntityDamageCause.magic, damagingEntity: player });
+    entityHit.applyDamage(Math.round(12 * spellPower(player)), { cause: EntityDamageCause.magic, damagingEntity: player });
   }
   consumeHeldItem(player);
   actionBar(player, "§eCall Greater Thunder!");
@@ -412,7 +411,7 @@ function castLash(player) {
     actionBar(player, "§7Lash: no target in reach");
     return;
   }
-  if (!tryCooldown(player, "overlord_whip", 3.0)) return;
+  if (!tryCooldown(player, "overlord_whip", 3.0, 8)) return;
   const dx = player.location.x - target.location.x;
   const dz = player.location.z - target.location.z;
   const len = Math.hypot(dx, dz) || 1;
@@ -427,7 +426,7 @@ function castLash(player) {
 
 /** Shadow of Yggdrasil: a wave of earth magic along the ground. @param {import("@minecraft/server").Player} player */
 function castEarthSurge(player) {
-  if (!tryCooldown(player, "overlord_yggdrasil", 6.0)) return;
+  if (!tryCooldown(player, "overlord_yggdrasil", 6.0, 20)) return;
   const view = player.getViewDirection();
   const len = Math.hypot(view.x, view.z) || 1;
   const dir = { x: view.x / len, y: 0, z: view.z / len };
@@ -447,7 +446,7 @@ function castEarthSurge(player) {
         if (struck.has(victim.id) || !victim.getComponent("minecraft:health")) continue;
         if (victim.getComponent("minecraft:is_tamed")) continue;
         struck.add(victim.id);
-        victim.applyDamage(10, { cause: EntityDamageCause.magic, damagingEntity: player });
+        victim.applyDamage(Math.round(10 * spellPower(player)), { cause: EntityDamageCause.magic, damagingEntity: player });
         if (victim.isValid) victim.applyKnockback({ x: 0, z: 0 }, 0.9);
       } catch {
         // entity died or left the world while we were iterating
@@ -600,8 +599,8 @@ function castHeavyRecover(player) {
 
 /** Tome: Reality Slash - a piercing cut through everything ahead. @param {import("@minecraft/server").Player} player */
 function castRealitySlash(player) {
-  if (!tryCooldown(player, "overlord_slash", 10.0)) return;
-  const hits = strikeLine(player, player.getHeadLocation(), player.getViewDirection(), 18, 22,
+  if (!tryCooldown(player, "overlord_slash", 10.0, 30)) return;
+  const hits = strikeLine(player, player.getHeadLocation(), player.getViewDirection(), 18, Math.round(22 * spellPower(player)),
     EntityDamageCause.magic, "minecraft:critical_hit_emitter");
   playSound(player.dimension, "item.trident.riptide_1", player.location, 1.4);
   actionBar(player, hits > 0 ? `§bReality Slash cut ${hits}!` : "§bReality Slash!");
@@ -614,7 +613,7 @@ function castFallenDown(player) {
     actionBar(player, "§7Fallen Down: nothing in range");
     return;
   }
-  if (!tryCooldown(player, "overlord_fallen", 60.0)) return;
+  if (!tryCooldown(player, "overlord_fallen", 60.0, 80)) return;
   const dimension = player.dimension;
   actionBar(player, "§eSuper-tier magic: Fallen Down...");
   playSound(dimension, "beacon.activate", target, 1.2);
@@ -630,9 +629,10 @@ function castFallenDown(player) {
       playSound(dimension, "ambient.weather.thunder", target, 0.7);
       playSound(dimension, "random.explode", target, 0.5);
       const caster = player.isValid ? player : undefined;
+      const damage = Math.round(60 * (caster ? spellPower(caster) : 1));
       for (const foe of foesNear(dimension, target, 7)) {
         try {
-          foe.applyDamage(60, { cause: EntityDamageCause.magic, damagingEntity: caster });
+          foe.applyDamage(damage, { cause: EntityDamageCause.magic, damagingEntity: caster });
         } catch {
           // already dead
         }
@@ -645,7 +645,7 @@ function castFallenDown(player) {
 
 /** Frost Pain: Icy Burst - a cone of frost. @param {import("@minecraft/server").Player} player */
 function castIcyBurst(player) {
-  if (!tryCooldown(player, "overlord_frost", 6.0)) return;
+  if (!tryCooldown(player, "overlord_frost", 6.0, 15)) return;
   const view = player.getViewDirection();
   let count = 0;
   for (const foe of foesNear(player.dimension, player.location, 6)) {
@@ -654,7 +654,7 @@ function castIcyBurst(player) {
     const len = Math.hypot(dx, dz) || 1;
     if ((dx / len) * view.x + (dz / len) * view.z < 0.3) continue; // behind or beside the wielder
     try {
-      foe.applyDamage(8, { cause: EntityDamageCause.magic, damagingEntity: player });
+      foe.applyDamage(Math.round(8 * spellPower(player)), { cause: EntityDamageCause.magic, damagingEntity: player });
       if (foe.isValid) {
         foe.addEffect("slowness", 5 * TICKS, { amplifier: 4 });
         particle(player.dimension, "minecraft:blue_flame_particle", add(foe.location, { x: 0, y: 1, z: 0 }));
@@ -670,7 +670,7 @@ function castIcyBurst(player) {
 
 /** Brain's Katana: God Flash - dash forward, cutting everything on the way. @param {import("@minecraft/server").Player} player */
 function castGodFlash(player) {
-  if (!tryCooldown(player, "overlord_flash", 5.0)) return;
+  if (!tryCooldown(player, "overlord_flash", 5.0, 12)) return;
   const view = player.getViewDirection();
   const len = Math.hypot(view.x, view.z) || 1;
   const dir = { x: view.x / len, y: 0, z: view.z / len };
@@ -687,7 +687,7 @@ function castGodFlash(player) {
 
 /** CZ's Magic Rifle: fires a magic bullet. @param {import("@minecraft/server").Player} player */
 function fireRifle(player) {
-  if (!tryCooldown(player, "overlord_rifle", 0.6)) return;
+  if (!tryCooldown(player, "overlord_rifle", 0.6, 3)) return;
   const dir = player.getViewDirection();
   const origin = add(player.getHeadLocation(), dir, 1.2);
   const bullet = player.dimension.spawnEntity(id("magic_bullet"), origin);
@@ -729,7 +729,9 @@ world.afterEvents.itemUse.subscribe((event) => {
   const item = event.itemStack?.typeId;
   if (!item || !item.startsWith(`${NS}:`)) return;
   try {
-    if (item === id("staff_of_ainz_ooal_gown")) {
+    if (item === id("adventurer_plate")) {
+      openMenu(player);
+    } else if (item === id("staff_of_ainz_ooal_gown")) {
       if (player.isSneaking) castGraspHeart(player);
       else castFireball(player);
     } else if (item === id("ring_of_ainz_ooal_gown")) {
@@ -779,9 +781,16 @@ world.afterEvents.itemUse.subscribe((event) => {
 });
 
 world.afterEvents.itemCompleteUse.subscribe((event) => {
+  if (event.itemStack.typeId === id("blue_potion")) {
+    restoreMana(event.source, 80);
+    playSound(event.source.dimension, "random.orb", event.source.location, 1.2);
+    actionBar(event.source, "§b+80 mana");
+    return;
+  }
   if (event.itemStack.typeId !== id("red_potion")) return;
   try {
     const player = event.source;
+    restoreMana(player, 20);
     player.addEffect("instant_health", 1, { amplifier: 1, showParticles: true });
     player.addEffect("regeneration", 8 * TICKS, { amplifier: 1 });
     playSound(player.dimension, "random.orb", player.location, 0.8);
