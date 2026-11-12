@@ -8,7 +8,7 @@ import {
   EquipmentSlot,
   GameMode,
 } from "@minecraft/server";
-import { notify, openMenu, restoreMana, spellPower, spendMana } from "./rpg.js";
+import { grantLevel, notify, openMenu, restoreMana, spellPower, spendMana, useClassSkill } from "./rpg.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -30,6 +30,10 @@ const SIGILS = {
   [id("sigil_of_aura")]: id("aura"),
   [id("sigil_of_mare")]: id("mare"),
   [id("sigil_of_cz_delta")]: id("cz_delta"),
+  [id("sigil_of_lupusregina")]: id("lupusregina"),
+  [id("sigil_of_entoma")]: id("entoma"),
+  [id("sigil_of_solution")]: id("solution"),
+  [id("sigil_of_yuri")]: id("yuri"),
 };
 
 /** @type {[EquipmentSlot, string][]} */
@@ -701,6 +705,31 @@ function fireRifle(player) {
   playSound(player.dimension, "crossbow.shoot", origin, 1.5);
 }
 
+/** Lupusregina's Holy Staff: heals the wielder and nearby players. @param {import("@minecraft/server").Player} player */
+function castHolyLight(player) {
+  if (!tryCooldown(player, "overlord_holy", 12.0, 25)) return;
+  for (const ally of player.dimension.getPlayers({ location: player.location, maxDistance: 8 })) {
+    ally.addEffect("instant_health", 1, { amplifier: 1 });
+    ally.addEffect("regeneration", 8 * TICKS, { amplifier: 1 });
+    particle(player.dimension, "minecraft:heart_particle", add(ally.location, { x: 0, y: 2, z: 0 }));
+  }
+  playSound(player.dimension, "random.levelup", player.location, 1.6);
+  actionBar(player, "§eHoly Light!");
+}
+
+/** Shooting Star: a wish that grants one level. @param {import("@minecraft/server").Player} player */
+function useShootingStar(player) {
+  if (!tryCooldown(player, "overlord_sigil", 1.0)) return;
+  if (!grantLevel(player)) {
+    actionBar(player, "§7You are already at the highest level");
+    return;
+  }
+  consumeHeldItem(player);
+  player.addEffect("instant_health", 1, { amplifier: 5 });
+  particle(player.dimension, "minecraft:totem_particle", add(player.location, { x: 0, y: 1, z: 0 }));
+  playSound(player.dimension, "beacon.activate", player.location, 1.6);
+}
+
 /** @param {import("@minecraft/server").Player} player */
 function ownerTag(player) {
   return `overlord_owner_${player.id}`;
@@ -730,7 +759,12 @@ world.afterEvents.itemUse.subscribe((event) => {
   if (!item || !item.startsWith(`${NS}:`)) return;
   try {
     if (item === id("adventurer_plate")) {
-      openMenu(player);
+      if (player.isSneaking) useClassSkill(player);
+      else openMenu(player);
+    } else if (item === id("holy_staff")) {
+      castHolyLight(player);
+    } else if (item === id("shooting_star")) {
+      useShootingStar(player);
     } else if (item === id("staff_of_ainz_ooal_gown")) {
       if (player.isSneaking) castGraspHeart(player);
       else castFireball(player);
@@ -824,6 +858,8 @@ world.afterEvents.entityHurt.subscribe((event) => {
       const dz = victim.location.z - attacker.location.z;
       const len = Math.hypot(dx, dz) || 1;
       victim.applyKnockback({ x: (dx / len) * 2.4, z: (dz / len) * 2.4 }, 0.55); // dragon-fist punch
+    } else if (held === id("blade_bug") && victim.isValid) {
+      victim.addEffect("poison", 5 * TICKS, { amplifier: 1 });
     } else if (held === id("stiletto") && victim.isValid) {
       victim.setOnFire(4, true); // the stiletto carries a stored fire spell
     } else if (held === id("razor_edge") && victim.isValid) {

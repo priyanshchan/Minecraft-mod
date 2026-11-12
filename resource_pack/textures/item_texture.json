@@ -11,6 +11,9 @@
     "overlord_aura_whip": {
       "textures": "textures/items/overlord/aura_whip"
     },
+    "overlord_blade_bug": {
+      "textures": "textures/items/overlord/blade_bug"
+    },
     "overlord_blue_potion": {
       "textures": "textures/items/overlord/blue_potion"
     },
@@ -68,11 +71,20 @@
     "overlord_egg_elder_lich": {
       "textures": "textures/items/overlord/egg_elder_lich"
     },
+    "overlord_egg_entoma": {
+      "textures": "textures/items/overlord/egg_entoma"
+    },
     "overlord_egg_gazef": {
       "textures": "textures/items/overlord/egg_gazef"
     },
+    "overlord_egg_goblin": {
+      "textures": "textures/items/overlord/egg_goblin"
+    },
     "overlord_egg_hamsuke": {
       "textures": "textures/items/overlord/egg_hamsuke"
+    },
+    "overlord_egg_lupusregina": {
+      "textures": "textures/items/overlord/egg_lupusregina"
     },
     "overlord_egg_mare": {
       "textures": "textures/items/overlord/egg_mare"
@@ -86,6 +98,9 @@
     "overlord_egg_nfirea": {
       "textures": "textures/items/overlord/egg_nfirea"
     },
+    "overlord_egg_ogre": {
+      "textures": "textures/items/overlord/egg_ogre"
+    },
     "overlord_egg_old_guarder": {
       "textures": "textures/items/overlord/egg_old_guarder"
     },
@@ -97,6 +112,12 @@
     },
     "overlord_egg_shalltear": {
       "textures": "textures/items/overlord/egg_shalltear"
+    },
+    "overlord_egg_solution": {
+      "textures": "textures/items/overlord/egg_solution"
+    },
+    "overlord_egg_yuri": {
+      "textures": "textures/items/overlord/egg_yuri"
     },
     "overlord_egg_zaryusu": {
       "textures": "textures/items/overlord/egg_zaryusu"
@@ -113,6 +134,9 @@
     "overlord_guardian_crest": {
       "textures": "textures/items/overlord/guardian_crest"
     },
+    "overlord_holy_staff": {
+      "textures": "textures/items/overlord/holy_staff"
+    },
     "overlord_iron_gauntlets": {
       "textures": "textures/items/overlord/iron_gauntlets"
     },
@@ -124,6 +148,9 @@
     },
     "overlord_mask_of_envy": {
       "textures": "textures/items/overlord/mask_of_envy"
+    },
+    "overlord_pleiades_emblem": {
+      "textures": "textures/items/overlord/pleiades_emblem"
     },
     "overlord_razor_edge": {
       "textures": "textures/items/overlord/razor_edge"
@@ -161,6 +188,9 @@
     "overlord_shadow_of_yggdrasil": {
       "textures": "textures/items/overlord/shadow_of_yggdrasil"
     },
+    "overlord_shooting_star": {
+      "textures": "textures/items/overlord/shooting_star"
+    },
     "overlord_sigil_of_ainz": {
       "textures": "textures/items/overlord/sigil_of_ainz"
     },
@@ -179,6 +209,12 @@
     "overlord_sigil_of_demiurge": {
       "textures": "textures/items/overlord/sigil_of_demiurge"
     },
+    "overlord_sigil_of_entoma": {
+      "textures": "textures/items/overlord/sigil_of_entoma"
+    },
+    "overlord_sigil_of_lupusregina": {
+      "textures": "textures/items/overlord/sigil_of_lupusregina"
+    },
     "overlord_sigil_of_mare": {
       "textures": "textures/items/overlord/sigil_of_mare"
     },
@@ -193,6 +229,12 @@
     },
     "overlord_sigil_of_shalltear": {
       "textures": "textures/items/overlord/sigil_of_shalltear"
+    },
+    "overlord_sigil_of_solution": {
+      "textures": "textures/items/overlord/sigil_of_solution"
+    },
+    "overlord_sigil_of_yuri": {
+      "textures": "textures/items/overlord/sigil_of_yuri"
     },
     "overlord_spuit_lance": {
       "textures": "textures/items/overlord/spuit_lance"

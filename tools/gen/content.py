@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [1, 4, 0]
+VERSION = [1, 5, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v1.4.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v1.5.0"
 
 
 def oid(name):
@@ -99,6 +99,10 @@ SIGILS = {
     "aura": ("Aura Bella Fiora", "minecraft:oak_log"),
     "mare": ("Mare Bello Fiore", "minecraft:moss_block"),
     "cz_delta": ("CZ2128 Delta", "minecraft:gunpowder"),
+    "lupusregina": ("Lupusregina Beta", "minecraft:bone_block"),
+    "entoma": ("Entoma Vasilissa Zeta", "minecraft:string"),
+    "solution": ("Solution Epsilon", "minecraft:slime_ball"),
+    "yuri": ("Yuri Alpha", "minecraft:iron_ingot"),
 }
 
 ITEMS = {
@@ -196,6 +200,13 @@ ITEMS = {
     "magic_rifle": ("CZ's Magic Rifle", "equipment", _weapon(3, _cooldown("overlord_rifle", 0.6),
                                                             rarity="rare")),
     "adventurer_plate": ("Adventurer's Plate", "equipment", {"minecraft:max_stack_size": 1}),
+    "holy_staff": ("Lupusregina's Holy Staff", "equipment", _weapon(
+        7, {**_cooldown("overlord_holy", 12.0), "minecraft:glint": True}, rarity="rare")),
+    "blade_bug": ("Entoma's Blade Bug", "equipment", _weapon(8, rarity="rare")),
+    "pleiades_emblem": ("Pleiades Emblem", "items", {
+        "minecraft:max_stack_size": 16, "minecraft:rarity": "rare"}),
+    "shooting_star": ("Shooting Star", "items", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True}),
     "blue_potion": ("Mana Potion", "items", {
         "minecraft:max_stack_size": 16,
         "minecraft:use_animation": "drink",
@@ -391,6 +402,8 @@ def recipe_files():
             "C": cry, "D": "minecraft:amethyst_shard", "B": "minecraft:book"}, oid("tome_reality_slash")),
         "tome_fallen_down": _shaped("tome_fallen_down", ["DCD", "CBC", "DCD"], {
             "C": cry, "D": "minecraft:diamond_block", "B": "minecraft:book"}, oid("tome_fallen_down")),
+        "shooting_star": _shaped("shooting_star", ["EEE", "EGE", "EEE"], {
+            "E": oid("pleiades_emblem"), "G": "minecraft:gold_block"}, oid("shooting_star")),
         "adventurer_plate": _shapeless("adventurer_plate", [
             "minecraft:paper", "minecraft:copper_ingot"], oid("adventurer_plate")),
         "blue_potion": _shaped("blue_potion", ["LCL", "BBB"], {
@@ -416,6 +429,8 @@ VANILLA_ITEMS_USED = [
     "minecraft:ender_pearl", "minecraft:oak_log", "minecraft:moss_block", "minecraft:golden_apple",
     "minecraft:gunpowder", "minecraft:clock", "minecraft:glistering_melon_slice",
     "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
+    "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
+    "minecraft:rotten_flesh",
 ]
 
 
@@ -457,7 +472,8 @@ def loot_files():
         "ainz": [one(oid("staff_of_ainz_ooal_gown")), one(oid("ring_of_ainz_ooal_gown")),
                  _pool(_entry(cry, 8, 12)), _pool(_entry(coin, 24, 32)),
                  _pool(_entry(oid("tome_create_undead"), 1, 1, looting=False))],
-        "narberal": [_pool(_entry(oid("scroll_of_lightning"), 2, 4, looting=False)),
+        "narberal": [_pool(_entry(oid("pleiades_emblem"), 1, 2, looting=False)),
+                     _pool(_entry(oid("scroll_of_lightning"), 2, 4, looting=False)),
                      _pool(_entry(cry, 3, 5)), _pool(_entry(coin, 6, 12))],
         "pandoras_actor": [one(crest), one(oid("ring_of_sustenance")), _pool(_entry(cry, 4, 8)),
                            _pool(_entry(coin, 32, 48))],
@@ -475,7 +491,17 @@ def loot_files():
         "clementine": [one(oid("stiletto")), _pool(_entry(coin, 4, 8)), _pool(_entry(cry, 1, 3))],
         "brain": [one(oid("brain_katana")), _pool(_entry(coin, 4, 8))],
         "zaryusu": [one(oid("frost_pain")), _pool(_entry(cry, 1, 3))],
-        "cz_delta": [one(oid("magic_rifle")), _pool(_entry(cry, 3, 5)), _pool(_entry(coin, 6, 12))],
+        "cz_delta": [_pool(_entry(oid("pleiades_emblem"), 1, 2, looting=False)), one(oid("magic_rifle")), _pool(_entry(cry, 3, 5)), _pool(_entry(coin, 6, 12))],
+        "lupusregina": [_pool(_entry(oid("pleiades_emblem"), 1, 2, looting=False)), one(oid("holy_staff")),
+                        _pool(_entry(cry, 3, 5)), _pool(_entry(coin, 6, 12))],
+        "entoma": [_pool(_entry(oid("pleiades_emblem"), 1, 2, looting=False)), one(oid("blade_bug")),
+                   _pool(_entry(cry, 3, 5)), _pool(_entry("minecraft:string", 2, 6))],
+        "solution": [_pool(_entry(oid("pleiades_emblem"), 1, 2, looting=False)), _pool(_entry(cry, 3, 5)),
+                     _pool(_entry("minecraft:slime_ball", 3, 8)), _pool(_entry(coin, 6, 12))],
+        "yuri": [_pool(_entry(oid("pleiades_emblem"), 1, 2, looting=False)), _pool(_entry(cry, 3, 5)),
+                 _pool(_entry(coin, 8, 14))],
+        "goblin": [_pool(_entry(coin, 0, 1)), _pool(_entry("minecraft:rotten_flesh", 0, 1))],
+        "ogre": [_pool(_entry(coin, 1, 3)), _pool(_entry("minecraft:leather", 0, 2))],
         "empty": [],
     }
     return {f"loot_tables/entities/{NS}/{k}.json": {"pools": v} for k, v in t.items()}
@@ -759,6 +785,30 @@ def entity_files():
                                                     "track_target": True}},
     }, dict(events))
 
+    # ------------------------------------------------ remaining Pleiades
+    out["lupusregina"] = _entity("lupusregina", guardian(
+        "lupusregina", 240, 0.34, 10, (0.7, 2.0), kb=0.5, xp=100))
+    out["entoma"] = _entity("entoma", guardian(
+        "entoma", 200, 0.34, 8, (0.7, 2.0), kb=0.4, xp=100,
+        attack_extra={"effect_name": "poison", "effect_duration": 6}))
+    out["solution"] = _entity("solution", guardian(
+        "solution", 220, 0.32, 8, (0.7, 2.0), kb=0.8, xp=100,
+        attack_extra={"effect_name": "wither", "effect_duration": 4},
+        sensor={"cause": "projectile", "damage_multiplier": 0.5}))
+    out["yuri"] = _entity("yuri", guardian("yuri", 230, 0.34, 12, (0.7, 2.0), kb=0.7, xp=100))
+
+    # ------------------------------------------------------ goblin / ogre
+    c = _mob("goblin", ["goblin", "monster", "mob"], 16, 0.3, (0.6, 1.9), loot="goblin", xp=4, scale=0.7)
+    c["minecraft:attack"] = {"damage": 3}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(20)
+    out["goblin"] = _entity("goblin", c)
+    c = _mob("ogre", ["ogre", "monster", "mob"], 60, 0.24, (0.9, 2.0), loot="ogre", xp=15, scale=1.4, kb=0.7)
+    c["minecraft:attack"] = {"damage": 10}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24)
+    out["ogre"] = _entity("ogre", c)
+
     # ------------------------------------------------- Nfirea (herbalist)
     c = _mob("nfirea", ["nfirea", "human", "mob"], 30, 0.25, (0.6, 1.9), xp=0)
     del c["minecraft:behavior.hurt_by_target"]
@@ -932,7 +982,8 @@ def entity_files():
 
 MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_knight", "elder_lich",
         "hamsuke", "narberal", "pandoras_actor", "old_guarder", "aura", "mare", "gazef", "clementine",
-        "nazarick_maid", "brain", "zaryusu", "cz_delta", "nfirea"]
+        "nazarick_maid", "brain", "zaryusu", "cz_delta", "nfirea",
+        "lupusregina", "entoma", "solution", "yuri", "goblin", "ogre"]
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet"]
 
 ENTITY_NAMES = {
@@ -944,6 +995,8 @@ ENTITY_NAMES = {
     "gazef": "Gazef Stronoff", "clementine": "Clementine", "nazarick_maid": "Nazarick Maid",
     "brain": "Brain Unglaus", "zaryusu": "Zaryusu Shasha", "cz_delta": "CZ2128 Delta",
     "nfirea": "Nfirea Bareare", "magic_bullet": "Magic Bullet",
+    "lupusregina": "Lupusregina Beta", "entoma": "Entoma Vasilissa Zeta",
+    "solution": "Solution Epsilon", "yuri": "Yuri Alpha", "goblin": "Goblin", "ogre": "Ogre",
     "fireball": "Fireball", "negative_burst": "Negative Burst", "lightning_bolt": "Lightning",
 }
 
@@ -1040,6 +1093,8 @@ def spawn_rule_files():
         "spawn_rules/zaryusu.json": day_creature("zaryusu", "swamp", 3),
         "spawn_rules/nfirea.json": day_creature("nfirea", "plains"),
         "spawn_rules/clementine.json": monster("clementine", 3),
+        "spawn_rules/goblin.json": monster("goblin", 14, herd=(2, 4)),
+        "spawn_rules/ogre.json": monster("ogre", 6),
         "spawn_rules/death_knight.json": monster("death_knight", 8),
         "spawn_rules/elder_lich.json": monster("elder_lich", 8),
         "spawn_rules/old_guarder.json": monster("old_guarder", 12, herd=(2, 3)),
@@ -1097,6 +1152,18 @@ SOUNDS = {
     "nfirea": (1.0, [1.0, 1.1], {"hurt": "mob.villager.hit", "death": "mob.villager.death",
                                  "step": "mob.zombie.step", "haggle": "mob.villager.haggle",
                                  "haggle.yes": "mob.villager.yes", "haggle.no": "mob.villager.no"}),
+    "lupusregina": (1.0, [1.2, 1.3], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                      "step": "mob.zombie.step"}),
+    "entoma": (1.0, [1.4, 1.55], {"ambient": "mob.spider.say", "hurt": "game.player.hurt",
+                                  "death": "game.player.die", "step": "mob.zombie.step"}),
+    "solution": (1.0, [1.1, 1.2], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                   "step": "mob.zombie.step"}),
+    "yuri": (1.0, [1.0, 1.1], {"hurt": "game.player.hurt", "death": "game.player.die",
+                               "step": "mob.zombie.step"}),
+    "goblin": (1.0, [1.5, 1.7], {"ambient": "mob.zombie.say", "hurt": "mob.husk.hurt",
+                                 "death": "mob.husk.death", "step": "mob.zombie.step"}),
+    "ogre": (1.0, [0.5, 0.6], {"ambient": "mob.zombie.say", "hurt": "mob.husk.hurt",
+                               "death": "mob.husk.death", "step": "mob.irongolem.walk"}),
     "hamsuke": (1.0, [0.6, 0.8], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
                                   "death": "mob.rabbit.death", "step": "mob.polarbear.step"}),
 }
@@ -1189,6 +1256,12 @@ ENTITY_ANIMS = {
     "zaryusu": ["look_at_target", "idle", "walk", "attack", "tail"],
     "cz_delta": ["look_at_target", "idle", "robe_walk", "attack"],
     "nfirea": ["look_at_target", "idle", "walk"],
+    "lupusregina": ["look_at_target", "idle", "robe_walk", "attack"],
+    "entoma": ["look_at_target", "idle", "robe_walk", "attack"],
+    "solution": ["look_at_target", "idle", "robe_walk", "attack"],
+    "yuri": ["look_at_target", "idle", "robe_walk", "attack"],
+    "goblin": ["look_at_target", "idle", "walk", "attack"],
+    "ogre": ["look_at_target", "idle", "walk", "attack"],
     "magic_bullet": ["projectile.spin"],
     "lightning_bolt": ["projectile.spin"],
     "fireball": ["projectile.spin"],

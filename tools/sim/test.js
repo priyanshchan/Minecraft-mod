@@ -51,7 +51,7 @@ assert.equal(a.effects.get("health_boost").amplifier, 1, "vit 5 + warrior = 2 ti
 script.push(2, 0); rpg.openMenu(a); await new Promise((r) => setTimeout(r, 20));
 assert.deepEqual(pa.quest, { quest: "zombies", progress: 0 });
 // a locked quest cannot be taken at Copper rank
-pb.quest = null; script.push(2, 12, 13); rpg.openMenu(b); await new Promise((r) => setTimeout(r, 20));
+pb.quest = null; script.push(2, 18, 19); rpg.openMenu(b); await new Promise((r) => setTimeout(r, 20));
 assert.equal(pb.quest, null, "Ainz quest locked for Copper");
 
 // quest progress and completion
@@ -75,6 +75,12 @@ world.afterEvents.entityHurt.fire({ hurtEntity: weak, damage: 10, damageSource: 
 assert.equal(weak.damaged.length, 1, "lethal bonus goes through applyDamage");
 world.afterEvents.entityHurt.fire({ hurtEntity: target, damage: 10, damageSource: { damagingEntity: a, cause: "magic" } });
 assert.ok(Math.abs(target.health.currentValue - 97.4) < 1e-6, "no bonus on spells");
+
+// class skill (warrior) with cooldown, and Shooting Star level grant
+rpg.useClassSkill(a); assert.equal(a.effects.get("resistance").amplifier, 1);
+a.effects.delete("resistance"); rpg.useClassSkill(a); assert.ok(!a.effects.has("resistance"), "skill on cooldown");
+assert.equal(rpg.grantLevel(a), false, "no level past the cap");
+const lvl = pb.level; assert.equal(rpg.grantLevel(b), true); assert.equal(pb.level, lvl + 1);
 
 // persistence: saved profile is restored after leaving
 advance(100);

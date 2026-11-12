@@ -262,6 +262,81 @@
           "haggle.no": "mob.villager.no"
         }
       },
+      "overlord:lupusregina": {
+        "volume": 1.0,
+        "pitch": [
+          1.2,
+          1.3
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:entoma": {
+        "volume": 1.0,
+        "pitch": [
+          1.4,
+          1.55
+        ],
+        "events": {
+          "ambient": "mob.spider.say",
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:solution": {
+        "volume": 1.0,
+        "pitch": [
+          1.1,
+          1.2
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:yuri": {
+        "volume": 1.0,
+        "pitch": [
+          1.0,
+          1.1
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:goblin": {
+        "volume": 1.0,
+        "pitch": [
+          1.5,
+          1.7
+        ],
+        "events": {
+          "ambient": "mob.zombie.say",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:ogre": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.6
+        ],
+        "events": {
+          "ambient": "mob.zombie.say",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.irongolem.walk"
+        }
+      },
       "overlord:hamsuke": {
         "volume": 1.0,
         "pitch": [

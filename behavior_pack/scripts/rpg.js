@@ -38,14 +38,15 @@ const STATS = {
 };
 const STAT_KEYS = /** @type {StatKey[]} */ (Object.keys(STATS));
 
-/** @type {Record<ClassKey, { name: string, help: string }>} */
+/** @type {Record<ClassKey, { name: string, help: string, skill: string }>} */
 const CLASSES = {
-  none: { name: "Adventurer", help: "No class chosen yet." },
-  warrior: { name: "Warrior", help: "+20% melee damage and +2 hearts, but 30% less mana." },
-  caster: { name: "Magic Caster", help: "+30% spell power, +50% mana and faster mana recovery." },
-  assassin: { name: "Assassin", help: "25% chance of a critical hit (+50% damage) and one extra tier of Speed." },
-  cleric: { name: "Cleric", help: "Slowly regenerates health and deals +30% melee damage to the undead." },
+  none: { name: "Adventurer", help: "No class chosen yet.", skill: "" },
+  warrior: { name: "Warrior", help: "+20% melee damage and +2 hearts, but 30% less mana.", skill: "Fortress: Resistance II for 8 seconds" },
+  caster: { name: "Magic Caster", help: "+30% spell power, +50% mana and faster mana recovery.", skill: "Mana Surge: refills your mana" },
+  assassin: { name: "Assassin", help: "25% chance of a critical hit (+50% damage) and one extra tier of Speed.", skill: "Shadow Step: invisible and very fast for 6 seconds" },
+  cleric: { name: "Cleric", help: "Slowly regenerates health and deals +30% melee damage to the undead.", skill: "Sanctuary: heals you and players within 8 blocks" },
 };
+const SKILL_COOLDOWN = 45;
 const CLASS_KEYS = /** @type {ClassKey[]} */ (["warrior", "caster", "assassin", "cleric"]);
 
 /** Adventurer ranks, unlocked by the number of completed guild quests. */
@@ -65,11 +66,17 @@ const QUESTS = [
   { key: "zombies", title: "Restless Dead", target: "minecraft:zombie", what: "Zombies", count: 10, coins: 6, xp: 60, rank: 0 },
   { key: "skeletons", title: "Bone Collectors", target: "minecraft:skeleton", what: "Skeletons", count: 10, coins: 6, xp: 60, rank: 0 },
   { key: "old_guarders", title: "Guards of the Tomb", target: id("old_guarder"), what: "Nazarick Old Guarders", count: 8, coins: 10, xp: 120, rank: 0 },
+  { key: "goblins", title: "Goblin Raiders", target: id("goblin"), what: "Goblins", count: 12, coins: 8, xp: 90, rank: 0 },
+  { key: "ogres", title: "Ogre Trouble", target: id("ogre"), what: "Ogres", count: 5, coins: 12, xp: 160, rank: 1 },
   { key: "elder_liches", title: "Silence the Liches", target: id("elder_lich"), what: "Elder Liches", count: 5, coins: 14, xp: 200, rank: 1 },
   { key: "death_knights", title: "Knights of Death", target: id("death_knight"), what: "Death Knights", count: 5, coins: 20, xp: 350, rank: 2 },
   { key: "clementine", title: "The Fallen Scripture", target: id("clementine"), what: "Clementine", count: 1, coins: 24, xp: 400, rank: 2 },
   { key: "narberal", title: "Storm Maid", target: id("narberal"), what: "Narberal Gamma", count: 1, coins: 32, xp: 700, rank: 3 },
   { key: "cz_delta", title: "Silent Sniper", target: id("cz_delta"), what: "CZ2128 Delta", count: 1, coins: 32, xp: 700, rank: 3 },
+  { key: "lupusregina", title: "The Laughing Wolf", target: id("lupusregina"), what: "Lupusregina Beta", count: 1, coins: 32, xp: 700, rank: 3 },
+  { key: "entoma", title: "Spider's Whisper", target: id("entoma"), what: "Entoma Vasilissa Zeta", count: 1, coins: 32, xp: 700, rank: 3 },
+  { key: "solution", title: "The Hungry Slime", target: id("solution"), what: "Solution Epsilon", count: 1, coins: 32, xp: 700, rank: 3 },
+  { key: "yuri", title: "Captain of the Pleiades", target: id("yuri"), what: "Yuri Alpha", count: 1, coins: 36, xp: 800, rank: 4 },
   { key: "cocytus", title: "Ruler of the Frozen Glacier", target: id("cocytus"), what: "Cocytus", count: 1, coins: 48, xp: 1200, rank: 4 },
   { key: "shalltear", title: "The Bloody Valkyrie", target: id("shalltear"), what: "Shalltear Bloodfallen", count: 1, coins: 48, xp: 1200, rank: 4 },
   { key: "demiurge", title: "Jaldabaoth", target: id("demiurge"), what: "Demiurge", count: 1, coins: 48, xp: 1200, rank: 5 },
@@ -90,6 +97,10 @@ const KILL_XP = {
   [id("pandoras_actor")]: 450,
   [id("narberal")]: 300,
   [id("cz_delta")]: 300,
+  [id("lupusregina")]: 300,
+  [id("entoma")]: 300,
+  [id("solution")]: 300,
+  [id("yuri")]: 300,
   [id("death_knight")]: 60,
   [id("elder_lich")]: 30,
   [id("old_guarder")]: 15,
@@ -308,6 +319,60 @@ export function grantXp(player, amount, reason) {
     save(player);
   } else {
     notify(player, `§a+${Math.round(amount)} XP${reason ? ` §7(${reason})` : ""}`);
+  }
+}
+
+/**
+ * Raises the player by exactly one level (Shooting Star). Returns false at the level cap.
+ * @param {import("@minecraft/server").Player} player
+ */
+export function grantLevel(player) {
+  const p = profileOf(player);
+  if (p.level >= MAX_LEVEL) return false;
+  grantXp(player, xpForNext(p.level) - p.xp);
+  return true;
+}
+
+/** Tick at which each player's class skill is ready again. */
+const skillReady = new Map();
+
+/**
+ * Uses the active skill of the player's class (sneak + use the Adventurer's Plate).
+ * @param {import("@minecraft/server").Player} player
+ */
+export function useClassSkill(player) {
+  const p = profileOf(player);
+  if (p.cls === "none") {
+    notify(player, "§7Choose a class first to gain a class skill");
+    return;
+  }
+  const left = Math.ceil(((skillReady.get(player.id) ?? 0) - system.currentTick) / TICKS);
+  if (left > 0) {
+    notify(player, `§7Class skill ready in §f${left}s`);
+    return;
+  }
+  skillReady.set(player.id, system.currentTick + SKILL_COOLDOWN * TICKS);
+  if (p.cls === "warrior") {
+    player.addEffect("resistance", 8 * TICKS, { amplifier: 1 });
+    notify(player, "§cFortress!");
+  } else if (p.cls === "caster") {
+    p.mana = maxMana(p);
+    notify(player, "§bMana Surge!");
+  } else if (p.cls === "assassin") {
+    player.addEffect("invisibility", 6 * TICKS, { showParticles: false });
+    player.addEffect("speed", 6 * TICKS, { amplifier: 3, showParticles: false });
+    notify(player, "§8Shadow Step!");
+  } else {
+    for (const ally of player.dimension.getPlayers({ location: player.location, maxDistance: 8 })) {
+      ally.addEffect("instant_health", 1, { amplifier: 1 });
+      ally.addEffect("regeneration", 6 * TICKS, { amplifier: 1 });
+    }
+    notify(player, "§aSanctuary!");
+  }
+  try {
+    player.playSound("random.orb", { volume: 1, pitch: 1.4 });
+  } catch {
+    // cosmetic only
   }
 }
 
@@ -570,6 +635,11 @@ function openClasses(player) {
   const form = new ActionFormData()
     .title("Choose a class")
     .body(`Current class: §f${CLASSES[p.cls].name}§r\nYou can change class at any time.`);
+  form.body(
+    `Current class: §f${CLASSES[p.cls].name}§r\nYou can change class at any time.\n\n` +
+      CLASS_KEYS.map((k) => `§e${CLASSES[k].name}§r skill - ${CLASSES[k].skill}`).join("\n") +
+      `\n\nSneak and use the plate to trigger your class skill (${SKILL_COOLDOWN} s cooldown).`
+  );
   for (const key of CLASS_KEYS) form.button(`${CLASSES[key].name}\n${CLASSES[key].help}`);
   form.button("Back");
   show(form, player, (choice) => {
@@ -640,7 +710,7 @@ function openHelp(player) {
         `${POINTS_PER_LEVEL} stat points (max level ${MAX_LEVEL}).\n\n` +
         STAT_KEYS.map((k) => `${STATS[k].color}${STATS[k].name}§r: ${STATS[k].help}`).join("\n") +
         "\n\n§eMana§r: staff, ring, tome and weapon abilities cost mana, which recovers over time. Scrolls and potions cost none; Healing Potions also restore mana.\n\n" +
-        "§eClasses§r: each class gives a permanent bonus.\n\n" +
+        `§eClasses§r: each class gives a permanent bonus and an active skill - sneak and use the plate to trigger it (${SKILL_COOLDOWN} s cooldown).\n\n` +
         "§eGuild quests§r: accept a request, defeat the targets and earn Gold Coins and XP. Completed quests raise your adventurer rank from Copper to Adamantite and unlock harder requests.\n\n" +
         `§eParty§r: players within ${PARTY_RANGE} blocks of a kill receive half its XP and quest credit.`
     )
@@ -674,6 +744,7 @@ world.afterEvents.playerLeave.subscribe((event) => {
   profiles.delete(event.playerId);
   dirty.delete(event.playerId);
   hudHold.delete(event.playerId);
+  skillReady.delete(event.playerId);
 });
 
 world.afterEvents.worldLoad.subscribe(() => {

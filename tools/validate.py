@@ -47,6 +47,8 @@ VANILLA = {
         "minecraft:oak_log", "minecraft:moss_block", "minecraft:golden_apple",
         "minecraft:gunpowder", "minecraft:clock", "minecraft:glistering_melon_slice",
         "minecraft:amethyst_shard", "minecraft:nether_wart", "minecraft:lapis_lazuli",
+        "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
+        "minecraft:rotten_flesh",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
     "sound": {
@@ -63,7 +65,7 @@ VANILLA = {
         "mob.villager.haggle", "mob.villager.yes", "mob.villager.no", "mob.evocation_fangs.attack",
         "note.bell", "mob.irongolem.throw", "dig.grass", "random.fizz", "crossbow.shoot",
         "beacon.activate", "item.trident.riptide_1", "ambient.weather.thunder", "random.glass",
-        "random.levelup",
+        "random.levelup", "mob.zombie.say", "mob.wither.shoot",
     },
     # verified against the vanilla particle definitions
     "particle": {

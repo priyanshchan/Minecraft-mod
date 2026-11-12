@@ -39,6 +39,12 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 | **Gazef Stronoff** | 120 | Neutral warrior found in plains; hunts monsters, fights back if attacked | Razor Edge |
 | **Clementine** | 100 | Very fast night assassin with poisoned strikes | Clementine's Stiletto |
 | **CZ2128 Delta** | 200 | Battle maid sniper: rapid magic bullets at range | CZ's Magic Rifle |
+| **Lupusregina Beta** | 240 | Battle maid with a holy staff; fast melee | Holy Staff, Pleiades Emblems |
+| **Entoma Vasilissa Zeta** | 200 | Spider maid; poisonous strikes | Blade Bug, Pleiades Emblems |
+| **Solution Epsilon** | 220 | Slime maid; withering touch, halves projectile damage | Pleiades Emblems, Slime Balls |
+| **Yuri Alpha** | 230 | Captain of the Pleiades; heavy fists | Pleiades Emblems |
+| **Goblin** | 16 | Small raiders that spawn at night in groups of 2–4 | Gold Coins |
+| **Ogre** | 60 | Big, slow night monster that hits hard | Gold Coins, Leather |
 | **Brain Unglaus** | 110 | Neutral swordsman found in taiga; hunts monsters | Brain's Katana |
 | **Zaryusu Shasha** | 100 | Neutral lizardman found in swamps; hunts monsters, chilling strikes | Frost Pain |
 | **Nfirea Bareare** | 30 | Peaceful herbalist found in plains; trades potions and ingredients for Gold Coins | — |
@@ -82,6 +88,10 @@ Every mob has its own spawn egg.
 | **Scroll: Heavy Recover** | Single use: large heal for you and nearby tamed allies |
 | **Tome: Reality Slash** | Reusable: piercing cut that hits every mob in an 18-block line for 22 magic damage (10 s cooldown) |
 | **Tome: Fallen Down** | Reusable super-tier spell: after 3 seconds, 60 magic damage to every mob within 7 blocks of where you aimed (60 s cooldown) |
+| **Lupusregina's Holy Staff** | 7 damage. Use: *Holy Light* — heals you and players within 8 blocks |
+| **Entoma's Blade Bug** | 8 damage, poisons the target |
+| **Pleiades Emblem** | Dropped by all six Pleiades maids (Narberal and CZ included) |
+| **Shooting Star** | Single use: grants one level and a full heal. Crafted from 8 Pleiades Emblems around a gold block |
 | **Tome: Create Undead** | Summons a Death Knight that follows and defends you for 5 minutes (max. 3) |
 | **Minor Healing Potion** | Drink for instant health and regeneration |
 | **Dark Warrior armour** | Helmet, chestplate, leggings, boots (netherite-level protection). Full set grants Strength and Resistance |
@@ -114,7 +124,10 @@ character menu.
 - **Classes** (change any time): Warrior (+20% melee, +2 hearts, 30% less mana), Magic Caster (+30% spell power,
   +50% mana, faster recovery), Assassin (25% critical hits for +50% damage, extra Speed), Cleric (slow health
   regeneration, +30% melee damage to undead).
-- **Guild quests:** 13 kill requests, one at a time, paying Gold Coins and XP. Completed quests raise your
+- **Class skills:** sneak and use the plate to trigger your class's active skill (45 s cooldown) — Fortress
+  (Warrior: Resistance II), Mana Surge (Magic Caster: refills mana), Shadow Step (Assassin: invisible and
+  fast), Sanctuary (Cleric: heals you and nearby players).
+- **Guild quests:** 19 kill requests, one at a time, paying Gold Coins and XP. Completed quests raise your
   adventurer rank — Copper, Iron, Silver, Gold, Platinum, Mithril, Orichalcum, Adamantite — which unlocks
   harder requests, up to defeating Ainz Ooal Gown.
 - **Party play:** players within 24 blocks of a kill receive half its XP and quest credit.
@@ -128,7 +141,8 @@ Progress is saved per player in the world.
 2. Craft **Adamantite Ingots** (2 iron ingots + diamond + data crystal → 2 ingots) and forge the Dark Warrior armour with the usual armour shapes.
 3. Craft a **guardian sigil**: 4 data crystals in the corners, 1 gold coin in the centre and 4 of the guardian's material on the edges —
    obsidian (Albedo), redstone block (Shalltear), packed ice (Cocytus), magma block (Demiurge), iron block (Sebas),
-   copper block (Narberal Gamma), gold block (Pandora's Actor), oak log (Aura), moss block (Mare), gunpowder (CZ2128 Delta).
+   copper block (Narberal Gamma), gold block (Pandora's Actor), oak log (Aura), moss block (Mare), gunpowder (CZ2128 Delta), bone block (Lupusregina), string (Entoma),
+   slime ball (Solution), iron ingot (Yuri).
 4. Defeat the guardians for their weapons and **Guardian Crests**.
 5. Craft the **Sigil of Ainz Ooal Gown** (4 crests in the corners, 4 data crystals on the edges, diamond block in the centre) and face the Overlord.
 

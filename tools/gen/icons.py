@@ -315,6 +315,10 @@ SIGIL_COLORS = {
     "aura": ("#d9534a", "#2a1e16", "#f2d66b", "#3fbf5f"),
     "mare": ("#62b85f", "#1d4a61", "#f2d66b", "#3f8fe0"),
     "cz_delta": ("#6b7a4a", "#15131a", "#f0a8a0", "#3fbf7a"),
+    "lupusregina": ("#a8402a", "#1f1e28", "#d9a92b", "#f2c21b"),
+    "entoma": ("#c9608f", "#3a2a4a", "#f3ead8", "#d4202a"),
+    "solution": ("#ecca5c", "#1f1e28", "#3f8fe0", "#bfe8ff"),
+    "yuri": ("#3f6fb0", "#1b1a22", "#3d8a3f", "#f4f3f5"),
 }
 
 
@@ -834,6 +838,40 @@ def rifle():
     return s.outline().img
 
 
+def holy_staff():
+    s = Sprite()
+    s.shaft(1, 14, 10, "#4a4a58", "#2a2a33")
+    s.stamp([
+        "..GLG.",
+        "..LRL.",
+        "GLLLLG",
+        "LGLLGL",
+        "..GLG.",
+    ], {"G": GOLD, "L": GOLD_L, "R": "#d4202a"}, 9, 0)
+    return s.outline().img
+
+
+def emblem():
+    return sprite16([
+        "................",
+        ".......GG.......",
+        "......GLLG......",
+        "......GLLG......",
+        ".GGGGGLLLLGGGGG.",
+        "..GLLLLWWLLLLG..",
+        "...GLLWWWWLLG...",
+        "....GLLWWLLG....",
+        "....GLLLLLLG....",
+        "...GLLLGGLLLG...",
+        "...GLLG..GLLG...",
+        "..GLLG....GLLG..",
+        "..GGG......GGG..",
+        "................",
+        "................",
+        "................",
+    ], {"G": "#7d8bb3", "L": "#c9d4f2", "W": "#ffffff"})
+
+
 def plate():
     return sprite16([
         "................",
@@ -909,6 +947,12 @@ EGG_COLORS = {
     "zaryusu": ("#3f7a4a", "#c9c58f"),
     "cz_delta": ("#f0a8a0", "#4a5633"),
     "nfirea": ("#7a8f5a", "#e6c463"),
+    "lupusregina": ("#1f1e28", "#a8402a"),
+    "entoma": ("#3a2a4a", "#c9608f"),
+    "solution": ("#1f1e28", "#ecca5c"),
+    "yuri": ("#1b1a22", "#3d8a3f"),
+    "goblin": ("#6f9a3f", "#6b4226"),
+    "ogre": ("#b08a5a", "#4a3323"),
 }
 
 
@@ -957,6 +1001,10 @@ def all_item_icons():
         "iron_gauntlets": gauntlets(),
         "magic_rifle": rifle(),
         "adventurer_plate": plate(),
+        "holy_staff": holy_staff(),
+        "blade_bug": blade_icon("#3a2a4a", "#22182c", "#c9608f", "#d9f2a0", "#8fbf4a", "#5a8a2a", length=8),
+        "pleiades_emblem": emblem(),
+        "shooting_star": ring("#7fd6ff"),
         "blue_potion": potion("#2f7fe0"),
     }
     for who in SIGIL_COLORS:

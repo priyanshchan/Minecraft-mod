@@ -5,6 +5,25 @@
       "entries": [
         {
           "type": "item",
+          "name": "overlord:pleiades_emblem",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
           "name": "overlord:scroll_of_lightning",
           "weight": 1,
           "functions": [

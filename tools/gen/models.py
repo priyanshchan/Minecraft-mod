@@ -1916,6 +1916,273 @@ def magic_bullet():
     return m
 
 
+# ----------------------------------------------- remaining Pleiades maids
+def _pleiades(name, skin, hair, hair_d, eye, dress="#1f1e28", accent="#b3261f", face=None, glasses=False,
+              sleeve=None, glove=None, bun=True):
+    """Shared battle-maid body; returns (model, head bone, body bone, palette)."""
+    m = Model(name, bounds=(3, 3.5, 1.25))
+    skin_d, dress_l = shade(skin, 0.86), shade(dress, 1.5)
+    white, white_d = "#f4f3f5", "#c9c7d0"
+    pal = {"S": skin, "s": skin_d, "H": hair, "h": hair_d, "K": dress, "k": dress_l, "W": white,
+           "w": white_d, "e": eye, "m": "#c0606f", "R": accent, "F": "#2a2a33", "M": "#aeb6c6"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(dress)
+    art(torso.front, [
+        "KWWSSWWK",
+        "MKWRRWKM",
+        "KWWWWWWK",
+        "KkWWWWkK",
+        "KKWWWWKK",
+        "KkWWWWkK",
+        "KKWWWWKK",
+        "KkWWWWkK",
+        "RRWWWWRR",
+        "wWWWWWWw",
+        "KWWWWWWK",
+        "KkWWWWkK",
+    ], pal)
+    torso.band(8, 9, accent)
+    art(torso.front, ["RRWWWWRR"], pal, 0, 8)
+    torso.back.fill(white, 2, 9, 6, 12)
+    skirt = m.bone("robe", (0, 12, 0), parent="body").cube((-5, 0, -3), (10, 12, 6))
+    skirt.fill(dress)
+    for f in skirt.sides:
+        f.vshade(1.0, 0.85)
+        for x in range(1, f.w, 3):
+            f.vline(x, dress_l, 1, 11)
+    skirt.front.fill(white, 2, 0, 8, 9)
+    skirt.front.hline(9, white_d, 2, 8)
+    skirt.band(11, 12, accent)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(hair, noise=4)
+    art(hd.front, face or [
+        "WwWWWWwW",
+        "HHHHHHHH",
+        "HhSHHShH",
+        "HSSSSSSH",
+        "SeSSSSeS",
+        "SSSSSSSS",
+        "SSSmmSSS",
+        "SSSSSSSS",
+    ], pal)
+    if glasses:
+        art(hd.front, ["FeFFFFeF"], pal, 0, 4)
+    for f in (hd.right, hd.left, hd.back):
+        f.hline(0, white)
+        for x in (2, 5):
+            f.vline(x, hair_d, 1, 6)
+    for f in (hd.right, hd.left):
+        f.fill(skin, 0, 6, None, 8)
+    hd.top.hline(7, white).hline(6, white_d)
+    hd.bottom.fill(skin_d)
+    if bun:
+        knot = head.cube((-2, 26, 4), (4, 4, 2))
+        knot.fill(hair, noise=5)
+        knot.back.border(hair_d)
+    for bname, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(bname, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(sleeve or dress)
+        arm.band(0, 2, "#aeb6c6")
+        arm.band(8, 9, white)
+        arm.band(9, 12, glove or skin)
+    return m, head, body, pal
+
+
+def lupusregina():
+    m, head, body, pal = _pleiades("lupusregina", "#c98f68", "#a8402a", "#7a2a1a", "#f2c21b",
+                                   accent="#d9a92b", bun=False)
+    for sx in (-5, 3):
+        braid = head.cube((sx, 14, 3), (2, 12, 2))
+        braid.fill("#a8402a")
+        stripes(braid, "#7a2a1a", every=3, start=1)
+    staff = m.bone("staff", (-6, 13, -3), parent="rightArm")
+    shaft = staff.cube((-6.5, 1, -3.5), (1, 32, 1))
+    shaft.fill("#2a2a33", noise=3)
+    bar = staff.cube((-10, 27, -3.5), (8, 2, 1))
+    bar.fill(GOLD)
+    top = staff.cube((-7.5, 31, -4), (3, 5, 2))
+    top.fill(GOLD)
+    top.front.px(1, 2, "#d4202a")
+    top.back.px(1, 2, "#d4202a")
+    return m
+
+
+def entoma():
+    face = [
+        "WwWWWWwW",
+        "HHHHHHHH",
+        "HHHHHHHH",
+        "HSSSSSSH",
+        "SeSSSSeS",
+        "SSSSSSSS",
+        "SSSSSSSS",
+        "SSSSSSSS",
+    ]
+    m, head, body, pal = _pleiades("entoma", "#f3ead8", "#5a3a66", "#3d2646", "#d4202a",
+                                   dress="#3a2a4a", accent="#c9608f", face=face,
+                                   sleeve="#c9608f", glove="#3a2a4a", bun=False)
+    for sx in (-6, 3):
+        knot = head.cube((sx, 29, 0), (3, 4, 3))
+        knot.fill("#5a3a66", noise=5)
+        knot.band(3, 4, "#c9608f")
+    for bname in ("rightArm", "leftArm"):
+        bone = next(b for b in m.bones if b.name == bname)
+        x = -9 if bname == "rightArm" else 4
+        cuff = bone.cube((x, 12, -3), (5, 5, 6))
+        cuff.fill("#c9608f")
+        for f in cuff.sides:
+            f.hline(4, "#f3ead8")
+        cuff.bottom.fill("#3a2a4a")
+    return m
+
+
+def solution():
+    m, head, body, pal = _pleiades("solution", "#f6e2d4", "#ecca5c", "#bf9a34", "#3f8fe0",
+                                   accent="#3f8fe0", bun=False)
+    for sx in (-6, 4):
+        curl = head.cube((sx, 17, 0), (2, 10, 2))
+        curl.fill("#ecca5c")
+        stripes(curl, "#bf9a34", every=2, start=1)
+    return m
+
+
+def yuri():
+    m, head, body, pal = _pleiades("yuri", "#f1dccb", "#1b1a22", "#35323f", "#3a3148",
+                                   accent="#3f6fb0", glasses=True, glove="#3d8a3f")
+    for bname in ("rightArm", "leftArm"):
+        bone = next(b for b in m.bones if b.name == bname)
+        x = -9 if bname == "rightArm" else 4
+        fist = bone.cube((x, 11, -3), (5, 4, 6))
+        fist.fill("#3d8a3f", noise=5)
+        for f in fist.sides:
+            for xx in range(1, f.w, 2):
+                f.px(xx, 0, "#e9e3cf")
+        fist.bottom.fill("#275c2a")
+    choker = body.cube((-3, 23, -3), (6, 1, 6))
+    choker.fill("#3f6fb0")
+    return m
+
+
+# ------------------------------------------------------------ goblin / ogre
+def goblin():
+    m = Model("goblin", bounds=(2.5, 3, 1.0))
+    g, g_l, g_d = "#6f9a3f", "#8dbb55", "#4a6b27"
+    pal = {"G": g, "g": g_l, "D": g_d, "e": "#f2c21b", "K": "#15130f", "T": "#f1eee0", "L": "#6b4226",
+           "l": "#8a5a36"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-4, 12, -2), (8, 12, 4))
+    torso.fill(g)
+    art(torso.front, [
+        "GgGGGGgG",
+        "GGgGGgGG",
+        "DGGGGGGD",
+        "GGDGGDGG",
+        "GgGGGGgG",
+        "DGGggGGD",
+        "GGGGGGGG",
+        "LLLLLLLL",
+        "LlLLLLlL",
+        "lLlLLlLl",
+        "LlLlLlLL",
+        "LL.LL.LL",
+    ], pal | {".": g_d})
+    torso.band(7, 12, "#6b4226")
+    for f in (torso.right, torso.left, torso.back):
+        f.noise(6, 4)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(g, noise=5)
+    art(hd.front, [
+        "GgGGGGgG",
+        "GGGGGGGG",
+        "DDGGGGDD",
+        "GeKGGKeG",
+        "GGGDDGGG",
+        "GGGGGGGG",
+        "GTKKKKTG",
+        "DGGGGGGD",
+    ], pal)
+    for sx in (-7, 4):
+        ear = head.cube((sx, 27, -1), (3, 3, 1))
+        ear.fill(g_l)
+        ear.front.px(0 if sx < 0 else 2, 0, None)
+    for name, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 12, -2), (4, 12, 4))
+        arm.fill(g)
+        arm.band(10, 12, g_d)
+    for name, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -2), (4, 12, 4))
+        leg.fill(g)
+        leg.band(0, 3, "#6b4226")
+        leg.band(10, 12, g_d)
+    club = m.bone("weapon", (-6, 13, -2), parent="rightArm")
+    handle = club.cube((-6.5, 12.5, -8), (1, 1, 6))
+    handle.fill("#6b4a2a", noise=5)
+    knob = club.cube((-7.5, 11.5, -13), (3, 3, 5))
+    knob.fill("#5b3d22", noise=8)
+    return m
+
+
+def ogre():
+    m = Model("ogre", bounds=(4.5, 5, 1.5))
+    o, o_l, o_d = "#b08a5a", "#cba878", "#7d5f3a"
+    pal = {"O": o, "o": o_l, "D": o_d, "e": "#d4202a", "K": "#15130f", "T": "#f1eee0", "L": "#4a3323",
+           "l": "#6b4a32"}
+    body = m.bone("body", (0, 24, 0))
+    torso = body.cube((-6, 12, -3), (12, 12, 7))
+    torso.fill(o)
+    art(torso.front, [
+        "OoOOOOOOOoOO",
+        "OOoOOOOOoOOO",
+        "DOOoOOOoOOOD",
+        "OOOOoooOOOOO",
+        "OOOOOOOOOOOO",
+        "DOOOOOOOOOOD",
+        "OOoOOOOOOoOO",
+        "OOOoOOOOoOOO",
+        "LLLLLLLLLLLL",
+        "LlLLlLLlLLlL",
+        "lLLlLLlLLlLL",
+        "LLlLL.LL.lLL",
+    ], pal | {".": o_d})
+    torso.band(8, 12, "#4a3323")
+    for f in (torso.right, torso.left, torso.back):
+        f.noise(6, 3)
+    head = m.bone("head", (0, 24, 0), parent="body")
+    hd = head.cube((-4, 24, -4), (8, 8, 8))
+    hd.fill(o, noise=5)
+    art(hd.front, [
+        "OoOOOOoO",
+        "DDDOODDD",
+        "OeKOOKeO",
+        "OOOOOOOO",
+        "OODOODOO",
+        "OOOOOOOO",
+        "TKKKKKKT",
+        "TOOOOOOT",
+    ], pal)
+    for name, x, px in (("rightArm", -11, -8.5), ("leftArm", 6, 8.5)):
+        arm = m.bone(name, (px, 22, 0), parent="body").cube((x, 10, -2.5), (5, 14, 5))
+        arm.fill(o)
+        arm.band(0, 2, o_l)
+        arm.band(12, 14, o_d)
+    for name, x, px in (("rightLeg", -6, -3), ("leftLeg", 0, 3)):
+        leg = m.bone(name, (px, 12, 0)).cube((x, 0, -3), (6, 12, 6))
+        leg.fill(o)
+        leg.band(0, 4, "#4a3323")
+        leg.band(10, 12, o_d)
+    club = m.bone("weapon", (-8.5, 11, -2), parent="rightArm")
+    handle = club.cube((-9, 10.5, -10), (1, 1, 8))
+    handle.fill("#6b4a2a", noise=5)
+    knob = club.cube((-10.5, 9, -20), (4, 4, 10))
+    knob.fill("#5b3d22", noise=8)
+    for f in knob.faces:
+        f.px(1, 1, "#c9c1a4")
+    return m
+
+
 def lightning_bolt():
     m = Model("lightning_bolt", bounds=(1, 1, 0.25))
     body = m.bone("body", (0, 2, 0))
@@ -1934,4 +2201,5 @@ def lightning_bolt():
 
 ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_lich, hamsuke,
        narberal, pandoras_actor, old_guarder, aura, mare, gazef, clementine, nazarick_maid,
-       brain, zaryusu, cz_delta, nfirea, fireball, negative_burst, lightning_bolt, magic_bullet]
+       brain, zaryusu, cz_delta, nfirea,
+       lupusregina, entoma, solution, yuri, goblin, ogre, fireball, negative_burst, lightning_bolt, magic_bullet]

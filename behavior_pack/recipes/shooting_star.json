@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:shooting_star"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "EEE",
+      "EGE",
+      "EEE"
+    ],
+    "key": {
+      "E": {
+        "item": "overlord:pleiades_emblem"
+      },
+      "G": {
+        "item": "minecraft:gold_block"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:pleiades_emblem"
+      }
+    ],
+    "result": {
+      "item": "overlord:shooting_star",
+      "count": 1
+    }
+  }
+}
