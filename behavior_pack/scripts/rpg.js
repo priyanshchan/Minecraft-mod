@@ -28,6 +28,7 @@ const PARTY_SHARE = 0.5;
  *   quest: ActiveQuest | null,
  *   spells: string[], slots: string[], slot: number, casts: Record<string, number>,
  *   party: any[], stance: string, kills: Record<string, number>, rep: Record<string, number>,
+ *   daily: object, title: string, titles: string[],
  * }} Profile
  */
 
@@ -237,7 +238,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {} };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [] };
 }
 
 /**
@@ -554,9 +555,21 @@ export function mobLevel(mob) {
   }
 }
 
+/**
+ * Whether the world director made this mob an elite.
+ * @param {import("@minecraft/server").Entity} mob
+ */
+export function isElite(mob) {
+  try {
+    return mob.getDynamicProperty("overlord:elite") === true;
+  } catch {
+    return false;
+  }
+}
+
 /** @param {import("@minecraft/server").Entity} dead */
 function killXp(dead) {
-  const bonus = 1 + mobLevel(dead) * 0.03; // levelled mobs are worth more
+  const bonus = (1 + mobLevel(dead) * 0.03) * (isElite(dead) ? 3 : 1); // levelled mobs are worth more, elites triple
   const fixed = KILL_XP[dead.typeId];
   if (fixed !== undefined) return Math.round(fixed * bonus);
   try {
@@ -638,6 +651,13 @@ world.afterEvents.entityDie.subscribe((event) => {
     const before = knowledgeOf(p, typeId);
     p.kills[typeId] = (p.kills[typeId] ?? 0) + 1;
     const after = knowledgeOf(p, typeId);
+    if (isElite(dead)) {
+      // Elites carry a purse and are counted on their own line of the bestiary.
+      p.kills[id("elite_foes")] = (p.kills[id("elite_foes")] ?? 0) + 1;
+      giveItem(player, id("yggdrasil_gold_coin"), 3 + Math.floor(Math.random() * 4));
+      giveItem(player, id("data_crystal"), 1);
+      player.sendMessage(`§6[Overlord] §fElite §e${prettyName(typeId)}§f slain! Triple XP, Gold Coins and a Data Crystal.`);
+    }
     if (after > before) {
       player.sendMessage(`§6[Bestiary] §fYou now know the §e${prettyName(typeId)}§f better (rank ${after}): §a+${after * 5}% damage§f against it.`);
     }
@@ -670,6 +690,7 @@ export function showTarget(player, victim, health, max) {
   }
   const level = mobLevel(victim);
   if (level > 0) name = `§7Lv.${level} §f${name}`;
+  if (isElite(victim)) name = `§6* Elite §f${name}`;
   const ratio = max > 0 ? health / max : 0;
   const color = ratio > 0.5 ? "§a" : ratio > 0.2 ? "§e" : "§c";
   notify(player, `§f${name} ${color}${Math.ceil(health)}§7/${Math.round(max)} HP`);
@@ -967,6 +988,9 @@ function openHelp(player) {
         "§eParty§r: create a retainer and hire up to two mercenaries from the Party entry of this menu. Set their stance with the Command Banner (sneak + use switches Come / Go / Stay). Their kills count as yours.\n\n" +
         "§eBestiary§r: every 5, 15 and 40 kills of a kind of foe add 5% damage against it.\n\n" +
         "§eReputation§r: factions remember what you do. Kill their people and they turn on you until the grudge fades.\n\n" +
+        "§eElites§r: about one monster in twenty spawns as an elite - tougher, five levels higher, worth triple XP and carrying coins and a Data Crystal.\n\n" +
+        "§eDaily bounty§r: every in-game day the guild posts one bounty for everyone. Finish bounties on consecutive days to build a streak worth up to +50%.\n\n" +
+        "§eTitles§r: great deeds earn titles; wear one in front of your name from this menu.\n\n" +
         "§eCamps§r: the wilds hold camps and outposts of the factions - Kingdom, Empire, goblins, bandits, adventurers, lizardmen and Nazarick. Finding one gives XP; adventurers, guards and soldiers may tell you where the nearest lies. Cleared camps are re-manned after ten minutes.\n\n" +
         "§eCombat§r: hitting a mob shows its remaining health. Agility adds a 0.4% critical chance per point (+50% damage). Dying costs a tenth of the XP gathered towards your next level.\n\n" +
         "§eSpells§r: open the Grimoire to learn tier magic with Data Crystals and assign up to four spells; cast them with the Magic Wand (sneak + use switches spell). Each spell grows stronger with use.\n\n" +

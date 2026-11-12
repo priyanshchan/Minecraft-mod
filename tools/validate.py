@@ -33,7 +33,7 @@ VANILLA = {
                "minecraft:arrow", "minecraft:evocation_fang", "minecraft:zombie",
                "minecraft:villager_v2"},
     "block_geometry": {"minecraft:geometry.full_block"},
-    "quest_target": {"minecraft:zombie", "minecraft:skeleton"},
+    "quest_target": {"minecraft:zombie", "minecraft:skeleton", "minecraft:spider", "minecraft:creeper"},
     # verified against @minecraft/vanilla-data 1.26.60 (MinecraftBlockTypes)
     "script_block": {
         "air", "dirt", "coarse_dirt", "grass_block", "grass_path", "podzol", "sand", "red_sand", "stone", "gravel",
@@ -412,7 +412,7 @@ def main():
     for name in sorted(set(re.findall(r'\bid\("([a-z0-9_]+)"\)', script))):
         ident = f"{NS}:{name}"
         events = {e for d in entities.values() for e in d.get("events", {})}
-        check(ident in items or ident in entities or ident in events or ident in blocks,
+        check(ident in items or ident in entities or ident in events or ident in blocks or name == "elite_foes",
               f"scripts: unknown identifier {ident}")
     for name in sorted(set(re.findall(r'\bmc\("([a-z_]+)"\)', script))):
         check(name in VANILLA["script_block"] or f"minecraft:{name}" in VANILLA["item"],

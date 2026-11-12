@@ -7,6 +7,7 @@ import * as spells from "./spells.js";
 import * as director from "./director.js";
 import * as sites from "./structures.js";
 import * as party from "./party.js";
+import * as guild from "./guild.js";
 await import("./main.js"); // must load without touching the world
 
 function mkPlayer(name) {
@@ -356,6 +357,38 @@ const purse = () => f.inv.filter((s) => s && s.typeId === "overlord:yggdrasil_go
 defenders.slice(0, 4).forEach((m) => world.afterEvents.entityDie.fire({ deadEntity: m, damageSource: { damagingEntity: f } })); assert.equal(purse(), purseBefore, "not cleared yet");
 world.afterEvents.entityDie.fire({ deadEntity: defenders[4], damageSource: { damagingEntity: f } });
 assert.equal(purse(), purseBefore + 8); assert.ok(f.msgs.some((m) => m.includes("Goblin Camp cleared")));
+
+// ---- daily bounty, elites and titles ----
+const g = mkPlayer("gil"); const pg = rpg.profileOf(g); g.dimension = makeLand(); g.dimension.getPlayers = () => [g];
+world.clock.day = 20; const bounty = guild.bountyOf(20); assert.deepEqual(guild.bountyOf(20), guild.bountyOf(20));
+assert.equal(new Set([...Array(10).keys()].map((dd) => guild.bountyOf(dd).target)).size, guild.BOUNTIES.length, "every bounty comes round");
+const coinsOf = (pl) => pl.inv.filter((s) => s && s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0);
+for (let i = 0; i < bounty.count - 1; i++) kill(g, mob(bounty.target, 20));
+assert.equal(guild.dailyOf(g).progress, bounty.count - 1); assert.equal(coinsOf(g), 0); assert.ok(g.bar.includes("Bounty"));
+kill(g, mob(bounty.target, 20)); assert.ok(guild.dailyOf(g).done); assert.equal(coinsOf(g), Math.round(bounty.coins * 1.1), "first day: +10%");
+kill(g, mob(bounty.target, 20)); assert.equal(coinsOf(g), Math.round(bounty.coins * 1.1), "paid once a day");
+world.clock.day = 21; const next = guild.bountyOf(21); assert.equal(guild.dailyOf(g).progress, 0); assert.equal(guild.dailyOf(g).streak, 1);
+const purse21 = coinsOf(g); for (let i = 0; i < next.count; i++) kill(g, mob(next.target, 20));
+assert.equal(coinsOf(g) - purse21, Math.round(next.coins * 1.2), "second day in a row: +20%");
+world.clock.day = 23; assert.equal(guild.dailyOf(g).streak, 0, "a missed day ends the streak"); assert.equal(guild.dailyOf(g).total, 2);
+// elites: always elite when the roll says so - five levels up, tougher, triple XP, a purse, and their own bestiary line
+pg.level = 30; const roll = Math.random; Math.random = () => 0.01;
+const boss = (() => { const m = mob("minecraft:zombie", 20, ["monster"]); const props = new Map(); m.effects = new Map(); m.tags = new Set();
+  Object.assign(m, { dimension: g.dimension, location: { x: 1, y: 64, z: 1 }, hasTag: () => false, getDynamicProperty: (k) => props.get(k), setDynamicProperty: (k, v) => props.set(k, v),
+    addEffect: (e2, d2, o = {}) => m.effects.set(e2, o.amplifier ?? 0), remove() {} });
+  world.afterEvents.entitySpawn.fire({ entity: m, cause: "Spawned" }); advance(5); return m; })();
+Math.random = roll;
+assert.ok(rpg.isElite(boss)); assert.equal(rpg.mobLevel(boss), director.mobLevelFor(30, 0.01) + 5);
+assert.equal(boss.effects.get("health_boost"), Math.floor(rpg.mobLevel(boss) / 10) + 5 - 1); assert.ok(boss.effects.has("resistance"));
+world.afterEvents.entityHurt.fire({ hurtEntity: boss, damage: 1, damageSource: { damagingEntity: g, cause: "entityAttack" } }); assert.ok(g.bar.includes("Elite"), g.bar);
+const purseE = coinsOf(g); g.msgs.length = 0; kill(g, boss);
+assert.ok(coinsOf(g) - purseE >= 3 && g.msgs.some((m) => m.includes("Elite")) && pg.kills["overlord:elite_foes"] === 1);
+// titles: earned from deeds, paid once, worn in front of the name
+assert.deepEqual(guild.checkTitles(g), []); pg.kills["overlord:goblin"] = 50; pg.kills["overlord:frost_dragon"] = 1;
+const purseT = coinsOf(g); assert.deepEqual(guild.checkTitles(g).sort(), ["Dragon Slayer", "Goblin Slayer"]); assert.equal(coinsOf(g) - purseT, 20);
+assert.deepEqual(guild.checkTitles(g), [], "titles are granted once");
+assert.equal(guild.wearTitle(g, "archmage"), false, "cannot wear what is not earned"); assert.equal(guild.wearTitle(g, "dragon_slayer"), true);
+assert.equal(g.nameTag, "§e[Dragon Slayer]§r gil"); guild.wearTitle(g, ""); assert.equal(g.nameTag, "gil");
 
 // persistence: saved profile is restored after leaving
 advance(100);

@@ -194,6 +194,20 @@ sticks in a flag shape).
   Dragon's Hoard to clear it for
   Gold Coins and XP (more at higher levels). A cleared camp stays quiet for twenty minutes instead of ten.
 
+### Daily bounty, elites and titles
+
+- **Daily bounty:** every in-game day the guild posts one bounty for all players (for example 10 Goblins or
+  4 Ogres). Completing it pays Gold Coins and XP that grows with your level. Finishing bounties on consecutive
+  days builds a streak worth +10% a day, up to +50%; missing a day resets it.
+- **Elite mobs:** about one levelled monster in twenty spawns as an elite — five levels higher, with 10 extra
+  hearts, more damage and Resistance. Elites are marked in the target readout, give triple XP and drop Gold
+  Coins and a Data Crystal.
+- **Titles:** eleven titles are earned through deeds (Goblin Slayer, Undead Bane, Elite Hunter, Bounty Hunter,
+  Commander, Archmage, Giant Killer, Dragon Slayer, Guardian's Bane, Adamantite Adventurer, Rival of the
+  Sorcerer King). Each pays 10 Gold Coins when earned, and one can be worn in front of your name.
+
+All three are reached from the Adventurer's Plate menu.
+
 ### Living world
 
 - **Mob levels:** monsters that spawn near you take a level close to yours (70–120% of the highest-level player
@@ -341,7 +355,7 @@ tools/test_rpg.py  runs the script logic against a mock of the game API (needs N
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts) and `party.js` (retainers) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers) and `guild.js` (daily bounty, titles) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

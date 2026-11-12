@@ -25,6 +25,7 @@ import * as fx from "./vfx.js";
 import "./director.js";
 import "./structures.js";
 import { cycleStance, openParty } from "./party.js";
+import "./guild.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;

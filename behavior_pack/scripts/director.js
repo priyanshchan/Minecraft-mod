@@ -12,6 +12,7 @@ const id = (/** @type {string} */ name) => `${NS}:${name}`;
 const TICKS = 20;
 const LONG = 20000000;
 export const LEVEL_KEY = "overlord:lvl";
+export const ELITE_CHANCE = 0.05;
 
 /** Tags of mobs the add-on spawned on purpose; they are never removed by the level gate. */
 const SCRIPTED_TAGS = ["overlord_raid", "overlord_patrol", "overlord_summoned", "overlord_guard", "overlord_camp"];
@@ -87,9 +88,16 @@ export function mobLevelFor(playerLevel, roll) {
  * @param {number} level
  */
 function applyLevel(mob, level) {
+  // About one in twenty is an elite: five levels higher, much tougher, harder hitting.
+  const elite = Math.random() < ELITE_CHANCE;
+  if (elite) {
+    level = Math.min(100, level + 5);
+    mob.setDynamicProperty("overlord:elite", true);
+    mob.addEffect("resistance", LONG, { amplifier: 0, showParticles: true });
+  }
   mob.setDynamicProperty(LEVEL_KEY, level);
-  const hearts = Math.floor(level / 10); // +2 hearts per 10 levels
-  const might = Math.floor(level / 30); // Strength I at 30, II at 60, III at 90
+  const hearts = Math.floor(level / 10) + (elite ? 5 : 0); // +2 hearts per 10 levels, +10 for elites
+  const might = Math.floor(level / 30) + (elite ? 1 : 0); // Strength I at 30, II at 60, III at 90
   if (hearts > 0) mob.addEffect("health_boost", LONG, { amplifier: hearts - 1, showParticles: false });
   if (might > 0) mob.addEffect("strength", LONG, { amplifier: might - 1, showParticles: false });
   if (hearts > 0) {
