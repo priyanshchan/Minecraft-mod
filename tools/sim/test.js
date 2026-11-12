@@ -3,6 +3,7 @@ import { world, system, players, advance, ItemStack } from "@minecraft/server";
 import { script, shown } from "@minecraft/server-ui";
 import * as rpg from "./rpg.js";
 import * as raid from "./raid.js";
+import * as spells from "./spells.js";
 await import("./main.js"); // must load without touching the world
 
 function mkPlayer(name) {
@@ -13,7 +14,10 @@ function mkPlayer(name) {
     onScreenDisplay: { setActionBar(t) { p.bar = t; }, setTitle(t) { p.title = t; } }, sendMessage: (m) => msgs.push(m), playSound() {},
     getEffect: (e) => effects.get(e), addEffect(e, d, o = {}) { effects.set(e, { duration: d, amplifier: o.amplifier ?? 0 }); }, removeEffect: (e) => effects.delete(e),
     health: { currentValue: 20, effectiveMax: 20, setCurrentValue(v) { this.currentValue = v; return true; } },
-    getComponent(c) { if (c === "minecraft:health") return p.health; if (c === "minecraft:inventory") return { container: { addItem(s) { inv.push(s); } } }; },
+    getComponent(c) { if (c === "minecraft:health") return p.health; if (c === "minecraft:inventory") return { container: {
+      addItem(s) { inv.push(s); }, get size() { return inv.length; }, getItem: (i) => inv[i], setItem(i, s) { if (s) inv[i] = s; else inv[i] = undefined; } } }; },
+    aimed: [], getEntitiesFromViewDirection: () => p.aimed.map((entity) => ({ entity })), getBlockFromViewDirection: () => undefined,
+    getHeadLocation: () => ({ x: 0, y: 65.6, z: 0 }), getViewDirection: () => ({ x: 0, y: 0, z: 1 }),
     dimension: { id: "overworld", mobs: [], spawnParticle() {}, spawnItem() {}, getPlayers: () => players, playSound() {},
       getBlock: () => ({ isAir: true }),
       spawnEntity(typeId) { const e = { typeId, tags: new Set(), isValid: true, addTag(t) { this.tags.add(t); }, remove: () => { p.dimension.mobs = p.dimension.mobs.filter((m) => m !== e); } }; p.dimension.mobs.push(e); return e; },
@@ -109,6 +113,40 @@ assert.ok(!raid.inRaid(a)); assert.equal(a.dimension.mobs.length, 0); a.location
 // dying fails the raid
 raid.startRaid(a); world.afterEvents.entityDie.fire({ deadEntity: a, damageSource: {} });
 assert.ok(!raid.inRaid(a)); assert.equal(a.dimension.mobs.length, 0);
+
+// ---- tier magic ----
+const c = mkPlayer("cara"); const pc = rpg.profileOf(c);
+world.afterEvents.playerSpawn.fire({ player: c, initialSpawn: true }); advance(80);
+assert.ok(c.inv.some((s) => s && s.typeId === "overlord:grimoire") && c.inv.some((s) => s && s.typeId === "overlord:magic_wand"));
+assert.ok(c.bar.includes("Magic Arrow"), c.bar);                       // starter spell shown on the HUD
+assert.equal(spells.castSelected(c), false, "no target -> no cast");
+assert.equal(pc.mana, rpg.maxMana(pc), "mana refunded when nothing is hit");
+const dummy = mob("minecraft:zombie", 100, ["undead"]); dummy.id = "d1"; dummy.setOnFire = () => {}; dummy.addEffect = () => {};
+dummy.applyDamage = function (n) { this.damaged.push(n); };
+c.aimed = [dummy];
+assert.equal(spells.castSelected(c), true); assert.deepEqual(dummy.damaged, [7]);
+assert.equal(spells.castSelected(c), false, "cooldown blocks an immediate recast");
+// learning: level and crystal gates
+assert.ok(spells.learnSpell(c, "fireball").includes("needs level 13"));
+assert.ok(spells.learnSpell(c, "light_healing").includes("Learned"), "tier 1 is free");
+pc.level = 13; assert.ok(spells.learnSpell(c, "lightning").includes("costs 6"));
+c.inv.push(new ItemStack("overlord:data_crystal", 10));
+assert.ok(spells.learnSpell(c, "lightning").includes("Learned"));
+assert.equal(c.inv.filter((s) => s && s.typeId === "overlord:data_crystal").reduce((n, s) => n + s.amount, 0), 4);
+assert.deepEqual(pc.slots.slice(0, 3), ["magic_arrow", "light_healing", "lightning"]);
+// cycling and healing
+spells.cycleSpell(c); assert.equal(pc.slots[pc.slot], "light_healing");
+c.health.currentValue = 5; assert.equal(spells.castSelected(c), true); assert.equal(c.health.currentValue, 11);
+// mastery: 10 casts -> level 2 -> +8% damage; holy affinity not involved for arcane
+spells.cycleSpell(c); spells.cycleSpell(c); assert.equal(pc.slots[pc.slot], "magic_arrow");
+for (let i = 0; i < 9; i++) { advance(20); assert.equal(spells.castSelected(c), true); }
+assert.equal(spells.masteryOf(c, "magic_arrow"), 2);
+advance(20); dummy.damaged = []; spells.castSelected(c); assert.deepEqual(dummy.damaged, [8], "7 * 1.08 rounds to 8");
+// every spell is castable without throwing and has sane data
+assert.equal(new Set(spells.SPELLS.map((s) => s.key)).size, spells.SPELLS.length);
+for (const s of spells.SPELLS) assert.ok(s.mana > 0 && s.cooldown > 0 && s.tier >= 1 && typeof s.cast === "function", s.key);
+// death penalty
+pc.xp = 100; world.afterEvents.entityDie.fire({ deadEntity: c, damageSource: {} }); assert.equal(pc.xp, 90);
 
 // persistence: saved profile is restored after leaving
 advance(100);

@@ -161,6 +161,9 @@
     "overlord_golem_fist": {
       "textures": "textures/items/overlord/golem_fist"
     },
+    "overlord_grimoire": {
+      "textures": "textures/items/overlord/grimoire"
+    },
     "overlord_guardian_crest": {
       "textures": "textures/items/overlord/guardian_crest"
     },
@@ -172,6 +175,9 @@
     },
     "overlord_magic_rifle": {
       "textures": "textures/items/overlord/magic_rifle"
+    },
+    "overlord_magic_wand": {
+      "textures": "textures/items/overlord/magic_wand"
     },
     "overlord_maid_bell": {
       "textures": "textures/items/overlord/maid_bell"

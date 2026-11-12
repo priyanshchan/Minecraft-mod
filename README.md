@@ -149,6 +149,39 @@ character menu.
 
 Progress is saved per player in the world.
 
+### Tier magic
+
+Every player also receives a **Grimoire** and a **Magic Wand** (recipes: book + data crystal; data crystal /
+gold ingot / stick in a column).
+
+- **Learning:** open the Grimoire to learn spells. Each tier needs a level (tier 1 at level 1, then +6 levels
+  per tier; super-tier at level 70) and Data Crystals (2 per tier; tier 1 is free; super-tier costs 30).
+- **Casting:** assign up to four spells to slots. Use the wand to cast the selected one; sneak + use switches
+  slot. The selected spell is shown on the status bar.
+- **Mastery:** every spell gains mastery with use (levels at 10, 30, 70 and 150 casts), +8% power per level.
+- **Elements:** fire ignites, ice slows, lightning briefly stuns, and holy deals +50% to undead. Some
+  creatures are weak or resistant — e.g. Cocytus shrugs off ice but takes +50% from fire, Demiurge the reverse.
+
+| Tier | Spells |
+| --- | --- |
+| 1 | Magic Arrow, Light Healing |
+| 2 | Shock Wave, Reinforce Armor |
+| 3 | Fireball, Lightning |
+| 4 | Fly, Ice Lance |
+| 5 | Dragon Lightning (jumps to 4 mobs), Dimensional Move |
+| 6 | Heal (you and nearby players), Thousand Bone Lance |
+| 7 | Chain Dragon Lightning (8 mobs), Napalm |
+| 8 | Gravity Maelstrom (drags mobs in), Greater Full Potential |
+| 9 | Vermilion Nova |
+| 10 | Reality Slash, Time Stop, Meteor Fall |
+| Super | Fallen Down |
+
+### Combat mechanics
+
+- Hitting a mob shows its name and remaining health above the hotbar.
+- Agility gives a 0.4% critical-hit chance per point (+50% damage); Assassins add 25% on top.
+- Dying costs a tenth of the XP gathered towards your next level (never a level).
+
 ### Tomb Raid
 
 Blow the **Horn of the Tomb Raid** to start a five-wave battle around you. The tier follows your level
@@ -202,7 +235,7 @@ tools/build.py     validates, then packages dist/*.mcaddon
 tools/test_rpg.py  runs the script logic against a mock of the game API (needs Node.js)
 ```
 
-`behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests) and `raid.js` (Tomb Raid) are written by hand; everything else inside the two pack
+`behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic) and `raid.js` (Tomb Raid) are written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 
 ```bash

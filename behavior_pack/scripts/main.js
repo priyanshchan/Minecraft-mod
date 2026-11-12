@@ -20,6 +20,7 @@ import {
   useClassSkill,
 } from "./rpg.js";
 import { startRaid } from "./raid.js";
+import { castSelected, cycleSpell, openGrimoire } from "./spells.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -877,6 +878,11 @@ world.afterEvents.itemUse.subscribe((event) => {
     if (item === id("adventurer_plate")) {
       if (player.isSneaking) useClassSkill(player);
       else openMenu(player);
+    } else if (item === id("magic_wand")) {
+      if (player.isSneaking) cycleSpell(player);
+      else castSelected(player);
+    } else if (item === id("grimoire")) {
+      openGrimoire(player);
     } else if (item === id("raid_horn")) {
       startRaid(player);
     } else if (item === id("goblin_horn")) {

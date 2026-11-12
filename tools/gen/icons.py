@@ -950,6 +950,14 @@ def regalia_layers():
     return armor_layers("#2b1a3d", "#412a5c", "#1c1029", "#e0202c")
 
 
+def wand():
+    s = Sprite()
+    s.shaft(2, 13, 8, "#4a3a6a", "#2b1f45")
+    s.px(3, 12, GOLD).px(4, 12, GOLD_D).px(9, 6, GOLD).px(10, 6, GOLD_D)
+    s.stamp([".cC.", "cWCc", "CCDC", ".cD."], {"C": "#c05bff", "c": "#e3b8ff", "W": "#ffffff", "D": "#7a2bb3"}, 10, 2)
+    return s.outline().img
+
+
 def plate():
     return sprite16([
         "................",
@@ -1089,6 +1097,8 @@ def all_item_icons():
         "iron_gauntlets": gauntlets(),
         "magic_rifle": rifle(),
         "adventurer_plate": plate(),
+        "magic_wand": wand(),
+        "grimoire": tome("#1f5c3a", "#143f27", "#f6d968", "#c05bff"),
         "tome_crystal_lance": tome("#2a5a7a", "#1c4058", "#e6f6ff", "#bfe8ff"),
         "fluder_staff": fluder_staff(),
         "golem_fist": golem_fist(),

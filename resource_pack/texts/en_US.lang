@@ -42,6 +42,8 @@ item.overlord.brain_katana.name=Brain's Katana
 item.overlord.iron_gauntlets.name=Sebas's Iron Gauntlets
 item.overlord.magic_rifle.name=CZ's Magic Rifle
 item.overlord.adventurer_plate.name=Adventurer's Plate
+item.overlord.grimoire.name=Grimoire
+item.overlord.magic_wand.name=Magic Wand
 item.overlord.tome_crystal_lance.name=Tome: Crystal Lance
 item.overlord.fluder_staff.name=Fluder's Staff
 item.overlord.golem_fist.name=Gargantua's Fist
@@ -161,4 +163,4 @@ item.spawn_egg.entity.overlord:soul_eater.name=Soul Eater Spawn Egg
 item.spawn_egg.entity.overlord:quagoa.name=Quagoa Spawn Egg
 
 pack.name=Overlord: Tomb of Nazarick
-pack.description=Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v2.0.0
+pack.description=Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v2.1.0

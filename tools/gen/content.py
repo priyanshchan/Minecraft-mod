@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [2, 0, 0]
+VERSION = [2, 1, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v2.0.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. §7v2.1.0"
 
 
 def oid(name):
@@ -201,6 +201,10 @@ ITEMS = {
     "magic_rifle": ("CZ's Magic Rifle", "equipment", _weapon(3, _cooldown("overlord_rifle", 0.6),
                                                             rarity="rare")),
     "adventurer_plate": ("Adventurer's Plate", "equipment", {"minecraft:max_stack_size": 1}),
+    "grimoire": ("Grimoire", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "rare"}),
+    "magic_wand": ("Magic Wand", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:hand_equipped": True, "minecraft:rarity": "rare",
+        "minecraft:can_destroy_in_creative": False}),
     "tome_crystal_lance": ("Tome: Crystal Lance", "equipment", {
         "minecraft:max_stack_size": 1, "minecraft:rarity": "rare", "minecraft:glint": True,
         **_cooldown("overlord_lance", 1.5)}),
@@ -459,6 +463,9 @@ def recipe_files():
                                   oid("glacier_bricks"), 4),
         "shooting_star": _shaped("shooting_star", ["EEE", "EGE", "EEE"], {
             "E": oid("pleiades_emblem"), "G": "minecraft:gold_block"}, oid("shooting_star")),
+        "grimoire": _shapeless("grimoire", ["minecraft:book", cry], oid("grimoire")),
+        "magic_wand": _shaped("magic_wand", ["C", "G", "S"], {
+            "C": cry, "G": "minecraft:gold_ingot", "S": "minecraft:stick"}, oid("magic_wand")),
         "adventurer_plate": _shapeless("adventurer_plate", [
             "minecraft:paper", "minecraft:copper_ingot"], oid("adventurer_plate")),
         "blue_potion": _shaped("blue_potion", ["LCL", "BBB"], {

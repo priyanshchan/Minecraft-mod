@@ -2,11 +2,11 @@
   "format_version": 2,
   "header": {
     "name": "Overlord: Tomb of Nazarick [RP]",
-    "description": "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. \u00a77v2.0.0",
+    "description": "Ainz Ooal Gown, the Floor Guardians, legendary weapons, spells, levels, classes and quests. \u00a77v2.1.0",
     "uuid": "c0efa9f1-85eb-41e8-a663-b693b3f36197",
     "version": [
       2,
-      0,
+      1,
       0
     ],
     "min_engine_version": [
@@ -21,7 +21,7 @@
       "uuid": "6f472436-ea00-42b5-b73d-8ee5e218a303",
       "version": [
         2,
-        0,
+        1,
         0
       ]
     }
@@ -31,7 +31,7 @@
       "uuid": "e6440d11-49cb-4a78-994b-2621743284c3",
       "version": [
         2,
-        0,
+        1,
         0
       ]
     }

@@ -73,7 +73,7 @@ VANILLA = {
     "particle": {
         "minecraft:critical_hit_emitter", "minecraft:soul_particle", "minecraft:totem_particle",
         "minecraft:knockback_roar_particle", "minecraft:heart_particle", "minecraft:blue_flame_particle",
-        "minecraft:electric_spark_particle", "minecraft:villager_happy",
+        "minecraft:electric_spark_particle", "minecraft:villager_happy", "minecraft:basic_flame_particle",
     },
     "effect": {"slowness", "slow_falling", "instant_health", "regeneration", "strength", "resistance",
                "wither", "night_vision", "saturation", "levitation", "invisibility", "speed",
@@ -403,6 +403,10 @@ def main():
         check(ident in known_entities, f"main.js: unknown entity {ident}")
     for sound in re.findall(r'playSound\([^,]+,\s*"([^"]+)"', script):
         check(sound in VANILLA["sound"], f"main.js: unknown sound {sound}")
+    for p in re.findall(r'const [A-Z]+ = "(minecraft:[a-z_]+)";', script):
+        check(p in VANILLA["particle"], f"scripts: unknown particle {p}")
+    for sound in re.findall(r'"((?:random|mob|ambient|item|beacon)\.[a-z_.0-9]+)"', script):
+        check(sound in VANILLA["sound"], f"scripts: unknown sound {sound}")
     for p in re.findall(r'particle\([^,]+,\s*"([^"]+)"', script):
         check(p in VANILLA["particle"], f"main.js: unknown particle {p}")
     for effect in re.findall(r'addEffect\("([^"]+)"', script):

@@ -26,6 +26,7 @@ const PARTY_SHARE = 0.5;
  *   str: number, vit: number, int: number, agi: number,
  *   cls: ClassKey, mana: number, done: number, hud: boolean,
  *   quest: ActiveQuest | null,
+ *   spells: string[], slots: string[], slot: number, casts: Record<string, number>,
  * }} Profile
  */
 
@@ -128,7 +129,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {} };
 }
 
 /**
@@ -144,7 +145,8 @@ export function profileOf(player) {
     if (typeof raw === "string") {
       const saved = JSON.parse(raw);
       for (const key of /** @type {(keyof Profile)[]} */ (Object.keys(profile))) {
-        if (saved[key] !== undefined && typeof saved[key] === typeof profile[key]) {
+        if (saved[key] !== undefined && saved[key] !== null && typeof saved[key] === typeof profile[key] &&
+            Array.isArray(saved[key]) === Array.isArray(profile[key])) {
           /** @type {any} */ (profile)[key] = saved[key];
         }
       }
@@ -171,8 +173,11 @@ function save(player) {
   }
 }
 
-/** @param {import("@minecraft/server").Player} player */
-function touch(player) {
+/**
+ * Marks the profile as changed so it is saved soon.
+ * @param {import("@minecraft/server").Player} player
+ */
+export function touch(player) {
   dirty.add(player.id);
 }
 
@@ -246,6 +251,17 @@ export function notify(player, text) {
   }
 }
 
+/** Extra status-bar text per player (the selected spell, set by spells.js). */
+const hudExtra = new Map();
+
+/**
+ * @param {import("@minecraft/server").Player} player
+ * @param {string} text
+ */
+export function setHudExtra(player, text) {
+  hudExtra.set(player.id, text);
+}
+
 /** @param {import("@minecraft/server").Player} player */
 function drawHud(player) {
   const p = profileOf(player);
@@ -256,7 +272,7 @@ function drawHud(player) {
   const points = p.points > 0 ? ` §7| §d+${p.points} pts` : "";
   try {
     player.onScreenDisplay.setActionBar(
-      `§6Lv.${p.level} §f${CLASSES[p.cls].name} §7| §bMP ${Math.floor(p.mana)}/${maxMana(p)} §7| §aXP ${percent}${questText}${points}`
+      `§6Lv.${p.level} §f${CLASSES[p.cls].name} §7| §bMP ${Math.floor(p.mana)}/${maxMana(p)} §7| §aXP ${percent}${hudExtra.get(player.id) ?? ""}${questText}${points}`
     );
   } catch {
     // player left mid-tick
@@ -509,6 +525,39 @@ world.afterEvents.entityDie.subscribe((event) => {
 
 // ------------------------------------------------------------ combat bonuses
 
+/**
+ * Target frame: shows the name and remaining health of the mob the player just hit.
+ * @param {import("@minecraft/server").Player} player
+ * @param {import("@minecraft/server").Entity} victim
+ * @param {number} health
+ * @param {number} max
+ */
+export function showTarget(player, victim, health, max) {
+  let name = victim.nameTag;
+  if (!name) {
+    name = victim.typeId.split(":")[1].split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  }
+  const ratio = max > 0 ? health / max : 0;
+  const color = ratio > 0.5 ? "§a" : ratio > 0.2 ? "§e" : "§c";
+  notify(player, `§f${name} ${color}${Math.ceil(health)}§7/${Math.round(max)} HP`);
+}
+
+// Death penalty: lose a tenth of the XP gathered towards the next level.
+world.afterEvents.entityDie.subscribe((event) => {
+  try {
+    if (event.deadEntity.typeId !== "minecraft:player") return;
+    const player = /** @type {import("@minecraft/server").Player} */ (event.deadEntity);
+    const p = profileOf(player);
+    const lost = Math.floor(p.xp * 0.1);
+    if (lost <= 0) return;
+    p.xp -= lost;
+    touch(player);
+    player.sendMessage(`§6[Overlord] §7You lost §c${lost} XP§7 on death.`);
+  } catch {
+    // player data unavailable during the death tick
+  }
+});
+
 let applyingBonus = false;
 
 world.afterEvents.entityHurt.subscribe((event) => {
@@ -524,15 +573,19 @@ world.afterEvents.entityHurt.subscribe((event) => {
     let factor = p.str * 0.02 + (p.cls === "warrior" ? 0.2 : 0);
     if (p.cls === "cleric" && victim.matches({ families: ["undead"] })) factor += 0.3;
     let crit = false;
-    if (p.cls === "assassin" && Math.random() < 0.25) {
+    // Agility gives everyone a small critical chance; assassins add 25% on top.
+    if (Math.random() < p.agi * 0.004 + (p.cls === "assassin" ? 0.25 : 0)) {
       factor += 0.5;
       crit = true;
     }
     const bonus = event.damage * factor;
-    if (bonus < 0.5) return;
-
     const health = victim.getComponent("minecraft:health");
     if (!health || health.currentValue <= 0) return;
+    if (bonus < 0.5) {
+      showTarget(player, victim, health.currentValue, health.effectiveMax);
+      return;
+    }
+    showTarget(player, victim, Math.max(0, health.currentValue - bonus), health.effectiveMax);
     if (health.currentValue - bonus > 0.5) {
       // The hit has already landed, so the extra damage is taken straight off the target's health.
       health.setCurrentValue(health.currentValue - bonus);
@@ -753,6 +806,8 @@ function openHelp(player) {
         `${POINTS_PER_LEVEL} stat points (max level ${MAX_LEVEL}).\n\n` +
         STAT_KEYS.map((k) => `${STATS[k].color}${STATS[k].name}§r: ${STATS[k].help}`).join("\n") +
         "\n\n§eMana§r: staff, ring, tome and weapon abilities cost mana, which recovers over time. Scrolls and potions cost none; Healing Potions also restore mana.\n\n" +
+        "§eCombat§r: hitting a mob shows its remaining health. Agility adds a 0.4% critical chance per point (+50% damage). Dying costs a tenth of the XP gathered towards your next level.\n\n" +
+        "§eSpells§r: open the Grimoire to learn tier magic with Data Crystals and assign up to four spells; cast them with the Magic Wand (sneak + use switches spell). Each spell grows stronger with use.\n\n" +
         `§eClasses§r: each class gives a permanent bonus and an active skill - sneak and use the plate to trigger it (${SKILL_COOLDOWN} s cooldown).\n\n` +
         "§eGuild quests§r: accept a request, defeat the targets and earn Gold Coins and XP. Completed quests raise your adventurer rank from Copper to Adamantite and unlock harder requests.\n\n" +
         `§eParty§r: players within ${PARTY_RANGE} blocks of a kill receive half its XP and quest credit.\n\n` +
@@ -788,6 +843,7 @@ world.afterEvents.playerLeave.subscribe((event) => {
   profiles.delete(event.playerId);
   dirty.delete(event.playerId);
   hudHold.delete(event.playerId);
+  hudExtra.delete(event.playerId);
   regalia.delete(event.playerId);
   skillReady.delete(event.playerId);
 });
