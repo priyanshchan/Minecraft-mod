@@ -846,6 +846,160 @@
           "step": "mob.irongolem.walk",
           "shoot": "mob.ghast.fireball"
         }
+      },
+      "overlord:go_gin": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.6
+        ],
+        "events": {
+          "ambient": "mob.zombie.say",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.irongolem.walk"
+        }
+      },
+      "overlord:elf_ranger": {
+        "volume": 1.0,
+        "pitch": [
+          1.05,
+          1.15
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "random.bow"
+        }
+      },
+      "overlord:decem": {
+        "volume": 1.0,
+        "pitch": [
+          1.05,
+          1.15
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:behemoth": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.6
+        ],
+        "events": {
+          "ambient": "mob.zombie.say",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.irongolem.walk"
+        }
+      },
+      "overlord:neia": {
+        "volume": 1.0,
+        "pitch": [
+          1.05,
+          1.15
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "random.bow"
+        }
+      },
+      "overlord:remedios": {
+        "volume": 1.0,
+        "pitch": [
+          1.05,
+          1.15
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:paladin": {
+        "volume": 1.0,
+        "pitch": [
+          0.95,
+          1.05
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:bafolk": {
+        "volume": 1.0,
+        "pitch": [
+          0.7,
+          0.8
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:eight_edge_assassin": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.8
+        ],
+        "events": {
+          "ambient": "mob.wither.ambient",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:arena_master": {
+        "volume": 1.0,
+        "pitch": [
+          1.0,
+          1.1
+        ],
+        "events": {
+          "hurt": "mob.villager.hit",
+          "death": "mob.villager.death",
+          "step": "mob.zombie.step",
+          "haggle": "mob.villager.haggle",
+          "haggle.yes": "mob.villager.yes",
+          "haggle.no": "mob.villager.no"
+        }
+      },
+      "overlord:platinum_dragon_lord": {
+        "volume": 1.0,
+        "pitch": [
+          0.9,
+          1.0
+        ],
+        "events": {
+          "ambient": "mob.ravager.ambient",
+          "hurt": "mob.irongolem.hit",
+          "death": "mob.wither.death",
+          "step": "mob.irongolem.walk",
+          "shoot": "random.glass"
+        }
+      },
+      "overlord:rubedo": {
+        "volume": 1.0,
+        "pitch": [
+          1.0,
+          1.1
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
       }
     }
   }

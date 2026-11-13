@@ -52,7 +52,7 @@ VANILLA = {
     # verified against @minecraft/vanilla-data 1.26.60
     "item": {
         "minecraft:iron_ingot", "minecraft:diamond", "minecraft:redstone", "minecraft:glass_bottle",
-        "minecraft:crying_obsidian", "minecraft:soul_sand", "minecraft:cooked_beef",
+        "minecraft:crying_obsidian", "minecraft:soul_sand", "minecraft:cooked_beef", "minecraft:nether_star",
         "minecraft:bone", "minecraft:book", "minecraft:obsidian", "minecraft:stone_bricks",
         "minecraft:diamond_block", "minecraft:redstone_block", "minecraft:packed_ice", "minecraft:magma",
         "minecraft:iron_block", "minecraft:wheat_seeds", "minecraft:pumpkin_seeds",

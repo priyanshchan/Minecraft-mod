@@ -21,10 +21,39 @@ const WEAPONS = new Set(
     id("aura_whip"), id("frost_pain"), id("brain_katana"), id("iron_gauntlets"), id("holy_staff"), id("blade_bug"),
     id("fluder_staff"), id("golem_fist"), id("runic_hammer"), id("fang_dagger"), id("kilineyram"), id("safarlisia"),
     id("takemikazuchi"), id("fell_iron"), id("charons_guidance"), id("angel_mace"), id("hellfire_blade"),
-    id("giants_maul"), id("dragonbone_blade"), id("six_arms_knuckles")]
+    id("giants_maul"), id("dragonbone_blade"), id("six_arms_knuckles"), id("martial_lord_club"),
+    id("elf_kings_staff")]
 );
 
+/** Runes a runesmith can inscribe on a weapon; a weapon holds one at a time. */
+/** @type {Record<string, { name: string, item: string, help: string }>} */
+export const RUNES = {
+  fire: { name: "Rune of Fire", item: id("rune_of_fire"), help: "sets whatever it strikes alight" },
+  frost: { name: "Rune of Frost", item: id("rune_of_frost"), help: "slows whatever it strikes" },
+  storm: { name: "Rune of Storm", item: id("rune_of_storm"), help: "a second jolt of lightning after every blow" },
+  life: { name: "Rune of Life", item: id("rune_of_life"), help: "heals you for 8% of the damage dealt" },
+};
+export const RUNE_KEY = "overlord:rune";
+
 /** @typedef {import("@minecraft/server").Player} Player */
+
+/** The rune inscribed on an item, if any. @param {import("@minecraft/server").ItemStack | undefined} item */
+export function runeOf(item) {
+  try {
+    const rune = item?.getDynamicProperty(RUNE_KEY);
+    return typeof rune === "string" && RUNES[rune] ? rune : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** The lines written on a worked weapon. @param {number} plus @param {string | undefined} rune */
+function loreFor(plus, rune) {
+  const lines = [];
+  if (plus > 0) lines.push(`§6Reinforced +${plus}`, `§7+${plus * 6}% melee damage`);
+  if (rune) lines.push(`§b${RUNES[rune].name}`, `§7${RUNES[rune].help}`);
+  return lines;
+}
 
 /** Gold Coins and adamantite ingots needed for the next level. @param {number} plus current level */
 export function reinforceCost(plus) {
@@ -51,7 +80,7 @@ export function reinforce(player) {
   // Mark the weapon first, so nothing is charged if the item cannot be changed.
   try {
     held.setDynamicProperty(PLUS_KEY, plus + 1);
-    held.setLore([`§6Reinforced +${plus + 1}`, `§7+${(plus + 1) * 6}% melee damage`]);
+    held.setLore(loreFor(plus + 1, runeOf(held)));
     container.setItem(player.selectedSlotIndex, held);
   } catch {
     return "§7This weapon cannot be reinforced";
@@ -66,30 +95,71 @@ export function reinforce(player) {
   return `§aThe runesmith reinforces your weapon to +${plus + 1}`;
 }
 
+/**
+ * Inscribes a rune from the player's inventory on the weapon in their hand, replacing any rune already there.
+ * @param {Player} player @param {string} rune
+ */
+export function inscribe(player, rune) {
+  const kind = RUNES[rune];
+  if (!kind) return "§7No such rune";
+  const container = player.getComponent("minecraft:inventory")?.container;
+  const held = container?.getItem(player.selectedSlotIndex);
+  if (!container || !held || !WEAPONS.has(held.typeId)) return "§7Hold one of the add-on's weapons to inscribe it";
+  const smiths = player.dimension.getEntities({ type: id("dwarf"), location: player.location, maxDistance: SMITH_RANGE });
+  if (smiths.length === 0) return "§7Only a Dwarf Runesmith can inscribe runes - find one at a Dwarven Forge";
+  if (runeOf(held) === rune) return `§7This weapon already bears the ${kind.name}`;
+  if (countItem(player, kind.item) < 1) return `§7You have no ${kind.name}`;
+  const current = held.getDynamicProperty(PLUS_KEY);
+  try {
+    held.setDynamicProperty(RUNE_KEY, rune);
+    held.setLore(loreFor(typeof current === "number" ? current : 0, rune));
+    container.setItem(player.selectedSlotIndex, held);
+  } catch {
+    return "§7This weapon cannot be inscribed";
+  }
+  takeItem(player, kind.item, 1);
+  try {
+    player.playSound("random.anvil_use", { volume: 1, pitch: 1.4 });
+  } catch {
+    // cosmetic only
+  }
+  return `§aThe runesmith inscribes the ${kind.name}: it ${kind.help}`;
+}
+
 registerMenu(
-  () => "Reinforce weapon",
+  () => "Forge: reinforce and runes",
   (player) => {
     const held = player.getComponent("minecraft:inventory")?.container?.getItem(player.selectedSlotIndex);
-    const current = held && WEAPONS.has(held.typeId) ? held.getDynamicProperty(PLUS_KEY) : undefined;
+    const workable = held !== undefined && WEAPONS.has(held.typeId);
+    const current = workable ? held.getDynamicProperty(PLUS_KEY) : undefined;
     const plus = typeof current === "number" ? current : 0;
     const cost = reinforceCost(plus);
+    const rune = workable ? runeOf(held) : undefined;
+    const owned = Object.keys(RUNES).filter((key) => countItem(player, RUNES[key].item) > 0);
     const form = new ActionFormData()
-      .title("Reinforce weapon")
+      .title("Forge")
       .body(
-        `Stand within ${SMITH_RANGE} blocks of a Dwarf Runesmith with a weapon in your hand. Each level adds 6% melee damage, up to +${MAX_PLUS}.\n\n` +
-          (held && WEAPONS.has(held.typeId)
+        `Stand within ${SMITH_RANGE} blocks of a Dwarf Runesmith with a weapon in your hand.\n\n` +
+          `§eReinforcing§r adds 6% melee damage a level, up to +${MAX_PLUS}. ` +
+          (workable
             ? plus >= MAX_PLUS
               ? `Your weapon is already +${MAX_PLUS}.`
-              : `Your weapon is +${plus}. Next level: ${cost.coins} Gold Coins and ${cost.ingots} Adamantite Ingot(s).`
-            : "You are not holding a weapon that can be reinforced.")
+              : `Your weapon is +${plus}; the next level costs ${cost.coins} Gold Coins and ${cost.ingots} Adamantite Ingot(s).`
+            : "You are not holding a weapon that can be worked.") +
+          `\n\n§eRunes§r: a weapon bears one rune at a time, and a new one replaces the old. ` +
+          (rune ? `Your weapon bears the ${RUNES[rune].name}.` : "Your weapon bears no rune.") +
+          "\n" +
+          Object.values(RUNES).map((r) => `${r.name}: ${r.help}`).join("\n")
       )
-      .button("Reinforce")
-      .button("Close");
+      .button("Reinforce");
+    for (const key of owned) form.button(`Inscribe the ${RUNES[key].name}`);
+    form.button("Close");
     form
       .show(player)
       .then((response) => {
-        if (response.canceled || response.selection !== 0 || !player.isValid) return;
-        notify(player, reinforce(player));
+        if (response.canceled || response.selection === undefined || !player.isValid) return;
+        if (response.selection === 0) notify(player, reinforce(player));
+        else if (response.selection <= owned.length) notify(player, inscribe(player, owned[response.selection - 1]));
       })
       .catch(() => {});
   }

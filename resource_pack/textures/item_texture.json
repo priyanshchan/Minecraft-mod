@@ -17,6 +17,9 @@
     "overlord_aura_whip": {
       "textures": "textures/items/overlord/aura_whip"
     },
+    "overlord_avarice_and_generosity": {
+      "textures": "textures/items/overlord/avarice_and_generosity"
+    },
     "overlord_basilisk_eye": {
       "textures": "textures/items/overlord/basilisk_eye"
     },
@@ -104,6 +107,9 @@
     "overlord_demon_heart": {
       "textures": "textures/items/overlord/demon_heart"
     },
+    "overlord_depiction_of_nature": {
+      "textures": "textures/items/overlord/depiction_of_nature"
+    },
     "overlord_dragon_bone": {
       "textures": "textures/items/overlord/dragon_bone"
     },
@@ -137,14 +143,23 @@
     "overlord_egg_archer": {
       "textures": "textures/items/overlord/egg_archer"
     },
+    "overlord_egg_arena_master": {
+      "textures": "textures/items/overlord/egg_arena_master"
+    },
     "overlord_egg_aura": {
       "textures": "textures/items/overlord/egg_aura"
+    },
+    "overlord_egg_bafolk": {
+      "textures": "textures/items/overlord/egg_bafolk"
     },
     "overlord_egg_bandit": {
       "textures": "textures/items/overlord/egg_bandit"
     },
     "overlord_egg_beastman": {
       "textures": "textures/items/overlord/egg_beastman"
+    },
+    "overlord_egg_behemoth": {
+      "textures": "textures/items/overlord/egg_behemoth"
     },
     "overlord_egg_brain": {
       "textures": "textures/items/overlord/egg_brain"
@@ -167,6 +182,9 @@
     "overlord_egg_death_knight": {
       "textures": "textures/items/overlord/egg_death_knight"
     },
+    "overlord_egg_decem": {
+      "textures": "textures/items/overlord/egg_decem"
+    },
     "overlord_egg_demiurge": {
       "textures": "textures/items/overlord/egg_demiurge"
     },
@@ -179,8 +197,14 @@
     "overlord_egg_eclair": {
       "textures": "textures/items/overlord/egg_eclair"
     },
+    "overlord_egg_eight_edge_assassin": {
+      "textures": "textures/items/overlord/egg_eight_edge_assassin"
+    },
     "overlord_egg_elder_lich": {
       "textures": "textures/items/overlord/egg_elder_lich"
+    },
+    "overlord_egg_elf_ranger": {
+      "textures": "textures/items/overlord/egg_elf_ranger"
     },
     "overlord_egg_enri": {
       "textures": "textures/items/overlord/egg_enri"
@@ -211,6 +235,9 @@
     },
     "overlord_egg_gigant_basilisk": {
       "textures": "textures/items/overlord/egg_gigant_basilisk"
+    },
+    "overlord_egg_go_gin": {
+      "textures": "textures/items/overlord/egg_go_gin"
     },
     "overlord_egg_goblin": {
       "textures": "textures/items/overlord/egg_goblin"
@@ -251,6 +278,9 @@
     "overlord_egg_nazarick_maid": {
       "textures": "textures/items/overlord/egg_nazarick_maid"
     },
+    "overlord_egg_neia": {
+      "textures": "textures/items/overlord/egg_neia"
+    },
     "overlord_egg_nfirea": {
       "textures": "textures/items/overlord/egg_nfirea"
     },
@@ -263,11 +293,23 @@
     "overlord_egg_old_guarder": {
       "textures": "textures/items/overlord/egg_old_guarder"
     },
+    "overlord_egg_paladin": {
+      "textures": "textures/items/overlord/egg_paladin"
+    },
     "overlord_egg_pandoras_actor": {
       "textures": "textures/items/overlord/egg_pandoras_actor"
     },
+    "overlord_egg_platinum_dragon_lord": {
+      "textures": "textures/items/overlord/egg_platinum_dragon_lord"
+    },
     "overlord_egg_quagoa": {
       "textures": "textures/items/overlord/egg_quagoa"
+    },
+    "overlord_egg_remedios": {
+      "textures": "textures/items/overlord/egg_remedios"
+    },
+    "overlord_egg_rubedo": {
+      "textures": "textures/items/overlord/egg_rubedo"
     },
     "overlord_egg_sebas": {
       "textures": "textures/items/overlord/egg_sebas"
@@ -313,6 +355,9 @@
     },
     "overlord_egg_zesshi": {
       "textures": "textures/items/overlord/egg_zesshi"
+    },
+    "overlord_elf_kings_staff": {
+      "textures": "textures/items/overlord/elf_kings_staff"
     },
     "overlord_fang_dagger": {
       "textures": "textures/items/overlord/fang_dagger"
@@ -374,6 +419,9 @@
     "overlord_kilineyram": {
       "textures": "textures/items/overlord/kilineyram"
     },
+    "overlord_longinus": {
+      "textures": "textures/items/overlord/longinus"
+    },
     "overlord_magic_rifle": {
       "textures": "textures/items/overlord/magic_rifle"
     },
@@ -383,11 +431,29 @@
     "overlord_maid_bell": {
       "textures": "textures/items/overlord/maid_bell"
     },
+    "overlord_martial_lord_club": {
+      "textures": "textures/items/overlord/martial_lord_club"
+    },
     "overlord_mask_of_envy": {
       "textures": "textures/items/overlord/mask_of_envy"
     },
     "overlord_orb_of_death": {
       "textures": "textures/items/overlord/orb_of_death"
+    },
+    "overlord_platinum_boots": {
+      "textures": "textures/items/overlord/platinum_boots"
+    },
+    "overlord_platinum_chestplate": {
+      "textures": "textures/items/overlord/platinum_chestplate"
+    },
+    "overlord_platinum_helmet": {
+      "textures": "textures/items/overlord/platinum_helmet"
+    },
+    "overlord_platinum_leggings": {
+      "textures": "textures/items/overlord/platinum_leggings"
+    },
+    "overlord_platinum_scale": {
+      "textures": "textures/items/overlord/platinum_scale"
     },
     "overlord_pleiades_emblem": {
       "textures": "textures/items/overlord/pleiades_emblem"
@@ -430,6 +496,18 @@
     },
     "overlord_ring_of_sustenance": {
       "textures": "textures/items/overlord/ring_of_sustenance"
+    },
+    "overlord_rune_of_fire": {
+      "textures": "textures/items/overlord/rune_of_fire"
+    },
+    "overlord_rune_of_frost": {
+      "textures": "textures/items/overlord/rune_of_frost"
+    },
+    "overlord_rune_of_life": {
+      "textures": "textures/items/overlord/rune_of_life"
+    },
+    "overlord_rune_of_storm": {
+      "textures": "textures/items/overlord/rune_of_storm"
     },
     "overlord_runic_hammer": {
       "textures": "textures/items/overlord/runic_hammer"
@@ -488,6 +566,9 @@
     "overlord_sigil_of_dark_young": {
       "textures": "textures/items/overlord/sigil_of_dark_young"
     },
+    "overlord_sigil_of_decem": {
+      "textures": "textures/items/overlord/sigil_of_decem"
+    },
     "overlord_sigil_of_demiurge": {
       "textures": "textures/items/overlord/sigil_of_demiurge"
     },
@@ -520,6 +601,12 @@
     },
     "overlord_sigil_of_pandoras_actor": {
       "textures": "textures/items/overlord/sigil_of_pandoras_actor"
+    },
+    "overlord_sigil_of_platinum_dragon_lord": {
+      "textures": "textures/items/overlord/sigil_of_platinum_dragon_lord"
+    },
+    "overlord_sigil_of_rubedo": {
+      "textures": "textures/items/overlord/sigil_of_rubedo"
     },
     "overlord_sigil_of_sebas": {
       "textures": "textures/items/overlord/sigil_of_sebas"

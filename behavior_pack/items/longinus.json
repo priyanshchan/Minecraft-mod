@@ -1,0 +1,28 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:longinus",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_longinus"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.longinus.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "epic",
+      "minecraft:glint": true,
+      "minecraft:cooldown": {
+        "category": "overlord_scroll",
+        "duration": 1.5
+      }
+    }
+  }
+}

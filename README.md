@@ -72,6 +72,18 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 | **Beastman Warrior** | 50 | Pack raider of savanna, plains and badlands (from level 6); holds Beastman Warcamps | Beast Hide, Gold Coins |
 | **Lakyus** | 140 | Neutral leader of Blue Roses found in forests; hunts monsters | Gold |
 | **Enri Emmot** | 30 | Peaceful chief of Carne Village; sells food, arrows, potions and the Horn of the Goblin General | — |
+| **Rubedo** (boss bar) | 1500 | The strongest being in Nazarick; 30-damage blows and takes a fifth less from everything. Sigil only | Longinus (World Item), Guardian Crests |
+| **Platinum Dragon Lord** (boss bar) | 1200 | Volleys of lightning from range, 26-damage bite up close; resists lightning and ice. World boss from level 75 | Platinum Dragon Scales, Avarice and Generosity (World Item) |
+| **Decem Hougan** (boss bar) | 700 | The Elf King; calls a Primal Earth Elemental to his side. World boss from level 50 | Staff of the Elf King, Guardian Crests |
+| **Go Gin the Martial Lord** (boss bar) | 450 | Troll champion of the Imperial Arena; the last round at the top tier | Martial Lord's Club, a Guardian Crest |
+| **Primal Earth Elemental** | 260 | Slow, heavy-hitting elemental; summoned by Decem, by his staff, and a world boss below level 50 | Stone, Gold Coins |
+| **Eight-Edge Assassin** | 90 | Nazarick's ambusher (from level 25): arrives invisible, leaps, weak to holy | Soul Fragments, Data Crystals |
+| **Bafolk Raider** | 60 | Goat-headed raider of hills, savanna and badlands (from level 10); holds Bafolk Raid Camps | Beast Hide, Gold Coins |
+| **Remedios Custodio** | 160 | Neutral paladin captain found at Holy Kingdom Forts; hunts monsters | Gold |
+| **Neia Baraja** | 90 | Neutral archer of the Holy Kingdom; found in plains and at the Forts; shoots monsters and demons | Arrows |
+| **Holy Kingdom Paladin** | 50 | Neutral soldier garrisoning the Forts; fights monsters and demons | Iron |
+| **Elf Ranger** | 36 | Neutral archer of the forests and Elven Groves; fights monsters and the Theocracy | Arrows |
+| **Arena Master** | 40 | Runs the Imperial Arena; cannot be hurt. Speak to him to fight | — |
 | **Evil Lord Wrath** (boss bar) | 650 | Demon lord at Demon Gates; hurls fireballs from range, then closes in with burning claws; immune to fire, weak to ice | Demon Heart, Hellfire Blade, Guardian Crests |
 | **Zesshi Zetsumei** (boss bar) | 600 | The Black Scripture's strongest; 18-damage scythe and takes 30% less damage from everything | Charon's Guidance, Guardian Crests |
 | **Dominion Authority** (boss bar) | 500 | Highest angel; smites with lightning from afar; nearly immune to holy magic, weak to dark | Angel Feathers, Guardian Crests |
@@ -161,6 +173,13 @@ Every mob has its own spawn egg.
 | **Bone Dragon armour** | Made from Dragon Bones in the usual shapes (netherite-level). Full set: 35% of magic, fire, lightning, explosion and wither damage is turned aside |
 | **Beast Hide armour** | Mid-level armour made from Beast Hide in the usual shapes. Full set: Haste, and you never go hungry |
 | Dragon Bone, Beast Hide | Crafting materials from the Skeletal Dragon and from beastmen and basilisks |
+| **Runes** (Fire, Frost, Storm, Life) | Inscribed on a weapon by a Dwarf Runesmith — see *Runes* below. Four Data Crystals around blaze powder, packed ice, a copper ingot or a golden apple; the runesmith also sells them |
+| **Martial Lord's Club** | 14 damage. Use: *Roar* — strikes and weakens everything within 6 blocks and gives you Strength II for 8 seconds. Dropped by Go Gin |
+| **Staff of the Elf King** | Use: calls a Primal Earth Elemental to fight for you for 2 minutes (60 s cooldown, 40 mana). Dropped by Decem |
+| **Platinum armour** | Made from Platinum Dragon Scales in the usual shapes (netherite-level). Full set: Resistance II and Regeneration |
+| **Avarice and Generosity** (World Item) | While carried, hoards a tenth of every kill's XP on top of what the kill gives (up to 20,000). Use to receive it all. Dropped by the Platinum Dragon Lord |
+| **Depiction of Nature and Society** (World Item) | Use: every lesser monster within 8 blocks is sealed away — no loot, no XP (5 minute recharge; bosses are unaffected). The Emperor's prize for felling the Martial Lord |
+| **Longinus** (World Item) | Single use: erases the foe you are looking at, whatever it is, and costs you three levels. Dropped by Rubedo |
 | Angel Feather, Demon Heart, Blessed Cloth | Crafting materials from angels, Evil Lord Wrath and Scripture priests |
 | **Tome: Create Undead** | Summons a Death Knight that follows and defends you for 5 minutes (max. 3) |
 | **Minor Healing Potion** | Drink for instant health and regeneration |
@@ -205,9 +224,9 @@ character menu.
   Sword Saint (+30% melee, +4 hearts, Fortress adds Strength), High Wizard (+45% spell power, Mana Surge adds
   Regeneration), Master Assassin (35% critical hits, 10-second Shadow Step), High Priest (double regeneration,
   +45% against undead, Sanctuary reaches 12 blocks and heals your companions).
-- **Guild quests:** 49 requests, one at a time, paying Gold Coins and XP. Most are kill requests; six ask for
+- **Guild quests:** 56 requests, one at a time, paying Gold Coins and XP. Most are kill requests; seven ask for
   deeds instead — discovering sites, clearing hostile camps, finishing daily bounties, winning a Tomb Raid,
-  slaying elites and defeating a world boss. Completed quests raise your adventurer rank — Copper, Iron,
+  winning in the arena, slaying elites and defeating a world boss. Completed quests raise your adventurer rank — Copper, Iron,
   Silver, Gold, Platinum, Mithril, Orichalcum, Adamantite — which unlocks harder requests, up to defeating
   Ainz Ooal Gown.
 - **Mana font:** standing on a Block of Data Crystal triples your mana recovery.
@@ -282,25 +301,48 @@ sticks in a flag shape).
 - **Elite mobs:** about one levelled monster in twenty spawns as an elite — five levels higher, with 10 extra
   hearts, more damage and Resistance. Elites are marked in the target readout, give triple XP and drop Gold
   Coins and a Data Crystal.
-- **Titles:** sixteen titles are earned through deeds (Goblin Slayer, Undead Bane, Demon Hunter, World's Shield,
-  Elite Hunter, Bounty Hunter, Commander, Sworn Lord, Archmage, Grandmaster, Giant Killer, Dragon Slayer,
+- **Titles:** seventeen titles are earned through deeds (Goblin Slayer, Undead Bane, Demon Hunter, World's Shield,
+  Elite Hunter, Bounty Hunter, Commander, Sworn Lord, Archmage, Grandmaster, Martial Lord, Giant Killer, Dragon Slayer,
   Demon Emperor's Bane, Guardian's Bane, Adamantite Adventurer, Rival of the Sorcerer King). Each pays 10 Gold Coins when earned, and one can be worn in front of your name.
 
 All three are reached from the Adventurer's Plate menu.
+
+### Runes, the arena and World Items
+
+- **Runes:** stand near a Dwarf Runesmith with a weapon in your hand and a rune in your inventory, and choose
+  *Forge* in the plate menu. A weapon bears one rune at a time, written on the item beside any reinforcement;
+  a new rune replaces the old one. Runes work on every melee blow:
+
+  | Rune | Effect |
+  | --- | --- |
+  | Fire | Sets the target alight |
+  | Frost | Slows the target |
+  | Storm | A second jolt of 4 lightning damage a moment after each blow |
+  | Life | Heals you for 8% of the damage dealt |
+
+- **Imperial Arena:** speak to the Arena Master at an Imperial Arena to fight five rounds on the sand. The
+  next champions come only when the sand is clear; falling, walking more than 32 blocks away or taking longer
+  than two and a half minutes over a round forfeits. The tier follows your level (1–19, 20–49, 50+) and pays
+  20, 45 or 90 Gold Coins and 500, 1800 or 5000 XP. At the top tier the fourth round is Zero and the last is
+  Go Gin, the Martial Lord; felling him also earns a Guardian Crest and, the first time, a World Item.
+- **World Items:** three relics for the end of the game — Avarice and Generosity, the Depiction of Nature and
+  Society and Longinus (see the item table).
 
 ### World bosses, reinforcing and travel
 
 - **World bosses:** once an in-game day there is a 30% chance that a boss appears 36 blocks from a random
   overworld player of level 25 or higher, and every player is told who it is and in which direction. Below
-  level 50 it is Gargantua, Dominion Authority, Evil Lord Wrath or the Skeletal Dragon; from level 50 the
-  Frost Dragon, Evil Lord Wrath, Zesshi, the Dark Young or Jaldabaoth; from level 75 a Floor Guardian
-  (Cocytus, Shalltear, Albedo, Demiurge or Sebas), the Dark Young or Jaldabaoth. Every player within 64 blocks when it dies receives 30 Gold Coins, 6 Data Crystals and
+  level 50 it is Gargantua, Dominion Authority, Evil Lord Wrath, the Skeletal Dragon or a Primal Earth
+  Elemental; from level 50 the Frost Dragon, Evil Lord Wrath, Zesshi, the Dark Young, Jaldabaoth or Decem
+  Hougan; from level 75 a Floor Guardian (Cocytus, Shalltear, Albedo, Demiurge or Sebas), the Dark Young,
+  Jaldabaoth or the Platinum Dragon Lord. Every player within 64 blocks when it dies receives 30 Gold Coins, 6 Data Crystals and
   1500 XP on top of its normal drops.
 - **Reinforcing weapons:** stand within 10 blocks of a Dwarf Runesmith, hold one of the add-on's weapons and
   choose *Reinforce weapon* in the plate menu. Each level adds 6% melee damage, up to +5, and is written on
   the item. Level *n* costs 15 × *n* Gold Coins and *n* Adamantite Ingots (75 coins and 5 ingots for +5).
 - **Travel:** friendly sites you have visited (Adventurers' Camps, Kingdom Army Camps, Empire Outposts,
-  Dwarven Forges and Lizardman Villages) are remembered — the latest 24. The *Travel* entry in the plate menu
+  Dwarven Forges, Lizardman Villages, Carne Village, Imperial Arenas, Holy Kingdom Forts and Elven Groves) are
+  remembered — the latest 24. The *Travel* entry in the plate menu
   takes you back to one for 5 Gold Coins, within the overworld.
 
 ### Living world
@@ -310,7 +352,8 @@ All three are reached from the Adventurer's Plate menu.
   3% XP. The level shows next to the mob's name when you hit it. Bosses keep their own numbers.
 - **Level-gated spawns:** dangerous mobs only appear once someone nearby is strong enough — Skeleton Mage 3,
   Ogre 4, Elder Lich 5, Beastman 6, Death Knight 8, Shadow Demon 8, Clementine 10, Scripture Priest 10,
-  Hellhound 12, Soul Eater 12, Frost Giant 14, Gigant Basilisk 15, Fluder 15. Raids, patrols, summons and
+  Bafolk 10, Hellhound 12, Soul Eater 12, Frost Giant 14, Gigant Basilisk 15, Fluder 15, Eight-Edge
+  Assassin 25. Raids, patrols, summons and
   creative-mode spawning are not affected.
 - **Night patrols:** from level 5, each night has a 35% chance that Nazarick sends a patrol towards you. Its
   make-up follows your level (5+, 20+, 50+).
@@ -341,6 +384,10 @@ sometimes tell you the same.
 | **Mausoleum of Nazarick** | Walled court of Nazarick brick with lamp pillars, a dais, a Block of Data Crystal and a rich chest | Old Guarders, Skeleton Mages and an Elder Lich; Lupusregina with Death Knights from level 20; Shalltear with her Vampire Brides from level 50 |
 | **Zurrernorn Shrine** | Bone altar between obsidian pillars, soul fires, chest | Skeleton Mages and Old Guarders; Khajiit from level 20; Khajiit and the Skeletal Dragon from level 50 |
 | **Beastman Warcamp** | Three hide tents inside a ring of stakes, chest | 4–6 Beastman Warriors; Gigant Basilisks at higher levels |
+| **Imperial Arena** | Ring wall of stone brick around a sand floor, red banners, chest | The Arena Master and 2–4 Imperial Knights; can be travelled to |
+| **Holy Kingdom Fort** | Walled yard with corner lanterns, two tents, chest | 4–6 Paladins and Neia Baraja; Remedios from level 20; can be travelled to |
+| **Elven Grove** | Lantern-topped log pillars on moss, two tents, chest | 4–6 Elf Rangers; can be travelled to |
+| **Bafolk Raid Camp** | Two hide tents, bone trophies, chest | 4–6 Bafolk Raiders; an Ogre or a War Troll at higher levels |
 | **Adventurers' Camp** | Tent, campfire, crafting table, supply chest | 3 Adventurers (can be hired) |
 | **Kingdom Army Camp** | Three tents, banners, training yard, supply chest | 4 Kingdom Soldiers, 2 Kingdom Archers |
 | **Empire Outpost** | Stone watchtower, low wall, banner, chest | 4–6 Imperial Knights |
@@ -470,7 +517,8 @@ himself. Clear every wave to earn Gold Coins, Data Crystals and XP (24/6/600, 48
    copper block (Narberal Gamma), gold block (Pandora's Actor), oak log (Aura), moss block (Mare), gunpowder (CZ2128 Delta), bone block (Lupusregina), string (Entoma),
    slime ball (Solution), iron ingot (Yuri), stone (Gargantua), blue ice (Frost Dragon), netherrack (Evil Lord Wrath),
    glowstone (Dominion Authority), block of quartz (Zesshi), soul sand (Skeletal Dragon), crying obsidian
-   (Dark Young), blaze rod (Jaldabaoth).
+   (Dark Young), blaze rod (Jaldabaoth), emerald (Decem Hougan), amethyst shard (Platinum Dragon Lord),
+   nether star (Rubedo).
 4. Defeat the guardians for their weapons and **Guardian Crests**.
 5. Craft the **Sigil of Ainz Ooal Gown** (4 crests in the corners, 4 data crystals on the edges, diamond block in the centre) and face the Overlord.
 
@@ -499,7 +547,9 @@ Infernal armour (matching Dark Warrior piece + Demon Heart + magma block, any ar
 Scripture Vestments (the usual armour shapes with Blessed Cloth),
 Angel's Mace (Angel Feather / gold block / stick in a column),
 Bone Dragon armour (the usual armour shapes with Dragon Bones), Beast Hide armour (the usual shapes with
-Beast Hide), Dragonbone Greatsword (two Dragon Bones above a stick).
+Beast Hide), Dragonbone Greatsword (two Dragon Bones above a stick),
+Platinum armour (the usual armour shapes with Platinum Dragon Scales),
+Runes (a Data Crystal above, below, left and right of blaze powder, packed ice, a copper ingot or a golden apple).
 
 ## Repository layout
 
@@ -516,7 +566,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement) and `mount.js` (Hamsuke) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement) `mount.js` (Hamsuke) and `arena.js` (Imperial Arena) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

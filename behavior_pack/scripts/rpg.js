@@ -28,7 +28,7 @@ const PARTY_SHARE = 0.5;
  *   quest: ActiveQuest | null,
  *   spells: string[], slots: string[], slot: number, casts: Record<string, number>,
  *   party: any[], stance: string, kills: Record<string, number>, rep: Record<string, number>,
- *   daily: object, title: string, titles: string[], sites: string[], supply: boolean,
+ *   daily: object, title: string, titles: string[], sites: string[], supply: boolean, bank: number,
  * }} Profile
  */
 
@@ -98,10 +98,12 @@ const QUESTS = [
   { key: "death_knights", title: "Knights of Death", target: id("death_knight"), what: "Death Knights", count: 5, coins: 20, xp: 350, rank: 2 },
   { key: "soul_eaters", title: "Devourers of Souls", target: id("soul_eater"), what: "Soul Eaters", count: 5, coins: 22, xp: 400, rank: 2 },
   { key: "ev_sites", title: "Chart the Wilds", target: "event:site", what: "sites discovered", count: 3, coins: 14, xp: 250, rank: 1 },
+  { key: "bafolk", title: "Horns in the Hills", target: id("bafolk"), what: "Bafolk Raiders", count: 8, coins: 16, xp: 280, rank: 1 },
   { key: "beastmen", title: "Raiders from the East", target: id("beastman"), what: "Beastman Warriors", count: 8, coins: 16, xp: 260, rank: 1 },
   { key: "shadow_demons", title: "Things in the Dark", target: id("shadow_demon"), what: "Shadow Demons", count: 8, coins: 16, xp: 260, rank: 1 },
   { key: "hellhounds", title: "Hounds of the Pit", target: id("hellhound"), what: "Hellhounds", count: 6, coins: 22, xp: 380, rank: 2 },
   { key: "priests", title: "The Sunlight Scripture", target: id("theocracy_priest"), what: "Sunlight Scripture Priests", count: 6, coins: 22, xp: 380, rank: 2 },
+  { key: "ev_arena", title: "Blood and Sand", target: "event:arena", what: "arena victory", count: 1, coins: 26, xp: 500, rank: 2 },
   { key: "ev_camps", title: "Clear the Roads", target: "event:camp", what: "hostile camps cleared", count: 2, coins: 24, xp: 450, rank: 2 },
   { key: "ev_bounty", title: "Guild Regular", target: "event:bounty", what: "daily bounties completed", count: 3, coins: 26, xp: 500, rank: 2 },
   { key: "frost_giants", title: "Giants of the North", target: id("frost_giant"), what: "Frost Giants", count: 4, coins: 24, xp: 420, rank: 2 },
@@ -115,6 +117,7 @@ const QUESTS = [
   { key: "yuri", title: "Captain of the Pleiades", target: id("yuri"), what: "Yuri Alpha", count: 1, coins: 36, xp: 800, rank: 4 },
   { key: "war_trolls", title: "Troll Hunt", target: id("war_troll"), what: "War Trolls", count: 3, coins: 36, xp: 800, rank: 3 },
   { key: "ev_raid", title: "Into the Tomb", target: "event:raid", what: "Tomb Raid cleared", count: 1, coins: 34, xp: 800, rank: 3 },
+  { key: "assassins", title: "Eight Blades in the Dark", target: id("eight_edge_assassin"), what: "Eight-Edge Assassins", count: 3, coins: 34, xp: 760, rank: 3 },
   { key: "ev_elite", title: "Cull the Strong", target: "event:elite", what: "elite monsters slain", count: 5, coins: 30, xp: 700, rank: 3 },
   { key: "basilisks", title: "The Stone Gaze", target: id("gigant_basilisk"), what: "Gigant Basilisks", count: 2, coins: 32, xp: 700, rank: 3 },
   { key: "khajiit", title: "The Orb of Death", target: id("khajiit"), what: "Khajiit Dale Badantel", count: 1, coins: 36, xp: 800, rank: 3 },
@@ -122,10 +125,14 @@ const QUESTS = [
   { key: "nigun", title: "Captain of the Scripture", target: id("nigun"), what: "Nigun Grid Luin", count: 1, coins: 36, xp: 800, rank: 3 },
   { key: "fluder", title: "The Triad Caster", target: id("fluder"), what: "Fluder Paradyne", count: 1, coins: 36, xp: 800, rank: 3 },
   { key: "gargantua", title: "The Stone Colossus", target: id("gargantua"), what: "Gargantua", count: 1, coins: 56, xp: 1500, rank: 5 },
+  { key: "go_gin", title: "The Martial Lord", target: id("go_gin"), what: "Go Gin (in the arena)", count: 1, coins: 50, xp: 1400, rank: 4 },
   { key: "ev_worldboss", title: "Shield of the Realm", target: "event:world_boss", what: "world boss defeated", count: 1, coins: 50, xp: 1500, rank: 4 },
   { key: "skeletal_dragon", title: "Bones over E-Rantel", target: id("skeletal_dragon"), what: "Skeletal Dragon", count: 1, coins: 54, xp: 1500, rank: 4 },
   { key: "dominion", title: "The Highest Angel", target: id("dominion_authority"), what: "Dominion Authority", count: 1, coins: 52, xp: 1400, rank: 4 },
   { key: "evil_lord", title: "Lord of Wrath", target: id("evil_lord_wrath"), what: "Evil Lord Wrath", count: 1, coins: 60, xp: 1800, rank: 5 },
+  { key: "decem", title: "The Elf King", target: id("decem"), what: "Decem Hougan", count: 1, coins: 60, xp: 1900, rank: 5 },
+  { key: "platinum", title: "The Platinum Dragon Lord", target: id("platinum_dragon_lord"), what: "Platinum Dragon Lord", count: 1, coins: 80, xp: 3000, rank: 6 },
+  { key: "rubedo", title: "The Strongest of Nazarick", target: id("rubedo"), what: "Rubedo", count: 1, coins: 90, xp: 3600, rank: 7 },
   { key: "dark_young", title: "The Black Goat's Young", target: id("dark_young"), what: "Dark Young", count: 1, coins: 62, xp: 2000, rank: 5 },
   { key: "jaldabaoth", title: "The Demon Emperor", target: id("jaldabaoth"), what: "Jaldabaoth", count: 1, coins: 70, xp: 2600, rank: 6 },
   { key: "zesshi", title: "Certain Death", target: id("zesshi"), what: "Zesshi Zetsumei", count: 1, coins: 64, xp: 2400, rank: 6 },
@@ -161,6 +168,11 @@ const KILL_XP = {
   [id("zero")]: 350,
   [id("dark_young")]: 1000,
   [id("jaldabaoth")]: 1200,
+  [id("go_gin")]: 500,
+  [id("decem")]: 900,
+  [id("behemoth")]: 180,
+  [id("platinum_dragon_lord")]: 1600,
+  [id("rubedo")]: 2000,
   [id("war_troll")]: 90,
   [id("fluder")]: 250,
   [id("evileye")]: 250,
@@ -218,6 +230,13 @@ export const TIPS = {
   [id("beastman")]: "Beastmen hunt in packs - strike one and the rest come running.",
   [id("zero")]: "Zero's fists are faster than most blades. Do not stand still in front of him.",
   [id("dark_young")]: "A Dark Young tramples everything in its path. Keep moving and never fight it alone.",
+  [id("go_gin")]: "Go Gin shrugs off small wounds. Fire and heavy, steady blows wear the Martial Lord down.",
+  [id("decem")]: "The Elf King calls a Primal Earth Elemental to his side. Kill the king and it has no master.",
+  [id("behemoth")]: "A Primal Earth Elemental is slow. Stay out of reach and it can do nothing.",
+  [id("bafolk")]: "Bafolk raid in bands - one cry brings the rest.",
+  [id("eight_edge_assassin")]: "Eight-Edge Assassins strike from hiding. Holy magic hurts them most.",
+  [id("platinum_dragon_lord")]: "The Platinum Dragon Lord hurls lightning from range and shrugs off lightning and ice. Darkness wounds it.",
+  [id("rubedo")]: "Rubedo is the strongest being in Nazarick and takes a fifth less from everything. Bring everything you have.",
   [id("jaldabaoth")]: "Jaldabaoth rains fire from afar and tears with his claws up close. Ice wounds him; fire does nothing.",
   [id("ainz")]: "Ainz raises Death Knights and withers what he touches. Holy magic bites deepest.",
   "minecraft:zombie": "Zombies burn in daylight. Holy magic hurts all undead.",
@@ -304,7 +323,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0 };
 }
 
 /**
@@ -544,6 +563,19 @@ export function grantXp(player, amount, reason) {
   } else {
     notify(player, `§a+${Math.round(amount)} XP${reason ? ` §7(${reason})` : ""}`);
   }
+}
+
+/**
+ * Takes levels from the player (the price of Longinus). Stat points already spent are kept.
+ * @param {import("@minecraft/server").Player} player
+ * @param {number} count
+ */
+export function loseLevels(player, count) {
+  const p = profileOf(player);
+  p.level = Math.max(1, p.level - count);
+  p.xp = 0;
+  touch(player);
+  updateLevelTag(player);
 }
 
 /**
@@ -1113,6 +1145,9 @@ function openHelp(player) {
         "§eScrolls and tomes§r: using a scroll or tome of a spell you know counts towards its mastery, and reading a tome teaches you its spell for free once your level allows.\n\n" +
         "§eMana font§r: stand on a Block of Data Crystal and your mana returns three times as fast.\n\n" +
         "§eGuild deeds§r: some requests ask for deeds instead of kills - discovering sites, clearing camps, finishing bounties, winning a Tomb Raid, slaying elites or a world boss.\n\n" +
+        "§eRunes§r: a Dwarf Runesmith can inscribe one rune on a weapon - Fire (burns), Frost (slows), Storm (a second jolt) or Life (heals you). Runes are crafted from Data Crystals or bought from the runesmith.\n\n" +
+        "§eArena§r: speak to the Arena Master at an Imperial Arena to fight five rounds for coins and XP. At level 50 the last round is Go Gin, the Martial Lord.\n\n" +
+        "§eWorld Items§r: three relics dropped by the greatest foes - Avarice and Generosity banks a tenth of your kill XP, the Depiction of Nature and Society banishes lesser monsters, and Longinus erases one foe at the cost of three of your levels.\n\n" +
         "§eWorld bosses§r: some mornings a great foe appears near a strong adventurer and the whole world is told. Everyone nearby when it falls is rewarded.\n\n" +
         "§eReinforcing§r: stand near a Dwarf Runesmith and choose Reinforce weapon to raise the weapon in your hand up to +5 (6% melee damage each) for Gold Coins and adamantite.\n\n" +
         "§eTravel§r: friendly camps you have discovered can be returned to from the Travel entry for 5 Gold Coins.\n\n" +

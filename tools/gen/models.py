@@ -2979,6 +2979,64 @@ def jaldabaoth():
     return m
 
 
+
+# ------------------------------------------------ v6.0: arena, elves, paladins
+def go_gin():
+    return _brute("go_gin", "#8a9a6a", "#aabb88", "#5a6a44")
+
+
+def elf_ranger():
+    return _soldier("elf_ranger", "#f2dcc4", "#e9e2a8", "#3f6a45", "#5f8f66", "#2a4a2f", "#7a6a45", "#55482f",
+                    helmet=False, weapon_kind="bow")
+
+
+def decem():
+    return _soldier("decem", "#e8d2bc", "#f4f3f5", "#2f5a3a", "#4a8055", "#1c3a24", "#d9a92b", "#96701a",
+                    helmet=False, weapon_kind="staff", orb="#63ff6b")
+
+
+def behemoth():
+    return _brute("behemoth", "#7a6a55", "#9a8a72", "#4f4436")
+
+
+def neia():
+    return _soldier("neia", "#f0d2b8", "#d9c05a", "#6a5238", "#8a6e4c", "#463522", "#3f4a5a", "#2a323f",
+                    helmet=False, weapon_kind="bow")
+
+
+def remedios():
+    return _soldier("remedios", "#f0d2b8", "#5a3a1f", "#e9edf2", "#ffffff", "#aab2c0", "#b03030", "#7a1f1f",
+                    helmet=False, weapon_kind="sword")
+
+
+def paladin():
+    return _soldier("paladin", "#e0b48c", "#3a2a1f", "#d9dde6", "#f4f6fa", "#9aa2b0", "#f4f1ea", "#c9c3b5",
+                    helmet=True, weapon_kind="sword")
+
+
+def bafolk():
+    return _lizard("bafolk", "#8a7a66", "#a89880", "#5a4e40", "#d6cfb6", ("#6b4a32", "#8a6a4a"))
+
+
+def eight_edge_assassin():
+    return _beast("eight_edge_assassin", "#15131a", "#2a2633", "#d4202a", "#3a3a44", "#22222a")
+
+
+def arena_master():
+    return _soldier("arena_master", "#d6a57e", "#2a2a2a", "#a8262a", "#c93a3a", "#6e1f1c", "#d9a92b", "#96701a",
+                    helmet=False, weapon_kind="none")
+
+
+def platinum_dragon_lord():
+    return frost_dragon("platinum_dragon_lord", "#d9dde6", "#ffffff", "#9aa2b0", "#b8bcc8", eye="#59d0ff")
+
+
+def rubedo():
+    m, _head, _body, _pal = _pleiades("rubedo", "#f6e2d4", "#c2171d", "#7a1016", "#e0202c", dress="#f4f1ea",
+                                      accent="#c2171d", bun=False)
+    return m
+
+
 ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_lich, hamsuke,
        narberal, pandoras_actor, old_guarder, aura, mare, gazef, clementine, nazarick_maid,
        brain, zaryusu, cz_delta, nfirea,
@@ -2989,4 +3047,6 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        hellhound, shadow_demon, evil_lord_wrath, archangel_flame, dominion_authority, theocracy_priest, nigun,
        climb, zesshi, eclair,
        skeletal_dragon, khajiit, gigant_basilisk, frost_giant, beastman, lakyus, enri, zero, dark_young, jaldabaoth,
+       go_gin, elf_ranger, decem, behemoth, neia, remedios, paladin, bafolk, eight_edge_assassin, arena_master,
+       platinum_dragon_lord, rubedo,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

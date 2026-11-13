@@ -4,7 +4,7 @@
       "total_exp_required": 0,
       "groups": [
         {
-          "num_to_select": 11,
+          "num_to_select": 15,
           "trades": [
             {
               "wants": [
@@ -170,6 +170,66 @@
                 }
               ],
               "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 26
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:rune_of_fire",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 4
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 26
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:rune_of_frost",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 4
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 26
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:rune_of_storm",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 4
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 32
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:rune_of_life",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 4
             }
           ]
         }
