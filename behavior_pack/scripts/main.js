@@ -9,8 +9,14 @@ import {
   GameMode,
 } from "@minecraft/server";
 import {
+  creditedPlayer,
   grantLevel,
+  grantXp,
+  killXp,
+  loseLevels,
   notify,
+  profileOf,
+  touch,
   openMenu,
   resetStats,
   restoreMana,
@@ -20,13 +26,14 @@ import {
   useClassSkill,
 } from "./rpg.js";
 import { startRaid } from "./raid.js";
-import { MAX_ALLIES, castSelected, creditCast, cycleSpell, openGrimoire, studyTome, summonAlly } from "./spells.js";
+import { MAX_ALLIES, castSelected, countItem, creditCast, cycleSpell, openGrimoire, studyTome, summonAlly } from "./spells.js";
 import * as fx from "./vfx.js";
 import "./director.js";
 import "./structures.js";
 import { cycleStance, openParty, orderUnison } from "./party.js";
 import "./guild.js";
-import "./forge.js";
+import { runeOf } from "./forge.js";
+import "./arena.js";
 import "./mount.js";
 
 const NS = "overlord";
@@ -61,6 +68,9 @@ const SIGILS = {
   [id("sigil_of_skeletal_dragon")]: id("skeletal_dragon"),
   [id("sigil_of_dark_young")]: id("dark_young"),
   [id("sigil_of_jaldabaoth")]: id("jaldabaoth"),
+  [id("sigil_of_decem")]: id("decem"),
+  [id("sigil_of_platinum_dragon_lord")]: id("platinum_dragon_lord"),
+  [id("sigil_of_rubedo")]: id("rubedo"),
 };
 
 /** @type {[EquipmentSlot, string][]} */
@@ -115,6 +125,10 @@ const FLOURISH = {
   overlord_orb: ["dark", 6, "summon"],
   overlord_quake: ["ice", 5, "smash"],
   overlord_flurry: ["none", 4, "slash"],
+  overlord_roar: ["none", 6, "smash"],
+  overlord_elemental: ["acid", 7, "summon"],
+  overlord_depiction: ["acid", 9, "raise"],
+  overlord_avarice: ["holy", 3, "self"],
 };
 
 /** Own cooldown bookkeeping: `${playerId}|${category}` -> tick when usable again. */
@@ -1064,6 +1078,130 @@ function usePetrify(player) {
   actionBar(player, count > 0 ? `§aThe basilisk's gaze turns ${count} to stone for a moment` : "§aThe eye finds nothing to petrify");
 }
 
+/** Martial Lord's Club: Roar - a blow that staggers everything near and fills the wielder with strength. @param {import("@minecraft/server").Player} player */
+function castRoar(player) {
+  if (!tryCooldown(player, "overlord_roar", 12.0, 20)) return;
+  let count = 0;
+  for (const foe of foesNear(player.dimension, player.location, 6)) {
+    try {
+      foe.applyDamage(Math.round(16 * spellPower(player)), { cause: EntityDamageCause.entityAttack, damagingEntity: player });
+      if (foe.isValid) foe.addEffect("weakness", 6 * TICKS, { amplifier: 1 });
+      count++;
+    } catch {
+      // already dead
+    }
+  }
+  player.addEffect("strength", 8 * TICKS, { amplifier: 1 });
+  fx.ring(player.dimension, player.location, "none", 6);
+  fx.shake(player.dimension, player.location, 12, 0.5, 0.4);
+  playSound(player.dimension, "mob.ravager.roar", player.location, 0.8);
+  actionBar(player, count > 0 ? `§6The Martial Lord's roar staggers ${count}!` : "§6The Martial Lord's roar!");
+}
+
+/** Staff of the Elf King: calls a Primal Earth Elemental to fight for the bearer. @param {import("@minecraft/server").Player} player */
+function callElemental(player) {
+  let present = 0;
+  try {
+    present = player.dimension.getEntities({ tags: [`overlord_ally_${player.id}`] }).length;
+  } catch {
+    // dimension unloading
+  }
+  if (present >= MAX_ALLIES) {
+    actionBar(player, "§7You already command as many summoned creatures as you can");
+    return;
+  }
+  if (!tryCooldown(player, "overlord_elemental", 60.0, 40)) return;
+  summonAlly(player, id("behemoth"), 1);
+  fx.shake(player.dimension, player.location, 10, 0.4, 0.5);
+  playSound(player.dimension, "random.anvil_land", player.location, 0.5);
+  actionBar(player, "§aThe earth rises: a Primal Earth Elemental answers the staff");
+}
+
+/** World Item - Depiction of Nature and Society: lesser monsters nearby are sealed away in another world. @param {import("@minecraft/server").Player} player */
+function useDepiction(player) {
+  if (!tryCooldown(player, "overlord_depiction", 300.0)) return;
+  let count = 0;
+  for (const foe of foesNear(player.dimension, player.location, 8)) {
+    try {
+      const health = foe.getComponent("minecraft:health");
+      if (!health || health.effectiveMax >= 200 || foe.typeId === id("retainer")) continue; // the great are not so easily painted out
+      fx.implode(player.dimension, add(foe.location, { x: 0, y: 1, z: 0 }), "acid", 1.4);
+      foe.remove();
+      count++;
+    } catch {
+      // already gone
+    }
+  }
+  fx.circle(player.dimension, player.location, "acid", 8);
+  fx.ring(player.dimension, player.location, "acid", 8);
+  fx.wash(player, { red: 0.1, green: 0.35, blue: 0.15 }, 0.5);
+  playSound(player.dimension, "beacon.activate", player.location, 0.6);
+  actionBar(player, count > 0 ? `§aThe painted world closes over ${count} of your foes` : "§aThe scroll finds nothing it can seal away");
+}
+
+const AVARICE_CAP = 20000;
+
+/** World Item - Avarice and Generosity: releases the experience the gauntlets have hoarded. @param {import("@minecraft/server").Player} player */
+function useAvarice(player) {
+  if (!tryCooldown(player, "overlord_avarice", 5.0)) return;
+  const p = profileOf(player);
+  if (p.bank <= 0) {
+    actionBar(player, "§7The gauntlets are empty - carry them while you fight and they hoard a tenth of your kill XP");
+    return;
+  }
+  const stored = p.bank;
+  p.bank = 0;
+  touch(player);
+  fx.spiral(player.dimension, () => (player.isValid ? player.location : undefined), "holy", 1.0, 2.4);
+  playSound(player.dimension, "random.levelup", player.location, 1.2);
+  grantXp(player, stored, "Avarice and Generosity");
+  player.sendMessage(`§6[World Item] §fAvarice and Generosity returns §a${stored} XP§f.`);
+}
+
+// While the gauntlets are carried they hoard a tenth of every kill's XP, on top of what the kill itself gives.
+world.afterEvents.entityDie.subscribe((event) => {
+  try {
+    const player = creditedPlayer(event.damageSource.damagingEntity);
+    if (!player || event.deadEntity.typeId === "minecraft:player") return;
+    if (countItem(player, id("avarice_and_generosity")) === 0) return;
+    const p = profileOf(player);
+    if (p.bank >= AVARICE_CAP) return;
+    p.bank = Math.min(AVARICE_CAP, p.bank + Math.max(1, Math.round(killXp(event.deadEntity) * 0.1)));
+    touch(player);
+  } catch {
+    // killer or victim is gone
+  }
+});
+
+/** World Item - Longinus: erases one foe, whatever it is, at the price of three of the wielder's levels. @param {import("@minecraft/server").Player} player */
+function useLonginus(player) {
+  const target = player
+    .getEntitiesFromViewDirection({ maxDistance: 24 })
+    .map((h) => h.entity)
+    .find((e) => e.isValid && e.typeId !== "minecraft:player" && e.typeId !== id("retainer") && e.getComponent("minecraft:health"));
+  if (!target) {
+    actionBar(player, "§7Longinus: no foe in sight");
+    return;
+  }
+  if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "holy")) return;
+  const at = add(target.location, { x: 0, y: 1, z: 0 });
+  fx.beam(player.dimension, fx.handOf(player), at, "holy", 2.4);
+  fx.pillar(player.dimension, target.location, "holy", 12, 2.4);
+  fx.nova(player.dimension, at, "holy", 6);
+  fx.shake(player.dimension, at, 24, 1.0, 0.6);
+  fx.wash(player, { red: 1, green: 1, blue: 1 }, 0.5);
+  playSound(player.dimension, "ambient.weather.thunder", at, 1.2);
+  try {
+    const health = target.getComponent("minecraft:health");
+    target.applyDamage((health?.effectiveMax ?? 1000) * 10 + 1000, { cause: EntityDamageCause.magic, damagingEntity: player });
+  } catch {
+    // already gone
+  }
+  consumeHeldItem(player);
+  loseLevels(player, 3);
+  player.sendMessage("§6[World Item] §fLonginus erases its target - and takes §cthree of your levels§f with it. The spear is spent.");
+}
+
 /** Kilineyram: Dark Blade Mega Impact - a burst of darkness around the wielder. @param {import("@minecraft/server").Player} player */
 function castDarkBlade(player) {
   if (!tryCooldown(player, "overlord_kilineyram", 10.0, 30)) return;
@@ -1358,6 +1496,16 @@ world.afterEvents.itemUse.subscribe((event) => {
       castFlurry(player);
     } else if (item === id("basilisk_eye")) {
       usePetrify(player);
+    } else if (item === id("martial_lord_club")) {
+      castRoar(player);
+    } else if (item === id("elf_kings_staff")) {
+      callElemental(player);
+    } else if (item === id("depiction_of_nature")) {
+      useDepiction(player);
+    } else if (item === id("avarice_and_generosity")) {
+      useAvarice(player);
+    } else if (item === id("longinus")) {
+      useLonginus(player);
     } else if (item === id("frost_pain")) {
       castIcyBurst(player);
     } else if (item === id("brain_katana")) {
@@ -1422,6 +1570,24 @@ world.afterEvents.entityHurt.subscribe((event) => {
     }
     if (attacker.typeId !== "minecraft:player") return;
     const held = heldItemId(/** @type {import("@minecraft/server").Player} */ (attacker));
+    // A rune inscribed by a runesmith works on every melee blow, whatever the weapon.
+    const rune = runeOf(attacker.getComponent("minecraft:equippable")?.getEquipment(EquipmentSlot.Mainhand));
+    if (rune && victim.isValid && event.damageSource.cause === EntityDamageCause.entityAttack) {
+      if (rune === "fire") victim.setOnFire(4, true);
+      else if (rune === "frost") victim.addEffect("slowness", 3 * TICKS, { amplifier: 1 });
+      else if (rune === "life") heal(attacker, Math.max(1, event.damage * 0.08));
+      else {
+        system.runTimeout(() => {
+          try {
+            if (!victim.isValid || !attacker.isValid) return;
+            victim.applyDamage(4, { cause: EntityDamageCause.magic, damagingEntity: attacker });
+            fx.spark(victim.dimension, add(victim.location, { x: 0, y: 1, z: 0 }), "lightning", 0.7);
+          } catch {
+            // target is gone
+          }
+        }, 11);
+      }
+    }
     if (held === id("spuit_lance")) {
       heal(attacker, Math.max(1, event.damage * 0.25));
       if (victim.isValid) particle(victim.dimension, "minecraft:heart_particle", add(attacker.location, { x: 0, y: 2, z: 0 }));
@@ -1564,6 +1730,9 @@ system.runInterval(() => {
       } else if (wearsFullSet(gear, "infernal")) {
         player.addEffect("fire_resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("strength", 3 * TICKS, { amplifier: 0, showParticles: false });
+      } else if (wearsFullSet(gear, "platinum")) {
+        player.addEffect("resistance", 3 * TICKS, { amplifier: 1, showParticles: false });
+        player.addEffect("regeneration", 3 * TICKS, { amplifier: 0, showParticles: false });
       } else if (wearsFullSet(gear, "beasthide")) {
         player.addEffect("haste", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("saturation", 3 * TICKS, { amplifier: 0, showParticles: false }); // a hunter never goes hungry

@@ -417,6 +417,63 @@ export const SITES = [
           : [[id("beastman"), 6], [id("gigant_basilisk"), 2]],
   },
   {
+    key: "imperial_arena", name: "Imperial Arena", weight: 6, radius: 9, pad: mc("sand"),
+    build(b) {
+      for (let i = 0; i < 40; i++) { // the ring wall, with a gate to the south
+        const a = (i / 40) * Math.PI * 2;
+        const x = Math.round(Math.cos(a) * 8);
+        const z = Math.round(Math.sin(a) * 8);
+        if (Math.abs(x) <= 1 && z > 0) continue;
+        b.fill(x, 0, z, x, 1, z, mc("stone_bricks"));
+      }
+      for (const [x, z] of [[-6, -6], [6, -6], [-6, 6], [6, 6]]) b.flag(x, z, mc("red_wool"));
+      b.fill(-1, 0, -7, 1, 0, -7, mc("smooth_stone")); // the master's dais
+      b.chest(4, 0, -6, [[mc("bread"), 2, 5], [id("red_potion"), 1, 3], [mc("iron_ingot"), 1, 4], [id("yggdrasil_gold_coin"), 3, 8]]);
+    },
+    garrison: (tier) => [[id("arena_master"), 1], [id("imperial_knight"), 2 + tier]],
+  },
+  {
+    key: "paladin_fort", name: "Holy Kingdom Fort", weight: 6, radius: 8, pad: mc("cobblestone"),
+    build(b) {
+      b.walls(-7, 0, -7, 7, 2, 7, mc("stone_bricks"));
+      b.fill(-1, 0, 7, 1, 2, 7, mc("air")); // the gate
+      for (const [x, z] of [[-7, -7], [7, -7], [-7, 7], [7, 7]]) b.fill(x, 3, z, x, 3, z, mc("lantern"));
+      b.tent(-3, -4, mc("white_wool"));
+      b.tent(3, -4, mc("white_wool"));
+      b.flag(0, -6, mc("white_wool"));
+      b.campfire(0, 1);
+      b.chest(5, 0, 4, [[id("blessed_cloth"), 1, 3], [id("red_potion"), 1, 3], [mc("iron_ingot"), 2, 5], [id("yggdrasil_gold_coin"), 3, 8]]);
+    },
+    garrison: (tier) => (tier === 0 ? [[id("paladin"), 4], [id("neia"), 1]] : [[id("paladin"), 4 + tier], [id("neia"), 1], [id("remedios"), 1]]),
+  },
+  {
+    key: "elven_grove", name: "Elven Grove", weight: 6, radius: 7, pad: mc("moss_block"),
+    build(b) {
+      for (const [x, z] of [[-5, -5], [5, -5], [-5, 5], [5, 5], [0, -6]]) { // living pillars
+        b.fill(x, 0, z, x, 3, z, mc("oak_log"));
+        b.set(x, 4, z, mc("lantern"));
+      }
+      b.tent(-3, 0, mc("green_wool"));
+      b.tent(3, 0, mc("green_wool"));
+      b.campfire(0, -2);
+      b.chest(0, 0, 5, [[mc("arrow"), 4, 12], [mc("golden_apple"), 0, 1], [mc("emerald"), 1, 3], [id("yggdrasil_gold_coin"), 2, 6]]);
+    },
+    garrison: (tier) => [[id("elf_ranger"), 4 + tier]],
+  },
+  {
+    key: "bafolk_camp", name: "Bafolk Raid Camp", weight: 8, radius: 7, pad: mc("coarse_dirt"),
+    build(b) {
+      b.tent(-4, 1, mc("brown_wool"));
+      b.tent(4, 1, mc("brown_wool"));
+      for (const [x, z] of [[-6, -5], [6, -5], [0, -6]]) b.fill(x, 0, z, x, 1, z, mc("bone_block")); // trophies
+      b.flag(-6, 5, mc("brown_wool"));
+      b.campfire(0, -1);
+      b.chest(0, 0, 5, [[id("beast_hide"), 1, 4], [mc("leather"), 1, 3], [mc("iron_ingot"), 0, 3], [id("yggdrasil_gold_coin"), 3, 8]]);
+    },
+    garrison: (tier) =>
+      tier === 0 ? [[id("bafolk"), 4]] : tier === 1 ? [[id("bafolk"), 5], [id("ogre"), 1]] : [[id("bafolk"), 6], [id("war_troll"), 1]],
+  },
+  {
     key: "dwarven_forge", name: "Dwarven Forge", weight: 8, radius: 6, pad: mc("smooth_stone"),
     build(b) {
       b.walls(-3, 0, -3, 3, 3, 3, mc("deepslate_bricks"));
@@ -652,9 +709,10 @@ const manned = new Map();
 const sieges = new Map();
 /** Sites whose garrison is hostile: clearing them out is rewarded. */
 const HOSTILE_SITES = new Set(["goblin_camp", "bandit_camp", "nazarick_outpost", "troll_den", "dragon_hoard", "theocracy_camp", "demon_gate",
-  "graveyard", "great_tomb", "zurrernorn_shrine", "beastman_camp"]);
+  "graveyard", "great_tomb", "zurrernorn_shrine", "beastman_camp", "bafolk_camp"]);
 /** Sites a player can travel back to once discovered. */
-const FRIENDLY_SITES = new Set(["adventurer_camp", "kingdom_camp", "empire_outpost", "dwarven_forge", "lizardman_village", "carne_village"]);
+const FRIENDLY_SITES = new Set(["adventurer_camp", "kingdom_camp", "empire_outpost", "dwarven_forge", "lizardman_village", "carne_village", "imperial_arena", "paladin_fort",
+  "elven_grove"]);
 export const TRAVEL_COST = 5;
 
 /** @param {number} level */
@@ -879,7 +937,7 @@ registerMenu(
         (lead ? `${lead.replace("Word is there's", "Nearest site nobody has found yet:")}\n\n` : "") +
           (places.length > 0
           ? `Return to a friendly camp you have discovered for ${TRAVEL_COST} Gold Coins. Your party follows.`
-          : "You have not discovered any friendly camps yet. Adventurers' camps, Kingdom and Empire army posts, Dwarven Forges, Lizardman villages and Carne Village can be travelled to once found.")
+          : "You have not discovered any friendly camps yet. Adventurers' camps, Kingdom and Empire army posts, Dwarven Forges, Lizardman villages, Carne Village, Imperial Arenas, Holy Kingdom Forts and Elven Groves can be travelled to once found.")
       );
     for (const place of places) {
       const distance = Math.round(Math.hypot(place.x - player.location.x, place.z - player.location.z));

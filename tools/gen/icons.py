@@ -329,6 +329,9 @@ SIGIL_COLORS = {
     "skeletal_dragon": ("#d8d0b4", "#2a2620", "#a59c7e", "#b6ff4a"),
     "dark_young": ("#1f1c28", "#07060a", "#4a2a6a", "#c05bff"),
     "jaldabaoth": ("#a3121f", "#17060a", "#d8d0c0", "#ff7a1a"),
+    "decem": ("#2f5a3a", "#10220f", "#f4f3f5", "#63ff6b"),
+    "platinum_dragon_lord": ("#d9dde6", "#3a4050", "#9aa2b0", "#59d0ff"),
+    "rubedo": ("#c2171d", "#2a0a0e", "#f4f1ea", "#e0202c"),
 }
 
 
@@ -922,6 +925,35 @@ VESTMENT_PAL = {"K": "#8a8478", "k": "#f4f1ea", "l": "#ffffff", "G": GOLD, "g": 
 
 BONEDRAGON_PAL = {"K": "#6e664c", "k": "#d8d0b4", "l": "#f1eee0", "G": "#a59c7e", "g": "#6e664c", "R": "#b6ff4a"}
 BEASTHIDE_PAL = {"K": "#5a3a1c", "k": "#c07a2a", "l": "#e0a04a", "G": "#f1e0b8", "g": "#a8946a", "R": "#3a2a1e"}
+
+
+PLATINUM_PAL = {"K": "#7a8292", "k": "#d9dde6", "l": "#ffffff", "G": "#59d0ff", "g": "#2f8fc0", "R": "#f6d968"}
+
+
+def platinum_layers():
+    return armor_layers("#d9dde6", "#ffffff", "#9aa2b0", "#59d0ff", GOLD="#b8bcc8", GOLD_D="#7a8292")
+
+
+def rune_stone(glyph):
+    """A flat stone carved with a glowing rune."""
+    return sprite16([
+        "................",
+        "................",
+        "....SSSSSSS.....",
+        "...SsssssssS....",
+        "..SssGsssGssS...",
+        "..SsssGsGsssS...",
+        "..SssssGssssS...",
+        "..SsssGGGsssS...",
+        "..SsssGsGsssS...",
+        "..SssGsssGssS...",
+        "..SsssGGGsssS...",
+        "...SsssssssS....",
+        "....SSSSSSS.....",
+        "................",
+        "................",
+        "................",
+    ], {"S": "#4a4f5a", "s": "#7a8090", "G": glyph})
 
 
 def bonedragon_layers():
@@ -1633,6 +1665,18 @@ EGG_COLORS = {
     "zero": ("#b9835a", "#3a3a44"),
     "dark_young": ("#0c0b10", "#c05bff"),
     "jaldabaoth": ("#a3121f", "#d8d0c0"),
+    "go_gin": ("#8a9a6a", "#d9a92b"),
+    "elf_ranger": ("#3f6a45", "#e9e2a8"),
+    "decem": ("#2f5a3a", "#f4f3f5"),
+    "behemoth": ("#7a6a55", "#4f4436"),
+    "neia": ("#6a5238", "#d9c05a"),
+    "remedios": ("#e9edf2", "#b03030"),
+    "paladin": ("#d9dde6", "#f4f1ea"),
+    "bafolk": ("#8a7a66", "#5a4e40"),
+    "eight_edge_assassin": ("#15131a", "#d4202a"),
+    "arena_master": ("#a8262a", "#d9a92b"),
+    "platinum_dragon_lord": ("#d9dde6", "#59d0ff"),
+    "rubedo": ("#f4f1ea", "#c2171d"),
 }
 
 
@@ -1692,6 +1736,20 @@ def all_item_icons():
         "dragonscale_chestplate": chestplate(DRAGON_PAL),
         "dragonscale_leggings": leggings(DRAGON_PAL),
         "dragonscale_boots": boots(DRAGON_PAL),
+        "rune_of_fire": rune_stone("#ff7a1a"),
+        "rune_of_frost": rune_stone("#8fe0ff"),
+        "rune_of_storm": rune_stone("#ffe94a"),
+        "rune_of_life": rune_stone("#63ff6b"),
+        "platinum_scale": crystal("#d9dde6", "#ffffff", "#ffffff", "#9aa2b0"),
+        "platinum_helmet": helmet(PLATINUM_PAL),
+        "platinum_chestplate": chestplate(PLATINUM_PAL),
+        "platinum_leggings": leggings(PLATINUM_PAL),
+        "platinum_boots": boots(PLATINUM_PAL),
+        "martial_lord_club": mace(),
+        "elf_kings_staff": blade_icon("#6b4a32", "#4a3323", "#3f6a45", "#63ff6b", "#b8ffbe", "#2f8a3a", length=11),
+        "depiction_of_nature": scroll("#3f8a4a"),
+        "avarice_and_generosity": gauntlets(),
+        "longinus": blade_icon("#3a2a1e", "#1f150f", "#d9a92b", "#f4f3f5", "#c9ced6", "#a3121f", length=12),
         "basilisk_eye": eye_icon(),
         "dragon_bone": bone(),
         "beast_hide": hide(),

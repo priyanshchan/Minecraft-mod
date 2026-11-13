@@ -11,6 +11,7 @@ import * as guild from "./guild.js";
 import * as forge from "./forge.js";
 import * as mount from "./mount.js";
 import * as vfx from "./vfx.js";
+import * as arena from "./arena.js";
 await import("./main.js"); // must load without touching the world
 
 // Everything random in the add-on goes through Math.random. A seeded generator makes each run identical
@@ -693,6 +694,64 @@ vfx.wash(v, { red: 1, green: 1, blue: 1 }); assert.equal(faded.length, 1); vfx.s
 delete v.camera; delete v.runCommand; vfx.wash(v, { red: 1, green: 1, blue: 1 }); vfx.shake(v.dimension, v.location, 10);
 // the Grimoire's preview plays every element without a hitch
 advance(1); v.fx = []; vfx.showcase(v); advance(200); for (const name of ["flame", "shard", "arc", "ray", "wisp", "droplet", "glyph", "streak", "pillar_light", "nova"]) assert.ok(drew(name).length > 0, name);
+
+// ---- v6.0: runes, the arena and World Items ----
+const w = mkPlayer("wren"); const pw = rpg.profileOf(w); w.dimension = makeLand(); w.dimension.getPlayers = () => [w]; w.location = { x: 0, y: 64, z: 0 };
+w.selectedSlotIndex = 0; let wornW = "";
+w.getComponent = ((base) => (cmp) => (cmp === "minecraft:equippable" ? { getEquipment: (slot) => (slot === "Mainhand" ? w.inv[0] : wornW ? { typeId: `overlord:${wornW}_${worn[slot]}` } : undefined) } : base(cmp)))(w.getComponent);
+// runes: a runesmith inscribes one rune on a weapon; it is written on the item beside any reinforcement
+const sabre = new ItemStack("overlord:razor_edge"); w.inv.push(sabre, new ItemStack("overlord:rune_of_fire", 1), new ItemStack("overlord:rune_of_life", 2));
+assert.ok(forge.inscribe(w, "fire").includes("Dwarf Runesmith")); w.dimension.spawnEntity("overlord:dwarf", w.location);
+assert.ok(forge.inscribe(w, "storm").includes("You have no Rune of Storm")); assert.ok(forge.inscribe(w, "fire").includes("inscribes the Rune of Fire"));
+assert.equal(forge.runeOf(sabre), "fire"); assert.ok(sabre.lore.some((l) => l.includes("Rune of Fire"))); assert.ok(!w.inv.some((it) => it && it.typeId === "overlord:rune_of_fire"), "the rune is used up");
+assert.ok(forge.inscribe(w, "fire").includes("already bears"));
+w.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 64), new ItemStack("overlord:adamantite_ingot", 3)); assert.ok(forge.reinforce(w).includes("+1"));
+assert.ok(sabre.lore[0].includes("+1") && sabre.lore.some((l) => l.includes("Rune of Fire")), "reinforcing keeps the rune on the item");
+// each rune works on a melee blow
+const dummyW = (name) => { const m = mob("minecraft:zombie", 200, ["monster"]); Object.assign(m, { id: name, dimension: w.dimension, tags: new Set(), afflicted: [], burning: 0, setOnFire(n) { m.burning = n; }, addEffect(e) { m.afflicted.push(e); },
+  applyDamage(n) { m.damaged.push(n); }, applyKnockback() {}, hasTag: () => false, addTag() {} }); return m; };
+const strawman = dummyW("straw"); const hit = (cause = "entityAttack") => world.afterEvents.entityHurt.fire({ hurtEntity: strawman, damage: 20, damageSource: { damagingEntity: w, cause } });
+hit(); assert.equal(strawman.burning, 4, "Rune of Fire"); strawman.burning = 0; hit("magic"); assert.equal(strawman.burning, 0, "runes answer blows, not spells");
+assert.ok(forge.inscribe(w, "life").includes("Rune of Life")); assert.equal(forge.runeOf(sabre), "life", "a new rune replaces the old");
+w.health.currentValue = 10; hit(); assert.ok(Math.abs(w.health.currentValue - 11.6) < 1e-6, `Rune of Life heals 8% of 20: ${w.health.currentValue}`);
+sabre.setDynamicProperty("overlord:rune", "storm"); strawman.damaged.length = 0; hit(); advance(12); assert.ok(strawman.damaged.includes(4), "Rune of Storm jolts a moment later");
+sabre.setDynamicProperty("overlord:rune", "frost"); strawman.afflicted.length = 0; hit(); assert.ok(strawman.afflicted.includes("slowness"), "Rune of Frost");
+// the arena: five rounds, the next champion only once the sand is clear, a purse at the end
+w.dimension.mobs.length = 0; pw.level = 10; assert.ok(arena.enter(w).includes("Arena Master")); assert.equal(arena.inArena(w), false);
+w.dimension.spawnEntity("overlord:arena_master", w.location); const purseW = coinsOf(w); const xpW = pw.xp; const lvW = pw.level;
+assert.ok(arena.enter(w).includes("tier 1")); assert.ok(arena.inArena(w)); assert.ok(arena.enter(w).includes("already fighting"));
+const onSand = () => w.dimension.mobs.filter((m) => m.tags.has("overlord_arena_wren"));
+for (let round = 0; round < 5; round++) {
+  const want = arena.ROUNDS[0][round].reduce((sum, [, count]) => sum + count, 0);
+  assert.equal(onSand().length, want, `round ${round + 1}`); assert.ok(onSand().every((m) => m.tags.has("overlord_arena")));
+  advance(60); assert.equal(onSand().length, want, "the round waits while a champion stands");
+  for (const m of onSand()) m.remove(); advance(100);
+}
+assert.equal(arena.inArena(w), false, "five rounds won"); assert.equal(coinsOf(w) - purseW, arena.PURSES[0].coins); assert.ok(pw.level > lvW || pw.xp > xpW);
+assert.ok(w.msgs.some((m) => m.includes("[Arena]") && m.includes("crowd roars")));
+// leaving the sand or falling forfeits and clears the champions; the top tier ends with Go Gin and the Emperor's prize
+assert.ok(arena.enter(w).includes("tier")); w.location = { x: 60, y: 64, z: 0 }; advance(30); assert.equal(arena.inArena(w), false); assert.equal(onSand().length, 0); w.location = { x: 0, y: 64, z: 0 };
+arena.enter(w); world.afterEvents.entityDie.fire({ deadEntity: w, damageSource: {} }); assert.equal(arena.inArena(w), false); assert.equal(onSand().length, 0);
+pw.level = 60; pw.quest = { quest: "ev_arena", progress: 0 }; assert.ok(arena.enter(w).includes("tier 3"));
+for (let round = 0; round < 5; round++) { if (round === 4) assert.deepEqual(onSand().map((m) => m.typeId), ["overlord:go_gin"]); for (const m of onSand()) m.remove(); advance(100); }
+assert.ok(w.inv.some((it) => it && it.typeId === "overlord:depiction_of_nature"), "the Emperor's prize"); assert.equal(pw.quest, null, "an arena win is a guild deed");
+assert.equal(arena.tierFor(19), 0); assert.equal(arena.tierFor(20), 1); assert.equal(arena.tierFor(50), 2);
+// World Items: the Depiction seals lesser foes away, the gauntlets hoard XP, Longinus erases anything for three levels
+w.dimension.mobs.length = 0; const lesser = dummyW("lesser"); lesser.health.effectiveMax = 40; lesser.remove = () => { lesser.gone = true; }; const mighty = dummyW("mighty"); mighty.health.effectiveMax = 600; mighty.remove = () => { mighty.gone = true; };
+w.dimension.mobs.push(lesser, mighty); use(w, "overlord:depiction_of_nature"); assert.ok(lesser.gone && !mighty.gone, "bosses cannot be painted out"); assert.ok(w.bar.includes("closes over 1"), w.bar);
+use(w, "overlord:depiction_of_nature"); assert.ok(w.bar.includes("Recharging"), "five-minute recharge");
+w.dimension.mobs.length = 0; assert.equal(pw.bank, 0); kill(w, mob("overlord:death_knight", 80)); assert.equal(pw.bank, 0, "nothing is hoarded without the gauntlets");
+w.inv.push(new ItemStack("overlord:avarice_and_generosity")); kill(w, mob("overlord:death_knight", 80)); assert.equal(pw.bank, Math.round(rpg.killXp(mob("overlord:death_knight", 80)) * 0.1));
+pw.bank = 900; const before900 = pw.xp + 0; const lv900 = pw.level; use(w, "overlord:avarice_and_generosity"); assert.equal(pw.bank, 0); assert.ok(pw.level > lv900 || pw.xp === before900 + 900, "the hoard is paid out");
+advance(120); use(w, "overlord:avarice_and_generosity"); assert.ok(w.bar.includes("empty"), w.bar);
+const titan = dummyW("titan"); titan.health.effectiveMax = 1500; titan.location = { x: 0, y: 64, z: 6 }; w.aimed = [titan]; const lvL = pw.level; w.inv[0] = new ItemStack("overlord:longinus");
+advance(40); use(w, "overlord:longinus"); assert.ok(titan.damaged[0] >= 15000, "enough to erase anything"); assert.equal(pw.level, lvL - 3); assert.equal(w.inv[0], undefined, "the spear is spent"); w.aimed = [];
+// new gear: the Martial Lord's Club, the Elf King's staff and Platinum armour
+w.inv[0] = sabre; rpg.restoreMana(w, 1e6); w.dimension.mobs.length = 0; const thug = dummyW("thug"); w.dimension.mobs.push(thug); w.effects.clear();
+use(w, "overlord:martial_lord_club"); assert.ok(thug.damaged.length === 1 && thug.afflicted.includes("weakness") && w.effects.get("strength").amplifier === 1);
+w.dimension.mobs.length = 0; use(w, "overlord:elf_kings_staff"); advance(3); assert.equal(w.dimension.mobs.filter((m) => m.typeId === "overlord:behemoth" && m.tamedBy === "wren").length, 1);
+wornW = "platinum"; w.effects.clear(); advance(45); assert.ok(w.effects.get("resistance").amplifier === 1 && w.effects.has("regeneration"), "Platinum armour"); wornW = "";
+pw.kills["overlord:go_gin"] = 1; assert.ok(guild.checkTitles(w).includes("Martial Lord"));
 
 // persistence: saved profile is restored after leaving
 advance(100);

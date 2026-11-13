@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [5, 5, 0]
+VERSION = [6, 0, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v5.5.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v6.0.0"
 
 
 def oid(name):
@@ -111,6 +111,9 @@ SIGILS = {
     "skeletal_dragon": ("the Skeletal Dragon", "minecraft:soul_sand"),
     "dark_young": ("the Dark Young", "minecraft:crying_obsidian"),
     "jaldabaoth": ("Jaldabaoth", "minecraft:blaze_rod"),
+    "decem": ("Decem Hougan", "minecraft:emerald"),
+    "platinum_dragon_lord": ("the Platinum Dragon Lord", "minecraft:amethyst_shard"),
+    "rubedo": ("Rubedo", "minecraft:nether_star"),
 }
 
 ITEMS = {
@@ -308,6 +311,25 @@ ITEMS = {
                            "using_converts_to": "minecraft:glass_bottle"},
         "minecraft:rarity": "uncommon",
     }),
+    **{f"rune_of_{kind}": (f"Rune of {kind.capitalize()}", "items", {
+        "minecraft:max_stack_size": 16, "minecraft:rarity": "rare"}) for kind in ("fire", "frost", "storm", "life")},
+    "platinum_scale": ("Platinum Dragon Scale", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "rare"}),
+    "platinum_helmet": ("Platinum Helm", "equipment", _armor("slot.armor.head", 3, 520, "armor_head")),
+    "platinum_chestplate": ("Platinum Cuirass", "equipment", _armor("slot.armor.chest", 8, 760, "armor_torso")),
+    "platinum_leggings": ("Platinum Greaves", "equipment", _armor("slot.armor.legs", 6, 710, "armor_legs")),
+    "platinum_boots": ("Platinum Boots", "equipment", _armor("slot.armor.feet", 3, 620, "armor_feet")),
+    "martial_lord_club": ("Martial Lord's Club", "equipment", _weapon(14, _cooldown("overlord_roar", 12.0))),
+    "elf_kings_staff": ("Staff of the Elf King", "equipment", _weapon(6, _cooldown("overlord_elemental", 60.0))),
+    # World Items
+    "depiction_of_nature": ("Depiction of Nature and Society", "items", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
+        **_cooldown("overlord_depiction", 300.0)}),
+    "avarice_and_generosity": ("Avarice and Generosity", "items", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
+        **_cooldown("overlord_avarice", 5.0)}),
+    "longinus": ("Longinus", "items", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
+        **_cooldown("overlord_scroll", 1.5)}),
     "basilisk_eye": ("Basilisk Eye", "items", {
         "minecraft:max_stack_size": 16, "minecraft:rarity": "rare", **_cooldown("overlord_scroll", 1.5)}),
     "dragon_bone": ("Dragon Bone", "items", {"minecraft:max_stack_size": 64}),
@@ -333,6 +355,9 @@ for _piece in ("helmet", "chestplate", "leggings", "boots"):
     ITEMS[f"world_champion_{_piece}"][2]["minecraft:rarity"] = "epic"
     ITEMS[f"infernal_{_piece}"][2]["minecraft:rarity"] = "epic"
     ITEMS[f"bonedragon_{_piece}"][2]["minecraft:rarity"] = "epic"
+    ITEMS[f"platinum_{_piece}"][2]["minecraft:rarity"] = "epic"
+    ITEMS[f"platinum_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
+        {"items": [oid("platinum_scale")], "repair_amount": "query.max_durability * 0.25"}]}
     ITEMS[f"bonedragon_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
         {"items": [oid("dragon_bone")], "repair_amount": "query.max_durability * 0.25"}]}
     ITEMS[f"beasthide_{_piece}"][2]["minecraft:rarity"] = "uncommon"
@@ -567,9 +592,14 @@ def recipe_files():
            for piece, pattern in (("helmet", ["AAA", "A A"]), ("chestplate", ["A A", "AAA", "AAA"]),
                                   ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
         **{f"{kind}_{piece}": _shaped(f"{kind}_{piece}", pattern, {"A": oid(mat)}, oid(f"{kind}_{piece}"))
-           for kind, mat in (("bonedragon", "dragon_bone"), ("beasthide", "beast_hide"))
+           for kind, mat in (("bonedragon", "dragon_bone"), ("beasthide", "beast_hide"),
+                             ("platinum", "platinum_scale"))
            for piece, pattern in (("helmet", ["AAA", "A A"]), ("chestplate", ["A A", "AAA", "AAA"]),
                                   ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
+        **{f"rune_of_{kind}": _shaped(f"rune_of_{kind}", [" C ", "CXC", " C "], {"C": cry, "X": core},
+                                      oid(f"rune_of_{kind}"))
+           for kind, core in (("fire", "minecraft:blaze_powder"), ("frost", "minecraft:packed_ice"),
+                              ("storm", "minecraft:copper_ingot"), ("life", "minecraft:golden_apple"))},
         "dragonbone_blade": _shaped("dragonbone_blade", ["B", "B", "S"], {
             "B": oid("dragon_bone"), "S": "minecraft:stick"}, oid("dragonbone_blade")),
         **{f"infernal_{piece}": _shapeless(f"infernal_{piece}", [
@@ -730,6 +760,21 @@ def loot_files():
                   _pool(_entry(coin, 10, 20))],
         "climb": [_pool(_entry("minecraft:iron_ingot", 1, 3))],
         "lakyus": [_pool(_entry("minecraft:gold_ingot", 1, 3))],
+        "go_gin": [one(oid("martial_lord_club")), _pool(_entry(crest, 1, 1, looting=False)), _pool(_entry(coin, 15, 25))],
+        "elf_ranger": [_pool(_entry("minecraft:arrow", 0, 3)), _pool(_entry(coin, 0, 2))],
+        "decem": [one(oid("elf_kings_staff")), _pool(_entry(crest, 2, 2, looting=False)), _pool(_entry(cry, 8, 12)),
+                  _pool(_entry(coin, 14, 24))],
+        "behemoth": [_pool(_entry("minecraft:stone", 2, 5)), _pool(_entry(coin, 3, 8))],
+        "neia": [_pool(_entry("minecraft:arrow", 2, 6))],
+        "remedios": [_pool(_entry("minecraft:gold_ingot", 1, 3))],
+        "paladin": [_pool(_entry("minecraft:iron_ingot", 0, 2))],
+        "bafolk": [_pool(_entry(oid("beast_hide"), 0, 2)), _pool(_entry(coin, 0, 2))],
+        "eight_edge_assassin": [_pool(_entry(oid("soul_fragment"), 0, 2)), _pool(_entry(cry, 1, 2))],
+        "platinum_dragon_lord": [_pool(_entry(oid("platinum_scale"), 10, 14, looting=False)),
+                                 one(oid("avarice_and_generosity")), _pool(_entry(crest, 4, 4, looting=False)),
+                                 _pool(_entry(cry, 12, 18)), _pool(_entry(coin, 24, 36))],
+        "rubedo": [one(oid("longinus")), _pool(_entry(crest, 4, 4, looting=False)), _pool(_entry(cry, 14, 20)),
+                   _pool(_entry(coin, 30, 40))],
         "skeletal_dragon": [_pool(_entry(oid("dragon_bone"), 8, 12, looting=False)),
                             _pool(_entry(crest, 2, 2, looting=False)), _pool(_entry(cry, 6, 10)),
                             _pool(_entry(coin, 12, 20))],
@@ -1662,6 +1707,106 @@ def entity_files():
                                       "add": {"component_groups": ["overlord:ranged_mode"]}},
     })
 
+    # ---------------------------------------------- v6.0: arena, elves, paladins
+    def two_modes(shot, burst, melee_damage, radius=28.0):
+        """Component groups and events for a boss that shoots from range and closes in to strike."""
+        return ({
+            "overlord:mode_switcher": {"minecraft:target_nearby_sensor": {
+                "inside_range": 4.5, "outside_range": 6.5, "must_see": True,
+                "on_inside_range": {"event": "overlord:switch_to_melee", "target": "self"},
+                "on_outside_range": {"event": "overlord:switch_to_ranged", "target": "self"}}},
+            "overlord:ranged_mode": {
+                "minecraft:shooter": {"def": shot},
+                "minecraft:behavior.ranged_attack": {
+                    "priority": 3, "burst_shots": burst, "burst_interval": 0.3, "attack_interval_min": 2.0,
+                    "attack_interval_max": 3.5, "attack_radius": radius, "speed_multiplier": 1.0}},
+            "overlord:melee_mode": {
+                "minecraft:attack": {"damage": melee_damage},
+                "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.3,
+                                                        "track_target": True}},
+        }, {
+            "minecraft:entity_spawned": {"add": {"component_groups": ["overlord:mode_switcher",
+                                                                       "overlord:ranged_mode"]}},
+            "overlord:switch_to_melee": {"remove": {"component_groups": ["overlord:ranged_mode"]},
+                                         "add": {"component_groups": ["overlord:melee_mode"]}},
+            "overlord:switch_to_ranged": {"remove": {"component_groups": ["overlord:melee_mode"]},
+                                          "add": {"component_groups": ["overlord:ranged_mode"]}},
+        })
+
+    c = _mob("go_gin", ["go_gin", "arena", "monster", "mob"], 450, 0.3, (0.9, 2.0), loot="go_gin", xp=300,
+             scale=1.7, kb=1.0, follow=40, persistent=True)
+    c["minecraft:boss"] = {"hud_range": 40, "should_darken_sky": False}
+    c["minecraft:attack"] = {"damage": 16}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(32, [ally])
+    out["go_gin"] = _entity("go_gin", c)
+
+    out["elf_ranger"] = troop("elf_ranger", "elf", "theocracy", 36, 0, ranged=True)
+    out["neia"] = troop("neia", "holy_kingdom", "demon", 90, 0, ranged=True)
+    out["paladin"] = troop("paladin", "holy_kingdom", "demon", 50, 8)
+    out["remedios"] = hunter("remedios", "human", 160, 0.32, 13)
+
+    c = _mob("decem", ["decem", "elf", "human", "monster", "mob"], 700, 0.36, (0.7, 2.0), loot="decem", xp=600,
+             kb=1.0, follow=48, persistent=True)
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": False}
+    c["minecraft:attack"] = {"damage": 20}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:behavior.summon_entity"] = {"priority": 2, "summon_choices": [{
+        "weight": 1, "cooldown_time": 30.0, "cast_duration": 2.0, "particle_color": "#FF63FF6B",
+        "start_sound_event": "cast.spell",
+        "sequence": [{"shape": "circle", "target": "self", "base_delay": 1.5, "num_entities_spawned": 1,
+                      "entity_type": oid("behemoth"), "summon_cap": 1, "summon_cap_radius": 32.0,
+                      "size": 2.0, "sound_event": "prepare.summon"}]}]}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(48, [ally])
+    out["decem"] = _entity("decem", c)
+
+    c = _mob("behemoth", ["behemoth", "elemental", "monster", "mob"], 260, 0.26, (1.0, 2.2), loot="behemoth", xp=120,
+             scale=1.9, kb=1.0)
+    c["minecraft:attack"] = {"damage": 18}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(32, [ally, "human"])
+    out["behemoth"] = _entity("behemoth", c)
+
+    c = _mob("bafolk", ["bafolk", "monster", "mob"], 60, 0.33, (0.7, 2.0), loot="bafolk", xp=16, kb=0.3)
+    c["minecraft:attack"] = {"damage": 8}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:behavior.hurt_by_target"] = {"priority": 1, "alert_same_type": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally, "human"])
+    out["bafolk"] = _entity("bafolk", c)
+
+    c = _mob("eight_edge_assassin", ["eight_edge_assassin", "nazarick", "monster", "mob"], 90, 0.42, (1.0, 1.2),
+             loot="eight_edge_assassin", xp=45, scale=1.2, kb=0.4)
+    del c["minecraft:can_climb"]
+    c["minecraft:attack"] = {"damage": 12}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.4, "track_target": True}
+    c["minecraft:behavior.leap_at_target"] = {"priority": 2, "yd": 0.4, "must_be_on_ground": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(28, [ally, "human"])
+    out["eight_edge_assassin"] = _entity("eight_edge_assassin", c)
+
+    c = _mob("arena_master", ["arena_master", "empire", "mob"], 40, 0.2, (0.6, 1.9), xp=0, persistent=True)
+    del c["minecraft:behavior.hurt_by_target"]
+    c["minecraft:damage_sensor"] = {"triggers": [{"cause": "all", "deals_damage": False}]}
+    out["arena_master"] = _entity("arena_master", c)
+
+    c = _mob("platinum_dragon_lord", ["platinum_dragon_lord", "dragon", "monster", "mob"], 1200, 0.3, (2.0, 2.2),
+             loot="platinum_dragon_lord", xp=1000, scale=1.6, kb=1.0, follow=48, persistent=True)
+    del c["minecraft:can_climb"]
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": True}
+    c["minecraft:damage_sensor"] = _no_fall()
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(48, [ally])
+    groups, events = two_modes(oid("lightning_bolt"), 3, 26)
+    out["platinum_dragon_lord"] = _entity("platinum_dragon_lord", c, groups, events)
+
+    c = _mob("rubedo", ["rubedo", "nazarick", "monster", "mob"], 1500, 0.42, (0.7, 2.0), loot="rubedo", xp=1200,
+             kb=1.0, follow=48, persistent=True)
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": True}
+    c["minecraft:attack"] = {"damage": 30}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.4, "track_target": True}
+    c["minecraft:damage_sensor"] = {"triggers": [{"cause": "fall", "deals_damage": False},
+                                                 {"cause": "all", "damage_multiplier": 0.8}]}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(48, [ally])
+    out["rubedo"] = _entity("rubedo", c)
+
     # --------------------------------------------------- retainers (party members)
     not_players = {"test": "is_family", "subject": "other", "operator": "!=", "value": "player"}
     follow = lambda start, stop: {"priority": 4, "speed_multiplier": 1.3, "start_distance": start,
@@ -1793,7 +1938,8 @@ def _apply_ai(out):
 
     # Creatures that tier magic can summon as allies get the same "summoned" form as Death Knights.
     for name, families in (("old_guarder", ["old_guarder", "nazarick_ally", "undead", "mob"]),
-                           ("archangel_flame", ["archangel_flame", "nazarick_ally", "angel", "mob"])):
+                           ("archangel_flame", ["archangel_flame", "nazarick_ally", "angel", "mob"]),
+                           ("behemoth", ["behemoth", "nazarick_ally", "elemental", "mob"])):
         entity = out[name]["minecraft:entity"]
         entity["component_groups"]["overlord:summoned"] = {
             "minecraft:type_family": {"family": families},
@@ -1883,7 +2029,9 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
         "hellhound", "shadow_demon", "evil_lord_wrath", "archangel_flame", "dominion_authority",
         "theocracy_priest", "nigun", "climb", "zesshi", "eclair",
         "skeletal_dragon", "khajiit", "gigant_basilisk", "frost_giant", "beastman", "lakyus", "enri", "zero",
-        "dark_young", "jaldabaoth"]
+        "dark_young", "jaldabaoth",
+        "go_gin", "elf_ranger", "decem", "behemoth", "neia", "remedios", "paladin", "bafolk",
+        "eight_edge_assassin", "arena_master", "platinum_dragon_lord", "rubedo"]
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard", "frost_breath"]
 
 ENTITY_NAMES = {
@@ -1907,6 +2055,10 @@ ENTITY_NAMES = {
     "skeletal_dragon": "Skeletal Dragon", "khajiit": "Khajiit Dale Badantel", "gigant_basilisk": "Gigant Basilisk",
     "frost_giant": "Frost Giant", "beastman": "Beastman Warrior", "lakyus": "Lakyus Alvein Dale Aindra",
     "enri": "Enri Emmot", "zero": "Zero of the Six Arms", "dark_young": "Dark Young", "jaldabaoth": "Jaldabaoth",
+    "go_gin": "Go Gin the Martial Lord", "elf_ranger": "Elf Ranger", "decem": "Decem Hougan",
+    "behemoth": "Primal Earth Elemental", "neia": "Neia Baraja", "remedios": "Remedios Custodio",
+    "paladin": "Holy Kingdom Paladin", "bafolk": "Bafolk Raider", "eight_edge_assassin": "Eight-Edge Assassin",
+    "arena_master": "Arena Master", "platinum_dragon_lord": "Platinum Dragon Lord", "rubedo": "Rubedo",
     "war_troll": "War Troll", "vampire_bride": "Vampire Bride", "dwarf": "Dwarf Runesmith",
     "frost_dragon": "Frost Dragon", "frost_breath": "Frost Breath",
     "retainer": "Retainer", "guard": "Kingdom Guard", "soldier": "Kingdom Soldier", "archer": "Kingdom Archer",
@@ -1949,6 +2101,8 @@ def trade_files():
         sell(oid("data_crystal"), 6), sell(oid("gilded_nazarick_bricks"), 8, qty=8),
         buy("minecraft:raw_iron", 8, 3), buy("minecraft:coal", 16, 2), buy("minecraft:diamond", 1, 7),
         buy("minecraft:gold_ingot", 4, 5), buy(oid("dragon_bone"), 2, 5), buy(oid("frost_dragon_scale"), 2, 6),
+        sell(oid("rune_of_fire"), 26, uses=4), sell(oid("rune_of_frost"), 26, uses=4),
+        sell(oid("rune_of_storm"), 26, uses=4), sell(oid("rune_of_life"), 32, uses=4),
     ]
     village = [
         sell("minecraft:bread", 1, qty=3), sell("minecraft:cooked_beef", 2, qty=2), sell(oid("red_potion"), 3),
@@ -2037,6 +2191,10 @@ def spawn_rule_files():
                                                      biomes=["plains", "forest", "savanna"]),
         "spawn_rules/climb.json": day_creature("climb", "plains", 1),
         "spawn_rules/lakyus.json": day_creature("lakyus", "forest", 1),
+        "spawn_rules/neia.json": day_creature("neia", "plains", 1),
+        "spawn_rules/elf_ranger.json": day_creature("elf_ranger", "forest", 2, herd=(2, 3)),
+        "spawn_rules/bafolk.json": monster("bafolk", 4, herd=(2, 3), biomes=["extreme_hills", "savanna", "mesa"]),
+        "spawn_rules/eight_edge_assassin.json": monster("eight_edge_assassin", 2),
         "spawn_rules/gigant_basilisk.json": monster("gigant_basilisk", 2, biomes=["plains", "savanna", "forest"]),
         "spawn_rules/frost_giant.json": monster("frost_giant", 3, biomes=["cold", "taiga", "extreme_hills"]),
         "spawn_rules/beastman.json": monster("beastman", 4, herd=(2, 4), biomes=["savanna", "plains", "mesa"]),
@@ -2222,7 +2380,11 @@ def _walk(amp, phase=0.0):
 
 for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), ("gigant_basilisk", "soul_eater"),
                     ("frost_giant", "ogre"), ("beastman", "lizardman"), ("lakyus", "climb"), ("enri", "nfirea"),
-                    ("zero", "bandit"), ("dark_young", "evil_lord_wrath"), ("jaldabaoth", "evil_lord_wrath")):
+                    ("zero", "bandit"), ("dark_young", "evil_lord_wrath"), ("jaldabaoth", "evil_lord_wrath"),
+                    ("go_gin", "ogre"), ("elf_ranger", "archer"), ("decem", "climb"), ("behemoth", "ogre"),
+                    ("neia", "archer"), ("remedios", "climb"), ("paladin", "soldier"), ("bafolk", "lizardman"),
+                    ("eight_edge_assassin", "soul_eater"), ("arena_master", "nfirea"),
+                    ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri")):
     SOUNDS[_new] = SOUNDS[_like]
 
 
@@ -2346,7 +2508,11 @@ ENTITY_ANIMS = {
 }
 for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), ("gigant_basilisk", "soul_eater"),
                     ("frost_giant", "ogre"), ("beastman", "lizardman"), ("lakyus", "climb"), ("enri", "nfirea"),
-                    ("zero", "bandit"), ("dark_young", "soul_eater"), ("jaldabaoth", "evil_lord_wrath")):
+                    ("zero", "bandit"), ("dark_young", "soul_eater"), ("jaldabaoth", "evil_lord_wrath"),
+                    ("go_gin", "ogre"), ("elf_ranger", "archer"), ("decem", "climb"), ("behemoth", "ogre"),
+                    ("neia", "archer"), ("remedios", "climb"), ("paladin", "soldier"), ("bafolk", "lizardman"),
+                    ("eight_edge_assassin", "soul_eater"), ("arena_master", "nfirea"),
+                    ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri")):
     ENTITY_ANIMS[_new] = ENTITY_ANIMS[_like]
 
 # ---------------------------------------------------------------- particles
@@ -2844,6 +3010,7 @@ WEARABLES = {
     **{f"vestment_{piece}": (piece, f"{NS}_vestment_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"bonedragon_{piece}": (piece, f"{NS}_bonedragon_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"beasthide_{piece}": (piece, f"{NS}_beasthide_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    **{f"platinum_{piece}": (piece, f"{NS}_platinum_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"crimson_{piece}": (piece, f"{NS}_crimson_{layer}") for piece, (layer, _s) in ARMOR.items()},
 }
 

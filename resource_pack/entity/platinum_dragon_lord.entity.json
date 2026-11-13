@@ -1,0 +1,40 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:platinum_dragon_lord",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/platinum_dragon_lord"
+      },
+      "geometry": {
+        "default": "geometry.overlord.platinum_dragon_lord"
+      },
+      "scripts": {
+        "animate": [
+          "look_at_target",
+          "hamsuke_walk",
+          "hamsuke_tail",
+          "hamsuke_attack",
+          "dragon_wings"
+        ]
+      },
+      "animations": {
+        "look_at_target": "animation.overlord.look_at_target",
+        "hamsuke_walk": "animation.overlord.hamsuke.walk",
+        "hamsuke_tail": "animation.overlord.hamsuke.tail",
+        "hamsuke_attack": "animation.overlord.hamsuke.attack",
+        "dragon_wings": "animation.overlord.dragon_wings"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ],
+      "spawn_egg": {
+        "texture": "overlord_egg_platinum_dragon_lord",
+        "texture_index": 0
+      }
+    }
+  }
+}

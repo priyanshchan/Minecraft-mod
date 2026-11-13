@@ -15,7 +15,7 @@ export const LEVEL_KEY = "overlord:lvl";
 export const ELITE_CHANCE = 0.05;
 
 /** Tags of mobs the add-on spawned on purpose; they are never removed by the level gate. */
-const SCRIPTED_TAGS = ["overlord_raid", "overlord_patrol", "overlord_summoned", "overlord_guard", "overlord_camp", "overlord_worldboss"];
+const SCRIPTED_TAGS = ["overlord_raid", "overlord_patrol", "overlord_summoned", "overlord_guard", "overlord_camp", "overlord_worldboss", "overlord_arena"];
 
 /** Naturally spawning mobs that only appear once a nearby player has reached this level. */
 export const SPAWN_GATE = {
@@ -29,6 +29,8 @@ export const SPAWN_GATE = {
   [id("beastman")]: 6,
   [id("frost_giant")]: 14,
   [id("gigant_basilisk")]: 15,
+  [id("bafolk")]: 10,
+  [id("eight_edge_assassin")]: 25,
   [id("theocracy_priest")]: 10,
   [id("hellhound")]: 12,
   [id("war_troll")]: 14,
@@ -73,6 +75,10 @@ const DIALOGUE = {
     "This post belongs to the Baharuth Empire. State your business or move along.",
     "The Emperor's knights do not fear the Kingdom's rabble.",
   ],
+  [id("neia")]: ["My eyes frighten people. My arrows frighten demons - that will have to do.", "Justice needs strength behind it. I learned that from the Sorcerer King."],
+  [id("remedios")]: ["A paladin does not think. A paladin strikes what is evil.", "If you see demi-humans in the hills, cut them down before they reach the wall."],
+  [id("paladin")]: ["The Holy Kingdom stands while its wall stands.", "Bafolk have been raiding out of the hills again. Watch the ridgelines."],
+  [id("elf_ranger")]: ["The forest hears you long before we do, human.", "The Theocracy burns our groves. If you fight their priests, you are welcome here."],
   [id("lakyus")]: ["Blue Roses takes the jobs nobody else dares to. If you see a demon gate, do not go in alone.", "My sword? Kilineyram drinks darkness. Sometimes I worry what it gives back."],
   [id("enri")]: ["Welcome to Carne. We are a small village, but we look after our friends.", "The goblins answer the horn. I still cannot quite believe they call me General."],
   [id("climb")]: ["I will become strong enough to protect the Princess. Until then, I train.", "Sir Gazef says a blade is only as true as the arm behind it."],
@@ -222,16 +228,26 @@ system.runInterval(() => {
   }
 }, 10 * TICKS);
 
+// Eight-Edge Assassins arrive unseen and only show themselves once their veil wears off.
+world.afterEvents.entitySpawn.subscribe((event) => {
+  try {
+    if (event.entity.typeId === id("eight_edge_assassin")) event.entity.addEffect("invisibility", 20 * TICKS, { showParticles: false });
+  } catch {
+    // it is already gone
+  }
+});
+
 // -------------------------------------------------------------- world bosses
 
 const WORLD_BOSS_LEVEL = 25;
 const WORLD_BOSS_CHANCE = 0.3; // per in-game day
 /** Bosses that may appear, for players below level 50, from level 50 and from level 75. */
 const WORLD_BOSSES = [
-  [id("gargantua"), id("dominion_authority"), id("evil_lord_wrath"), id("skeletal_dragon")],
-  [id("frost_dragon"), id("evil_lord_wrath"), id("zesshi"), id("dark_young"), id("jaldabaoth")],
+  [id("gargantua"), id("dominion_authority"), id("evil_lord_wrath"), id("skeletal_dragon"), id("behemoth")],
+  [id("frost_dragon"), id("evil_lord_wrath"), id("zesshi"), id("dark_young"), id("jaldabaoth"), id("decem")],
   // The strongest adventurers draw out the Floor Guardians themselves.
-  [id("cocytus"), id("shalltear"), id("albedo"), id("demiurge"), id("sebas"), id("dark_young"), id("jaldabaoth")],
+  [id("cocytus"), id("shalltear"), id("albedo"), id("demiurge"), id("sebas"), id("dark_young"), id("jaldabaoth"),
+    id("platinum_dragon_lord")],
 ];
 export const WORLD_BOSS_KEY = id("world_bosses");
 let bossDay = -1;

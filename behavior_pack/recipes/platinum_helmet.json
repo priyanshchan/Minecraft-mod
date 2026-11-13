@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:platinum_helmet"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "AAA",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:platinum_scale"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:platinum_scale"
+      }
+    ],
+    "result": {
+      "item": "overlord:platinum_helmet",
+      "count": 1
+    }
+  }
+}
