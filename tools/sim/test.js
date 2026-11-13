@@ -245,14 +245,17 @@ for (let rx = -15; rx < 15; rx++) for (let rz = -15; rz < 15; rz++) {
   const site = sites.siteOf(rx, rz, 777); if (!site) continue; planned++; kinds.add(site.type.key);
   assert.ok(site.x >= rx * sites.REGION + 24 && site.x < (rx + 1) * sites.REGION - 24 && site.z >= rz * sites.REGION + 24 && site.z < (rz + 1) * sites.REGION - 24);
 }
-assert.ok(planned > 900 * 0.3 && planned < 900 * 0.5, `planned ${planned}`); assert.equal(kinds.size, sites.SITES.length);
+assert.ok(planned > 900 * 0.55 && planned < 900 * 0.75, `planned ${planned}`); assert.equal(kinds.size, sites.SITES.length);
 // a flat grassy test world that records every block placed
 const makeLand = (opts = {}) => {
   const placed = new Map(); const chests = new Map(); const k = (l) => `${Math.floor(l.x)},${l.y},${Math.floor(l.z)}`;
   const land = { id: "minecraft:overworld", mobs: [], placed, chests, spawnParticle() {}, playSound() {}, spawnItem() {}, getPlayers: () => players,
     heightAt: opts.heightAt ?? (() => 63),
-    getTopmostBlock: ({ x, z }) => (opts.unloaded ? undefined : { location: { x, y: land.heightAt(x, z), z } }),
-    getBlock(l) { const typeId = placed.get(k(l)) ?? (l.y <= land.heightAt(l.x, l.z) ? (opts.water ? "minecraft:water" : "minecraft:grass_block") : "minecraft:air");
+    getTopmostBlock: ({ x, z }) => { if (opts.broken) throw new Error("LocationInUnloadedChunkError: Trying to access location in an unloaded chunk");
+      return opts.unloaded ? undefined : { location: { x, y: land.heightAt(x, z), z } }; },
+    getBlock(l) { if (opts.broken) throw new Error("LocationInUnloadedChunkError: Trying to access location in an unloaded chunk");
+      const wet = typeof opts.water === "function" ? opts.water(l.x, l.z) : opts.water;
+      const typeId = placed.get(k(l)) ?? (l.y <= land.heightAt(l.x, l.z) ? (wet ? "minecraft:water" : "minecraft:grass_block") : "minecraft:air");
       return { typeId, isLiquid: typeId === "minecraft:water", isAir: typeId === "minecraft:air", location: l,
         getComponent: (c) => (c === "minecraft:inventory" && typeId === "minecraft:chest" ? { container: { addItem(s) { (chests.get(k(l)) ?? chests.set(k(l), []).get(k(l))).push(s); } } } : undefined) }; },
     setBlockType(l, t) { placed.set(k(l), t); },
@@ -288,20 +291,37 @@ for (const type of sites.SITES) {
 const camp0 = sites.SITES[0];
 assert.equal(sites.buildSite(makeLand({ water: true }), { x: 0, z: 0, type: camp0 }), null, "no camps on water");
 assert.equal(sites.buildSite(makeLand({ unloaded: true }), { x: 0, z: 0, type: camp0 }), undefined, "wait for chunks");
-assert.equal(sites.buildSite(makeLand({ heightAt: (x) => 63 + Math.floor(x / 2) }), { x: 0, z: 0, type: camp0 }), null, "too steep");
+assert.equal(sites.buildSite(makeLand({ heightAt: (x) => 63 + x }), { x: 0, z: 0, type: camp0 }), null, "too steep");
+// the real game raises an error for chunks that are not loaded and ticking: that means "later", never a crash
+assert.equal(sites.buildSite(makeLand({ broken: true }), { x: 0, z: 0, type: camp0 }), undefined, "an unloaded-chunk error means try again later");
+// rolling ground is evened out: the pad sits on the median height over a dirt foundation
+const hill = makeLand({ heightAt: (x) => 63 + Math.floor(x / 3) }); const terrace = sites.buildSite(hill, { x: 0, z: 0, type: camp0 });
+assert.ok(terrace && terrace.y === 64, "a gentle slope is built on"); assert.equal(hill.placed.get("-7,58,0"), "minecraft:dirt", "foundation under the low side");
+// a planned spot in water is moved a little to one side instead of being given up
+const shore = makeLand({ water: (x) => x < 12 }); const moved = sites.buildSite(shore, { x: 0, z: 0, type: camp0 });
+assert.ok(moved && moved.x === 24 && moved.z === 0, `moved to ${moved && moved.x},${moved && moved.z}`);
+// tree tops, plants and snow cover are looked through; leaves and logs are not ground
+for (const [block, ground] of [["minecraft:grass_block", true], ["minecraft:sand", true], ["minecraft:stone", true], ["minecraft:hardened_clay", true], ["minecraft:snow", true],
+  ["minecraft:oak_leaves", false], ["minecraft:oak_log", false], ["minecraft:snow_layer", false], ["minecraft:short_grass", false], ["minecraft:water", false]]) assert.equal(sites.isGround(block), ground, block);
 // exploring: find a planned site, walk up to it, discover it once, garrison it once, and hear a rumour before
 let goal; for (let rx = 2; rx < 40 && !goal; rx++) { const site = sites.siteOf(rx, 2); if (site) goal = site; }
 assert.ok(goal, "a site exists somewhere east");
 const e = mkPlayer("eve"); const pe = rpg.profileOf(e); e.dimension = makeLand();
 e.location = { x: goal.x - 300, y: 64, z: goal.z }; const heard = sites.rumour(e);
 assert.ok(heard && /blocks to the/.test(heard), String(heard));
-e.location = { x: goal.x - 80, y: 64, z: goal.z }; sites.explore(e);
+e.location = { x: goal.x - 100, y: 64, z: goal.z }; sites.explore(e); assert.equal(e.dimension.placed.size, 0, "too far away to be loaded");
+// while the chunks around the site raise unloaded errors nothing is built, nothing is given up and nothing crashes
+const ready = e.dimension; e.dimension = makeLand({ broken: true }); e.location = { x: goal.x - 60, y: 64, z: goal.z }; sites.explore(e);
+assert.equal(e.dimension.placed.size, 0); e.dimension = ready;
+// standing on the planned spot holds the build back until the player steps away
+e.location = { x: goal.x + 2, y: 64, z: goal.z }; sites.explore(e); assert.equal(e.dimension.placed.size, 0, "nobody is walled in");
+e.location = { x: goal.x - 60, y: 64, z: goal.z }; sites.explore(e);
 assert.ok([...e.dimension.placed.values()].includes("minecraft:chest"), "built when in range"); assert.equal(e.dimension.mobs.length, 0, "not garrisoned yet");
 const built = e.dimension.placed.size; sites.explore(e); assert.equal(e.dimension.placed.size, built, "built once");
 e.location = { x: goal.x - 20, y: 64, z: goal.z }; const xpE = pe.xp; sites.explore(e);
 assert.ok(e.dimension.mobs.length >= 3 && e.bar.includes("Discovered"), e.bar); assert.ok(pe.level === 2 && pe.xp === xpE + 80 - rpg.xpForNext(1), "discovery XP (enough for level 2)");
 const manned = e.dimension.mobs.length; sites.explore(e); assert.equal(e.dimension.mobs.length, manned, "no refill before ten minutes");
-assert.ok([...world.props.keys()].some((key) => key.startsWith("overlord:site:")), "sites are saved in the world");
+assert.ok([...world.props.keys()].some((key) => key.startsWith("overlord:camp:")), "sites are saved in the world");
 
 // ---- party: retainers and mercenaries ----
 const f = mkPlayer("finn"); const pf = rpg.profileOf(f); f.dimension = makeLand(); f.dimension.getPlayers = () => [f];
@@ -358,7 +378,7 @@ kill(f, mob("overlord:bandit", 30)); assert.equal(rpg.standingOf(pf, "kingdom"),
 // ---- clearing a hostile camp ----
 let lair; for (let rx = 3; rx < 200 && !lair; rx++) { const site = sites.siteOf(rx, 7); if (site && site.type.key === "goblin_camp") lair = site; }
 assert.ok(lair, "a goblin camp exists somewhere");
-f.dimension = makeLand(); f.dimension.getPlayers = () => [f]; f.location = { x: lair.x - 80, y: 64, z: lair.z }; sites.explore(f);
+f.dimension = makeLand(); f.dimension.getPlayers = () => [f]; f.location = { x: lair.x - 60, y: 64, z: lair.z }; sites.explore(f);
 f.location = { x: lair.x - 20, y: 64, z: lair.z }; sites.explore(f);
 const defenders = f.dimension.mobs.filter((m) => m.tags.has("overlord_camp")); assert.equal(defenders.length, 5);
 const purse = () => f.inv.filter((s) => s && s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0); const purseBefore = purse();
@@ -428,7 +448,7 @@ players.splice(0, players.length, ...others, h);
 let haven; for (let rx = 3; rx < 400 && !haven; rx++) { const site = sites.siteOf(rx, 11); if (site && site.type.key === "adventurer_camp") haven = site; }
 assert.ok(haven, "an adventurers' camp exists somewhere"); assert.equal(sites.waypoints(h).length, 0);
 h.dimension = makeLand(); h.dimension.getPlayers = () => [h];
-h.location = { x: haven.x - 80, y: 64, z: haven.z }; sites.explore(h); h.location = { x: haven.x - 20, y: 64, z: haven.z }; sites.explore(h);
+h.location = { x: haven.x - 60, y: 64, z: haven.z }; sites.explore(h); h.location = { x: haven.x - 20, y: 64, z: haven.z }; sites.explore(h);
 const ways = sites.waypoints(h); assert.equal(ways.length, 1); assert.equal(ways[0].name, haven.type.name);
 const visitor = mkPlayer("ivy"); visitor.dimension = h.dimension; visitor.location = { ...h.location }; sites.explore(visitor);
 assert.equal(sites.waypoints(visitor).length, 1, "a later visitor learns the camp too");
