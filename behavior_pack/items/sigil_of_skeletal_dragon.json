@@ -1,0 +1,24 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:sigil_of_skeletal_dragon",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_sigil_of_skeletal_dragon"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.sigil_of_skeletal_dragon.name"
+      },
+      "minecraft:max_stack_size": 16,
+      "minecraft:rarity": "rare",
+      "minecraft:glint": true
+    }
+  }
+}

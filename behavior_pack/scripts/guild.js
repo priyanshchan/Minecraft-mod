@@ -4,7 +4,7 @@
 // one of which can be worn in front of the player's name.
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { creditedPlayer, giveItem, grantXp, notify, profileOf, registerMenu, touch } from "./rpg.js";
+import { ADVANCE_LEVEL, creditedPlayer, giveItem, grantXp, notify, profileOf, questEvent, registerMenu, touch } from "./rpg.js";
 import { partyOf } from "./party.js";
 
 const NS = "overlord";
@@ -31,6 +31,9 @@ export const BOUNTIES = [
   { target: id("skeleton_mage"), what: "Skeleton Mages", count: 6, coins: 12, xp: 180 },
   { target: id("quagoa"), what: "Quagoa", count: 6, coins: 12, xp: 180 },
   { target: id("ogre"), what: "Ogres", count: 4, coins: 14, xp: 200 },
+  { target: id("beastman"), what: "Beastman Warriors", count: 8, coins: 12, xp: 180 },
+  { target: id("shadow_demon"), what: "Shadow Demons", count: 6, coins: 14, xp: 200 },
+  { target: id("vampire_bride"), what: "Vampire Brides", count: 4, coins: 14, xp: 220 },
 ];
 const MAX_STREAK = 5; // each day of streak adds 10% to the reward, up to +50%
 
@@ -88,6 +91,7 @@ function advanceBounty(player, typeId) {
   giveItem(player, COIN, coins);
   player.sendMessage(`§6[Bounty] §fDaily bounty complete! §6${coins} Gold Coins§f, §a${xp} XP§f. Streak: §e${record.streak} day${record.streak === 1 ? "" : "s"}§f (+${record.streak * 10}%).`);
   grantXp(player, xp, "bounty");
+  questEvent(player, "bounty");
 }
 
 /** Day on which each player was last told about the bounty. */
@@ -123,7 +127,9 @@ export const TITLES = [
   { key: "demon_hunter", name: "Demon Hunter", how: "Slay 50 demons", earned: (p) => slain(p, [id("hellhound"), id("shadow_demon"), id("evil_lord_wrath")]) >= 50 },
   { key: "worlds_shield", name: "World's Shield", how: "Help defeat 3 world bosses", earned: (p) => slain(p, [id("world_bosses")]) >= 3 },
   { key: "giant_killer", name: "Giant Killer", how: "Defeat Gargantua", earned: (p) => slain(p, [id("gargantua")]) >= 1 },
-  { key: "dragon_slayer", name: "Dragon Slayer", how: "Defeat the Frost Dragon", earned: (p) => slain(p, [id("frost_dragon"), "minecraft:ender_dragon"]) >= 1 },
+  { key: "dragon_slayer", name: "Dragon Slayer", how: "Defeat a dragon", earned: (p) => slain(p, [id("frost_dragon"), id("skeletal_dragon"), "minecraft:ender_dragon"]) >= 1 },
+  { key: "demon_emperors_bane", name: "Demon Emperor's Bane", how: "Defeat Jaldabaoth", earned: (p) => slain(p, [id("jaldabaoth")]) >= 1 },
+  { key: "grandmaster", name: "Grandmaster", how: `Bring a class to its advanced form (level ${ADVANCE_LEVEL})`, earned: (p) => p.cls !== "none" && p.level >= ADVANCE_LEVEL },
   { key: "guardians_bane", name: "Guardian's Bane", how: "Defeat a Floor Guardian", earned: (p) => slain(p, GUARDIANS) >= 1 },
   { key: "adamantite", name: "Adamantite Adventurer", how: "Complete 24 guild quests", earned: (p) => p.done >= 24 },
   { key: "rival_of_the_king", name: "Rival of the Sorcerer King", how: "Defeat Ainz Ooal Gown", earned: (p) => slain(p, [id("ainz")]) >= 1 },

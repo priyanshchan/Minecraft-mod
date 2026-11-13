@@ -4,7 +4,7 @@
       "total_exp_required": 0,
       "groups": [
         {
-          "num_to_select": 18,
+          "num_to_select": 20,
           "trades": [
             {
               "wants": [
@@ -230,6 +230,36 @@
                 }
               ],
               "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 30
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:sealing_crystal",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 4
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 28
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:tome_create_undead",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 4
             },
             {
               "wants": [

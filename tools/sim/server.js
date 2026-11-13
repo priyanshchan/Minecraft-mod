@@ -2,7 +2,7 @@ const sig = () => { const subs = []; return { subscribe: (f) => (subs.push(f), f
 export const timers = []; export let tick = 0;
 export const system = {
   get currentTick() { return tick; },
-  runTimeout: (f, t = 0) => { timers.push({ at: tick + t, f }); return 1; },
+  runTimeout: (f, t = 0) => { timers.push({ at: tick + Math.max(1, t), f }); return 1; }, // like the game, never earlier than the next tick
   runInterval: (f, t = 1) => { timers.push({ every: t, f }); return 1; },
   run: (f) => { timers.push({ at: tick + 1, f }); return 1; },
 };
@@ -23,7 +23,7 @@ export const world = {
 };
 export const EntityInitializationCause = { Spawned: "Spawned", Loaded: "Loaded", Born: "Born", Event: "Event", Transformed: "Transformed" };
 export const DisplaySlotId = { BelowName: "BelowName" };
-export const EntityDamageCause = { entityAttack: "entityAttack", magic: "magic" };
+export const EntityDamageCause = { entityAttack: "entityAttack", magic: "magic", fire: "fire", lightning: "lightning", entityExplosion: "entityExplosion", wither: "wither" };
 export const Direction = { Up: "Up", Down: "Down", North: "North", South: "South", East: "East", West: "West" };
 export const EquipmentSlot = { Head: "Head", Chest: "Chest", Legs: "Legs", Feet: "Feet", Mainhand: "Mainhand" };
 export const GameMode = { Creative: "Creative" };

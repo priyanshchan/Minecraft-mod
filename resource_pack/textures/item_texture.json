@@ -17,6 +17,24 @@
     "overlord_aura_whip": {
       "textures": "textures/items/overlord/aura_whip"
     },
+    "overlord_basilisk_eye": {
+      "textures": "textures/items/overlord/basilisk_eye"
+    },
+    "overlord_beast_hide": {
+      "textures": "textures/items/overlord/beast_hide"
+    },
+    "overlord_beasthide_boots": {
+      "textures": "textures/items/overlord/beasthide_boots"
+    },
+    "overlord_beasthide_chestplate": {
+      "textures": "textures/items/overlord/beasthide_chestplate"
+    },
+    "overlord_beasthide_helmet": {
+      "textures": "textures/items/overlord/beasthide_helmet"
+    },
+    "overlord_beasthide_leggings": {
+      "textures": "textures/items/overlord/beasthide_leggings"
+    },
     "overlord_blade_bug": {
       "textures": "textures/items/overlord/blade_bug"
     },
@@ -25,6 +43,18 @@
     },
     "overlord_blue_potion": {
       "textures": "textures/items/overlord/blue_potion"
+    },
+    "overlord_bonedragon_boots": {
+      "textures": "textures/items/overlord/bonedragon_boots"
+    },
+    "overlord_bonedragon_chestplate": {
+      "textures": "textures/items/overlord/bonedragon_chestplate"
+    },
+    "overlord_bonedragon_helmet": {
+      "textures": "textures/items/overlord/bonedragon_helmet"
+    },
+    "overlord_bonedragon_leggings": {
+      "textures": "textures/items/overlord/bonedragon_leggings"
     },
     "overlord_bow_of_houyi": {
       "textures": "textures/items/overlord/bow_of_houyi"
@@ -74,6 +104,12 @@
     "overlord_demon_heart": {
       "textures": "textures/items/overlord/demon_heart"
     },
+    "overlord_dragon_bone": {
+      "textures": "textures/items/overlord/dragon_bone"
+    },
+    "overlord_dragonbone_blade": {
+      "textures": "textures/items/overlord/dragonbone_blade"
+    },
     "overlord_dragonscale_boots": {
       "textures": "textures/items/overlord/dragonscale_boots"
     },
@@ -107,6 +143,9 @@
     "overlord_egg_bandit": {
       "textures": "textures/items/overlord/egg_bandit"
     },
+    "overlord_egg_beastman": {
+      "textures": "textures/items/overlord/egg_beastman"
+    },
     "overlord_egg_brain": {
       "textures": "textures/items/overlord/egg_brain"
     },
@@ -121,6 +160,9 @@
     },
     "overlord_egg_cz_delta": {
       "textures": "textures/items/overlord/egg_cz_delta"
+    },
+    "overlord_egg_dark_young": {
+      "textures": "textures/items/overlord/egg_dark_young"
     },
     "overlord_egg_death_knight": {
       "textures": "textures/items/overlord/egg_death_knight"
@@ -140,6 +182,9 @@
     "overlord_egg_elder_lich": {
       "textures": "textures/items/overlord/egg_elder_lich"
     },
+    "overlord_egg_enri": {
+      "textures": "textures/items/overlord/egg_enri"
+    },
     "overlord_egg_entoma": {
       "textures": "textures/items/overlord/egg_entoma"
     },
@@ -155,11 +200,17 @@
     "overlord_egg_frost_dragon": {
       "textures": "textures/items/overlord/egg_frost_dragon"
     },
+    "overlord_egg_frost_giant": {
+      "textures": "textures/items/overlord/egg_frost_giant"
+    },
     "overlord_egg_gargantua": {
       "textures": "textures/items/overlord/egg_gargantua"
     },
     "overlord_egg_gazef": {
       "textures": "textures/items/overlord/egg_gazef"
+    },
+    "overlord_egg_gigant_basilisk": {
+      "textures": "textures/items/overlord/egg_gigant_basilisk"
     },
     "overlord_egg_goblin": {
       "textures": "textures/items/overlord/egg_goblin"
@@ -175,6 +226,15 @@
     },
     "overlord_egg_imperial_knight": {
       "textures": "textures/items/overlord/egg_imperial_knight"
+    },
+    "overlord_egg_jaldabaoth": {
+      "textures": "textures/items/overlord/egg_jaldabaoth"
+    },
+    "overlord_egg_khajiit": {
+      "textures": "textures/items/overlord/egg_khajiit"
+    },
+    "overlord_egg_lakyus": {
+      "textures": "textures/items/overlord/egg_lakyus"
     },
     "overlord_egg_lizardman": {
       "textures": "textures/items/overlord/egg_lizardman"
@@ -218,6 +278,9 @@
     "overlord_egg_shalltear": {
       "textures": "textures/items/overlord/egg_shalltear"
     },
+    "overlord_egg_skeletal_dragon": {
+      "textures": "textures/items/overlord/egg_skeletal_dragon"
+    },
     "overlord_egg_skeleton_mage": {
       "textures": "textures/items/overlord/egg_skeleton_mage"
     },
@@ -245,6 +308,9 @@
     "overlord_egg_zaryusu": {
       "textures": "textures/items/overlord/egg_zaryusu"
     },
+    "overlord_egg_zero": {
+      "textures": "textures/items/overlord/egg_zero"
+    },
     "overlord_egg_zesshi": {
       "textures": "textures/items/overlord/egg_zesshi"
     },
@@ -262,6 +328,9 @@
     },
     "overlord_frost_pain": {
       "textures": "textures/items/overlord/frost_pain"
+    },
+    "overlord_giants_maul": {
+      "textures": "textures/items/overlord/giants_maul"
     },
     "overlord_ginnungagap": {
       "textures": "textures/items/overlord/ginnungagap"
@@ -316,6 +385,9 @@
     },
     "overlord_mask_of_envy": {
       "textures": "textures/items/overlord/mask_of_envy"
+    },
+    "overlord_orb_of_death": {
+      "textures": "textures/items/overlord/orb_of_death"
     },
     "overlord_pleiades_emblem": {
       "textures": "textures/items/overlord/pleiades_emblem"
@@ -413,6 +485,9 @@
     "overlord_sigil_of_cz_delta": {
       "textures": "textures/items/overlord/sigil_of_cz_delta"
     },
+    "overlord_sigil_of_dark_young": {
+      "textures": "textures/items/overlord/sigil_of_dark_young"
+    },
     "overlord_sigil_of_demiurge": {
       "textures": "textures/items/overlord/sigil_of_demiurge"
     },
@@ -430,6 +505,9 @@
     },
     "overlord_sigil_of_gargantua": {
       "textures": "textures/items/overlord/sigil_of_gargantua"
+    },
+    "overlord_sigil_of_jaldabaoth": {
+      "textures": "textures/items/overlord/sigil_of_jaldabaoth"
     },
     "overlord_sigil_of_lupusregina": {
       "textures": "textures/items/overlord/sigil_of_lupusregina"
@@ -449,6 +527,9 @@
     "overlord_sigil_of_shalltear": {
       "textures": "textures/items/overlord/sigil_of_shalltear"
     },
+    "overlord_sigil_of_skeletal_dragon": {
+      "textures": "textures/items/overlord/sigil_of_skeletal_dragon"
+    },
     "overlord_sigil_of_solution": {
       "textures": "textures/items/overlord/sigil_of_solution"
     },
@@ -457,6 +538,9 @@
     },
     "overlord_sigil_of_zesshi": {
       "textures": "textures/items/overlord/sigil_of_zesshi"
+    },
+    "overlord_six_arms_knuckles": {
+      "textures": "textures/items/overlord/six_arms_knuckles"
     },
     "overlord_soul_fragment": {
       "textures": "textures/items/overlord/soul_fragment"

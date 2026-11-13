@@ -1,0 +1,164 @@
+{
+  "tiers": [
+    {
+      "total_exp_required": 0,
+      "groups": [
+        {
+          "num_to_select": 10,
+          "trades": [
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 1
+                }
+              ],
+              "gives": [
+                {
+                  "item": "minecraft:bread",
+                  "quantity": 3
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 2
+                }
+              ],
+              "gives": [
+                {
+                  "item": "minecraft:cooked_beef",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 3
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:red_potion",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 24
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:goblin_horn",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 4
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 2
+                }
+              ],
+              "gives": [
+                {
+                  "item": "minecraft:arrow",
+                  "quantity": 16
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 2
+                }
+              ],
+              "gives": [
+                {
+                  "item": "minecraft:leather",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "minecraft:wheat",
+                  "quantity": 16
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:beast_hide",
+                  "quantity": 3
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "minecraft:rotten_flesh",
+                  "quantity": 16
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:basilisk_eye",
+                  "quantity": 1
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 6
+                }
+              ],
+              "max_uses": 32
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -2550,7 +2550,9 @@ def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, 
         leg.band(4, 6, armor)
         leg.band(8, 12, "#3a2a1e")
     weapon = m.bone("weapon", (-6, 13, -2), parent="rightArm")
-    if weapon_kind == "scythe":
+    if weapon_kind == "none":
+        pass  # bare hands
+    elif weapon_kind == "scythe":
         shaft = weapon.cube((-6.5, 1, -3.5), (1, 34, 1))
         shaft.fill("#1b1a22", noise=3)
         blade = weapon.cube((-6.5, 28, -13), (1, 7, 10))
@@ -2831,10 +2833,10 @@ def dwarf():
                     helmet=True, weapon_kind="hammer", mask="#b5651d", orb="#ff7a1a")
 
 
-def frost_dragon():
-    m = Model("frost_dragon", bounds=(7, 6, 2.0))
-    sc, sc_l, sc_d, belly = "#bfe3f5", "#eaf7ff", "#7fb4d6", "#5f8fb8"
-    pal = {"S": sc, "s": sc_l, "D": sc_d, "B": belly, "e": "#f2c21b", "K": "#15202b", "T": "#ffffff"}
+def frost_dragon(name="frost_dragon", sc="#bfe3f5", sc_l="#eaf7ff", sc_d="#7fb4d6", belly="#5f8fb8",
+                 eye="#f2c21b"):
+    m = Model(name, bounds=(7, 6, 2.0))
+    pal = {"S": sc, "s": sc_l, "D": sc_d, "B": belly, "e": eye, "K": "#15202b", "T": "#ffffff"}
     body = m.bone("body", (0, 12, 0))
     b = body.cube((-6, 8, -10), (12, 10, 20))
     b.fill(sc, noise=6)
@@ -2928,6 +2930,55 @@ def lightning_bolt():
     return m
 
 
+
+# ------------------------------------------------------ v5.0: the wider world
+def skeletal_dragon():
+    return frost_dragon("skeletal_dragon", "#d8d0b4", "#f1eee0", "#a59c7e", "#6e664c", eye="#b6ff4a")
+
+
+def khajiit():
+    return _soldier("khajiit", "#d9c7b0", "#d9c7b0", "#5a1414", "#7a2020", "#3a0c0c", "#2a0a0a", "#1a0606",
+                    helmet=False, weapon_kind="staff", orb="#7a1fff")
+
+
+def gigant_basilisk():
+    return _beast("gigant_basilisk", "#3f5a2a", "#5f7f3f", "#f2e21b", "#7a8a4a", "#55652f")
+
+
+def frost_giant():
+    return _brute("frost_giant", "#9fc4dc", "#cfe6f5", "#6a93b0")
+
+
+def beastman():
+    return _lizard("beastman", "#c07a2a", "#e0a04a", "#7a4a18", "#f1e0b8", ("#8a8f98", "#c9ced6"))
+
+
+def lakyus():
+    return _soldier("lakyus", "#f6dcc8", "#f0d060", "#e9edf2", "#ffffff", "#aab2c0", "#3a4fb0", "#27357a",
+                    helmet=False, weapon_kind="sword")
+
+
+def enri():
+    return _soldier("enri", "#f0cfae", "#b5642e", "#8a6a4a", "#a8845c", "#5f4830", "#b03a2e", "#7a251d",
+                    helmet=False, weapon_kind="none")
+
+
+def zero():
+    return _soldier("zero", "#b9835a", "#b9835a", "#5a3a2a", "#7a5238", "#3a2418", "#3a3a44", "#22222a",
+                    helmet=False, weapon_kind="none")
+
+
+def dark_young():
+    return _beast("dark_young", "#0c0b10", "#1f1c28", "#c05bff", "#2a2433", "#17141d")
+
+
+def jaldabaoth():
+    m = _soldier("jaldabaoth", "#e8c9a8", "#1b1a22", "#a3121f", "#c93a3a", "#5f0a12", "#2a0a0e", "#17060a",
+                 helmet=False, weapon_kind="none", mask="#d8d0c0")
+    _wings(m, "#3a0d12", "#6a1a20")
+    return m
+
+
 ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_lich, hamsuke,
        narberal, pandoras_actor, old_guarder, aura, mare, gazef, clementine, nazarick_maid,
        brain, zaryusu, cz_delta, nfirea,
@@ -2937,4 +2988,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        war_troll, vampire_bride, dwarf, frost_dragon, frost_breath,
        hellhound, shadow_demon, evil_lord_wrath, archangel_flame, dominion_authority, theocracy_priest, nigun,
        climb, zesshi, eclair,
+       skeletal_dragon, khajiit, gigant_basilisk, frost_giant, beastman, lakyus, enri, zero, dark_young, jaldabaoth,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

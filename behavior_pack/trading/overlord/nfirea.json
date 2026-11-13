@@ -4,7 +4,7 @@
       "total_exp_required": 0,
       "groups": [
         {
-          "num_to_select": 9,
+          "num_to_select": 11,
           "trades": [
             {
               "wants": [
@@ -76,6 +76,36 @@
               "gives": [
                 {
                   "item": "minecraft:glistering_melon_slice",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 9
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:troll_elixir",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 32
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 18
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:scroll_of_rebirth",
                   "quantity": 1
                 }
               ],

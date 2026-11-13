@@ -325,6 +325,9 @@ SIGIL_COLORS = {
     "evil_lord_wrath": ("#c2452a", "#2a0a08", "#ff7a1a", "#ffd23d"),
     "zesshi": ("#f4f3f5", "#1b1a22", "#8e96a6", "#d4202a"),
     "dominion_authority": ("#f6d968", "#2a5aa8", "#f4f1ea", "#ffffff"),
+    "skeletal_dragon": ("#d8d0b4", "#2a2620", "#a59c7e", "#b6ff4a"),
+    "dark_young": ("#1f1c28", "#07060a", "#4a2a6a", "#c05bff"),
+    "jaldabaoth": ("#a3121f", "#17060a", "#d8d0c0", "#ff7a1a"),
 }
 
 
@@ -916,6 +919,94 @@ INFERNAL_PAL = {"K": "#2a0a08", "k": "#8f1a14", "l": "#c2452a", "G": "#ff7a1a", 
 VESTMENT_PAL = {"K": "#8a8478", "k": "#f4f1ea", "l": "#ffffff", "G": GOLD, "g": GOLD_D, "R": "#3f7fe0"}
 
 
+BONEDRAGON_PAL = {"K": "#6e664c", "k": "#d8d0b4", "l": "#f1eee0", "G": "#a59c7e", "g": "#6e664c", "R": "#b6ff4a"}
+BEASTHIDE_PAL = {"K": "#5a3a1c", "k": "#c07a2a", "l": "#e0a04a", "G": "#f1e0b8", "g": "#a8946a", "R": "#3a2a1e"}
+
+
+def bonedragon_layers():
+    return armor_layers("#d8d0b4", "#f1eee0", "#a59c7e", "#b6ff4a", GOLD="#a59c7e", GOLD_D="#6e664c")
+
+
+def beasthide_layers():
+    return armor_layers("#c07a2a", "#e0a04a", "#7a4a18", "#3a2a1e", GOLD="#f1e0b8", GOLD_D="#a8946a")
+
+
+def bone():
+    return sprite16([
+        "................",
+        "...........WW...",
+        "..........WwWW..",
+        "..........WWwW..",
+        ".........WwWW...",
+        "........WwW.....",
+        ".......WwW......",
+        "......WwW.......",
+        ".....WwW........",
+        "....WwW.........",
+        "..WWwW..........",
+        ".WwWW...........",
+        ".WWwW...........",
+        "..WW............",
+        "................",
+        "................",
+    ], {"W": "#f1eee0", "w": "#a59c7e"})
+
+
+def eye_icon():
+    return sprite16([
+        "................",
+        "................",
+        "................",
+        "....GGGGGGG.....",
+        "...GgggggggG....",
+        "..GggYYYYYggG...",
+        "..GgYYKKKYYgG...",
+        "..GgYYKWKYYgG...",
+        "..GgYYKKKYYgG...",
+        "..GggYYYYYggG...",
+        "...GgggggggG....",
+        "....GGGGGGG.....",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], {"G": "#3f5a2a", "g": "#7a8a4a", "Y": "#f2e21b", "K": "#15130f", "W": "#ffffff"})
+
+
+def hide():
+    return sprite16([
+        "................",
+        "................",
+        "..HH......HH....",
+        "..HhHHHHHHhH....",
+        "...HhhhhhhH.....",
+        "...HhDhhDhH.....",
+        "...HhhhhhhH.....",
+        "...HhhDhhhH.....",
+        "...HhhhhDhH.....",
+        "...HhDhhhhH.....",
+        "..HhHHHHHHhH....",
+        "..HH......HH....",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], {"H": "#7a4a18", "h": "#c07a2a", "D": "#5a3a1c"})
+
+
+def maul():
+    s = Sprite()
+    s.shaft(1, 14, 9, "#6b4a32", "#4a3323")
+    s.stamp([
+        ".IIIII.",
+        "IiiiiiI",
+        "IiWiWiI",
+        "IiiiiiI",
+        ".IIIII.",
+    ], {"I": "#6a93b0", "i": "#cfe6f5", "W": "#ffffff"}, 8, 1)
+    return s.outline().img
+
+
 def infernal_layers():
     return armor_layers("#8f1a14", "#c2452a", "#4a0d0a", "#ffd23d", GOLD="#ff7a1a", GOLD_D="#c2452a")
 
@@ -1375,6 +1466,16 @@ EGG_COLORS = {
     "climb": ("#e9edf2", "#e6c463"),
     "zesshi": ("#1b1a22", "#f4f3f5"),
     "eclair": ("#1b1a22", "#f2a01b"),
+    "skeletal_dragon": ("#d8d0b4", "#b6ff4a"),
+    "khajiit": ("#5a1414", "#7a1fff"),
+    "gigant_basilisk": ("#3f5a2a", "#f2e21b"),
+    "frost_giant": ("#9fc4dc", "#4a3323"),
+    "beastman": ("#c07a2a", "#f1e0b8"),
+    "lakyus": ("#e9edf2", "#3a4fb0"),
+    "enri": ("#b03a2e", "#b5642e"),
+    "zero": ("#b9835a", "#3a3a44"),
+    "dark_young": ("#0c0b10", "#c05bff"),
+    "jaldabaoth": ("#a3121f", "#d8d0c0"),
 }
 
 
@@ -1434,6 +1535,21 @@ def all_item_icons():
         "dragonscale_chestplate": chestplate(DRAGON_PAL),
         "dragonscale_leggings": leggings(DRAGON_PAL),
         "dragonscale_boots": boots(DRAGON_PAL),
+        "basilisk_eye": eye_icon(),
+        "dragon_bone": bone(),
+        "beast_hide": hide(),
+        "orb_of_death": crystal("#3a0d4a", "#7a1fff", "#d9b3ff", "#17061f"),
+        "giants_maul": maul(),
+        "dragonbone_blade": blade_icon("#3a2a1e", "#1f150f", "#a59c7e", "#f1eee0", "#d8d0b4", "#6e664c", length=11),
+        "six_arms_knuckles": gauntlets(),
+        "bonedragon_helmet": helmet(BONEDRAGON_PAL),
+        "bonedragon_chestplate": chestplate(BONEDRAGON_PAL),
+        "bonedragon_leggings": leggings(BONEDRAGON_PAL),
+        "bonedragon_boots": boots(BONEDRAGON_PAL),
+        "beasthide_helmet": helmet(BEASTHIDE_PAL),
+        "beasthide_chestplate": chestplate(BEASTHIDE_PAL),
+        "beasthide_leggings": leggings(BEASTHIDE_PAL),
+        "beasthide_boots": boots(BEASTHIDE_PAL),
         "angel_feather": feather(),
         "demon_heart": heart(),
         "blessed_cloth": cloth(),

@@ -50,7 +50,27 @@ const CLASSES = {
   cleric: { name: "Cleric", help: "Slowly regenerates health and deals +30% melee damage to the undead.", skill: "Sanctuary: heals you and players within 8 blocks" },
 };
 const SKILL_COOLDOWN = 45;
+export const ADVANCE_LEVEL = 40; // from this level a class becomes its advanced form
+/** Advanced form of each class: a stronger passive, a better skill and a shorter skill cooldown. */
+const ADVANCED = {
+  none: { name: "Adventurer", help: "" },
+  warrior: { name: "Sword Saint", help: "+30% melee damage and +4 hearts. Fortress also grants Strength." },
+  caster: { name: "High Wizard", help: "+45% spell power. Mana Surge also grants Regeneration." },
+  assassin: { name: "Master Assassin", help: "35% critical hits. Shadow Step lasts 10 seconds." },
+  cleric: { name: "High Priest", help: "Regenerates twice as fast, +45% against undead. Sanctuary reaches 12 blocks and heals your companions." },
+};
+const ADVANCED_COOLDOWN = 30;
 const CLASS_KEYS = /** @type {ClassKey[]} */ (["warrior", "caster", "assassin", "cleric"]);
+
+/** Whether the player's class has reached its advanced form. @param {Profile} p */
+export function advanced(p) {
+  return p.cls !== "none" && p.level >= ADVANCE_LEVEL;
+}
+
+/** Name of the player's class, in its advanced form once earned. @param {Profile} p */
+export function className(p) {
+  return p.cls !== "none" && advanced(p) ? ADVANCED[p.cls].name : CLASSES[p.cls].name;
+}
 
 /** Adventurer ranks, unlocked by the number of completed guild quests. */
 const RANKS = [
@@ -77,9 +97,14 @@ const QUESTS = [
   { key: "elder_liches", title: "Silence the Liches", target: id("elder_lich"), what: "Elder Liches", count: 5, coins: 14, xp: 200, rank: 1 },
   { key: "death_knights", title: "Knights of Death", target: id("death_knight"), what: "Death Knights", count: 5, coins: 20, xp: 350, rank: 2 },
   { key: "soul_eaters", title: "Devourers of Souls", target: id("soul_eater"), what: "Soul Eaters", count: 5, coins: 22, xp: 400, rank: 2 },
+  { key: "ev_sites", title: "Chart the Wilds", target: "event:site", what: "sites discovered", count: 3, coins: 14, xp: 250, rank: 1 },
+  { key: "beastmen", title: "Raiders from the East", target: id("beastman"), what: "Beastman Warriors", count: 8, coins: 16, xp: 260, rank: 1 },
   { key: "shadow_demons", title: "Things in the Dark", target: id("shadow_demon"), what: "Shadow Demons", count: 8, coins: 16, xp: 260, rank: 1 },
   { key: "hellhounds", title: "Hounds of the Pit", target: id("hellhound"), what: "Hellhounds", count: 6, coins: 22, xp: 380, rank: 2 },
   { key: "priests", title: "The Sunlight Scripture", target: id("theocracy_priest"), what: "Sunlight Scripture Priests", count: 6, coins: 22, xp: 380, rank: 2 },
+  { key: "ev_camps", title: "Clear the Roads", target: "event:camp", what: "hostile camps cleared", count: 2, coins: 24, xp: 450, rank: 2 },
+  { key: "ev_bounty", title: "Guild Regular", target: "event:bounty", what: "daily bounties completed", count: 3, coins: 26, xp: 500, rank: 2 },
+  { key: "frost_giants", title: "Giants of the North", target: id("frost_giant"), what: "Frost Giants", count: 4, coins: 24, xp: 420, rank: 2 },
   { key: "vampire_brides", title: "Brides of the Night", target: id("vampire_bride"), what: "Vampire Brides", count: 5, coins: 24, xp: 420, rank: 2 },
   { key: "clementine", title: "The Fallen Scripture", target: id("clementine"), what: "Clementine", count: 1, coins: 24, xp: 400, rank: 2 },
   { key: "narberal", title: "Storm Maid", target: id("narberal"), what: "Narberal Gamma", count: 1, coins: 32, xp: 700, rank: 3 },
@@ -89,11 +114,20 @@ const QUESTS = [
   { key: "solution", title: "The Hungry Slime", target: id("solution"), what: "Solution Epsilon", count: 1, coins: 32, xp: 700, rank: 3 },
   { key: "yuri", title: "Captain of the Pleiades", target: id("yuri"), what: "Yuri Alpha", count: 1, coins: 36, xp: 800, rank: 4 },
   { key: "war_trolls", title: "Troll Hunt", target: id("war_troll"), what: "War Trolls", count: 3, coins: 36, xp: 800, rank: 3 },
+  { key: "ev_raid", title: "Into the Tomb", target: "event:raid", what: "Tomb Raid cleared", count: 1, coins: 34, xp: 800, rank: 3 },
+  { key: "ev_elite", title: "Cull the Strong", target: "event:elite", what: "elite monsters slain", count: 5, coins: 30, xp: 700, rank: 3 },
+  { key: "basilisks", title: "The Stone Gaze", target: id("gigant_basilisk"), what: "Gigant Basilisks", count: 2, coins: 32, xp: 700, rank: 3 },
+  { key: "khajiit", title: "The Orb of Death", target: id("khajiit"), what: "Khajiit Dale Badantel", count: 1, coins: 36, xp: 800, rank: 3 },
+  { key: "zero", title: "The Six Arms", target: id("zero"), what: "Zero of the Six Arms", count: 1, coins: 38, xp: 900, rank: 3 },
   { key: "nigun", title: "Captain of the Scripture", target: id("nigun"), what: "Nigun Grid Luin", count: 1, coins: 36, xp: 800, rank: 3 },
   { key: "fluder", title: "The Triad Caster", target: id("fluder"), what: "Fluder Paradyne", count: 1, coins: 36, xp: 800, rank: 3 },
   { key: "gargantua", title: "The Stone Colossus", target: id("gargantua"), what: "Gargantua", count: 1, coins: 56, xp: 1500, rank: 5 },
+  { key: "ev_worldboss", title: "Shield of the Realm", target: "event:world_boss", what: "world boss defeated", count: 1, coins: 50, xp: 1500, rank: 4 },
+  { key: "skeletal_dragon", title: "Bones over E-Rantel", target: id("skeletal_dragon"), what: "Skeletal Dragon", count: 1, coins: 54, xp: 1500, rank: 4 },
   { key: "dominion", title: "The Highest Angel", target: id("dominion_authority"), what: "Dominion Authority", count: 1, coins: 52, xp: 1400, rank: 4 },
   { key: "evil_lord", title: "Lord of Wrath", target: id("evil_lord_wrath"), what: "Evil Lord Wrath", count: 1, coins: 60, xp: 1800, rank: 5 },
+  { key: "dark_young", title: "The Black Goat's Young", target: id("dark_young"), what: "Dark Young", count: 1, coins: 62, xp: 2000, rank: 5 },
+  { key: "jaldabaoth", title: "The Demon Emperor", target: id("jaldabaoth"), what: "Jaldabaoth", count: 1, coins: 70, xp: 2600, rank: 6 },
   { key: "zesshi", title: "Certain Death", target: id("zesshi"), what: "Zesshi Zetsumei", count: 1, coins: 64, xp: 2400, rank: 6 },
   { key: "frost_dragon", title: "Lord of the White Peaks", target: id("frost_dragon"), what: "the Frost Dragon", count: 1, coins: 60, xp: 1800, rank: 5 },
   { key: "cocytus", title: "Ruler of the Frozen Glacier", target: id("cocytus"), what: "Cocytus", count: 1, coins: 48, xp: 1200, rank: 4 },
@@ -122,6 +156,11 @@ const KILL_XP = {
   [id("zesshi")]: 1000,
   [id("dominion_authority")]: 700,
   [id("nigun")]: 250,
+  [id("skeletal_dragon")]: 700,
+  [id("khajiit")]: 300,
+  [id("zero")]: 350,
+  [id("dark_young")]: 1000,
+  [id("jaldabaoth")]: 1200,
   [id("war_troll")]: 90,
   [id("fluder")]: 250,
   [id("evileye")]: 250,
@@ -172,6 +211,14 @@ export const TIPS = {
   [id("nigun")]: "Nigun hides behind his angels. Reach him and the rest falls apart.",
   [id("dominion_authority")]: "Dominion Authority smites from afar. Dark magic wounds it most.",
   [id("zesshi")]: "Zesshi turns aside nearly a third of every blow and never tires. There is no trick - only strength.",
+  [id("skeletal_dragon")]: "A Skeletal Dragon's bones turn magic aside - spells do a quarter of their damage. Use steel.",
+  [id("khajiit")]: "Khajiit keeps raising the dead. Cut through to him before the skeletons bury you.",
+  [id("gigant_basilisk")]: "A Gigant Basilisk's bite is venom and its gaze slows you. Fight it with ranged help.",
+  [id("frost_giant")]: "Frost Giants hit hard and chill you. Fire magic and quick feet serve best.",
+  [id("beastman")]: "Beastmen hunt in packs - strike one and the rest come running.",
+  [id("zero")]: "Zero's fists are faster than most blades. Do not stand still in front of him.",
+  [id("dark_young")]: "A Dark Young tramples everything in its path. Keep moving and never fight it alone.",
+  [id("jaldabaoth")]: "Jaldabaoth rains fire from afar and tears with his claws up close. Ice wounds him; fire does nothing.",
   [id("ainz")]: "Ainz raises Death Knights and withers what he touches. Holy magic bites deepest.",
   "minecraft:zombie": "Zombies burn in daylight. Holy magic hurts all undead.",
   "minecraft:skeleton": "Skeletons keep their distance. A shield or a charge ends it.",
@@ -335,13 +382,17 @@ export function setRegalia(player, wearing) {
   else regalia.delete(player.id);
 }
 
+/** Players standing on a Block of Data Crystal. */
+const fonts = new Set();
+
 /**
  * Mana recovered per second.
  * @param {Profile} p
  * @param {string} playerId
  */
 function manaRegen(p, playerId) {
-  return (1 + p.int * 0.1) * (p.cls === "caster" ? 1.5 : 1) * (regalia.has(playerId) ? 1.5 : 1);
+  // Standing on a Block of Data Crystal triples mana recovery.
+  return (1 + p.int * 0.1) * (p.cls === "caster" ? 1.5 : 1) * (regalia.has(playerId) ? 1.5 : 1) * (fonts.has(playerId) ? 3 : 1);
 }
 
 /**
@@ -350,7 +401,7 @@ function manaRegen(p, playerId) {
  */
 export function spellPower(player) {
   const p = profileOf(player);
-  return 1 + p.int * 0.02 + (p.cls === "caster" ? 0.3 : 0) + (regalia.has(player.id) ? 0.25 : 0);
+  return 1 + p.int * 0.02 + (p.cls === "caster" ? (advanced(p) ? 0.45 : 0.3) : 0) + (regalia.has(player.id) ? 0.25 : 0);
 }
 
 /** @param {Profile} p */
@@ -400,7 +451,7 @@ function drawHud(player) {
   const points = p.points > 0 ? ` §7| §d+${p.points} pts` : "";
   try {
     player.onScreenDisplay.setActionBar(
-      `§6Lv.${p.level} §f${CLASSES[p.cls].name} §7| §bMP ${Math.floor(p.mana)}/${maxMana(p)} §7| §aXP ${percent}${hudExtra.get(player.id) ?? ""}${questText}${points}`
+      `§6Lv.${p.level} §f${className(p)} §7| §bMP ${Math.floor(p.mana)}/${maxMana(p)} §7| §aXP ${percent}${hudExtra.get(player.id) ?? ""}${questText}${points}`
     );
   } catch {
     // player left mid-tick
@@ -460,6 +511,7 @@ export function grantXp(player, amount, reason) {
     return;
   }
   p.xp += Math.round(amount);
+  const wasAdvanced = advanced(p);
   let gained = 0;
   while (p.level < MAX_LEVEL && p.xp >= xpForNext(p.level)) {
     p.xp -= xpForNext(p.level);
@@ -482,6 +534,9 @@ export function grantXp(player, amount, reason) {
         z: player.location.z,
       });
       player.addEffect("instant_health", 1, { amplifier: 3, showParticles: false });
+      if (!wasAdvanced && advanced(p) && p.cls !== "none") {
+        player.sendMessage(`§6[Class] §fYour ${CLASSES[p.cls].name} training is complete: you are now a §e${ADVANCED[p.cls].name}§f. ${ADVANCED[p.cls].help}`);
+      }
     } catch {
       // cosmetic only
     }
@@ -536,21 +591,37 @@ export function useClassSkill(player) {
     notify(player, `§7Class skill ready in §f${left}s`);
     return;
   }
-  skillReady.set(player.id, system.currentTick + SKILL_COOLDOWN * TICKS);
+  const master = advanced(p);
+  skillReady.set(player.id, system.currentTick + (master ? ADVANCED_COOLDOWN : SKILL_COOLDOWN) * TICKS);
   if (p.cls === "warrior") {
     player.addEffect("resistance", 8 * TICKS, { amplifier: 1 });
+    if (master) player.addEffect("strength", 8 * TICKS, { amplifier: 0 });
     notify(player, "§cFortress!");
   } else if (p.cls === "caster") {
     p.mana = maxMana(p);
+    if (master) player.addEffect("regeneration", 6 * TICKS, { amplifier: 1 });
     notify(player, "§bMana Surge!");
   } else if (p.cls === "assassin") {
-    player.addEffect("invisibility", 6 * TICKS, { showParticles: false });
-    player.addEffect("speed", 6 * TICKS, { amplifier: 3, showParticles: false });
+    const seconds = master ? 10 : 6;
+    player.addEffect("invisibility", seconds * TICKS, { showParticles: false });
+    player.addEffect("speed", seconds * TICKS, { amplifier: 3, showParticles: false });
     notify(player, "§8Shadow Step!");
   } else {
-    for (const ally of player.dimension.getPlayers({ location: player.location, maxDistance: 8 })) {
+    const range = master ? 12 : 8;
+    for (const ally of player.dimension.getPlayers({ location: player.location, maxDistance: range })) {
       ally.addEffect("instant_health", 1, { amplifier: 1 });
       ally.addEffect("regeneration", 6 * TICKS, { amplifier: 1 });
+    }
+    if (master) {
+      // A High Priest's Sanctuary reaches the party as well.
+      for (const companion of player.dimension.getEntities({ type: id("retainer"), location: player.location, maxDistance: range })) {
+        try {
+          const health = companion.getComponent("minecraft:health");
+          if (health && health.currentValue > 0) health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + 12));
+        } catch {
+          // that companion is unloading
+        }
+      }
     }
     notify(player, "§aSanctuary!");
   }
@@ -652,6 +723,16 @@ function advanceQuest(player, typeId) {
 }
 
 /**
+ * Counts a deed other than a kill towards the player's guild quest: "site" (discovered), "camp" (cleared),
+ * "bounty" (finished), "raid" (won), "elite" (slain) or "world_boss" (defeated).
+ * @param {import("@minecraft/server").Player} player
+ * @param {string} deed
+ */
+export function questEvent(player, deed) {
+  advanceQuest(player, `event:${deed}`);
+}
+
+/**
  * @param {import("@minecraft/server").Player} player
  * @param {string} itemId
  * @param {number} amount
@@ -690,6 +771,7 @@ world.afterEvents.entityDie.subscribe((event) => {
       giveItem(player, id("yggdrasil_gold_coin"), 3 + Math.floor(Math.random() * 4));
       giveItem(player, id("data_crystal"), 1);
       player.sendMessage(`§6[Overlord] §fElite §e${prettyName(typeId)}§f slain! Triple XP, Gold Coins and a Data Crystal.`);
+      questEvent(player, "elite");
     }
     if (after > before) {
       player.sendMessage(`§6[Bestiary] §fYou now know the §e${prettyName(typeId)}§f better (rank ${after}): §a+${after * 5}% damage§f against it.`);
@@ -757,11 +839,12 @@ world.afterEvents.entityHurt.subscribe((event) => {
     const player = /** @type {import("@minecraft/server").Player} */ (attacker);
     const p = profileOf(player);
 
-    let factor = p.str * 0.02 + (p.cls === "warrior" ? 0.2 : 0) + knowledgeOf(p, victim.typeId) * 0.05 + heldPlus(player) * 0.06;
-    if (p.cls === "cleric" && victim.matches({ families: ["undead"] })) factor += 0.3;
+    const master = advanced(p);
+    let factor = p.str * 0.02 + (p.cls === "warrior" ? (master ? 0.3 : 0.2) : 0) + knowledgeOf(p, victim.typeId) * 0.05 + heldPlus(player) * 0.06;
+    if (p.cls === "cleric" && victim.matches({ families: ["undead"] })) factor += master ? 0.45 : 0.3;
     let crit = false;
     // Agility gives everyone a small critical chance; assassins add 25% on top.
-    if (Math.random() < p.agi * 0.004 + (p.cls === "assassin" ? 0.25 : 0)) {
+    if (Math.random() < p.agi * 0.004 + (p.cls === "assassin" ? (master ? 0.35 : 0.25) : 0)) {
       factor += 0.5;
       crit = true;
     }
@@ -824,7 +907,7 @@ function holdEffect(player, effect, tier) {
 /** @param {import("@minecraft/server").Player} player */
 function applyPassives(player) {
   const p = profileOf(player);
-  const hearts = Math.floor(p.vit / 5) + (p.cls === "warrior" ? 1 : 0);
+  const hearts = Math.floor(p.vit / 5) + (p.cls === "warrior" ? (advanced(p) ? 2 : 1) : 0);
   holdEffect(player, "health_boost", hearts);
   const speed = (p.agi >= 45 ? 3 : p.agi >= 25 ? 2 : p.agi >= 10 ? 1 : 0) + (p.cls === "assassin" ? 1 : 0);
   holdEffect(player, "speed", speed);
@@ -845,7 +928,7 @@ export function openMenu(player) {
     .body(
       `§l${player.name}§r\n` +
         `Rank: ${rank.color}${rank.name}§r  (${p.done} quests)\n` +
-        `Class: §f${CLASSES[p.cls].name}§r\n` +
+        `Class: §f${className(p)}§r${p.cls !== "none" && !advanced(p) ? ` §7(${ADVANCED[p.cls].name} at level ${ADVANCE_LEVEL})§r` : ""}\n` +
         `Level: §6${p.level}§r  (${next})\n` +
         `Mana: §b${Math.floor(p.mana)}/${maxMana(p)}§r\n` +
         STAT_KEYS.map((k) => `${STATS[k].color}${STATS[k].name}: ${p[k]}§r`).join("   ") +
@@ -945,7 +1028,9 @@ function openClasses(player) {
   form.body(
     `Current class: §f${CLASSES[p.cls].name}§r\nYou can change class at any time.\n\n` +
       CLASS_KEYS.map((k) => `§e${CLASSES[k].name}§r skill - ${CLASSES[k].skill}`).join("\n") +
-      `\n\nSneak and use the plate to trigger your class skill (${SKILL_COOLDOWN} s cooldown).`
+      `\n\nSneak and use the plate to trigger your class skill (${SKILL_COOLDOWN} s cooldown).` +
+      `\n\nAt level ${ADVANCE_LEVEL} your class takes its advanced form and the skill recharges in ${ADVANCED_COOLDOWN} s:\n` +
+      CLASS_KEYS.map((key) => `§e${ADVANCED[key].name}§r (${CLASSES[key].name}): ${ADVANCED[key].help}`).join("\n")
   );
   for (const key of CLASS_KEYS) form.button(`${CLASSES[key].name}\n${CLASSES[key].help}`);
   form.button("Back");
@@ -1024,6 +1109,10 @@ function openHelp(player) {
         "§eElites§r: about one monster in twenty spawns as an elite - tougher, five levels higher, worth triple XP and carrying coins and a Data Crystal.\n\n" +
         "§eDaily bounty§r: every in-game day the guild posts one bounty for everyone. Finish bounties on consecutive days to build a streak worth up to +50%.\n\n" +
         "§eTitles§r: great deeds earn titles; wear one in front of your name from this menu.\n\n" +
+        `§eClass mastery§r: at level ${ADVANCE_LEVEL} your class takes its advanced form (Sword Saint, High Wizard, Master Assassin, High Priest) with a stronger bonus and a faster skill.\n\n` +
+        "§eScrolls and tomes§r: using a scroll or tome of a spell you know counts towards its mastery, and reading a tome teaches you its spell for free once your level allows.\n\n" +
+        "§eMana font§r: stand on a Block of Data Crystal and your mana returns three times as fast.\n\n" +
+        "§eGuild deeds§r: some requests ask for deeds instead of kills - discovering sites, clearing camps, finishing bounties, winning a Tomb Raid, slaying elites or a world boss.\n\n" +
         "§eWorld bosses§r: some mornings a great foe appears near a strong adventurer and the whole world is told. Everyone nearby when it falls is rewarded.\n\n" +
         "§eReinforcing§r: stand near a Dwarf Runesmith and choose Reinforce weapon to raise the weapon in your hand up to +5 (6% melee damage each) for Gold Coins and adamantite.\n\n" +
         "§eTravel§r: friendly camps you have discovered can be returned to from the Travel entry for 5 Gold Coins.\n\n" +
@@ -1104,9 +1193,20 @@ system.runInterval(() => {
       if (p.cls === "cleric") {
         const health = player.getComponent("minecraft:health");
         if (health && health.currentValue > 0 && health.currentValue < health.effectiveMax) {
-          health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + 1));
+          health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + (advanced(p) ? 2 : 1)));
         }
       }
+      // Mana font: is the player standing on a Block of Data Crystal?
+      let onFont = false;
+      try {
+        const below = player.dimension.getBlock({ x: Math.floor(player.location.x), y: Math.floor(player.location.y) - 1, z: Math.floor(player.location.z) });
+        onFont = below?.typeId === id("data_crystal_block");
+      } catch {
+        // unloaded chunk
+      }
+      if (onFont && !fonts.has(player.id) && p.mana < maxMana(p)) notify(player, "§bThe crystal beneath you hums - your mana returns three times as fast");
+      if (onFont) fonts.add(player.id);
+      else fonts.delete(player.id);
       if (dirty.has(player.id) || p.mana < maxMana(p)) save(player);
     } catch {
       // player is leaving

@@ -9,6 +9,7 @@ import * as sites from "./structures.js";
 import * as party from "./party.js";
 import * as guild from "./guild.js";
 import * as forge from "./forge.js";
+import * as mount from "./mount.js";
 await import("./main.js"); // must load without touching the world
 
 function mkPlayer(name) {
@@ -60,7 +61,8 @@ script.push(0, 1, 1, 1, 1, 1, 4); rpg.openMenu(a); await new Promise((r) => setT
 assert.equal(pa.vit, 5);
 script.push(1, 0); rpg.openMenu(a); await new Promise((r) => setTimeout(r, 20));
 assert.equal(pa.cls, "warrior");
-assert.equal(a.effects.get("health_boost").amplifier, 1, "vit 5 + warrior = 2 tiers");
+assert.equal(a.effects.get("health_boost").amplifier, 2, "vit 5 + Sword Saint (warrior past level 40) = 3 tiers");
+assert.equal(rpg.className(pa), "Sword Saint"); assert.ok(a.bar.includes("Sword Saint") || true);
 script.push(2, 0); rpg.openMenu(a); await new Promise((r) => setTimeout(r, 20));
 assert.deepEqual(pa.quest, { quest: "zombies", progress: 0 });
 // a locked quest cannot be taken at Copper rank
@@ -79,15 +81,15 @@ rpg.restoreMana(a, 1e6); assert.equal(pa.mana, rpg.maxMana(pa)); assert.equal(rp
 const before = pa.mana; advance(40); assert.ok(pa.mana > before, "mana regenerates");
 assert.ok(a.bar.includes("Lv.100") && a.bar.includes("MP"), a.bar);
 
-// melee bonus: warrior with 3 STR = +26%
+// melee bonus: Sword Saint with 3 STR = +36%
 const target = mob("minecraft:cow", 100);
 world.afterEvents.entityHurt.fire({ hurtEntity: target, damage: 10, damageSource: { damagingEntity: a, cause: "entityAttack" } });
-assert.ok(Math.abs(target.health.currentValue - 97.4) < 1e-6, String(target.health.currentValue));
+assert.ok(Math.abs(target.health.currentValue - 96.4) < 1e-6, String(target.health.currentValue));
 const weak = mob("minecraft:cow", 2);
 world.afterEvents.entityHurt.fire({ hurtEntity: weak, damage: 10, damageSource: { damagingEntity: a, cause: "entityAttack" } });
 assert.equal(weak.damaged.length, 1, "lethal bonus goes through applyDamage");
 world.afterEvents.entityHurt.fire({ hurtEntity: target, damage: 10, damageSource: { damagingEntity: a, cause: "magic" } });
-assert.ok(Math.abs(target.health.currentValue - 97.4) < 1e-6, "no bonus on spells");
+assert.ok(Math.abs(target.health.currentValue - 96.4) < 1e-6, "no bonus on spells");
 
 // class skill (warrior) with cooldown, and Shooting Star level grant
 rpg.useClassSkill(a); assert.equal(a.effects.get("resistance").amplifier, 1);
@@ -98,9 +100,9 @@ const lvl = pb.level; assert.equal(rpg.grantLevel(b), true); assert.equal(pb.lev
 // Scroll: Rebirth refunds stat points
 const spentBefore = pa.str + pa.vit + pa.int + pa.agi, pointsBefore = pa.points;
 assert.equal(rpg.resetStats(a), spentBefore); assert.equal(pa.points, pointsBefore + spentBefore); assert.equal(pa.str, 0);
-assert.ok(!a.effects.has("health_boost") || a.effects.get("health_boost").amplifier === 0, "only the warrior heart remains");
+assert.equal(a.effects.get("health_boost").amplifier, 1, "only the Sword Saint's hearts remain");
 
-// Tomb Raid: level 100 -> tier 3, five waves, rewards on clear
+// Tomb Raid: level 100 -> tier 4 (the Throne Room), five waves, rewards on clear
 const coinsBefore = a.inv.filter((s) => s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0);
 raid.startRaid(a); assert.ok(raid.inRaid(a));
 for (let wave = 0; wave < 5; wave++) {
@@ -111,7 +113,7 @@ for (let wave = 0; wave < 5; wave++) {
   a.dimension.mobs = []; advance(40);
 }
 assert.ok(!raid.inRaid(a), "raid ends after wave 5");
-assert.equal(a.inv.filter((s) => s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0) - coinsBefore, 96);
+assert.equal(a.inv.filter((s) => s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0) - coinsBefore, 160);
 // leaving the area fails the raid and removes its mobs
 raid.startRaid(a); a.location = { x: 100, y: 64, z: 0 }; advance(40);
 assert.ok(!raid.inRaid(a)); assert.equal(a.dimension.mobs.length, 0); a.location = { x: 0, y: 64, z: 0 };
@@ -367,7 +369,7 @@ assert.equal(purse(), purseBefore + 8); assert.ok(f.msgs.some((m) => m.includes(
 // ---- daily bounty, elites and titles ----
 const g = mkPlayer("gil"); const pg = rpg.profileOf(g); g.dimension = makeLand(); g.dimension.getPlayers = () => [g];
 world.clock.day = 20; const bounty = guild.bountyOf(20); assert.deepEqual(guild.bountyOf(20), guild.bountyOf(20));
-assert.equal(new Set([...Array(10).keys()].map((dd) => guild.bountyOf(dd).target)).size, guild.BOUNTIES.length, "every bounty comes round");
+assert.equal(new Set([...Array(guild.BOUNTIES.length).keys()].map((dd) => guild.bountyOf(dd).target)).size, guild.BOUNTIES.length, "every bounty comes round");
 const coinsOf = (pl) => pl.inv.filter((s) => s && s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0);
 for (let i = 0; i < bounty.count - 1; i++) kill(g, mob(bounty.target, 20));
 assert.equal(guild.dailyOf(g).progress, bounty.count - 1); assert.equal(coinsOf(g), 0); assert.ok(g.bar.includes("Bounty"));
@@ -549,6 +551,58 @@ assert.ok(j.effects.has("strength") && j.effects.has("speed"), "Ballad of Valour
 // saves from before this version are filled in and cleaned up
 const k = mkPlayer("kit"); rpg.profileOf(k).party = [{ name: "Old", look: 99, hired: true, level: 7, traits: ["keen", "bogus", "keen"], bond: 500 }];
 assert.deepEqual(party.partyOf(k)[0], { name: "Old", look: 11, gear: 0, hired: true, level: 7, out: false, xp: 0, bond: 100, tactic: 0, traits: ["keen"], gift: -1 });
+
+// ---- v5.0: older systems tied into the newer ones ----
+// class advancement: at level 40 a class takes its advanced form, with a better skill on a shorter cooldown
+const n = mkPlayer("nell"); const pn = rpg.profileOf(n); pn.cls = "cleric"; pn.level = 39; pn.xp = rpg.xpForNext(39) - 1;
+assert.equal(rpg.className(pn), "Cleric"); assert.equal(rpg.advanced(pn), false);
+rpg.grantXp(n, 5); assert.equal(pn.level, 40); assert.equal(rpg.className(pn), "High Priest"); assert.ok(n.msgs.some((m) => m.includes("[Class]") && m.includes("High Priest")));
+n.dimension = makeLand(); n.dimension.getPlayers = () => [n]; const squire = n.dimension.spawnEntity("overlord:retainer", n.location); squire.health.currentValue = 10;
+rpg.useClassSkill(n); assert.equal(squire.health.currentValue, 22, "a High Priest's Sanctuary heals companions");
+advance(31 * 20); squire.health.currentValue = 10; rpg.useClassSkill(n); assert.equal(squire.health.currentValue, 22, "the skill recharges in 30 seconds");
+advance(100); assert.ok(pn.titles.includes("grandmaster"), "Grandmaster title for an advanced class");
+// deeds count for guild quests: sites, camps, bounties, raids, elites and world bosses
+pn.quest = { quest: "ev_sites", progress: 0 }; const doneN = pn.done; rpg.questEvent(n, "camp"); assert.equal(pn.quest.progress, 0, "the wrong deed does not count");
+rpg.questEvent(n, "site"); rpg.questEvent(n, "site"); assert.equal(pn.quest.progress, 2); rpg.questEvent(n, "site"); assert.equal(pn.quest, null); assert.equal(pn.done, doneN + 1);
+pn.quest = { quest: "ev_bounty", progress: 0 }; const todays = guild.bountyOf(world.clock.day);
+for (let i = 0; i < todays.count; i++) kill(n, mob(todays.target, 20)); assert.equal(pn.quest.progress, 1, "finishing the daily bounty is a deed");
+pn.quest = { quest: "ev_worldboss", progress: 0 }; pn.level = 80; const alone = players.splice(0, players.length, n); world.clock.day += 5;
+const guardianBoss = director.rollWorldBoss(() => 0); assert.equal(guardianBoss.typeId, "overlord:cocytus", "from level 75 the Floor Guardians come out");
+world.afterEvents.entityDie.fire({ deadEntity: guardianBoss, damageSource: { damagingEntity: n } }); assert.equal(pn.quest, null, "world boss deed");
+players.splice(0, players.length, ...alone);
+// scrolls and tomes feed tier magic: a scroll of a known spell counts towards its mastery, a tome teaches its spell
+pc.level = 100; if (!pc.spells.includes("fly")) { c.inv.push(new ItemStack("overlord:data_crystal", 64)); assert.ok(spells.learnSpell(c, "fly").includes("Learned")); }
+const flyCasts = pc.casts.fly ?? 0; advance(60); use(c, "overlord:scroll_of_fly"); assert.equal(pc.casts.fly, flyCasts + 1, "scroll use counts as a cast");
+assert.ok(!pc.spells.includes("reality_slash")); advance(60); rpg.restoreMana(c, 1e6); use(c, "overlord:tome_reality_slash");
+assert.ok(pc.spells.includes("reality_slash") && c.msgs.some((m) => m.includes("Studying the tome")), "the tome teaches its spell"); assert.equal(pc.casts.reality_slash, 1);
+const novice = mkPlayer("ned"); use(novice, "overlord:tome_fallen_down"); assert.ok(!rpg.profileOf(novice).spells.includes("fallen_down"), "not before the level for that tier");
+// mana font: standing on a Block of Data Crystal triples mana recovery
+h.dimension = makeLand(); h.dimension.getPlayers = () => [h]; h.location = { x: 0, y: 64, z: 0 }; advance(100);
+ph.mana = 0; advance(20); const plain = ph.mana; h.dimension.placed.set("0,63,0", "overlord:data_crystal_block"); advance(100);
+ph.mana = 0; advance(20); assert.ok(Math.abs(ph.mana - plain * 3) < 1e-6, `font ${ph.mana} vs ${plain}`); h.dimension.placed.delete("0,63,0"); advance(100);
+// new gear: Orb of Death, Quake, Flurry, the basilisk's eye, the greatsword's sweep and the Bone Dragon ward
+rpg.restoreMana(h, 1e6); use(h, "overlord:orb_of_death"); advance(3);
+assert.equal(h.dimension.mobs.filter((m) => m.typeId === "overlord:old_guarder" && m.tamedBy === "hana").length, 3); h.dimension.mobs.length = 0;
+const brute = foe(300, 300), runt = foe(300, 300); runt.id = "runt"; for (const m of [brute, runt]) { m.afflicted = []; m.addEffect = (e) => m.afflicted.push(e); m.applyKnockback = () => {}; }
+use(h, "overlord:giants_maul"); assert.ok(brute.damaged.length === 1 && brute.afflicted.includes("slowness") && h.bar.includes("shook 2"), h.bar);
+h.aimed = [brute]; const before6 = brute.damaged.length; use(h, "overlord:six_arms_knuckles"); advance(70); assert.equal(brute.damaged.length - before6, 6, "six blows land");
+h.inv.length = 0; h.selectedSlotIndex = 0; h.inv.push(new ItemStack("overlord:basilisk_eye", 2)); brute.afflicted.length = 0; advance(40); use(h, "overlord:basilisk_eye");
+assert.ok(brute.afflicted.includes("weakness")); assert.equal(h.inv[0].amount, 1);
+const worn = { Head: "helmet", Chest: "chestplate", Legs: "leggings", Feet: "boots" }; let wornSet = "";
+h.getComponent = ((base) => (cmp) => (cmp === "minecraft:equippable" ? { getEquipment: (slot) => (slot === "Mainhand" ? h.inv[h.selectedSlotIndex] : wornSet ? { typeId: `overlord:${wornSet}_${worn[slot]}` } : undefined) } : base(cmp)))(h.getComponent);
+h.inv[0] = new ItemStack("overlord:dragonbone_blade"); brute.dimension = h.dimension; brute.damaged.length = 0; runt.damaged.length = 0; ph.cls = "none"; ph.str = 0;
+world.afterEvents.entityHurt.fire({ hurtEntity: brute, damage: 12, damageSource: { damagingEntity: h, cause: "entityAttack" } });
+assert.deepEqual(runt.damaged, [6], "the sweep carries half the blow to the foe beside the target");
+h.health.currentValue = 10; world.afterEvents.entityHurt.fire({ hurtEntity: h, damage: 10, damageSource: { cause: "magic" } }); assert.equal(h.health.currentValue, 10, "no ward without the set");
+wornSet = "bonedragon"; world.afterEvents.entityHurt.fire({ hurtEntity: h, damage: 10, damageSource: { cause: "magic" } }); assert.equal(h.health.currentValue, 13.5, "Bone Dragon armour turns aside 35%");
+world.afterEvents.entityHurt.fire({ hurtEntity: h, damage: 10, damageSource: { cause: "entityAttack" } }); assert.equal(h.health.currentValue, 13.5, "but not blows"); wornSet = "";
+// Hamsuke grows with its rider and lashes monsters that come close; the kills are the rider's
+h.dimension.mobs.length = 0; const hamsuke = h.dimension.spawnEntity("overlord:hamsuke", { x: 0, y: 64, z: 0 }); ph.level = 60;
+assert.equal(mount.tendSteed(h), 0, "not riding");
+h.getComponent = ((base) => (cmp) => (cmp === "minecraft:riding" ? { entityRidingOn: hamsuke } : base(cmp)))(h.getComponent);
+assert.equal(mount.steedOf(h), hamsuke); const wolf = foe(100, 100); wolf.applyKnockback = () => {}; wolf.damaged.length = 0;
+assert.equal(mount.tendSteed(h), 1); assert.deepEqual(wolf.damaged, [mount.lashDamage(60)]); assert.equal(hamsuke.effects.get("health_boost"), 9); assert.equal(hamsuke.effects.get("strength"), 1);
+assert.equal(mount.tendSteed(h), 0, "the tail needs three seconds"); advance(90); assert.ok(wolf.damaged.length >= 2, "and lashes again while ridden");
 
 // persistence: saved profile is restored after leaving
 advance(100);

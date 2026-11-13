@@ -3,7 +3,7 @@
 // player. Clearing them all pays out coins, crystals and XP; dying, leaving the area
 // or running out of time fails the raid.
 import { world, system } from "@minecraft/server";
-import { giveItem, grantXp, notify, profileOf } from "./rpg.js";
+import { giveItem, grantXp, notify, profileOf, questEvent } from "./rpg.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -17,6 +17,7 @@ const BOSSES = [
   [id("death_knight")],
   [id("narberal"), id("lupusregina"), id("entoma"), id("solution"), id("yuri"), id("cz_delta")],
   [id("shalltear"), id("cocytus"), id("albedo"), id("demiurge"), id("aura"), id("mare")],
+  [id("ainz")], // the Throne Room: the Overlord himself
 ];
 
 /** Waves per tier: each wave is a list of [entity, count]. "boss" is replaced by a random tier boss. */
@@ -42,6 +43,13 @@ const WAVES = [
     [[id("narberal"), 1], [id("cz_delta"), 1], [id("death_knight"), 2]],
     [["boss", 1], [id("death_knight"), 3]],
   ],
+  [
+    [[id("death_knight"), 4], [id("elder_lich"), 3]],
+    [[id("soul_eater"), 4], [id("vampire_bride"), 4]],
+    [[id("yuri"), 1], [id("lupusregina"), 1], [id("death_knight"), 3]],
+    [[id("cocytus"), 1], [id("soul_eater"), 2]],
+    [["boss", 1], [id("death_knight"), 2]],
+  ],
 ];
 
 /** Rewards per tier. */
@@ -49,6 +57,7 @@ const REWARDS = [
   { coins: 24, crystals: 6, xp: 600, bonus: [] },
   { coins: 48, crystals: 12, xp: 2000, bonus: [[id("guardian_crest"), 1]] },
   { coins: 96, crystals: 24, xp: 6000, bonus: [[id("guardian_crest"), 2], [id("soul_fragment"), 8]] },
+  { coins: 160, crystals: 40, xp: 12000, bonus: [[id("guardian_crest"), 4], [id("soul_fragment"), 12]] },
 ];
 
 /**
@@ -62,7 +71,7 @@ const raids = new Map();
 
 /** @param {number} level */
 function tierFor(level) {
-  return level >= 50 ? 2 : level >= 20 ? 1 : 0;
+  return level >= 80 ? 3 : level >= 50 ? 2 : level >= 20 ? 1 : 0;
 }
 
 /**
@@ -163,6 +172,7 @@ function winRaid(player, raid) {
     // cosmetic only
   }
   grantXp(player, reward.xp, "raid");
+  questEvent(player, "raid");
 }
 
 /**

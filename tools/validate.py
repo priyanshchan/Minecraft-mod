@@ -44,11 +44,15 @@ VANILLA = {
         "furnace", "anvil", "gold_block", "blue_ice", "packed_ice", "cobblestone", "mossy_cobblestone",
         "deepslate_bricks", "iron_bars", "smooth_stone",
         "obsidian", "netherrack", "magma", "crying_obsidian", "yellow_wool", "soul_lantern",
+        "oak_planks", "composter", "bell", "purple_wool", "orange_wool", "mossy_stone_bricks",
+        "cracked_stone_bricks", "polished_blackstone", "acacia_log", "acacia_fence", "bookshelf",
+        "chiseled_stone_bricks", "amethyst_block",
     },
     "script_entity": {"minecraft:villager_v2", "minecraft:zombie", "minecraft:lightning_bolt"},
     # verified against @minecraft/vanilla-data 1.26.60
     "item": {
         "minecraft:iron_ingot", "minecraft:diamond", "minecraft:redstone", "minecraft:glass_bottle",
+        "minecraft:crying_obsidian", "minecraft:soul_sand", "minecraft:cooked_beef",
         "minecraft:bone", "minecraft:book", "minecraft:obsidian", "minecraft:stone_bricks",
         "minecraft:diamond_block", "minecraft:redstone_block", "minecraft:packed_ice", "minecraft:magma",
         "minecraft:iron_block", "minecraft:wheat_seeds", "minecraft:pumpkin_seeds",
@@ -91,7 +95,7 @@ VANILLA = {
     },
     "effect": {"slowness", "slow_falling", "instant_health", "regeneration", "strength", "resistance",
                "wither", "night_vision", "saturation", "levitation", "invisibility", "speed", "jump_boost",
-               "fire_resistance", "poison", "weakness", "health_boost"},
+               "fire_resistance", "poison", "weakness", "health_boost", "haste"},
 }
 
 errors: list[str] = []

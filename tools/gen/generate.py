@@ -110,7 +110,8 @@ def main():
     save_png(RP / f"textures/models/armor/{content.NS}_dragonscale_1.png", layer1)
     save_png(RP / f"textures/models/armor/{content.NS}_dragonscale_2.png", layer2)
     for name, make in (("ranger", icons.ranger_layers), ("crimson", icons.crimson_layers),
-                       ("infernal", icons.infernal_layers), ("vestment", icons.vestment_layers)):
+                       ("infernal", icons.infernal_layers), ("vestment", icons.vestment_layers),
+                       ("bonedragon", icons.bonedragon_layers), ("beasthide", icons.beasthide_layers)):
         layer1, layer2 = make()
         save_png(RP / f"textures/models/armor/{content.NS}_{name}_1.png", layer1)
         save_png(RP / f"textures/models/armor/{content.NS}_{name}_2.png", layer2)

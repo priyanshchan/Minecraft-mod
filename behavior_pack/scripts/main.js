@@ -20,13 +20,14 @@ import {
   useClassSkill,
 } from "./rpg.js";
 import { startRaid } from "./raid.js";
-import { castSelected, cycleSpell, openGrimoire, summonAlly } from "./spells.js";
+import { MAX_ALLIES, castSelected, creditCast, cycleSpell, openGrimoire, studyTome, summonAlly } from "./spells.js";
 import * as fx from "./vfx.js";
 import "./director.js";
 import "./structures.js";
 import { cycleStance, openParty, orderUnison } from "./party.js";
 import "./guild.js";
 import "./forge.js";
+import "./mount.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -57,6 +58,9 @@ const SIGILS = {
   [id("sigil_of_evil_lord_wrath")]: id("evil_lord_wrath"),
   [id("sigil_of_dominion_authority")]: id("dominion_authority"),
   [id("sigil_of_zesshi")]: id("zesshi"),
+  [id("sigil_of_skeletal_dragon")]: id("skeletal_dragon"),
+  [id("sigil_of_dark_young")]: id("dark_young"),
+  [id("sigil_of_jaldabaoth")]: id("jaldabaoth"),
 };
 
 /** @type {[EquipmentSlot, string][]} */
@@ -106,6 +110,9 @@ const FLOURISH = {
   overlord_fracture: ["none", 4, "raise"],
   overlord_reap: ["dark", 7, "raise"],
   overlord_hellfire: ["fire", 7, "point"],
+  overlord_orb: ["dark", 6, "raise"],
+  overlord_quake: ["ice", 5, "raise"],
+  overlord_flurry: ["none", 4, "point"],
 };
 
 /** Own cooldown bookkeeping: `${playerId}|${category}` -> tick when usable again. */
@@ -398,6 +405,7 @@ function castLightning(player) {
     return;
   }
   if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  creditCast(player, "call_greater_thunder"); // a scroll of a spell you know counts towards its mastery
   /** @type {import("@minecraft/server").Vector3} */
   let strike;
   if (entityHit) {
@@ -417,6 +425,7 @@ function castLightning(player) {
 /** Scroll: Fly. @param {import("@minecraft/server").Player} player */
 function castFly(player) {
   if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  creditCast(player, "fly"); // a scroll of a spell you know counts towards its mastery
   player.addEffect("levitation", 6 * TICKS, { amplifier: 2, showParticles: false });
   player.addEffect("slow_falling", 25 * TICKS, { showParticles: false });
   consumeHeldItem(player);
@@ -451,6 +460,7 @@ function castGreaterTeleportation(player) {
     return;
   }
   if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  creditCast(player, "dimensional_move"); // a scroll of a spell you know counts towards its mastery
   const from = player.location;
   const fromDimension = player.dimension;
   player.teleport({ x: home.x + 0.5, y: home.y, z: home.z + 0.5 }, { dimension: home.dimension });
@@ -620,6 +630,7 @@ function castExplosion(player) {
 /** Scroll: Time Stop - freezes nearby foes. @param {import("@minecraft/server").Player} player */
 function castTimeStop(player) {
   if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  creditCast(player, "time_stop"); // a scroll of a spell you know counts towards its mastery
   let count = 0;
   for (const foe of foesNear(player.dimension, player.location, 12)) {
     try {
@@ -638,6 +649,7 @@ function castTimeStop(player) {
 /** Scroll: Heavy Recover - heals the caster and nearby pets. @param {import("@minecraft/server").Player} player */
 function castHeavyRecover(player) {
   if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  creditCast(player, "heal"); // a scroll of a spell you know counts towards its mastery
   player.addEffect("instant_health", 1, { amplifier: 3 });
   player.addEffect("regeneration", 10 * TICKS, { amplifier: 2 });
   for (const ally of player.dimension.getEntities({ location: player.location, maxDistance: 8 })) {
@@ -659,6 +671,7 @@ function castHeavyRecover(player) {
 /** Tome: Reality Slash - a piercing cut through everything ahead. @param {import("@minecraft/server").Player} player */
 function castRealitySlash(player) {
   if (!tryCooldown(player, "overlord_slash", 10.0, 30)) return;
+  creditCast(player, "reality_slash");
   const hits = strikeLine(player, player.getHeadLocation(), player.getViewDirection(), 18, Math.round(22 * spellPower(player)),
     EntityDamageCause.magic, "minecraft:critical_hit_emitter");
   playSound(player.dimension, "item.trident.riptide_1", player.location, 1.4);
@@ -673,6 +686,7 @@ function castFallenDown(player) {
     return;
   }
   if (!tryCooldown(player, "overlord_fallen", 60.0, 80)) return;
+  creditCast(player, "fallen_down");
   const dimension = player.dimension;
   actionBar(player, "§eSuper-tier magic: Fallen Down...");
   playSound(dimension, "beacon.activate", target, 1.2);
@@ -912,6 +926,92 @@ function breakSealingCrystal(player) {
   playSound(player.dimension, "random.glass", player.location, 1.4);
   playSound(player.dimension, "beacon.activate", player.location, 1.4);
   actionBar(player, `§eThe crystal shatters - ${count} Archangel Flame${count === 1 ? "" : "s"} answer!`);
+}
+
+/** Orb of Death: raises three Old Guarders to fight for the bearer. @param {import("@minecraft/server").Player} player */
+function raiseDead(player) {
+  let present = 0;
+  try {
+    present = player.dimension.getEntities({ tags: [`overlord_ally_${player.id}`] }).length;
+  } catch {
+    // dimension unloading
+  }
+  if (present >= MAX_ALLIES) {
+    actionBar(player, "§7You already command as many summoned creatures as you can");
+    return;
+  }
+  if (!tryCooldown(player, "overlord_orb", 45.0, 30)) return;
+  const count = summonAlly(player, id("old_guarder"), 3);
+  creditCast(player, "summon_undead_3");
+  playSound(player.dimension, "mob.wither.spawn", player.location, 1.4);
+  actionBar(player, `§5The Orb of Death stirs - ${count} of the dead rise for you`);
+}
+
+/** Frost Giant's Maul: Quake - a slam that hurts, chills and throws everything nearby. @param {import("@minecraft/server").Player} player */
+function castQuake(player) {
+  if (!tryCooldown(player, "overlord_quake", 10.0, 20)) return;
+  let count = 0;
+  for (const foe of foesNear(player.dimension, player.location, 5)) {
+    try {
+      foe.applyDamage(Math.round(14 * spellPower(player)), { cause: EntityDamageCause.entityAttack, damagingEntity: player });
+      if (foe.isValid) {
+        foe.addEffect("slowness", 4 * TICKS, { amplifier: 2 });
+        foe.applyKnockback({ x: 0, z: 0 }, 0.6);
+      }
+      count++;
+    } catch {
+      // already dead
+    }
+  }
+  fx.ring(player.dimension, player.location, "ice", 5);
+  playSound(player.dimension, "random.anvil_land", player.location, 0.6);
+  actionBar(player, count > 0 ? `§bQuake shook ${count}!` : "§bQuake!");
+}
+
+/** Knuckles of the Six Arms: Flurry - six blows in a breath on one foe. @param {import("@minecraft/server").Player} player */
+function castFlurry(player) {
+  const target = player
+    .getEntitiesFromViewDirection({ maxDistance: 5 })
+    .map((h) => h.entity)
+    .find((e) => e.isValid && e.typeId !== "minecraft:player" && e.getComponent("minecraft:health"));
+  if (!target) {
+    actionBar(player, "§7Flurry: no foe within reach");
+    return;
+  }
+  if (!tryCooldown(player, "overlord_flurry", 8.0, 15)) return;
+  for (let blow = 0; blow < 6; blow++) {
+    // Blows are spaced past the target's hurt cooldown so every one of them lands.
+    system.runTimeout(() => {
+      try {
+        if (!target.isValid || !player.isValid) return;
+        target.applyDamage(5, { cause: EntityDamageCause.magic, damagingEntity: player });
+        fx.spark(player.dimension, add(target.location, { x: 0, y: 1, z: 0 }), "none", 0.8);
+      } catch {
+        // target is gone
+      }
+    }, blow * 11);
+  }
+  playSound(player.dimension, "random.anvil_land", player.location, 1.6);
+  actionBar(player, "§fFlurry!");
+}
+
+/** Basilisk Eye: a single use that petrifies everything nearby for a few seconds. @param {import("@minecraft/server").Player} player */
+function usePetrify(player) {
+  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  let count = 0;
+  for (const foe of foesNear(player.dimension, player.location, 8)) {
+    try {
+      foe.addEffect("slowness", 5 * TICKS, { amplifier: 6 });
+      foe.addEffect("weakness", 5 * TICKS, { amplifier: 2 });
+      count++;
+    } catch {
+      // immune or gone
+    }
+  }
+  consumeHeldItem(player);
+  fx.ring(player.dimension, player.location, "acid", 8);
+  playSound(player.dimension, "random.glass", player.location, 0.6);
+  actionBar(player, count > 0 ? `§aThe basilisk's gaze turns ${count} to stone for a moment` : "§aThe eye finds nothing to petrify");
 }
 
 /** Kilineyram: Dark Blade Mega Impact - a burst of darkness around the wielder. @param {import("@minecraft/server").Player} player */
@@ -1195,9 +1295,19 @@ world.afterEvents.itemUse.subscribe((event) => {
     } else if (item === id("scroll_of_heavy_recover")) {
       castHeavyRecover(player);
     } else if (item === id("tome_reality_slash")) {
+      studyTome(player, "reality_slash"); // reading a tome teaches its spell once your level allows
       castRealitySlash(player);
     } else if (item === id("tome_fallen_down")) {
+      studyTome(player, "fallen_down");
       castFallenDown(player);
+    } else if (item === id("orb_of_death")) {
+      raiseDead(player);
+    } else if (item === id("giants_maul")) {
+      castQuake(player);
+    } else if (item === id("six_arms_knuckles")) {
+      castFlurry(player);
+    } else if (item === id("basilisk_eye")) {
+      usePetrify(player);
     } else if (item === id("frost_pain")) {
       castIcyBurst(player);
     } else if (item === id("brain_katana")) {
@@ -1244,7 +1354,11 @@ world.afterEvents.entityHurt.subscribe((event) => {
     const victim = event.hurtEntity;
     if (!attacker || !attacker.isValid || event.damageSource.cause !== EntityDamageCause.entityAttack) return;
 
-    if (attacker.typeId === id("hellhound") || attacker.typeId === id("evil_lord_wrath")) {
+    if (attacker.typeId === id("gigant_basilisk")) {
+      if (victim.isValid) victim.addEffect("slowness", 3 * TICKS, { amplifier: 1 }); // the stone gaze
+      return;
+    }
+    if (attacker.typeId === id("hellhound") || attacker.typeId === id("evil_lord_wrath") || attacker.typeId === id("jaldabaoth")) {
       if (victim.isValid) victim.setOnFire(3, true); // jaws and claws of fire
       return;
     }
@@ -1291,6 +1405,17 @@ world.afterEvents.entityHurt.subscribe((event) => {
           // target is gone
         }
       }, 11);
+    } else if (held === id("dragonbone_blade") && !cleaving) {
+      // The greatsword's sweep carries half the blow to everything beside the target.
+      cleaving = true;
+      try {
+        for (const other of foesNear(victim.dimension, victim.location, 2.5)) {
+          if (other.id === victim.id) continue;
+          other.applyDamage(Math.max(1, event.damage * 0.5), { cause: EntityDamageCause.entityAttack, damagingEntity: attacker });
+        }
+      } finally {
+        cleaving = false;
+      }
     } else if (held === id("fell_iron") && victim.isValid) {
       victim.addEffect("slowness", 1.5 * TICKS, { amplifier: 4 }); // the pick's blow staggers
     } else if (held === id("kilineyram") && victim.isValid) {
@@ -1355,6 +1480,26 @@ function lightningImpact(projectile, dimension, location) {
 world.afterEvents.projectileHitEntity.subscribe((e) => lightningImpact(e.projectile, e.dimension, e.location));
 world.afterEvents.projectileHitBlock.subscribe((e) => lightningImpact(e.projectile, e.dimension, e.location));
 
+/** True while the Dragonbone Greatsword's sweep is being dealt, so the sweep does not sweep again. */
+let cleaving = false;
+
+// Bone Dragon armour: a third of any magical or elemental harm is turned aside.
+world.afterEvents.entityHurt.subscribe((event) => {
+  try {
+    const victim = event.hurtEntity;
+    if (victim.typeId !== "minecraft:player") return;
+    const cause = event.damageSource.cause;
+    if (cause !== EntityDamageCause.magic && cause !== EntityDamageCause.fire && cause !== EntityDamageCause.lightning &&
+        cause !== EntityDamageCause.entityExplosion && cause !== EntityDamageCause.wither) return;
+    const gear = victim.getComponent("minecraft:equippable");
+    if (!gear || !wearsFullSet(gear, "bonedragon")) return;
+    const health = victim.getComponent("minecraft:health");
+    if (health && health.currentValue > 0) health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + event.damage * 0.35));
+  } catch {
+    // the wearer is gone
+  }
+});
+
 // Worn-item effects: armour full-set bonuses and the Mask of Envy.
 system.runInterval(() => {
   for (const player of world.getAllPlayers()) {
@@ -1369,6 +1514,9 @@ system.runInterval(() => {
       } else if (wearsFullSet(gear, "infernal")) {
         player.addEffect("fire_resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("strength", 3 * TICKS, { amplifier: 0, showParticles: false });
+      } else if (wearsFullSet(gear, "beasthide")) {
+        player.addEffect("haste", 3 * TICKS, { amplifier: 0, showParticles: false });
+        player.addEffect("saturation", 3 * TICKS, { amplifier: 0, showParticles: false }); // a hunter never goes hungry
       } else if (wearsFullSet(gear, "vestment")) {
         player.addEffect("regeneration", 3 * TICKS, { amplifier: 0, showParticles: false });
       } else if (wearsFullSet(gear, "ranger")) {

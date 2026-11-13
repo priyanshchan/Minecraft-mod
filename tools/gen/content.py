@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [4, 6, 0]
+VERSION = [5, 0, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v4.6.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v5.0.0"
 
 
 def oid(name):
@@ -108,6 +108,9 @@ SIGILS = {
     "evil_lord_wrath": ("Evil Lord Wrath", "minecraft:netherrack"),
     "dominion_authority": ("Dominion Authority", "minecraft:glowstone"),
     "zesshi": ("Zesshi Zetsumei", "minecraft:quartz_block"),
+    "skeletal_dragon": ("the Skeletal Dragon", "minecraft:soul_sand"),
+    "dark_young": ("the Dark Young", "minecraft:crying_obsidian"),
+    "jaldabaoth": ("Jaldabaoth", "minecraft:blaze_rod"),
 }
 
 ITEMS = {
@@ -305,12 +308,36 @@ ITEMS = {
                            "using_converts_to": "minecraft:glass_bottle"},
         "minecraft:rarity": "uncommon",
     }),
+    "basilisk_eye": ("Basilisk Eye", "items", {
+        "minecraft:max_stack_size": 16, "minecraft:rarity": "rare", **_cooldown("overlord_scroll", 1.5)}),
+    "dragon_bone": ("Dragon Bone", "items", {"minecraft:max_stack_size": 64}),
+    "beast_hide": ("Beast Hide", "items", {"minecraft:max_stack_size": 64}),
+    "orb_of_death": ("Orb of Death", "items", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
+        **_cooldown("overlord_orb", 45.0)}),
+    "giants_maul": ("Frost Giant's Maul", "equipment", _weapon(13, _cooldown("overlord_quake", 10.0))),
+    "dragonbone_blade": ("Dragonbone Greatsword", "equipment", _weapon(12, rarity="rare")),
+    "six_arms_knuckles": ("Knuckles of the Six Arms", "equipment", _weapon(9, _cooldown("overlord_flurry", 8.0))),
+    "bonedragon_helmet": ("Bone Dragon Helm", "equipment", _armor("slot.armor.head", 3, 480, "armor_head")),
+    "bonedragon_chestplate": ("Bone Dragon Cuirass", "equipment", _armor("slot.armor.chest", 8, 700, "armor_torso")),
+    "bonedragon_leggings": ("Bone Dragon Greaves", "equipment", _armor("slot.armor.legs", 6, 650, "armor_legs")),
+    "bonedragon_boots": ("Bone Dragon Boots", "equipment", _armor("slot.armor.feet", 3, 560, "armor_feet")),
+    "beasthide_helmet": ("Beast Hide Hood", "equipment", _armor("slot.armor.head", 2, 200, "armor_head")),
+    "beasthide_chestplate": ("Beast Hide Jerkin", "equipment", _armor("slot.armor.chest", 5, 290, "armor_torso")),
+    "beasthide_leggings": ("Beast Hide Leggings", "equipment", _armor("slot.armor.legs", 4, 270, "armor_legs")),
+    "beasthide_boots": ("Beast Hide Boots", "equipment", _armor("slot.armor.feet", 2, 240, "armor_feet")),
     "sigil_of_ainz": ("Sigil of Ainz Ooal Gown", "items", {
         "minecraft:max_stack_size": 16, "minecraft:rarity": "epic", "minecraft:glint": True}),
 }
 for _piece in ("helmet", "chestplate", "leggings", "boots"):
     ITEMS[f"world_champion_{_piece}"][2]["minecraft:rarity"] = "epic"
     ITEMS[f"infernal_{_piece}"][2]["minecraft:rarity"] = "epic"
+    ITEMS[f"bonedragon_{_piece}"][2]["minecraft:rarity"] = "epic"
+    ITEMS[f"bonedragon_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
+        {"items": [oid("dragon_bone")], "repair_amount": "query.max_durability * 0.25"}]}
+    ITEMS[f"beasthide_{_piece}"][2]["minecraft:rarity"] = "uncommon"
+    ITEMS[f"beasthide_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
+        {"items": [oid("beast_hide")], "repair_amount": "query.max_durability * 0.25"}]}
     ITEMS[f"vestment_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
         {"items": [oid("blessed_cloth")], "repair_amount": "query.max_durability * 0.25"}]}
     ITEMS[f"ranger_{_piece}"][2]["minecraft:rarity"] = "uncommon"
@@ -539,6 +566,12 @@ def recipe_files():
                                         oid(f"vestment_{piece}"))
            for piece, pattern in (("helmet", ["AAA", "A A"]), ("chestplate", ["A A", "AAA", "AAA"]),
                                   ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
+        **{f"{kind}_{piece}": _shaped(f"{kind}_{piece}", pattern, {"A": oid(mat)}, oid(f"{kind}_{piece}"))
+           for kind, mat in (("bonedragon", "dragon_bone"), ("beasthide", "beast_hide"))
+           for piece, pattern in (("helmet", ["AAA", "A A"]), ("chestplate", ["A A", "AAA", "AAA"]),
+                                  ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
+        "dragonbone_blade": _shaped("dragonbone_blade", ["B", "B", "S"], {
+            "B": oid("dragon_bone"), "S": "minecraft:stick"}, oid("dragonbone_blade")),
         **{f"infernal_{piece}": _shapeless(f"infernal_{piece}", [
             oid(f"dark_warrior_{piece}"), oid("demon_heart"), "minecraft:magma"],
             oid(f"infernal_{piece}")) for piece in ("helmet", "chestplate", "leggings", "boots")},
@@ -696,6 +729,27 @@ def loot_files():
         "nigun": [one(oid("sealing_crystal")), _pool(_entry(oid("blessed_cloth"), 3, 6, looting=False)),
                   _pool(_entry(coin, 10, 20))],
         "climb": [_pool(_entry("minecraft:iron_ingot", 1, 3))],
+        "lakyus": [_pool(_entry("minecraft:gold_ingot", 1, 3))],
+        "skeletal_dragon": [_pool(_entry(oid("dragon_bone"), 8, 12, looting=False)),
+                            _pool(_entry(crest, 2, 2, looting=False)), _pool(_entry(cry, 6, 10)),
+                            _pool(_entry(coin, 12, 20))],
+        "khajiit": [one(oid("orb_of_death")), _pool(_entry(oid("soul_fragment"), 2, 4)), _pool(_entry(coin, 6, 12))],
+        "gigant_basilisk": [_pool(_entry(oid("basilisk_eye"), 1, 2, looting=False)),
+                            _pool(_entry(oid("beast_hide"), 1, 3)), _pool(_entry(coin, 2, 5))],
+        "frost_giant": [
+            _pool(_entry("minecraft:packed_ice", 1, 3)), _pool(_entry(coin, 1, 4)),
+            _pool(_entry(oid("giants_maul"), 1, 1, looting=False), conditions=[
+                {"condition": "killed_by_player"},
+                {"condition": "random_chance_with_looting", "chance": 0.12, "looting_multiplier": 0.03}]),
+        ],
+        "beastman": [_pool(_entry(oid("beast_hide"), 0, 2)), _pool(_entry(coin, 0, 2))],
+        "zero": [one(oid("six_arms_knuckles")), _pool(_entry(coin, 10, 20))],
+        "dark_young": [_pool(_entry(oid("soul_fragment"), 6, 10, looting=False)),
+                       _pool(_entry(crest, 2, 2, looting=False)), _pool(_entry(cry, 8, 12)),
+                       _pool(_entry(coin, 14, 24))],
+        "jaldabaoth": [_pool(_entry(oid("demon_heart"), 4, 6, looting=False)),
+                       _pool(_entry(crest, 3, 3, looting=False)), _pool(_entry(cry, 10, 16)),
+                       _pool(_entry(coin, 20, 30))],
         "zesshi": [one(oid("charons_guidance")), _pool(_entry(crest, 2, 2, looting=False)),
                    _pool(_entry(cry, 8, 12)), _pool(_entry(coin, 40, 64))],
         "frost_dragon": [_pool(_entry(oid("frost_dragon_scale"), 8, 12, looting=False)),
@@ -1504,6 +1558,110 @@ def entity_files():
     c["minecraft:behavior.nearest_attackable_target"] = _target_players(20, ["kingdom", "empire", "adventurer"])
     out["bandit"] = _entity("bandit", c)
 
+    # ------------------------------------------------------ v5.0: the wider world
+    c = _mob("skeletal_dragon", ["skeletal_dragon", "dragon", "undead", "monster", "mob"], 550, 0.28, (2.0, 2.2),
+             loot="skeletal_dragon", xp=450, scale=1.4, kb=1.0, follow=48, persistent=True, undead=True)
+    del c["minecraft:can_climb"]
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": False}
+    c["minecraft:attack"] = {"damage": 16}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    # Its bones turn magic aside: spells do a quarter of their damage.
+    c["minecraft:damage_sensor"] = {"triggers": [{"cause": "fall", "deals_damage": False},
+                                                 {"cause": "magic", "damage_multiplier": 0.25}]}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(48, [ally, "human"])
+    out["skeletal_dragon"] = _entity("skeletal_dragon", c)
+
+    c = caster("khajiit", ["khajiit", "zurrernorn", "human", "monster", "mob"], 200, oid("negative_burst"), 1.6, 2.6,
+               20.0, xp=150, kb=0.4, persistent=True)
+    c["minecraft:behavior.summon_entity"] = {"priority": 2, "summon_choices": [{
+        "weight": 1, "cooldown_time": 16.0, "cast_duration": 2.0, "particle_color": "#FF7A1FFF",
+        "start_sound_event": "cast.spell",
+        "sequence": [{"shape": "circle", "target": "self", "base_delay": 1.5, "num_entities_spawned": 2,
+                      "entity_type": oid("old_guarder"), "summon_cap": 5, "summon_cap_radius": 24.0,
+                      "size": 2.0, "sound_event": "prepare.summon"}]}]}
+    out["khajiit"] = _entity("khajiit", c)
+
+    c = _mob("gigant_basilisk", ["gigant_basilisk", "beast", "monster", "mob"], 160, 0.3, (1.4, 1.5),
+             loot="gigant_basilisk", xp=60, scale=1.5, kb=0.8)
+    del c["minecraft:can_climb"]
+    c["minecraft:attack"] = {"damage": 10, "effect_name": "poison", "effect_duration": 6}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally, "human"])
+    out["gigant_basilisk"] = _entity("gigant_basilisk", c)
+
+    c = _mob("frost_giant", ["frost_giant", "giant", "monster", "mob"], 150, 0.26, (0.9, 2.0), loot="frost_giant",
+             xp=50, scale=1.7, kb=0.9)
+    c["minecraft:attack"] = {"damage": 13, "effect_name": "slowness", "effect_duration": 4}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:damage_sensor"] = {"triggers": [{"cause": "freezing", "deals_damage": False}]}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally, "human"])
+    out["frost_giant"] = _entity("frost_giant", c)
+
+    c = _mob("beastman", ["beastman", "monster", "mob"], 50, 0.34, (0.7, 2.0), loot="beastman", xp=14, kb=0.2)
+    c["minecraft:attack"] = {"damage": 7}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:behavior.hurt_by_target"] = {"priority": 1, "alert_same_type": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally, "human"])
+    out["beastman"] = _entity("beastman", c)
+
+    out["lakyus"] = hunter("lakyus", "human", 140, 0.32, 11)
+
+    c = _mob("enri", ["enri", "merchant", "mob"], 30, 0.25, (0.6, 1.9), xp=0, persistent=True)
+    del c["minecraft:behavior.hurt_by_target"]
+    c["minecraft:economy_trade_table"] = {
+        "display_name": f"entity.{oid('enri')}.name",
+        "table": f"trading/{NS}/enri.json", "new_screen": True}
+    c["minecraft:behavior.trade_with_player"] = {"priority": 1, "filters": {"all_of": [
+        {"test": "in_water", "value": False}, {"test": "on_ground", "value": True}]}}
+    c["minecraft:behavior.look_at_trading_player"] = {"priority": 2}
+    c["minecraft:behavior.panic"] = {"priority": 3, "speed_multiplier": 1.4}
+    out["enri"] = _entity("enri", c)
+
+    c = _mob("zero", ["zero", "bandit", "human", "monster", "mob"], 300, 0.36, (0.7, 2.0), loot="zero", xp=200,
+             kb=0.8, follow=40, persistent=True)
+    c["minecraft:boss"] = {"hud_range": 40, "should_darken_sky": False}
+    c["minecraft:attack"] = {"damage": 14}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.4, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(32, ["kingdom", "empire", "adventurer"])
+    out["zero"] = _entity("zero", c)
+
+    c = _mob("dark_young", ["dark_young", "monster", "mob"], 800, 0.3, (2.2, 2.6), loot="dark_young", xp=700,
+             scale=2.4, kb=1.0, follow=48, persistent=True)
+    del c["minecraft:can_climb"]
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": True}
+    c["minecraft:attack"] = {"damage": 22}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:damage_sensor"] = _no_fall()
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(48, [ally, "human"])
+    out["dark_young"] = _entity("dark_young", c)
+
+    c = _mob("jaldabaoth", ["jaldabaoth", "demon", "monster", "mob"], 900, 0.3, (0.8, 2.1), loot="jaldabaoth",
+             xp=800, scale=1.3, kb=1.0, follow=48, fire_immune=True, persistent=True)
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": True}
+    c["minecraft:damage_sensor"] = _no_fall()
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(48, [ally, "human"])
+    out["jaldabaoth"] = _entity("jaldabaoth", c, {
+        "overlord:mode_switcher": {"minecraft:target_nearby_sensor": {
+            "inside_range": 4.5, "outside_range": 6.5, "must_see": True,
+            "on_inside_range": {"event": "overlord:switch_to_melee", "target": "self"},
+            "on_outside_range": {"event": "overlord:switch_to_ranged", "target": "self"}}},
+        "overlord:ranged_mode": {
+            "minecraft:shooter": {"def": oid("fireball")},
+            "minecraft:behavior.ranged_attack": {
+                "priority": 3, "burst_shots": 3, "burst_interval": 0.3, "attack_interval_min": 2.0,
+                "attack_interval_max": 3.5, "attack_radius": 28.0, "speed_multiplier": 1.0}},
+        "overlord:melee_mode": {
+            "minecraft:attack": {"damage": 24},
+            "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.3, "track_target": True}},
+    }, {
+        "minecraft:entity_spawned": {"add": {"component_groups": ["overlord:mode_switcher",
+                                                                   "overlord:ranged_mode"]}},
+        "overlord:switch_to_melee": {"remove": {"component_groups": ["overlord:ranged_mode"]},
+                                     "add": {"component_groups": ["overlord:melee_mode"]}},
+        "overlord:switch_to_ranged": {"remove": {"component_groups": ["overlord:melee_mode"]},
+                                      "add": {"component_groups": ["overlord:ranged_mode"]}},
+    })
+
     # --------------------------------------------------- retainers (party members)
     not_players = {"test": "is_family", "subject": "other", "operator": "!=", "value": "player"}
     follow = lambda start, stop: {"priority": 4, "speed_multiplier": 1.3, "start_distance": start,
@@ -1723,7 +1881,9 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
         "adventurer", "guard", "soldier", "archer", "imperial_knight", "bandit",
         "war_troll", "vampire_bride", "dwarf", "frost_dragon",
         "hellhound", "shadow_demon", "evil_lord_wrath", "archangel_flame", "dominion_authority",
-        "theocracy_priest", "nigun", "climb", "zesshi", "eclair"]
+        "theocracy_priest", "nigun", "climb", "zesshi", "eclair",
+        "skeletal_dragon", "khajiit", "gigant_basilisk", "frost_giant", "beastman", "lakyus", "enri", "zero",
+        "dark_young", "jaldabaoth"]
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard", "frost_breath"]
 
 ENTITY_NAMES = {
@@ -1744,6 +1904,9 @@ ENTITY_NAMES = {
     "archangel_flame": "Archangel Flame", "dominion_authority": "Dominion Authority",
     "theocracy_priest": "Sunlight Scripture Priest", "nigun": "Nigun Grid Luin", "climb": "Climb",
     "zesshi": "Zesshi Zetsumei", "eclair": "Eclair",
+    "skeletal_dragon": "Skeletal Dragon", "khajiit": "Khajiit Dale Badantel", "gigant_basilisk": "Gigant Basilisk",
+    "frost_giant": "Frost Giant", "beastman": "Beastman Warrior", "lakyus": "Lakyus Alvein Dale Aindra",
+    "enri": "Enri Emmot", "zero": "Zero of the Six Arms", "dark_young": "Dark Young", "jaldabaoth": "Jaldabaoth",
     "war_troll": "War Troll", "vampire_bride": "Vampire Bride", "dwarf": "Dwarf Runesmith",
     "frost_dragon": "Frost Dragon", "frost_breath": "Frost Breath",
     "retainer": "Retainer", "guard": "Kingdom Guard", "soldier": "Kingdom Soldier", "archer": "Kingdom Archer",
@@ -1771,12 +1934,13 @@ def trade_files():
         sell(oid("nazarick_lamp"), 6, qty=4), sell("minecraft:golden_apple", 16),
         sell(oid("adamantite_ingot"), 24), sell(oid("scroll_of_explosion"), 10),
         sell(oid("scroll_of_time_stop"), 14), sell(oid("scroll_of_rebirth"), 20),
-        sell(oid("soul_fragment"), 5),
+        sell(oid("soul_fragment"), 5), sell(oid("sealing_crystal"), 30, uses=4), sell(oid("tome_create_undead"), 28, uses=4),
         buy("minecraft:diamond", 1, 6), buy("minecraft:gold_ingot", 4, 5), buy("minecraft:bone", 16, 2),
     ]
     herbs = [
         sell(oid("red_potion"), 3), sell(oid("blue_potion"), 4), sell(oid("scroll_of_heavy_recover"), 6),
         sell("minecraft:golden_carrot", 3, qty=2), sell("minecraft:glistering_melon_slice", 4),
+        sell(oid("troll_elixir"), 9), sell(oid("scroll_of_rebirth"), 18),
         buy("minecraft:nether_wart", 8, 3), buy("minecraft:wheat", 16, 2),
         buy("minecraft:glass_bottle", 8, 2), buy("minecraft:apple", 6, 2),
     ]
@@ -1784,13 +1948,20 @@ def trade_files():
         sell(oid("adamantite_ingot"), 20), sell(oid("runic_hammer"), 60), sell("minecraft:iron_ingot", 6, qty=4),
         sell(oid("data_crystal"), 6), sell(oid("gilded_nazarick_bricks"), 8, qty=8),
         buy("minecraft:raw_iron", 8, 3), buy("minecraft:coal", 16, 2), buy("minecraft:diamond", 1, 7),
-        buy("minecraft:gold_ingot", 4, 5),
+        buy("minecraft:gold_ingot", 4, 5), buy(oid("dragon_bone"), 2, 5), buy(oid("frost_dragon_scale"), 2, 6),
+    ]
+    village = [
+        sell("minecraft:bread", 1, qty=3), sell("minecraft:cooked_beef", 2, qty=2), sell(oid("red_potion"), 3),
+        sell(oid("goblin_horn"), 24, uses=4), sell("minecraft:arrow", 2, qty=16), sell("minecraft:leather", 2, qty=2),
+        buy("minecraft:wheat", 16, 2), buy(oid("beast_hide"), 3, 2), buy("minecraft:rotten_flesh", 16, 1),
+        buy(oid("basilisk_eye"), 1, 6),
     ]
     table = lambda t: {"tiers": [{"total_exp_required": 0,
                                   "groups": [{"num_to_select": len(t), "trades": t}]}]}
     return {f"trading/{NS}/nazarick_maid.json": table(trades),
             f"trading/{NS}/nfirea.json": table(herbs),
-            f"trading/{NS}/dwarf.json": table(forge)}
+            f"trading/{NS}/dwarf.json": table(forge),
+            f"trading/{NS}/enri.json": table(village)}
 
 
 # ============================================================ spawn rules
@@ -1865,6 +2036,10 @@ def spawn_rule_files():
         "spawn_rules/theocracy_priest.json": monster("theocracy_priest", 2, herd=(2, 3),
                                                      biomes=["plains", "forest", "savanna"]),
         "spawn_rules/climb.json": day_creature("climb", "plains", 1),
+        "spawn_rules/lakyus.json": day_creature("lakyus", "forest", 1),
+        "spawn_rules/gigant_basilisk.json": monster("gigant_basilisk", 2, biomes=["plains", "savanna", "forest"]),
+        "spawn_rules/frost_giant.json": monster("frost_giant", 3, biomes=["cold", "taiga", "extreme_hills"]),
+        "spawn_rules/beastman.json": monster("beastman", 4, herd=(2, 4), biomes=["savanna", "plains", "mesa"]),
         "spawn_rules/eclair.json": day_creature("eclair", "cold", 2),
         "spawn_rules/war_troll.json": monster("war_troll", 2, biomes=["extreme_hills", "taiga", "forest"]),
         "spawn_rules/vampire_bride.json": monster("vampire_bride", 3),
@@ -2045,6 +2220,12 @@ def _walk(amp, phase=0.0):
             f"math.clamp(query.modified_move_speed, 0.0, 1.0)")
 
 
+for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), ("gigant_basilisk", "soul_eater"),
+                    ("frost_giant", "ogre"), ("beastman", "lizardman"), ("lakyus", "climb"), ("enri", "nfirea"),
+                    ("zero", "bandit"), ("dark_young", "evil_lord_wrath"), ("jaldabaoth", "evil_lord_wrath")):
+    SOUNDS[_new] = SOUNDS[_like]
+
+
 def animations_json():
     swing = "math.sin(variable.attack_time * 180.0)"
     a = {
@@ -2163,6 +2344,10 @@ ENTITY_ANIMS = {
     "fireball": ["projectile.spin"],
     "negative_burst": ["projectile.spin"],
 }
+for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), ("gigant_basilisk", "soul_eater"),
+                    ("frost_giant", "ogre"), ("beastman", "lizardman"), ("lakyus", "climb"), ("enri", "nfirea"),
+                    ("zero", "bandit"), ("dark_young", "soul_eater"), ("jaldabaoth", "evil_lord_wrath")):
+    ENTITY_ANIMS[_new] = ENTITY_ANIMS[_like]
 
 # ---------------------------------------------------------------- particles
 # Every spell effect is drawn with these five emitters.  The script passes
@@ -2354,6 +2539,8 @@ WEARABLES = {
     **{f"ranger_{piece}": (piece, f"{NS}_ranger_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"infernal_{piece}": (piece, f"{NS}_infernal_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"vestment_{piece}": (piece, f"{NS}_vestment_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    **{f"bonedragon_{piece}": (piece, f"{NS}_bonedragon_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    **{f"beasthide_{piece}": (piece, f"{NS}_beasthide_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"crimson_{piece}": (piece, f"{NS}_crimson_{layer}") for piece, (layer, _s) in ARMOR.items()},
 }
 

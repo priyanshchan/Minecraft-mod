@@ -4,7 +4,7 @@
 // squire zombies and small talk from the human NPCs.
 import { world, system, EntityInitializationCause, GameMode } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { FACTIONS, addRep, creditedPlayer, giveItem, grantXp, profileOf, registerMenu, standingOf, touch } from "./rpg.js";
+import { FACTIONS, addRep, creditedPlayer, giveItem, grantXp, profileOf, questEvent, registerMenu, standingOf, touch } from "./rpg.js";
 import { rumour } from "./structures.js";
 
 const NS = "overlord";
@@ -26,6 +26,9 @@ export const SPAWN_GATE = {
   [id("clementine")]: 10,
   [id("vampire_bride")]: 10,
   [id("shadow_demon")]: 8,
+  [id("beastman")]: 6,
+  [id("frost_giant")]: 14,
+  [id("gigant_basilisk")]: 15,
   [id("theocracy_priest")]: 10,
   [id("hellhound")]: 12,
   [id("war_troll")]: 14,
@@ -70,6 +73,8 @@ const DIALOGUE = {
     "This post belongs to the Baharuth Empire. State your business or move along.",
     "The Emperor's knights do not fear the Kingdom's rabble.",
   ],
+  [id("lakyus")]: ["Blue Roses takes the jobs nobody else dares to. If you see a demon gate, do not go in alone.", "My sword? Kilineyram drinks darkness. Sometimes I worry what it gives back."],
+  [id("enri")]: ["Welcome to Carne. We are a small village, but we look after our friends.", "The goblins answer the horn. I still cannot quite believe they call me General."],
   [id("climb")]: ["I will become strong enough to protect the Princess. Until then, I train.", "Sir Gazef says a blade is only as true as the arm behind it."],
   [id("eclair")]: ["One day I, Eclair Ecleir Eicler, shall rule the Great Tomb of Nazarick!", "You there - polish something. A clean tomb is a conquered tomb."],
   [id("gazef")]: ["I am Gazef Stronoff, Warrior-Captain of the Kingdom. These lands are under my protection."],
@@ -221,10 +226,12 @@ system.runInterval(() => {
 
 const WORLD_BOSS_LEVEL = 25;
 const WORLD_BOSS_CHANCE = 0.3; // per in-game day
-/** Bosses that may appear, for players below and from level 50. */
+/** Bosses that may appear, for players below level 50, from level 50 and from level 75. */
 const WORLD_BOSSES = [
-  [id("gargantua"), id("dominion_authority"), id("evil_lord_wrath")],
-  [id("frost_dragon"), id("evil_lord_wrath"), id("zesshi")],
+  [id("gargantua"), id("dominion_authority"), id("evil_lord_wrath"), id("skeletal_dragon")],
+  [id("frost_dragon"), id("evil_lord_wrath"), id("zesshi"), id("dark_young"), id("jaldabaoth")],
+  // The strongest adventurers draw out the Floor Guardians themselves.
+  [id("cocytus"), id("shalltear"), id("albedo"), id("demiurge"), id("sebas"), id("dark_young"), id("jaldabaoth")],
 ];
 export const WORLD_BOSS_KEY = id("world_bosses");
 let bossDay = -1;
@@ -249,7 +256,8 @@ export function rollWorldBoss(random = Math.random) {
   const heroes = world.getAllPlayers().filter((p) => p.dimension.id === "minecraft:overworld" && profileOf(p).level >= WORLD_BOSS_LEVEL);
   if (heroes.length === 0) return undefined;
   const hero = heroes[Math.floor(random() * heroes.length)];
-  const pool = WORLD_BOSSES[profileOf(hero).level >= 50 ? 1 : 0];
+  const heroLevel = profileOf(hero).level;
+  const pool = WORLD_BOSSES[heroLevel >= 75 ? 2 : heroLevel >= 50 ? 1 : 0];
   const type = pool[Math.floor(random() * pool.length)];
   const angle = random() * Math.PI * 2;
   const x = hero.location.x + Math.cos(angle) * 36;
@@ -275,6 +283,7 @@ world.afterEvents.entityDie.subscribe((event) => {
       giveItem(hero, id("data_crystal"), 6);
       hero.sendMessage("§6[World Boss] §fThe world boss has fallen! Reward: §630 Gold Coins§f, §b6 Data Crystals§f, §a1500 XP§f.");
       grantXp(hero, 1500, "world boss");
+      questEvent(hero, "world_boss");
     }
   } catch {
     // the boss is already unloaded

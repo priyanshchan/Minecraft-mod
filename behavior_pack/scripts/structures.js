@@ -5,7 +5,7 @@
 // posted - and later replenished - when a player comes close.
 import { world, system, BlockVolume, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { addRep, creditedPlayer, giveItem, grantXp, notify, profileOf, registerMenu, touch } from "./rpg.js";
+import { addRep, creditedPlayer, giveItem, grantXp, notify, profileOf, questEvent, registerMenu, touch } from "./rpg.js";
 import { countItem, takeItem } from "./spells.js";
 
 const NS = "overlord";
@@ -144,7 +144,8 @@ export const SITES = [
       b.set(5, 0, -4, mc("hay_block"));
       b.chest(0, 0, 3, [[id("yggdrasil_gold_coin"), 4, 10], [mc("bread"), 2, 5], [mc("iron_ingot"), 1, 3], [mc("gold_ingot"), 0, 2], [id("red_potion"), 0, 2]]);
     },
-    garrison: (tier) => [[id("bandit"), 4 + tier]],
+    // From level 50 the camp is led by Zero of the Six Arms.
+    garrison: (tier) => (tier === 2 ? [[id("zero"), 1], [id("bandit"), 5]] : [[id("bandit"), 4 + tier]]),
   },
   {
     key: "adventurer_camp", name: "Adventurers' Camp", weight: 15, radius: 5, pad: mc("grass_path"),
@@ -296,6 +297,92 @@ export const SITES = [
         : tier === 1
           ? [[id("old_guarder"), 3], [id("elder_lich"), 1], [id("vampire_bride"), 2]]
           : [[id("death_knight"), 2], [id("vampire_bride"), 2], [id("elder_lich"), 2]],
+  },
+  {
+    key: "carne_village", name: "Carne Village", weight: 7, radius: 9, pad: mc("grass_path"),
+    build(b) {
+      for (const x of [-7, 3]) { // two cottages with doorways facing the green
+        b.walls(x, 0, -7, x + 4, 2, -3, mc("oak_planks"));
+        b.fill(x, 3, -7, x + 4, 3, -3, mc("spruce_planks"));
+        b.fill(x + 2, 0, -3, x + 2, 1, -3, mc("air"));
+        b.set(x + 1, 0, -6, mc("crafting_table"));
+      }
+      b.fill(-8, 0, 6, -5, 0, 7, mc("hay_block"));
+      b.set(-6, 1, 6, mc("hay_block"));
+      b.set(6, 0, 6, mc("composter"));
+      b.set(7, 0, 6, mc("barrel"));
+      b.set(0, 0, 3, mc("oak_fence")); // the village bell
+      b.set(0, 1, 3, mc("bell"));
+      b.fill(-9, 0, -9, 9, 0, -9, mc("oak_fence"));
+      b.campfire(0, -1);
+      b.chest(0, 0, 6, [[mc("bread"), 2, 6], [mc("wheat"), 3, 8], [id("red_potion"), 1, 3], [id("yggdrasil_gold_coin"), 2, 6]]);
+    },
+    garrison: (tier) => [[id("enri"), 1], [id("nfirea"), 1], [id("guard"), 2 + tier]],
+  },
+  {
+    key: "great_tomb", name: "Mausoleum of Nazarick", weight: 5, radius: 9, pad: id("nazarick_tiles"),
+    build(b) {
+      b.walls(-8, 0, -8, 8, 1, 8, id("nazarick_bricks"));
+      b.fill(-1, 0, 8, 1, 1, 8, mc("air")); // the gate
+      b.fill(-8, 0, -1, -8, 1, 1, id("cracked_nazarick_bricks"));
+      for (const [x, z] of [[-6, -6], [6, -6], [-6, 6], [6, 6]]) {
+        b.fill(x, 0, z, x, 3, z, id("nazarick_pillar"));
+        b.set(x, 4, z, id("nazarick_lamp"));
+      }
+      b.fill(-2, 0, -4, 2, 0, 0, id("gilded_nazarick_bricks")); // the dais
+      b.set(0, 1, -4, id("data_crystal_block"));
+      b.chest(0, 1, -2, [[id("data_crystal"), 4, 8], [id("yggdrasil_gold_coin"), 8, 16], [id("soul_fragment"), 1, 3], [id("guardian_crest"), 0, 1], [id("scroll_of_time_stop"), 0, 1]]);
+    },
+    garrison: (tier) =>
+      tier === 0
+        ? [[id("old_guarder"), 4], [id("skeleton_mage"), 2], [id("elder_lich"), 1]]
+        : tier === 1
+          ? [[id("lupusregina"), 1], [id("death_knight"), 2], [id("elder_lich"), 2]]
+          : [[id("shalltear"), 1], [id("vampire_bride"), 2], [id("death_knight"), 2]],
+  },
+  {
+    key: "zurrernorn_shrine", name: "Zurrernorn Shrine", weight: 6, radius: 7, pad: mc("polished_blackstone"),
+    build(b) {
+      b.fill(-1, 0, -4, 1, 0, -3, mc("bone_block")); // the altar
+      b.set(0, 1, -4, mc("soul_lantern"));
+      for (const [x, z] of [[-5, -5], [5, -5], [-5, 5], [5, 5]]) {
+        b.fill(x, 0, z, x, 2, z, mc("obsidian"));
+        b.set(x, 3, z, mc("soul_lantern"));
+      }
+      b.flag(-3, -6, mc("purple_wool"));
+      b.flag(3, -6, mc("purple_wool"));
+      b.set(-3, 0, 2, mc("soul_campfire"));
+      b.set(3, 0, 2, mc("soul_campfire"));
+      b.chest(0, 0, 4, [[mc("bone"), 3, 8], [id("soul_fragment"), 1, 4], [id("data_crystal"), 2, 5], [id("yggdrasil_gold_coin"), 4, 10], [id("tome_create_undead"), 0, 1]]);
+    },
+    garrison: (tier) =>
+      tier === 0
+        ? [[id("skeleton_mage"), 3], [id("old_guarder"), 2]]
+        : tier === 1
+          ? [[id("khajiit"), 1], [id("old_guarder"), 3], [id("skeleton_mage"), 1]]
+          : [[id("skeletal_dragon"), 1], [id("khajiit"), 1], [id("old_guarder"), 2]],
+  },
+  {
+    key: "beastman_camp", name: "Beastman Warcamp", weight: 8, radius: 7, pad: mc("coarse_dirt"),
+    build(b) {
+      b.tent(-4, 2, mc("orange_wool"));
+      b.tent(4, 2, mc("orange_wool"));
+      b.tent(0, -5, mc("brown_wool"));
+      for (let i = 0; i < 10; i++) { // a ring of stakes
+        const a = (i / 10) * Math.PI * 2;
+        b.set(Math.round(Math.cos(a) * 7), 0, Math.round(Math.sin(a) * 7), mc("acacia_fence"));
+      }
+      b.flag(6, -6, mc("orange_wool"), mc("acacia_fence"));
+      b.set(-6, 0, -5, mc("bone_block"));
+      b.campfire(0, 0);
+      b.chest(0, 0, 5, [[id("beast_hide"), 1, 4], [mc("cooked_beef"), 2, 5], [mc("leather"), 1, 3], [id("yggdrasil_gold_coin"), 3, 8], [id("basilisk_eye"), 0, 1]]);
+    },
+    garrison: (tier) =>
+      tier === 0
+        ? [[id("beastman"), 4]]
+        : tier === 1
+          ? [[id("beastman"), 5], [id("gigant_basilisk"), 1]]
+          : [[id("beastman"), 6], [id("gigant_basilisk"), 2]],
   },
   {
     key: "dwarven_forge", name: "Dwarven Forge", weight: 8, radius: 6, pad: mc("smooth_stone"),
@@ -497,9 +584,9 @@ const manned = new Map();
 const sieges = new Map();
 /** Sites whose garrison is hostile: clearing them out is rewarded. */
 const HOSTILE_SITES = new Set(["goblin_camp", "bandit_camp", "nazarick_outpost", "troll_den", "dragon_hoard", "theocracy_camp", "demon_gate",
-  "graveyard"]);
+  "graveyard", "great_tomb", "zurrernorn_shrine", "beastman_camp"]);
 /** Sites a player can travel back to once discovered. */
-const FRIENDLY_SITES = new Set(["adventurer_camp", "kingdom_camp", "empire_outpost", "dwarven_forge", "lizardman_village"]);
+const FRIENDLY_SITES = new Set(["adventurer_camp", "kingdom_camp", "empire_outpost", "dwarven_forge", "lizardman_village", "carne_village"]);
 export const TRAVEL_COST = 5;
 
 /** @param {number} level */
@@ -571,6 +658,7 @@ export function explore(player) {
         remember(rx, rz, camp);
         notify(player, `§6Discovered: §f${camp.type.name}`);
         grantXp(player, 80, "discovery");
+        questEvent(player, "site");
       }
       // Everyone who visits a friendly camp can travel back to it later.
       if (FRIENDLY_SITES.has(camp.type.key)) {
@@ -620,6 +708,7 @@ world.afterEvents.entityDie.subscribe((event) => {
           addRep(hero, "adventurers", 5);
           hero.sendMessage(`§6[Overlord] §f${camp.type.name} cleared! Reward: §6${coins} Gold Coins§f, §a${xp} XP§f. The Kingdom and the adventurers think better of you.`);
           grantXp(hero, xp, "camp cleared");
+          questEvent(hero, "camp");
         }
         return;
       }
@@ -706,7 +795,7 @@ registerMenu(
       .body(
         places.length > 0
           ? `Return to a friendly camp you have discovered for ${TRAVEL_COST} Gold Coins. Your party follows.`
-          : "You have not discovered any friendly camps yet. Adventurers' camps, Kingdom and Empire army posts, Dwarven Forges and Lizardman villages can be travelled to once found."
+          : "You have not discovered any friendly camps yet. Adventurers' camps, Kingdom and Empire army posts, Dwarven Forges, Lizardman villages and Carne Village can be travelled to once found."
       );
     for (const place of places) {
       const distance = Math.round(Math.hypot(place.x - player.location.x, place.z - player.location.z));

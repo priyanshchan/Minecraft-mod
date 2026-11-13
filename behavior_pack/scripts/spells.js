@@ -108,6 +108,11 @@ export const AFFINITY = {
   [id("evil_lord_wrath")]: { fire: 0.1, ice: 1.5, holy: 1.25 },
   [id("archangel_flame")]: { holy: 0.25, fire: 0.5, dark: 1.5 },
   [id("dominion_authority")]: { holy: 0.1, lightning: 0.5, dark: 1.5 },
+  [id("skeletal_dragon")]: { ice: 0.5, holy: 1.5 },
+  [id("gigant_basilisk")]: { acid: 0.25, ice: 1.5 },
+  [id("frost_giant")]: { ice: 0.1, fire: 1.5 },
+  [id("dark_young")]: { dark: 0.25, fire: 1.5, holy: 1.25 },
+  [id("jaldabaoth")]: { fire: 0.1, ice: 1.5, holy: 1.25 },
   [id("war_troll")]: { fire: 1.5, acid: 1.5 },
   [id("vampire_bride")]: { fire: 1.25 },
   "minecraft:blaze": { fire: 0.25, ice: 1.5 },
@@ -730,6 +735,43 @@ export function takeItem(player, itemId, amount) {
       container.setItem(i, undefined);
     }
   }
+}
+
+/**
+ * A scroll or tome of a spell was used: if the player knows the spell, it counts towards its mastery.
+ * @param {Player} player @param {string} key
+ */
+export function creditCast(player, key) {
+  const p = book(player);
+  if (!p.spells.includes(key)) return false;
+  const before = masteryOf(player, key);
+  p.casts[key] = (p.casts[key] ?? 0) + 1;
+  touch(player);
+  const after = masteryOf(player, key);
+  if (after > before) notify(player, `§d${spellByKey(key)?.name ?? key} mastery ${after}`);
+  return true;
+}
+
+/**
+ * Reading a tome teaches its spell for free, once the reader's level allows that tier.
+ * @param {Player} player @param {string} key
+ */
+export function studyTome(player, key) {
+  const p = book(player);
+  const spell = spellByKey(key);
+  if (!spell || p.spells.includes(key) || p.level < levelForTier(spell.tier)) return false;
+  p.spells.push(key);
+  const free = p.slots.indexOf("");
+  if (free >= 0) p.slots[free] = key;
+  touch(player);
+  refreshHud(player);
+  try {
+    player.sendMessage(`§5[Grimoire] §fStudying the tome, you have learned §d${spell.name}§f. It can now be cast with the Magic Wand as well.`);
+    player.playSound("random.levelup", { volume: 1, pitch: 1.5 });
+  } catch {
+    // cosmetic only
+  }
+  return true;
 }
 
 /**

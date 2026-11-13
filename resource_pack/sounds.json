@@ -712,6 +712,140 @@
           "death": "mob.rabbit.death",
           "step": "mob.polarbear.step"
         }
+      },
+      "overlord:skeletal_dragon": {
+        "volume": 1.0,
+        "pitch": [
+          0.9,
+          1.0
+        ],
+        "events": {
+          "ambient": "mob.ravager.ambient",
+          "hurt": "mob.irongolem.hit",
+          "death": "mob.wither.death",
+          "step": "mob.irongolem.walk",
+          "shoot": "random.glass"
+        }
+      },
+      "overlord:khajiit": {
+        "volume": 1.0,
+        "pitch": [
+          0.75,
+          0.85
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "mob.shulker.shoot",
+          "cast.spell": "mob.evocation_illager.cast_spell",
+          "prepare.summon": "mob.evocation_illager.prepare_summon"
+        }
+      },
+      "overlord:gigant_basilisk": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.8
+        ],
+        "events": {
+          "ambient": "mob.wither.ambient",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:frost_giant": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.6
+        ],
+        "events": {
+          "ambient": "mob.zombie.say",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.irongolem.walk"
+        }
+      },
+      "overlord:beastman": {
+        "volume": 1.0,
+        "pitch": [
+          0.7,
+          0.8
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:lakyus": {
+        "volume": 1.0,
+        "pitch": [
+          1.05,
+          1.15
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:enri": {
+        "volume": 1.0,
+        "pitch": [
+          1.0,
+          1.1
+        ],
+        "events": {
+          "hurt": "mob.villager.hit",
+          "death": "mob.villager.death",
+          "step": "mob.zombie.step",
+          "haggle": "mob.villager.haggle",
+          "haggle.yes": "mob.villager.yes",
+          "haggle.no": "mob.villager.no"
+        }
+      },
+      "overlord:zero": {
+        "volume": 1.0,
+        "pitch": [
+          0.9,
+          1.0
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:dark_young": {
+        "volume": 1.0,
+        "pitch": [
+          0.4,
+          0.5
+        ],
+        "events": {
+          "ambient": "mob.ravager.ambient",
+          "hurt": "mob.irongolem.hit",
+          "death": "mob.wither.death",
+          "step": "mob.irongolem.walk",
+          "shoot": "mob.ghast.fireball"
+        }
+      },
+      "overlord:jaldabaoth": {
+        "volume": 1.0,
+        "pitch": [
+          0.4,
+          0.5
+        ],
+        "events": {
+          "ambient": "mob.ravager.ambient",
+          "hurt": "mob.irongolem.hit",
+          "death": "mob.wither.death",
+          "step": "mob.irongolem.walk",
+          "shoot": "mob.ghast.fireball"
+        }
       }
     }
   }
