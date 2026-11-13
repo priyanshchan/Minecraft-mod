@@ -35,6 +35,7 @@ import "./guild.js";
 import { runeOf } from "./forge.js";
 import "./arena.js";
 import "./ambience.js";
+import "./dragons.js";
 import "./mount.js";
 
 const NS = "overlord";

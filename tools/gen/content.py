@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [6, 5, 0]
+VERSION = [6, 6, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v6.5.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v6.6.0"
 
 
 def oid(name):
@@ -1345,7 +1345,7 @@ def entity_files():
     c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally])
     out["vampire_bride"] = _entity("vampire_bride", c)
 
-    c = _mob("frost_dragon", ["frost_dragon", "dragon", "monster", "mob"], 700, 0.26, (2.0, 2.2), loot="frost_dragon",
+    c = _mob("frost_dragon", ["frost_dragon", "dragon", "monster", "mob"], 700, 0.26, DRAGON_BOX, loot="frost_dragon",
              xp=600, scale=1.4, kb=1.0, follow=48, persistent=True)
     del c["minecraft:can_climb"]
     c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": False}
@@ -1604,7 +1604,7 @@ def entity_files():
     out["bandit"] = _entity("bandit", c)
 
     # ------------------------------------------------------ v5.0: the wider world
-    c = _mob("skeletal_dragon", ["skeletal_dragon", "dragon", "undead", "monster", "mob"], 550, 0.28, (2.0, 2.2),
+    c = _mob("skeletal_dragon", ["skeletal_dragon", "dragon", "undead", "monster", "mob"], 550, 0.28, DRAGON_BOX,
              loot="skeletal_dragon", xp=450, scale=1.4, kb=1.0, follow=48, persistent=True, undead=True)
     del c["minecraft:can_climb"]
     c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": False}
@@ -1788,7 +1788,7 @@ def entity_files():
     c["minecraft:damage_sensor"] = {"triggers": [{"cause": "all", "deals_damage": False}]}
     out["arena_master"] = _entity("arena_master", c)
 
-    c = _mob("platinum_dragon_lord", ["platinum_dragon_lord", "dragon", "monster", "mob"], 1200, 0.3, (2.0, 2.2),
+    c = _mob("platinum_dragon_lord", ["platinum_dragon_lord", "dragon", "monster", "mob"], 1200, 0.3, DRAGON_BOX,
              loot="platinum_dragon_lord", xp=1000, scale=1.6, kb=1.0, follow=48, persistent=True)
     del c["minecraft:can_climb"]
     c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": True}
@@ -1945,11 +1945,18 @@ SIZES = {
     "hamsuke": 1.5, "soul_eater": 1.2, "hellhound": 1.1, "eight_edge_assassin": 1.2, "gigant_basilisk": 2.0,
     "dark_young": 3.0,
     # dragons
-    "frost_dragon": 2.2, "skeletal_dragon": 2.4, "platinum_dragon_lord": 2.8,
+    # The dragons' own models are already more than eight blocks long before this is applied.
+    "frost_dragon": 2.6, "skeletal_dragon": 2.8, "platinum_dragon_lord": 3.4,
 }
+# A dragon's hit box is its trunk, not its whole length: wide enough to be hit, narrow enough to walk.
+DRAGON_BOX = (1.4, 2.0)
 
 
 def _resize(out):
+    for name in ("frost_dragon", "skeletal_dragon", "platinum_dragon_lord"):
+        # Creatures this large step over ledges that would stop anything smaller.
+        out[name]["minecraft:entity"]["components"]["minecraft:variable_max_auto_step"] = {
+            "base_value": 2.0625, "controlled_value": 2.0625, "jump_prevented_value": 1.0625}
     for name, entity in out.items():
         c = entity["minecraft:entity"]["components"]
         if "minecraft:collision_box" not in c:
@@ -2397,8 +2404,8 @@ SOUNDS = {
     "dwarf": (1.0, [0.7, 0.8], {"hurt": "mob.villager.hit", "death": "mob.villager.death",
                                 "step": "mob.zombie.step", "haggle": "mob.villager.haggle",
                                 "haggle.yes": "mob.villager.yes", "haggle.no": "mob.villager.no"}),
-    "frost_dragon": (1.0, [0.9, 1.0], {"ambient": "mob.ravager.ambient", "hurt": "mob.irongolem.hit",
-                                       "death": "mob.wither.death", "step": "mob.irongolem.walk",
+    "frost_dragon": (1.0, [0.7, 0.85], {"ambient": "mob.enderdragon.growl", "hurt": "mob.enderdragon.hit",
+                                       "death": "mob.enderdragon.death", "step": "mob.irongolem.walk",
                                        "shoot": "random.glass"}),
     "hamsuke": (1.0, [0.6, 0.8], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
                                   "death": "mob.rabbit.death", "step": "mob.polarbear.step"}),
@@ -2476,6 +2483,36 @@ def animations_json():
         "animation.overlord.dragon_wings": {"loop": True, "bones": {
             "rightWing": {"rotation": [0.0, 0.0, "math.sin(query.life_time * 140.0) * 12.0"]},
             "leftWing": {"rotation": [0.0, 0.0, "-math.sin(query.life_time * 140.0) * 12.0"]}}},
+        # ------------------------------------------------------------- the great dragons
+        # two-part wings: the arm beats and the tip follows a moment later, harder when on the move
+        "animation.overlord.dragon.wings": {"loop": True, "bones": {
+            "rightWing": {"rotation": [0.0, "math.sin(query.life_time * 110.0 + 90.0) * 4.0",
+                                       "math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0)"]},
+            "leftWing": {"rotation": [0.0, "-math.sin(query.life_time * 110.0 + 90.0) * 4.0",
+                                      "-math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0)"]},
+            "rightWingTip": {"rotation": [0.0, 0.0, "math.sin(query.life_time * 110.0 - 60.0) * 16.0"]},
+            "leftWingTip": {"rotation": [0.0, 0.0, "-math.sin(query.life_time * 110.0 - 60.0) * 16.0"]}}},
+        # the neck weaves like a snake's
+        "animation.overlord.dragon.neck": {"loop": True, "bones": {
+            "neck": {"rotation": ["math.sin(query.life_time * 40.0) * 3.0", "math.sin(query.life_time * 27.0) * 6.0", 0.0]},
+            "neck2": {"rotation": ["math.sin(query.life_time * 40.0 - 50.0) * 4.0",
+                                   "math.sin(query.life_time * 27.0 - 40.0) * 7.0", 0.0]}}},
+        # the jaw gapes to bite, and now and then to snarl
+        "animation.overlord.dragon.jaw": {"loop": True, "bones": {
+            "jaw": {"rotation": [f"math.max({swing} * 32.0, "
+                                 "math.clamp(math.sin(query.life_time * 45.0) * 60.0 - 50.0, 0.0, 14.0))", 0.0, 0.0]}}},
+        # a wave runs down the tail, wider towards the tip
+        "animation.overlord.dragon.tail": {"loop": True, "bones": {
+            "tail": {"rotation": ["math.sin(query.life_time * 55.0) * 2.0", "math.sin(query.life_time * 70.0) * 7.0", 0.0]},
+            "tail2": {"rotation": [0.0, "math.sin(query.life_time * 70.0 - 55.0) * 11.0", 0.0]},
+            "tail3": {"rotation": [0.0, "math.sin(query.life_time * 70.0 - 110.0) * 14.0", 0.0]},
+            "tail4": {"rotation": [0.0, "math.sin(query.life_time * 70.0 - 165.0) * 17.0", 0.0]}}},
+        # a bite is a lunge of the whole neck
+        "animation.overlord.dragon.lunge": {"loop": True, "bones": {
+            "body": {"rotation": [f"{swing} * 4.0", 0.0, 0.0]},
+            "neck": {"rotation": [f"{swing} * 18.0", 0.0, 0.0]},
+            "neck2": {"rotation": [f"{swing} * 14.0", 0.0, 0.0]},
+            "head": {"rotation": [f"-{swing} * 10.0", 0.0, 0.0]}}},
         # ------------------------------------------------ life: small motions every creature shares
         # breathing: the chest swells and settles
         "animation.overlord.breathe": {"loop": True, "bones": {
@@ -2557,7 +2594,8 @@ ENTITY_ANIMS = {
     "war_troll": ["look_at_target", "idle", "walk", "attack"],
     "vampire_bride": ["look_at_target", "idle", "robe_walk", "attack"],
     "dwarf": ["look_at_target", "idle", "walk"],
-    "frost_dragon": ["look_at_target", "hamsuke.walk", "hamsuke.tail", "hamsuke.attack", "dragon_wings"],
+    "frost_dragon": ["look_at_target", "hamsuke.walk", "dragon.wings", "dragon.neck", "dragon.jaw", "dragon.tail",
+                     "dragon.lunge"],
     "frost_breath": ["projectile.spin"],
     "retainer": ["look_at_target", "idle", "walk", "attack"],
     "crystal_shard": ["projectile.spin"],

@@ -1,6 +1,8 @@
 """Entity models + textures for the Overlord add-on (all art is original)."""
 from __future__ import annotations
 
+import random
+
 from modelkit import Model, shade, mix
 
 BONE, BONE_D, BONE_DD = "#e9e3cf", "#bdb496", "#8d8468"
@@ -3203,6 +3205,217 @@ def frost_dragon(name="frost_dragon", sc="#bfe3f5", sc_l="#eaf7ff", sc_d="#7fb4d
     spike.fill(sc_l)
     spike.back.fill(sc_d)
     return m
+
+
+
+# ------------------------------------------------------- v6.6: the great dragons
+# The three dragons are built far larger than anything else and each in its own way: the Frost
+# Dragon bristles with ice, the Skeletal Dragon is an open cage of bone round a soul fire, and the
+# Platinum Dragon Lord is plated and crowned.  They share one skeleton so they share their
+# animations: body, neck, neck2, head, jaw, leg0-3, tail, tail2-4 and two-part wings.
+def _great_dragon(name, style, scale_c, light, dark, belly, horn, membrane, eye, glow):
+    m = Model(name, bounds=(16, 10, 3.5))
+    m.SIZES = Model.SIZES + [(512, 256), (512, 512)]
+    bone_style, ice, plated = style == "bone", style == "ice", style == "plated"
+    pal = {"S": scale_c, "s": light, "D": dark, "B": belly, "e": eye, "K": "#0e0f14", "T": "#f4f1e6", "H": horn,
+           "G": glow}
+
+    def scales(cube, base=scale_c, seed=3):
+        cube.fill(base, noise=7, seed=seed)
+        for f in cube.sides:  # rows of overlapping scales
+            for y in range(2, f.h, 3):
+                f.hline(y, dark)
+        cube.bottom.fill(belly)
+        return cube
+
+    body = m.bone("body", (0, 22, 0))
+    if bone_style:
+        # an open ribcage round a soul fire, between solid shoulders and hips
+        spine = body.cube((-2, 25, -16), (4, 4, 34))
+        spine.fill(scale_c, noise=8)
+        for z in range(-12, 14, 5):
+            for x in (-9, 7):
+                rib = body.cube((x, 13, z), (2, 13, 2))
+                rib.fill(light, noise=6)
+                rib.band(11, 13, dark)
+            arch = body.cube((-9, 26, z), (18, 2, 2))
+            arch.fill(light, noise=6)
+        sternum = body.cube((-2, 12, -13), (4, 2, 28))
+        sternum.fill(dark)
+        fire = body.cube((-4, 16, -8), (8, 7, 16))
+        fire.fill(glow, noise=14)
+        fire.top.fill(shade(glow, 1.3))
+        for z, depth in ((-20, 6), (15, 6)):  # shoulder and hip girdles
+            block = body.cube((-9, 13, z), (18, 15, depth))
+            block.fill(scale_c, noise=8)
+            block.band(0, 2, light)
+            block.band(12, 15, dark)
+    else:
+        torso = scales(body.cube((-9, 14, -16), (18, 16, 34)))
+        torso.top.fill(dark, 6, 0, 12, None)  # darker along the spine
+        chest = scales(body.cube((-8, 12, -21), (16, 15, 6)), seed=5)
+        chest.front.fill(belly, 3, 4, 13, 15)
+        for y in range(6, 15, 3):
+            chest.front.hline(y, shade(belly, 0.8), 3, 13)
+        if plated:
+            for z in (-12, -2, 8):  # overlapping armour plates down the flanks
+                for x in (-10, 9):
+                    plate = body.cube((x, 17, z), (1, 9, 8))
+                    plate.fill(light)
+                    plate.band(0, 1, glow)
+                    plate.band(8, 9, dark)
+            gem = body.cube((-2, 17, -22), (4, 4, 1))
+            gem.fill(glow)
+            gem.front.border(horn)
+    for i, z in enumerate(range(-14, 18, 5)):  # the ridge along the back
+        tall = 7 if ice else 4 if bone_style else 5
+        ridge = body.cube((-1, 30, z), (2, tall - (i % 2), 3))
+        ridge.fill(light if ice else horn)
+        ridge.top.fill(glow if ice else shade(horn, 1.2))
+
+    # ------------------------------------------------------------ neck and head
+    neck = m.bone("neck", (0, 26, -18), parent="body", rotation=(-28, 0, 0))
+    n1 = neck.cube((-5, 21, -31), (10, 10, 15))
+    n1.fill(scale_c, noise=7) if bone_style else scales(n1, seed=7)
+    neck2 = m.bone("neck2", (0, 26, -31), parent="neck", rotation=(-18, 0, 0))
+    n2 = neck2.cube((-4, 22, -43), (8, 8, 13))
+    n2.fill(scale_c, noise=7) if bone_style else scales(n2, seed=9)
+    for bone_, z0 in ((neck, -30), (neck2, -42)):
+        for z in range(z0, z0 + 12, 4):
+            spike = bone_.cube((-1, 30 if bone_ is neck2 else 31, z), (2, 5 if ice else 3, 2))
+            spike.fill(light if ice else horn)
+    head = m.bone("head", (0, 26, -43), parent="neck2", rotation=(46, 0, 0))
+    skull = head.cube((-6, 21, -56), (12, 11, 14))
+    skull.fill("#e9e3cf" if bone_style else scale_c, noise=7)
+    skull.top.fill(light if not bone_style else "#f4f1e6")
+    for face, flip in ((skull.right, False), (skull.left, True)):  # eyes under a heavy brow
+        ex = 3 if not flip else face.w - 6
+        face.fill(dark, ex - 1, 2, ex + 4, 3)
+        face.fill("#0e0f14", ex, 3, ex + 3, 6)
+        face.fill(eye, ex, 4, ex + 3, 5)
+        face.px(ex + (0 if flip else 2), 4, "#ffffff")
+    snout = head.cube((-4, 22, -67), (8, 7, 11))
+    snout.fill("#e9e3cf" if bone_style else scale_c, noise=7)
+    snout.top.fill(light if not bone_style else "#f4f1e6")
+    snout.front.fill("#0e0f14", 1, 1, 3, 3)   # nostrils
+    snout.front.fill("#0e0f14", 5, 1, 7, 3)
+    for f in (snout.right, snout.left):  # upper teeth
+        for x in range(1, f.w, 2):
+            f.px(x, f.h - 1, "#f4f1e6")
+        f.hline(f.h - 2, dark)
+    jaw = m.bone("jaw", (0, 22, -55), parent="head")
+    lower = jaw.cube((-4, 19, -66), (8, 3, 12))
+    lower.fill("#d6cfb6" if bone_style else dark, noise=6)
+    for f in (lower.right, lower.left):  # lower teeth
+        for x in range(0, f.w, 2):
+            f.px(x, 0, "#f4f1e6")
+    lower.top.fill("#7a1f28" if not bone_style else "#3a3528")  # the inside of the mouth
+    horns = [(-6, 31, -50, 2, 3, 12), (4, 31, -50, 2, 3, 12), (-7, 28, -48, 1, 2, 8), (6, 28, -48, 1, 2, 8)]
+    if plated:  # a crown of horns
+        horns += [(-3, 32, -48, 2, 6, 2), (1, 32, -48, 2, 6, 2), (-1, 32, -53, 2, 4, 2)]
+    if ice:  # a beard of icicles
+        horns += [(-3, 17, -62, 1, 3, 1), (2, 17, -62, 1, 3, 1), (-1, 16, -58, 2, 4, 2)]
+    for x, y, z, w, h, d in horns:
+        spur = (jaw if y < 20 else head).cube((x, y, z), (w, h, d))
+        spur.fill(light if (ice and y < 20) else horn)
+        spur.back.fill(shade(horn, 1.25))
+
+    # --------------------------------------------------------------------- legs
+    for i, (x, z) in enumerate(((-14, -17), (8, -17), (-14, 10), (8, 10))):
+        leg = m.bone(f"leg{i}", (x + 3, 17, z + 4), parent="body")
+        thigh = leg.cube((x, 6, z), (6, 13, 8))
+        thigh.fill(scale_c, noise=7) if bone_style else scales(thigh, seed=11 + i)
+        if bone_style:
+            thigh.band(0, 2, light)
+            thigh.band(11, 13, dark)
+        foot = leg.cube((x - 1, 0, z - 3), (8, 6, 11))
+        foot.fill(dark if not bone_style else scale_c, noise=6)
+        for cx in (x - 1, x + 2, x + 5):  # claws
+            claw = leg.cube((cx, 0, z - 6), (2, 2, 3))
+            claw.fill("#f4f1e6")
+
+    # --------------------------------------------------------------------- tail
+    parent, z = "body", 18
+    for i, (w, h, length) in enumerate(((12, 12, 15), (9, 9, 15), (6, 6, 15), (4, 4, 13))):
+        name_ = "tail" if i == 0 else f"tail{i + 1}"
+        tail = m.bone(name_, (0, 24, z), parent=parent)
+        seg = tail.cube((-w / 2, 24 - h / 2 - 1, z), (w, h, length))
+        seg.fill(scale_c, noise=7) if bone_style else scales(seg, seed=17 + i)
+        if bone_style:
+            for zz in range(2, length, 4):
+                for f in seg.sides[::2]:
+                    f.vline(zz, dark)
+        fin = tail.cube((-1, 24 + h / 2 - 1, z + 3), (2, 4 if ice else 3, 3))
+        fin.fill(light if ice else horn)
+        parent, z = name_, z + length
+    tip = _bone(m, "tail4")
+    if ice:  # a mace of ice
+        for x, y in ((-4, 21), (2, 21), (-1, 25), (-1, 18)):
+            shard = tip.cube((x, y, z - 4), (2, 3, 6))
+            shard.fill(light)
+            shard.back.fill(glow)
+    elif plated:  # a bladed fan
+        fan = tip.cube((-6, 22, z - 3), (12, 1, 8))
+        fan.fill(light)
+        fan.top.border(glow)
+    else:  # a spur of bone
+        spur = tip.cube((-1, 20, z - 2), (2, 8, 5))
+        spur.fill("#f4f1e6")
+
+    # -------------------------------------------------------------------- wings
+    def wing_skin(cube, tattered):
+        """A wing skin seen from above and below: finger bones with skin stretched between."""
+        for f in (cube.top, cube.bottom):
+            f.fill(membrane)
+            f.noise(6, 21)
+            for x in range(0, f.w, 6):  # fingers
+                f.vline(x, horn)
+            for x in range(f.w):  # a scalloped trailing edge
+                depth = 2 + (x % 6 if x % 12 < 6 else 5 - x % 6)
+                for y in range(f.h - depth, f.h):
+                    f.px(x, y, (0, 0, 0, 0))
+            if tattered:  # holes where the skin has rotted through
+                rnd = random.Random(name + str(f.w))
+                for _ in range(14):
+                    hx, hy = rnd.randrange(1, f.w - 3), rnd.randrange(2, f.h - 4)
+                    for dx in range(rnd.randrange(2, 5)):
+                        for dy in range(rnd.randrange(2, 6)):
+                            if (hx + dx) % 6:
+                                f.px(hx + dx, hy + dy, (0, 0, 0, 0))
+        for f in cube.sides:
+            f.fill(shade(membrane, 0.8))
+
+    for side, sign in (("right", -1), ("left", 1)):
+        inner = m.bone(f"{side}Wing", (sign * 9, 29, -8), parent="body", rotation=(0, 0, sign * 24))
+        x0 = -35 if sign < 0 else 9
+        arm = inner.cube((x0, 28, -11), (26, 3, 4))
+        arm.fill(scale_c if not bone_style else "#e9e3cf", noise=6)
+        skin = inner.cube((x0, 29, -7), (26, 1, 26))
+        wing_skin(skin, bone_style)
+        outer = m.bone(f"{side}WingTip", (sign * 35, 29, -8), parent=f"{side}Wing", rotation=(0, 0, sign * -34))
+        x1 = -63 if sign < 0 else 35
+        arm2 = outer.cube((x1, 28, -11), (28, 2, 3))
+        arm2.fill(scale_c if not bone_style else "#e9e3cf", noise=6)
+        skin2 = outer.cube((x1, 29, -8), (28, 1, 22))
+        wing_skin(skin2, bone_style)
+        claw = outer.cube((x1 if sign < 0 else x1 + 26, 27, -13), (2, 2, 4))
+        claw.fill("#f4f1e6")
+    return m
+
+
+def frost_dragon():
+    return _great_dragon("frost_dragon", "ice", "#a9d6ee", "#eaf7ff", "#6fa6c9", "#dff1fb", "#cfe9f7", "#7fb8d8",
+                         "#f2c21b", "#8fe9ff")
+
+
+def skeletal_dragon():
+    return _great_dragon("skeletal_dragon", "bone", "#d8d0b4", "#f1eee0", "#8a8166", "#a59c7e", "#b8b094", "#5a5545",
+                         "#b6ff4a", "#7dff5a")
+
+
+def platinum_dragon_lord():
+    return _great_dragon("platinum_dragon_lord", "plated", "#cfd4de", "#ffffff", "#8e96a6", "#eef1f6", "#d9a92b",
+                         "#9fb4cc", "#59d0ff", "#59d0ff")
 
 
 ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_lich, hamsuke,
