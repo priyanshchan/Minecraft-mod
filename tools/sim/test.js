@@ -264,7 +264,10 @@ const makeLand = (opts = {}) => {
         remove() { this.isValid = false; land.mobs = land.mobs.filter((m) => m !== this); } };
       land.mobs.push(e); return e; },
     serial: 0,
-    getEntities: (q) => land.mobs.filter((m) => (!q.type || m.typeId === q.type) && (q.tags ?? []).every((t) => m.tags.has(t))) };
+    getEntities: (q) => { const found = land.mobs.filter((m) => (!q.type || m.typeId === q.type) && (q.tags ?? []).every((t) => m.tags.has(t)) &&
+        (!q.families || (m.matches && m.matches({ families: q.families }))) &&
+        (!q.maxDistance || !q.location || Math.hypot(m.location.x - q.location.x, m.location.z - q.location.z) <= q.maxDistance));
+      return q.closest ? found.slice(0, q.closest) : found; } };
   return land;
 };
 // every site type builds on flat ground: pad, cleared air, at least one stocked chest, and only known blocks
@@ -314,12 +317,13 @@ f.health.currentValue = 20;
 const offer = { name: "Borin", look: 0, level: 3, cost: 16 };
 assert.ok(party.hire(f, offer).includes("asks for 16")); f.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 64));
 assert.ok(party.hire(f, offer).includes("joins")); assert.ok(party.hire(f, { ...offer, name: "Kara", look: 2 }).includes("joins"));
-assert.ok(party.hire(f, offer).includes("full")); assert.equal(party.partyOf(f).length, 3);
-assert.equal(f.inv.filter((s) => s && s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0), 32);
-party.summon(f); advance(45); assert.equal(f.dimension.mobs.filter((m) => m.typeId === "overlord:retainer").length, 3);
+assert.ok(party.hire(f, { ...offer, name: "Dain", look: 9 }).includes("Dain the Thief joins"), "a rogue can be hired");
+assert.ok(party.hire(f, offer).includes("full")); assert.equal(party.partyOf(f).length, 4, "one retainer and three mercenaries");
+assert.equal(f.inv.filter((s) => s && s.typeId === "overlord:yggdrasil_gold_coin").reduce((n, s) => n + s.amount, 0), 16);
+party.summon(f); advance(45); assert.equal(f.dimension.mobs.filter((m) => m.typeId === "overlord:retainer").length, 4);
 assert.equal(party.candidates(f, () => 0.5).length, 3); assert.equal(party.levelOf(f, party.partyOf(f)[1]), 3, "mercenaries keep their level");
 // gear upgrades cost coins and strengthen the retainer
-assert.ok(party.upgrade(f, 0).includes("rank 1")); advance(45);
+f.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 20)); assert.ok(party.upgrade(f, 0).includes("rank 1")); advance(45);
 lyra = f.dimension.mobs.find((m) => m.typeId === "overlord:retainer" && m.nameTag.startsWith("Lyra"));
 assert.equal(lyra.effects.get("health_boost"), 1, "gear 1 at level 1 = two tiers of hearts");
 // a fighter uses its skill on the master's target, and the kill counts for the master
@@ -332,10 +336,10 @@ const killsBefore = pf.kills["overlord:goblin"] ?? 0; world.afterEvents.entityDi
 assert.equal(pf.kills["overlord:goblin"], killsBefore + 1, "retainer kills count for the master");
 // a fallen retainer rests for a minute, then returns
 world.afterEvents.entityDie.fire({ deadEntity: borin, damageSource: {} }); borin.remove();
-assert.ok(party.recovering(f, 1) > 50); advance(200); assert.ok(!f.dimension.mobs.some((m) => m.nameTag.startsWith("Borin")), "still recovering");
+assert.ok(party.recovering(f, 1) > 25 && party.recovering(f, 1) <= 30, "the healer tends the fallen: half a minute"); advance(200); assert.ok(!f.dimension.mobs.some((m) => m.nameTag.startsWith("Borin")), "still recovering");
 advance(60 * 20); assert.ok(f.dimension.mobs.some((m) => m.nameTag.startsWith("Borin")), "back after a minute");
 party.dismiss(f); assert.equal(f.dimension.mobs.filter((m) => m.typeId === "overlord:retainer").length, 0);
-party.release(f, 2); assert.equal(party.partyOf(f).length, 2);
+party.release(f, 2); assert.equal(party.partyOf(f).length, 3);
 // ---- bestiary ----
 for (let i = 0; i < 5; i++) kill(f, mob("overlord:ogre", 60));
 assert.equal(rpg.knowledgeOf(pf, "overlord:ogre"), 1); assert.ok(f.msgs.some((m) => m.includes("[Bestiary]")));
@@ -461,6 +465,90 @@ use(h, "overlord:sealing_crystal"); advance(3);
 assert.equal(h.dimension.mobs.filter((m) => m.typeId === "overlord:archangel_flame" && m.tamedBy === "hana").length, 3); assert.equal(h.inv[0].amount, 2);
 advance(40); use(h, "overlord:sealing_crystal"); assert.equal(h.dimension.mobs.length, 4, "only one more fits"); assert.equal(h.inv[0].amount, 1);
 advance(40); use(h, "overlord:sealing_crystal"); assert.equal(h.dimension.mobs.length, 4); assert.equal(h.inv[0].amount, 1, "a crystal is not wasted on a full retinue");
+
+// ---- v4.6: the AI party ----
+const j = mkPlayer("jon"); const pj = rpg.profileOf(j); j.dimension = makeLand(); j.dimension.getPlayers = () => [j]; world.clock.time = 6000;
+j.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 64));
+assert.ok(party.createMain(j, "Rex", 0));
+for (const [name, look, level] of [["Mia", 4, 3], ["Tor", 2, 3], ["Sly", 8, 25]]) assert.ok(party.hire(j, { name, look, level, cost: 10 }).includes("joins"));
+party.summon(j); advance(45);
+const ally = (name) => j.dimension.mobs.find((m) => m.typeId === "overlord:retainer" && m.nameTag.startsWith(name));
+const member = (i) => party.partyOf(j)[i];
+assert.ok(ally("Rex") && ally("Mia") && ally("Tor") && ally("Sly"), "a retainer and three mercenaries");
+assert.deepEqual(ally("Sly").events.slice(0, 2), ["overlord:look_8", "overlord:stance_come"]); assert.equal(party.formationOf(j).name, "Balanced formation");
+// growth: mercenaries earn half the kill XP and level up; every member at your side bonds with you
+kill(j, mob("overlord:death_knight", 80));
+assert.ok(member(1).xp === 30 || member(1).level > 3, "half of 60 XP"); assert.equal(member(0).xp, 0, "the main retainer levels with its master"); assert.equal(member(3).bond, 1);
+member(1).xp = rpg.xpForNext(member(1).level) - 1; const miaLevel = member(1).level; j.msgs.length = 0; kill(j, mob("minecraft:zombie", 20));
+assert.equal(member(1).level, miaLevel + 1); assert.ok(j.msgs.some((m) => m.includes("Mia") && m.includes("reached level")));
+member(1).bond = 24; kill(j, mob("minecraft:zombie", 20)); assert.equal(party.bondRank(member(1)), 1); assert.equal(party.recoveryOf(member(1)), 50);
+assert.ok(j.msgs.some((m) => m.includes("deepens") && m.includes("Companion")));
+const crystalsOf = (pl) => pl.inv.filter((s) => s && s.typeId === "overlord:data_crystal").reduce((n, s) => n + s.amount, 0);
+member(2).bond = 99; const crystalsJ = crystalsOf(j); kill(j, mob("minecraft:zombie", 20));
+assert.equal(member(2).bond, 100); assert.equal(crystalsOf(j) - crystalsJ, 5, "a sworn companion's gift"); assert.ok(j.msgs.some((m) => m.startsWith("§b<Tor>")));
+assert.ok(guild.checkTitles(j).includes("Sworn Lord"));
+// traits: one slot from level 10, two from level 30
+assert.ok(party.toggleTrait(j, 0, "keen").includes("from level 10")); pj.level = 30;
+assert.ok(party.toggleTrait(j, 0, "devoted").includes("now Devoted")); assert.ok(party.toggleTrait(j, 0, "sturdy").includes("now Sturdy"));
+assert.ok(party.toggleTrait(j, 0, "keen").includes("already has two")); assert.ok(party.toggleTrait(j, 0, "sturdy").includes("no longer")); party.toggleTrait(j, 0, "sturdy");
+assert.ok(party.toggleTrait(j, 1, "keen").includes("from level 10"), "mercenaries need the level themselves");
+assert.ok(party.toggleTrait(j, 3, "resolute").includes("now Resolute")); assert.equal(party.recoveryOf(member(3)), 30); assert.ok(party.toggleTrait(j, 3, "keen").includes("second trait from level 30"));
+advance(45); advance(45); assert.equal(ally("Rex").effects.get("health_boost"), 4, "level 30 = 3 tiers, Sturdy = 2 more");
+const bondRex = member(0).bond; kill(j, mob("minecraft:zombie", 20)); assert.equal(member(0).bond, bondRex + 2, "Devoted doubles the bond");
+// tactics: Free hand finds its own foe, Guardian answers whatever hurt the master, Vanguard strikes the master's target
+const beast = (name, at) => { const m = mob("minecraft:zombie", 200, ["monster"]);
+  Object.assign(m, { id: name, location: at, tags: new Set(), afflicted: [], addEffect(e) { m.afflicted.push(e); }, applyKnockback() {}, hasTag: (t) => m.tags.has(t), addTag: (t) => m.tags.add(t),
+    getDynamicProperty: () => undefined, applyDamage(n) { m.damaged.push(n); } }); j.dimension.mobs.push(m); return m; };
+assert.ok(party.setTactic(j, 1, 2).includes("Free hand")); assert.ok(party.setTactic(j, 2, 1).includes("Guardian"));
+advance(400); const lurker = beast("lurker", { x: 3, y: 64, z: 0 }); advance(45);
+assert.ok(lurker.damaged.length >= 1, "the Free hand mage attacks on her own"); const freeHits = lurker.damaged.length;
+const biter = beast("biter", { x: -3, y: 64, z: 0 });
+world.afterEvents.entityHurt.fire({ hurtEntity: j, damage: 2, damageSource: { damagingEntity: biter, cause: "entityAttack" } }); advance(45);
+assert.ok(biter.damaged.length >= 1, "the Guardian archer answers the attacker");
+world.afterEvents.entityHurt.fire({ hurtEntity: lurker, damage: 1, damageSource: { damagingEntity: j, cause: "entityAttack" } }); advance(45);
+assert.ok(lurker.damaged.length > freeHits + 1 && lurker.afflicted.includes("poison") && lurker.afflicted.includes("slowness"), "the rogue backstabs and the fighter bashes the master's target");
+// Unison: using the banner on a foe turns everyone on it at once, on a cooldown
+j.aimed = []; assert.equal(party.orderUnison(j), false, "no foe in view: the banner opens the menu");
+j.aimed = [biter]; const biterHits = biter.damaged.length; assert.equal(party.orderUnison(j), true);
+assert.ok(biter.damaged.length >= biterHits + 3, `mage, archer and rogue strike at once: ${biter.damaged.length - biterHits}`); assert.ok(j.bar.includes("Unison!"), j.bar);
+assert.ok(biter.damaged.at(-1) > 0 && j.msgs.some((m) => m.includes("As one")));
+party.orderUnison(j); assert.ok(j.bar.includes("ready again in"), j.bar); j.aimed = [];
+// self-preservation: potions first, then falling back - except for Fighters - and rallying once recovered
+const mia = ally("Mia"); mia.health.currentValue = 5; j.inv.push(new ItemStack("overlord:red_potion", 1)); party.tend(j);
+assert.equal(mia.health.currentValue, 25, "drank the master's potion"); assert.ok(!j.inv.some((s) => s && s.typeId === "overlord:red_potion")); assert.ok(!mia.events.includes("overlord:fall_back"));
+mia.health.currentValue = 5; party.tend(j); assert.equal(mia.events.at(-1), "overlord:fall_back"); assert.equal(mia.getDynamicProperty("overlord:back"), true);
+party.tend(j); assert.equal(mia.events.filter((e) => e === "overlord:fall_back").length, 1, "ordered back once");
+mia.health.currentValue = 30; party.tend(j); assert.equal(mia.events.at(-1), "overlord:rally_mage");
+const rex = ally("Rex"); rex.health.currentValue = 2; party.tend(j); assert.ok(!rex.events.includes("overlord:fall_back"), "Fighters hold the line");
+pj.supply = false; j.inv.push(new ItemStack("overlord:red_potion", 2)); mia.health.currentValue = 5; advance(420); party.tend(j);
+assert.equal(j.inv.filter((s) => s && s.typeId === "overlord:red_potion").reduce((n, s) => n + s.amount, 0), 2, "potion sharing can be switched off"); pj.supply = true;
+// between fights the party recovers, and the banner bar lists everyone
+rex.health.currentValue = 10; advance(300); assert.ok(rex.health.currentValue > 10, "rest between fights");
+const barJ = party.partyBar(j); assert.ok(barJ.includes("Rex") && barJ.includes("Sly") && /\d+\/40/.test(barJ), barJ);
+// the archer scouts for sites nobody has found yet
+if (sites.rumour(j)) { j.msgs.length = 0; advance(3200); assert.ok(j.msgs.some((m) => m.startsWith("§b<Tor>") && m.includes("I scouted ahead")), j.msgs.join(" / ")); }
+// a fallen member can be revived at once for coins
+const tor = ally("Tor"); j.msgs.length = 0; world.afterEvents.entityDie.fire({ deadEntity: tor, damageSource: {} }); tor.remove();
+assert.equal(party.recovering(j, 2), 20, "a sworn companion is back in twenty seconds"); assert.ok(j.msgs.some((m) => m.includes("revive")));
+assert.ok(party.partyBar(j).includes("Tor down"));
+j.inv.length = 0; assert.ok(party.revive(j, 2).includes("costs 8")); j.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 10));
+assert.ok(party.revive(j, 2).includes("back on their feet")); assert.equal(coinsOf(j), 2); assert.ok(ally("Tor"), "revived at once"); assert.ok(party.revive(j, 2).includes("does not need"));
+// gifts deepen the bond once a day
+const bondGift = member(0).bond; assert.ok(party.gift(j, 0).includes("costs 5")); j.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 10));
+assert.ok(party.gift(j, 0).includes("touched")); assert.equal(member(0).bond, bondGift + 5); assert.ok(party.gift(j, 0).includes("already had a gift today"));
+world.clock.day += 1; assert.ok(party.gift(j, 0).includes("touched")); assert.equal(coinsOf(j), 2);
+// a seasoned rogue turns up coins (Cutpurse)
+party.shareKill(j, mob("minecraft:zombie", 20), () => 0.99); assert.equal(coinsOf(j), 2); party.shareKill(j, mob("minecraft:zombie", 20), () => 0); assert.equal(coinsOf(j), 3);
+// formations and the bard
+party.release(j, 2); assert.ok(party.hire(j, { name: "Zed", look: 5, level: 5, cost: 0 }).includes("joins")); party.summon(j); advance(45);
+assert.equal(party.formationOf(j).name, "Mage specialists");
+party.release(j, 3); assert.ok(party.hire(j, { name: "Lute", look: 10, level: 20, cost: 0 }).includes("Minstrel")); party.summon(j); advance(45);
+assert.equal(party.formationOf(j).name, "Balanced formation"); j.effects.clear(); lurker.afflicted.length = 0;
+world.afterEvents.entityHurt.fire({ hurtEntity: lurker, damage: 1, damageSource: { damagingEntity: j, cause: "entityAttack" } }); advance(45);
+assert.ok(j.effects.has("strength") && j.effects.has("speed"), "Ballad of Valour"); assert.ok(lurker.afflicted.includes("weakness"), "Dirge");
+// saves from before this version are filled in and cleaned up
+const k = mkPlayer("kit"); rpg.profileOf(k).party = [{ name: "Old", look: 99, hired: true, level: 7, traits: ["keen", "bogus", "keen"], bond: 500 }];
+assert.deepEqual(party.partyOf(k)[0], { name: "Old", look: 11, gear: 0, hired: true, level: 7, out: false, xp: 0, bond: 100, tactic: 0, traits: ["keen"], gift: -1 });
 
 // persistence: saved profile is restored after leaving
 advance(100);

@@ -28,7 +28,7 @@ const PARTY_SHARE = 0.5;
  *   quest: ActiveQuest | null,
  *   spells: string[], slots: string[], slot: number, casts: Record<string, number>,
  *   party: any[], stance: string, kills: Record<string, number>, rep: Record<string, number>,
- *   daily: object, title: string, titles: string[], sites: string[],
+ *   daily: object, title: string, titles: string[], sites: string[], supply: boolean,
  * }} Profile
  */
 
@@ -257,7 +257,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [] };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true };
 }
 
 /**
@@ -600,8 +600,8 @@ export function isElite(mob) {
   }
 }
 
-/** @param {import("@minecraft/server").Entity} dead */
-function killXp(dead) {
+/** XP a kill is worth. @param {import("@minecraft/server").Entity} dead */
+export function killXp(dead) {
   const bonus = (1 + mobLevel(dead) * 0.03) * (isElite(dead) ? 3 : 1); // levelled mobs are worth more, elites triple
   const fixed = KILL_XP[dead.typeId];
   if (fixed !== undefined) return Math.round(fixed * bonus);
@@ -1033,6 +1033,7 @@ function openHelp(player) {
         `§eClasses§r: each class gives a permanent bonus and an active skill - sneak and use the plate to trigger it (${SKILL_COOLDOWN} s cooldown).\n\n` +
         "§eGuild quests§r: accept a request, defeat the targets and earn Gold Coins and XP. Completed quests raise your adventurer rank from Copper to Adamantite and unlock harder requests.\n\n" +
         `§eParty§r: players within ${PARTY_RANGE} blocks of a kill receive half its XP and quest credit.\n\n` +
+        "§eCompanions§r: your retainer levels with you and mercenaries earn XP from your kills. Fighting together builds a bond with each companion that strengthens its skills, every companion learns a second skill at level 20, and each can be given a tactic. Hurt companions fall back, drink your healing potions and recover between fights. Hold the Command Banner to see everyone's health.\n\n" +
         "§eTomb Raid§r: blow a Horn of the Tomb Raid to fight five waves. The raid tier follows your level (1-19, 20-49, 50+) and pays coins, crystals and XP."
     )
     .button("Back");

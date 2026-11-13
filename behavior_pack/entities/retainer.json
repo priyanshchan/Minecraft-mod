@@ -31,6 +31,21 @@
           "attack_interval_max": 2.2,
           "attack_radius": 16.0,
           "speed_multiplier": 1.0
+        },
+        "minecraft:behavior.avoid_mob_type": {
+          "priority": 2,
+          "entity_types": [
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "monster"
+              },
+              "max_dist": 4,
+              "walk_speed_multiplier": 1.2,
+              "sprint_speed_multiplier": 1.4
+            }
+          ]
         }
       },
       "overlord:voc_mage": {
@@ -43,6 +58,21 @@
           "attack_interval_max": 2.5,
           "attack_radius": 18.0,
           "speed_multiplier": 1.0
+        },
+        "minecraft:behavior.avoid_mob_type": {
+          "priority": 2,
+          "entity_types": [
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "monster"
+              },
+              "max_dist": 4,
+              "walk_speed_multiplier": 1.2,
+              "sprint_speed_multiplier": 1.4
+            }
+          ]
         }
       },
       "overlord:voc_healer": {
@@ -55,6 +85,75 @@
           "attack_interval_max": 4.0,
           "attack_radius": 14.0,
           "speed_multiplier": 1.0
+        },
+        "minecraft:behavior.avoid_mob_type": {
+          "priority": 2,
+          "entity_types": [
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "monster"
+              },
+              "max_dist": 6,
+              "walk_speed_multiplier": 1.2,
+              "sprint_speed_multiplier": 1.4
+            }
+          ]
+        }
+      },
+      "overlord:voc_rogue": {
+        "minecraft:attack": {
+          "damage": 7
+        },
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 3,
+          "speed_multiplier": 1.5,
+          "track_target": true
+        }
+      },
+      "overlord:voc_bard": {
+        "minecraft:shooter": {
+          "def": "overlord:magic_bullet"
+        },
+        "minecraft:behavior.ranged_attack": {
+          "priority": 3,
+          "attack_interval_min": 3.0,
+          "attack_interval_max": 4.5,
+          "attack_radius": 14.0,
+          "speed_multiplier": 1.0
+        },
+        "minecraft:behavior.avoid_mob_type": {
+          "priority": 2,
+          "entity_types": [
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "monster"
+              },
+              "max_dist": 5,
+              "walk_speed_multiplier": 1.2,
+              "sprint_speed_multiplier": 1.4
+            }
+          ]
+        }
+      },
+      "overlord:fall_back": {
+        "minecraft:behavior.avoid_mob_type": {
+          "priority": 1,
+          "entity_types": [
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "monster"
+              },
+              "max_dist": 10,
+              "walk_speed_multiplier": 1.2,
+              "sprint_speed_multiplier": 1.4
+            }
+          ]
         }
       },
       "overlord:stance_come": {
@@ -100,7 +199,23 @@
           ]
         }
       },
-      "overlord:stance_stay": {},
+      "overlord:stance_stay": {
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "must_see": true,
+          "reselect_targets": true,
+          "entity_types": [
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "monster"
+              },
+              "max_dist": 10
+            }
+          ]
+        }
+      },
       "overlord:look_0": {
         "minecraft:variant": {
           "value": 0
@@ -139,6 +254,26 @@
       "overlord:look_7": {
         "minecraft:variant": {
           "value": 7
+        }
+      },
+      "overlord:look_8": {
+        "minecraft:variant": {
+          "value": 8
+        }
+      },
+      "overlord:look_9": {
+        "minecraft:variant": {
+          "value": 9
+        }
+      },
+      "overlord:look_10": {
+        "minecraft:variant": {
+          "value": 10
+        }
+      },
+      "overlord:look_11": {
+        "minecraft:variant": {
+          "value": 11
         }
       }
     },
@@ -261,6 +396,127 @@
           ]
         }
       },
+      "overlord:fall_back": {
+        "add": {
+          "component_groups": [
+            "overlord:fall_back"
+          ]
+        }
+      },
+      "overlord:rally_fighter": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "overlord:fall_back",
+                "overlord:voc_fighter"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "overlord:voc_fighter"
+              ]
+            }
+          }
+        ]
+      },
+      "overlord:rally_archer": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "overlord:fall_back",
+                "overlord:voc_archer"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "overlord:voc_archer"
+              ]
+            }
+          }
+        ]
+      },
+      "overlord:rally_mage": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "overlord:fall_back",
+                "overlord:voc_mage"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "overlord:voc_mage"
+              ]
+            }
+          }
+        ]
+      },
+      "overlord:rally_healer": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "overlord:fall_back",
+                "overlord:voc_healer"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "overlord:voc_healer"
+              ]
+            }
+          }
+        ]
+      },
+      "overlord:rally_rogue": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "overlord:fall_back",
+                "overlord:voc_rogue"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "overlord:voc_rogue"
+              ]
+            }
+          }
+        ]
+      },
+      "overlord:rally_bard": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "overlord:fall_back",
+                "overlord:voc_bard"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "overlord:voc_bard"
+              ]
+            }
+          }
+        ]
+      },
       "overlord:look_0": {
         "remove": {
           "component_groups": [
@@ -271,9 +527,15 @@
             "overlord:look_5",
             "overlord:look_6",
             "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
             "overlord:voc_archer",
             "overlord:voc_mage",
-            "overlord:voc_healer"
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard"
           ]
         },
         "add": {
@@ -293,9 +555,15 @@
             "overlord:look_5",
             "overlord:look_6",
             "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
             "overlord:voc_archer",
             "overlord:voc_mage",
-            "overlord:voc_healer"
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard"
           ]
         },
         "add": {
@@ -315,9 +583,15 @@
             "overlord:look_5",
             "overlord:look_6",
             "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
             "overlord:voc_fighter",
             "overlord:voc_mage",
-            "overlord:voc_healer"
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard"
           ]
         },
         "add": {
@@ -337,9 +611,15 @@
             "overlord:look_5",
             "overlord:look_6",
             "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
             "overlord:voc_fighter",
             "overlord:voc_mage",
-            "overlord:voc_healer"
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard"
           ]
         },
         "add": {
@@ -359,9 +639,15 @@
             "overlord:look_5",
             "overlord:look_6",
             "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
             "overlord:voc_fighter",
             "overlord:voc_archer",
-            "overlord:voc_healer"
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard"
           ]
         },
         "add": {
@@ -381,9 +667,15 @@
             "overlord:look_4",
             "overlord:look_6",
             "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
             "overlord:voc_fighter",
             "overlord:voc_archer",
-            "overlord:voc_healer"
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard"
           ]
         },
         "add": {
@@ -403,9 +695,15 @@
             "overlord:look_4",
             "overlord:look_5",
             "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
             "overlord:voc_fighter",
             "overlord:voc_archer",
-            "overlord:voc_mage"
+            "overlord:voc_mage",
+            "overlord:voc_rogue",
+            "overlord:voc_bard"
           ]
         },
         "add": {
@@ -425,15 +723,133 @@
             "overlord:look_4",
             "overlord:look_5",
             "overlord:look_6",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
             "overlord:voc_fighter",
             "overlord:voc_archer",
-            "overlord:voc_mage"
+            "overlord:voc_mage",
+            "overlord:voc_rogue",
+            "overlord:voc_bard"
           ]
         },
         "add": {
           "component_groups": [
             "overlord:look_7",
             "overlord:voc_healer"
+          ]
+        }
+      },
+      "overlord:look_8": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_bard"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_8",
+            "overlord:voc_rogue"
+          ]
+        }
+      },
+      "overlord:look_9": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_bard"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_9",
+            "overlord:voc_rogue"
+          ]
+        }
+      },
+      "overlord:look_10": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_11",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_10",
+            "overlord:voc_bard"
+          ]
+        }
+      },
+      "overlord:look_11": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_11",
+            "overlord:voc_bard"
           ]
         }
       },

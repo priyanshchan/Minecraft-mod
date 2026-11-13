@@ -24,7 +24,7 @@ import { castSelected, cycleSpell, openGrimoire, summonAlly } from "./spells.js"
 import * as fx from "./vfx.js";
 import "./director.js";
 import "./structures.js";
-import { cycleStance, openParty } from "./party.js";
+import { cycleStance, openParty, orderUnison } from "./party.js";
 import "./guild.js";
 import "./forge.js";
 
@@ -1126,7 +1126,7 @@ world.afterEvents.itemUse.subscribe((event) => {
       else castSelected(player);
     } else if (item === id("command_banner")) {
       if (player.isSneaking) cycleStance(player);
-      else openParty(player);
+      else if (!orderUnison(player)) openParty(player); // on a foe: Unison; otherwise the party menu
     } else if (item === id("grimoire")) {
       openGrimoire(player);
     } else if (item === id("raid_horn")) {

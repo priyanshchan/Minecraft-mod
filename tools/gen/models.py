@@ -2648,7 +2648,7 @@ def bandit():
                     helmet=False, weapon_kind="sword", mask="#2a2420")
 
 
-# Looks a retainer can take: two per vocation (fighter, archer, mage, healer).
+# Looks a retainer can take: two per vocation (fighter, archer, mage, healer, rogue, bard).
 RETAINER_LOOKS = [
     # skin, hair, armour, light, dark, cloth, cloth dark, helmet, weapon, orb
     ("#e0b48c", "#3a2a1f", "#9aa0aa", "#c9ced6", "#5d626c", "#2f4f8f", "#1f3766", True, "sword", None),
@@ -2659,13 +2659,20 @@ RETAINER_LOOKS = [
     ("#d6a57e", "#e9e6dc", "#22335c", "#34497a", "#141f3a", "#2a4a80", "#1a3058", False, "staff", "#59d0ff"),
     ("#f6e2d4", "#ecca5c", "#d9d4c4", "#f4f1ea", "#a8a290", "#f4f1ea", "#c9c3b5", False, "staff", "#f6d968"),
     ("#e0b48c", "#6b4a2a", "#8fb8d6", "#b8d8f0", "#5f8aa8", "#dff1ff", "#a8c8de", False, "staff", "#63ff6b"),
+    # rogues: a masked assassin in black and a thief in worn leathers
+    ("#d9b08c", "#15131a", "#2a2a33", "#3d3d4a", "#17171d", "#3a1f4a", "#24122f", False, "sword", None, "#1c1c24"),
+    ("#c99a78", "#6a4a2a", "#6a5238", "#8a6e4c", "#463522", "#4f5a3a", "#363f28", False, "sword", None),
+    # bards: a minstrel in crimson and gold and a skald in blue and fur
+    ("#f1d6bf", "#b5482e", "#a8322e", "#cf4d44", "#6e1f1c", "#e0b040", "#a87d22", False, "staff", "#ffd45c"),
+    ("#e3bfa0", "#d9c9a0", "#3a5a7a", "#54799c", "#263d54", "#8a7558", "#5f503b", True, "staff", "#7fe0d0"),
 ]
 
 
 def _retainer(n):
-    skin, hair, armor, light, dark, cloth, cloth_d, helmet, weapon, orb = RETAINER_LOOKS[n]
+    skin, hair, armor, light, dark, cloth, cloth_d, helmet, weapon, orb = RETAINER_LOOKS[n][:10]
+    mask = RETAINER_LOOKS[n][10] if len(RETAINER_LOOKS[n]) > 10 else None
     return lambda: _soldier(f"retainer_{n}", skin, hair, armor, light, dark, cloth, cloth_d, helmet=helmet,
-                            weapon_kind=weapon, orb=orb or "#c05bff")
+                            weapon_kind=weapon, mask=mask, orb=orb or "#c05bff")
 
 
 RETAINERS = [_retainer(n) for n in range(len(RETAINER_LOOKS))]

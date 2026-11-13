@@ -192,19 +192,46 @@ Progress is saved per player in the world.
 Open **Party** in the Adventurer's Plate menu, or use a **Command Banner** (recipe: three red wool and two
 sticks in a flag shape).
 
-- **Your retainer:** create one companion of your own — choose a name and one of eight looks, two for each
+- **Your retainer:** create one companion of your own — choose a name and one of twelve looks, two for each
   vocation. It levels with you and can be restyled or change vocation at any time.
-- **Mercenaries:** hire up to two more (three party members in all) for Gold Coins. They keep the level they
-  were hired at; friends of the Adventurers' Guild pay a quarter less.
-- **Vocations:** Fighter (melee, staggering shield bash), Archer (arrows, aimed shot), Mage (magic bolts in
-  the element your target is weak to), Healer (mends you when you drop below 60% health).
-- **Stances:** *Come* (stay close and defend), *Go* (range ahead and attack monsters on sight), *Stay* (hold
-  position). Sneak + use the Command Banner to switch.
+- **Mercenaries:** hire up to three more (four party members in all) for Gold Coins; friends of the
+  Adventurers' Guild pay a quarter less. Mercenaries earn half of your kill XP and level up on their own.
+- **Vocations and skills** — every vocation has a second skill from level 20:
+
+  | Vocation | Looks | Fights | Skill | From level 20 |
+  | --- | --- | --- | --- | --- |
+  | Fighter | Knight, Swordsman | Melee | Shield Bash: a staggering blow | Rallying Cry: Resistance for you below half health |
+  | Archer | Ranger, Hunter | Arrows, keeps its distance | Aimed Shot | Volley: three foes at once |
+  | Mage | Sorcerer, Wizard | Magic bolts, keeps its distance | Elemental Bolt in the element the foe is weak to | Burst: everything around the foe |
+  | Healer | Priest, Acolyte | Stays back | Mend: heals the most wounded of you and the party | Sanctuary: a great heal when you are near death |
+  | Rogue | Assassin, Thief | Fast melee | Backstab: a poisoned strike on a short recharge | Cutpurse: one kill in five turns up a Gold Coin |
+  | Bard | Minstrel, Skald | Stays back | Ballad of Valour: Strength and Speed for you in battle | Dirge: slows and weakens foes around the target |
+
+- **Stances** (whole party): *Come* (stay close and defend), *Go* (range ahead and attack monsters on sight),
+  *Stay* (hold a spot and defend it). Sneak + use the Command Banner to switch.
+- **Tactics** (each member): *Vanguard* strikes the foe you are fighting, *Guardian* strikes whatever last
+  hurt you, *Free hand* picks its own foe within 12 blocks.
+- **Unison:** use the Command Banner while looking at a foe and every member turns on it at once with skills
+  readied, striking 25% harder for ten seconds (45 s cooldown). With no foe in view the banner opens the menu.
+- **Bond:** every kill at your side deepens your bond with a member (elites count three). Each of the four
+  ranks — Companion, Trusted, Loyal, Sworn — adds 8% skill power and takes 10 seconds off the time a fallen
+  member is away. A daily gift (5 Gold Coins) adds 5, and a Sworn companion gives you 5 Data Crystals.
+- **Traits:** a member can hold one trait from level 10 and two from level 30, changed freely: Sturdy
+  (+4 hearts), Keen (skills +15%), Swift (skills recharge 15% faster), Devoted (bond grows twice as fast),
+  Scavenger (one kill in ten turns up a Gold Coin), Resolute (returns in half the time).
+- **Formations:** three or more members of different vocations recharge skills a fifth faster; members who
+  share a vocation strike 15% harder.
+- **Looking after themselves:** members recover health between fights; a badly hurt member drinks one of your
+  Minor Healing Potions (can be switched off) and, unless it is a Fighter, falls back from monsters until it
+  has recovered.
 - **Gear:** five ranks bought with Gold Coins (20, 40, 60, 80, 100); each adds 4 hearts, every second one adds
   damage.
-- **Knowledge:** retainers call out what they know the first time you strike a kind of foe, and warn you when
-  you are badly hurt.
-- **Falling:** a fallen party member returns after 60 seconds. Players cannot hurt retainers, their kills
+- **Knowledge:** members call out what they know the first time you strike a kind of foe, point out elites,
+  warn you at nightfall and when you are badly hurt, and an Archer reports the nearest undiscovered site
+  every few minutes.
+- **Status:** hold the Command Banner to see every member's health above the hotbar.
+- **Falling:** a fallen member returns after 60 seconds (less with a strong bond, half with a Healer still
+  standing or the Resolute trait), or at once for 8 Gold Coins. Players cannot hurt retainers, their kills
   count as yours for XP, quests and the bestiary, and feeding one bread or a Healing Potion heals it.
 
 ### Bestiary and reputation
@@ -226,8 +253,8 @@ sticks in a flag shape).
 - **Elite mobs:** about one levelled monster in twenty spawns as an elite — five levels higher, with 10 extra
   hearts, more damage and Resistance. Elites are marked in the target readout, give triple XP and drop Gold
   Coins and a Data Crystal.
-- **Titles:** thirteen titles are earned through deeds (Goblin Slayer, Undead Bane, Demon Hunter, World's Shield,
-  Elite Hunter, Bounty Hunter, Commander, Archmage, Giant Killer, Dragon Slayer, Guardian's Bane, Adamantite Adventurer, Rival of the
+- **Titles:** fourteen titles are earned through deeds (Goblin Slayer, Undead Bane, Demon Hunter, World's Shield,
+  Elite Hunter, Bounty Hunter, Commander, Sworn Lord, Archmage, Giant Killer, Dragon Slayer, Guardian's Bane, Adamantite Adventurer, Rival of the
   Sorcerer King). Each pays 10 Gold Coins when earned, and one can be worn in front of your name.
 
 All three are reached from the Adventurer's Plate menu.

@@ -14,7 +14,11 @@
         "v4": "textures/entity/overlord/retainer_4",
         "v5": "textures/entity/overlord/retainer_5",
         "v6": "textures/entity/overlord/retainer_6",
-        "v7": "textures/entity/overlord/retainer_7"
+        "v7": "textures/entity/overlord/retainer_7",
+        "v8": "textures/entity/overlord/retainer_8",
+        "v9": "textures/entity/overlord/retainer_9",
+        "v10": "textures/entity/overlord/retainer_10",
+        "v11": "textures/entity/overlord/retainer_11"
       },
       "geometry": {
         "v0": "geometry.overlord.retainer_0",
@@ -24,7 +28,11 @@
         "v4": "geometry.overlord.retainer_4",
         "v5": "geometry.overlord.retainer_5",
         "v6": "geometry.overlord.retainer_6",
-        "v7": "geometry.overlord.retainer_7"
+        "v7": "geometry.overlord.retainer_7",
+        "v8": "geometry.overlord.retainer_8",
+        "v9": "geometry.overlord.retainer_9",
+        "v10": "geometry.overlord.retainer_10",
+        "v11": "geometry.overlord.retainer_11"
       },
       "scripts": {
         "animate": [

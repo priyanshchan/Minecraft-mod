@@ -23,7 +23,11 @@
             "Texture.v4",
             "Texture.v5",
             "Texture.v6",
-            "Texture.v7"
+            "Texture.v7",
+            "Texture.v8",
+            "Texture.v9",
+            "Texture.v10",
+            "Texture.v11"
           ]
         },
         "geometries": {
@@ -35,7 +39,11 @@
             "Geometry.v4",
             "Geometry.v5",
             "Geometry.v6",
-            "Geometry.v7"
+            "Geometry.v7",
+            "Geometry.v8",
+            "Geometry.v9",
+            "Geometry.v10",
+            "Geometry.v11"
           ]
         }
       },

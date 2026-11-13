@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [4, 5, 0]
+VERSION = [4, 6, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v4.5.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v4.6.0"
 
 
 def oid(name):
@@ -1539,6 +1539,9 @@ def entity_files():
         "minecraft:behavior.look_at_player": {"priority": 7, "look_distance": 8.0, "probability": 0.02},
         "minecraft:behavior.random_look_around": {"priority": 8},
     }
+    keep_away = lambda dist, priority: {"priority": priority, "entity_types": [{
+        "filters": _is_family("monster"), "max_dist": dist, "walk_speed_multiplier": 1.2,
+        "sprint_speed_multiplier": 1.4}]}
     shot = lambda lo, hi, radius: {"priority": 3, "attack_interval_min": lo, "attack_interval_max": hi,
                                    "attack_radius": radius, "speed_multiplier": 1.0}
     groups = {
@@ -1546,12 +1549,25 @@ def entity_files():
             "minecraft:attack": {"damage": 6},
             "minecraft:knockback_resistance": {"value": 0.5},
             "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.3, "track_target": True}},
+        # Ranged vocations keep monsters at arm's length instead of standing in melee.
         "overlord:voc_archer": {"minecraft:shooter": {"def": "minecraft:arrow"},
-                                "minecraft:behavior.ranged_attack": shot(1.2, 2.2, 16.0)},
+                                "minecraft:behavior.ranged_attack": shot(1.2, 2.2, 16.0),
+                                "minecraft:behavior.avoid_mob_type": keep_away(4, 2)},
         "overlord:voc_mage": {"minecraft:shooter": {"def": oid("magic_bullet")},
-                              "minecraft:behavior.ranged_attack": shot(1.5, 2.5, 18.0)},
+                              "minecraft:behavior.ranged_attack": shot(1.5, 2.5, 18.0),
+                              "minecraft:behavior.avoid_mob_type": keep_away(4, 2)},
         "overlord:voc_healer": {"minecraft:shooter": {"def": oid("magic_bullet")},
-                                "minecraft:behavior.ranged_attack": shot(2.5, 4.0, 14.0)},
+                                "minecraft:behavior.ranged_attack": shot(2.5, 4.0, 14.0),
+                                "minecraft:behavior.avoid_mob_type": keep_away(6, 2)},
+        # Rogues are quick on their feet; bards hang back and sing.
+        "overlord:voc_rogue": {
+            "minecraft:attack": {"damage": 7},
+            "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.5, "track_target": True}},
+        "overlord:voc_bard": {"minecraft:shooter": {"def": oid("magic_bullet")},
+                              "minecraft:behavior.ranged_attack": shot(3.0, 4.5, 14.0),
+                              "minecraft:behavior.avoid_mob_type": keep_away(5, 2)},
+        # A badly hurt member backs well away from monsters until it has recovered (set by the script).
+        "overlord:fall_back": {"minecraft:behavior.avoid_mob_type": keep_away(10, 1)},
         # stances
         "overlord:stance_come": {
             "minecraft:behavior.follow_owner": follow(5, 2),
@@ -1564,9 +1580,19 @@ def entity_files():
             "minecraft:behavior.nearest_attackable_target": {
                 "priority": 2, "must_see": True, "reselect_targets": True,
                 "entity_types": [{"filters": _is_family("monster"), "max_dist": 18}]}},
-        "overlord:stance_stay": {},
+        # Holding a spot still means defending it.
+        "overlord:stance_stay": {
+            "minecraft:behavior.nearest_attackable_target": {
+                "priority": 2, "must_see": True, "reselect_targets": True,
+                "entity_types": [{"filters": _is_family("monster"), "max_dist": 10}]}},
     }
-    events = {"minecraft:entity_spawned": {"add": {"component_groups": ["overlord:stance_come"]}}}
+    events = {"minecraft:entity_spawned": {"add": {"component_groups": ["overlord:stance_come"]}},
+              "overlord:fall_back": {"add": {"component_groups": ["overlord:fall_back"]}}}
+    # Rallying puts the vocation's own way of fighting back in place of the retreat.
+    for v in VOCATIONS:
+        events[f"overlord:rally_{v}"] = {"sequence": [
+            {"remove": {"component_groups": ["overlord:fall_back", f"overlord:voc_{v}"]}},
+            {"add": {"component_groups": [f"overlord:voc_{v}"]}}]}
     for n in range(RETAINER_LOOKS):
         groups[f"overlord:look_{n}"] = {"minecraft:variant": {"value": n}}
         events[f"overlord:look_{n}"] = {
@@ -2260,8 +2286,8 @@ def player_animations_json():
 
 RENDER_CONTROLLER = "controller.render.overlord.entity"
 RETAINER_CONTROLLER = "controller.render.overlord.retainer"
-RETAINER_LOOKS = 8  # two looks per vocation: fighter, archer, mage, healer
-VOCATIONS = ["fighter", "archer", "mage", "healer"]
+RETAINER_LOOKS = 12  # two looks per vocation
+VOCATIONS = ["fighter", "archer", "mage", "healer", "rogue", "bard"]
 
 
 def render_controllers_json():
@@ -2272,7 +2298,7 @@ def render_controllers_json():
             "materials": [{"*": "Material.default"}],
             "textures": ["Texture.default"],
         },
-        # Retainers pick their model and skin from the entity's variant (0-7).
+        # Retainers pick their model and skin from the entity's variant (one per look).
         RETAINER_CONTROLLER: {
             "arrays": {
                 "textures": {"Array.skins": [f"Texture.{k}" for k in looks]},
