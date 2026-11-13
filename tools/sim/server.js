@@ -28,7 +28,7 @@ export const Direction = { Up: "Up", Down: "Down", North: "North", South: "South
 export const EquipmentSlot = { Head: "Head", Chest: "Chest", Legs: "Legs", Feet: "Feet", Mainhand: "Mainhand" };
 export const GameMode = { Creative: "Creative" };
 export const emitted = [];
-export class MolangVariableMap { constructor() { this.v = {}; } setColorRGB(k, c) { this.v[k] = c; } setFloat(k, n) { this.v[k] = n; } }
+export class MolangVariableMap { constructor() { this.v = {}; } setColorRGB(k, c) { this.v[k] = c; } setFloat(k, n) { this.v[k] = n; } setVector3(k, vec) { this.v[k] = vec; } }
 export class BlockVolume { constructor(from, to) { this.from = from; this.to = to; } }
 export class ItemStack { constructor(typeId, amount = 1) { this.typeId = typeId; this.amount = amount; this.props = new Map(); this.lore = []; }
   getDynamicProperty(k) { return this.props.get(k); } setDynamicProperty(k, v) { this.props.set(k, v); } setLore(l) { this.lore = l; } }

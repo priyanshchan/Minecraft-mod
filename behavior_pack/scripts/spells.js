@@ -131,11 +131,16 @@ function hurt(player, target, amount, element) {
     let factor = AFFINITY[target.typeId]?.[element] ?? 1;
     if (element === "holy" && target.matches({ families: ["undead"] })) factor *= 1.5;
     if (element === "dark" && target.matches({ families: ["undead"] })) factor *= 0.25; // negative energy barely harms the dead
+    const where = { x: target.location.x, y: target.location.y + 1.4, z: target.location.z };
+    const dimension = target.dimension;
     target.applyDamage(Math.max(1, Math.round(amount * factor)), {
       cause: element === "fire" ? EntityDamageCause.fire : EntityDamageCause.magic,
       damagingEntity: player,
     });
-    if (!target.isValid) return;
+    if (!target.isValid) {
+      if (element === "dark" && dimension) fx.skull(dimension, where); // death magic leaves its mark over the slain
+      return;
+    }
     if (element === "fire") target.setOnFire(4, true);
     else if (element === "ice") target.addEffect("slowness", 4 * TICKS, { amplifier: 2 });
     else if (element === "lightning") target.addEffect("slowness", 1 * TICKS, { amplifier: 6 });
@@ -243,6 +248,8 @@ function burst(radius, damage, element, options = {}) {
     const accent = options.effect ?? CRIT;
     const strike = () => {
       fx.pillar(dimension, center, element, Math.min(12, 4 + radius), 1 + radius * 0.12);
+      fx.nova(dimension, add(center, { x: 0, y: 0.8, z: 0 }), element, radius);
+      if (radius >= 5) fx.shake(dimension, center, radius * 3, Math.min(1.2, radius * 0.1), 0.5);
       fx.ring(dimension, center, element, radius);
       fx.ring(dimension, add(center, { x: 0, y: 0.6, z: 0 }), element, radius * 0.6);
       for (let i = 0; i < 6; i++) {
@@ -280,6 +287,7 @@ function burst(radius, damage, element, options = {}) {
         system.runTimeout(() => {
           fx.circle(dimension, center, element, radius);
           fx.rise(dimension, center, element, radius * 0.8);
+          fx.implode(dimension, add(center, { x: 0, y: 3, z: 0 }), element, Math.min(8, radius)); // power gathering overhead
         }, t);
       }
       system.runTimeout(() => fx.fall(dimension, center, element, 10), Math.max(0, ticks - 10));
@@ -328,6 +336,7 @@ function healing(amount, radius) {
       }
       fx.rise(player.dimension, ally.location, "holy", 0.8);
       fx.circle(player.dimension, ally.location, "holy", 1.0);
+      fx.spiral(player.dimension, () => (ally.isValid ? ally.location : undefined), "holy", 0.8, 2);
       particle(player.dimension, "minecraft:heart_particle", add(ally.location, { x: 0, y: 2, z: 0 }));
     }
     if (radius > 0) fx.ring(player.dimension, player.location, "holy", radius);
@@ -345,6 +354,8 @@ function curse(range, effects, sound) {
     for (const [effect, seconds, amplifier] of effects) target.addEffect(effect, seconds * TICKS, { amplifier });
     strikeFx(player, hand(player), add(target.location, { x: 0, y: 1, z: 0 }), "dark", SOUL);
     fx.circle(player.dimension, target.location, "dark", 1.2);
+    fx.rise(player.dimension, target.location, "dark", 0.8);
+    fx.beam(player.dimension, hand(player), add(target.location, { x: 0, y: 1, z: 0 }), "dark", 0.7);
     playSound(player.dimension, sound, target.location, 1.2);
     return true;
   };
@@ -360,6 +371,7 @@ function drain(damage, healShare, mana) {
     fx.spark(player.dimension, at, "dark", 1.2);
     fx.beam(player.dimension, at, hand(player), "dark");
     fx.rise(player.dimension, player.location, "dark", 0.7);
+    fx.implode(player.dimension, add(player.location, { x: 0, y: 1, z: 0 }), "dark", 1.4);
     particle(player.dimension, SOUL, at);
     hurt(player, target, damage * power, "dark");
     const health = player.getComponent("minecraft:health");
@@ -399,6 +411,7 @@ export function summonAlly(player, type, count) {
     ally.addTag(tag);
     fx.circle(player.dimension, spot, "arcane", 1.1);
     fx.rise(player.dimension, spot, "arcane", 0.7);
+    fx.pillar(player.dimension, spot, "arcane", 2.6, 0.8);
     allies.push(ally);
   }
   // Ownership can only be set once the summoned form has been applied.
@@ -478,11 +491,10 @@ function castDimensionalMove(player) {
   if (!player.tryTeleport(to, { checkForBlocks: true }) && !player.tryTeleport(add(to, { x: 0, y: 1, z: 0 }), { checkForBlocks: true })) {
     return false;
   }
-  for (const spot of [from, to]) {
-    fx.circle(player.dimension, spot, "arcane", 1.3);
-    fx.pillar(player.dimension, spot, "arcane", 2.4, 1);
-    fx.ring(player.dimension, spot, "arcane", 2);
-  }
+  // Gone from one place in a rush of gathered light, there in the next in a shaft of it.
+  fx.circle(player.dimension, from, "arcane", 1.3);
+  fx.blink(player.dimension, from, to, "arcane");
+  fx.wash(player, { red: 0.08, green: 0.02, blue: 0.14 }, 0.3);
   playSound(player.dimension, "mob.endermen.portal", to, 1);
   return true;
 }
@@ -495,6 +507,8 @@ function castGraspHeart(player, power) {
   strikeFx(player, hand(player), at, "dark", SOUL);
   fx.circle(player.dimension, target.location, "dark", 1.4);
   fx.spark(player.dimension, at, "fire", 0.8); // the crushed heart
+  fx.skull(player.dimension, add(at, { x: 0, y: 0.8, z: 0 }), 1.2);
+  fx.beam(player.dimension, hand(player), at, "dark", 0.8);
   playSound(player.dimension, "mob.wither.hurt", at, 0.6);
   hurt(player, target, 75 * power, "dark");
   try {
@@ -522,6 +536,7 @@ function castTimeStop(player) {
     system.runTimeout(() => fx.ring(dimension, center, "none", 4 + i * 3.4), i * 3);
   }
   fx.circle(dimension, center, "none", 6);
+  fx.wash(player, { red: 0.85, green: 0.85, blue: 0.95 }, 0.35);
   playSound(dimension, "beacon.activate", center, 0.5);
   return true;
 }
@@ -530,8 +545,11 @@ function castTimeStop(player) {
 /** @type {Record<string, fx.Pose>} */
 const POSE = {};
 for (const key of ["light_healing", "heal", "reinforce_armor", "lesser_strength", "haste", "fly", "regenerate", "full_potential", "dimensional_move"]) POSE[key] = "self";
-for (const key of ["summon_undead_3", "summon_angel_4", "summon_undead_6"]) POSE[key] = "raise";
-for (const key of ["fire_rain", "ice_pillar", "napalm", "holy_smite", "gravity_maelstrom", "sand_field_all", "meteor_fall", "nuclear_blast", "time_stop", "shock_wave"]) POSE[key] = "raise";
+for (const key of ["summon_undead_3", "summon_angel_4", "summon_undead_6"]) POSE[key] = "summon";
+for (const key of ["bone_lance", "ice_lance", "reality_slash", "wall_of_hell"]) POSE[key] = "sweep";
+for (const key of ["energy_drain", "sleep", "grasp_heart", "death"]) POSE[key] = "channel";
+for (const key of ["fire_rain", "ice_pillar", "napalm", "holy_smite", "gravity_maelstrom", "sand_field_all", "meteor_fall", "nuclear_blast", "time_stop"]) POSE[key] = "raise";
+POSE.shock_wave = "slam";
 
 // -------------------------------------------------------------------- spells
 
@@ -834,7 +852,12 @@ export function openGrimoire(player) {
     form.button(`Slot ${i + 1}${i === p.slot ? " (selected)" : ""}\n${spell ? `${spell.name} - mastery ${masteryOf(player, spell.key)}` : "empty"}`);
   }
   form.button("Learn spells");
-  show(form, player, (choice) => (choice < SLOTS ? openSlot(player, choice) : openLearn(player)));
+  form.button("Preview the eight elements\nShows each element's effects around you");
+  show(form, player, (choice) => {
+    if (choice < SLOTS) openSlot(player, choice);
+    else if (choice === SLOTS) openLearn(player);
+    else fx.showcase(player);
+  });
 }
 
 /** @param {Player} player @param {number} slot */

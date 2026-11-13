@@ -10,6 +10,7 @@ import * as party from "./party.js";
 import * as guild from "./guild.js";
 import * as forge from "./forge.js";
 import * as mount from "./mount.js";
+import * as vfx from "./vfx.js";
 await import("./main.js"); // must load without touching the world
 
 // Everything random in the add-on goes through Math.random. A seeded generator makes each run identical
@@ -38,7 +39,7 @@ function mkPlayer(name) {
       addItem(s) { inv.push(s); }, get size() { return inv.length; }, getItem: (i) => inv[i], setItem(i, s) { if (s) inv[i] = s; else inv[i] = undefined; } } }; },
     aimed: [], getEntitiesFromViewDirection: () => p.aimed.map((entity) => ({ entity })), getBlockFromViewDirection: () => undefined,
     getHeadLocation: () => ({ x: 0, y: 65.6, z: 0 }), getViewDirection: () => ({ x: 0, y: 0, z: 1 }),
-    dimension: { id: "overworld", mobs: [], spawnParticle(effect, loc, vars) { p.fx.push({ effect, scale: vars?.v?.["variable.scale"], color: vars?.v?.["variable.color"] }); }, spawnItem() {}, getPlayers: () => players, playSound() {},
+    dimension: { id: "overworld", mobs: [], spawnParticle(effect, loc, vars) { p.fx.push({ effect, loc, scale: vars?.v?.["variable.scale"], color: vars?.v?.["variable.color"], vars: vars?.v ?? {} }); }, spawnItem() {}, getPlayers: () => players, playSound() {},
       getBlock: () => ({ isAir: true }), getTopmostBlock: ({ x, z }) => ({ location: { x, y: 63, z } }),
       spawnEntity(typeId) { const e = { typeId, tags: new Set(), isValid: true, addTag(t) { this.tags.add(t); }, remove: () => { p.dimension.mobs = p.dimension.mobs.filter((m) => m !== e); } }; p.dimension.mobs.push(e); return e; },
       getEntities: (q) => p.dimension.mobs.filter((m) => (q.tags ?? []).every((t) => m.tags.has(t))) } };
@@ -638,6 +639,60 @@ h.getComponent = ((base) => (cmp) => (cmp === "minecraft:riding" ? { entityRidin
 assert.equal(mount.steedOf(h), hamsuke); const wolf = foe(100, 100); wolf.applyKnockback = () => {}; wolf.damaged.length = 0;
 assert.equal(mount.tendSteed(h), 1); assert.deepEqual(wolf.damaged, [mount.lashDamage(60)]); assert.equal(hamsuke.effects.get("health_boost"), 9); assert.equal(hamsuke.effects.get("strength"), 1);
 assert.equal(mount.tendSteed(h), 0, "the tail needs three seconds"); advance(90); assert.ok(wolf.damaged.length >= 2, "and lashes again while ridden");
+
+// ---- v5.5: visuals ----
+const v = mkPlayer("vera"); const pv = rpg.profileOf(v); v.dimension.getPlayers = () => [v]; const drew = (name) => v.fx.filter((f) => f.effect === `overlord:${name}`);
+const origin5 = { x: 0, y: 64, z: 0 };
+// every element marks an impact in its own way, on top of the sparks and the flash they all share
+for (const [element, accent] of [["fire", "flame"], ["ice", "shard"], ["lightning", "arc"], ["holy", "ray"], ["dark", "wisp"], ["acid", "droplet"], ["arcane", "glyph"], ["none", "streak"]]) {
+  advance(1); v.fx = []; vfx.spark(v.dimension, origin5, element, 1.5);
+  assert.ok(drew("spark").length === 1 && drew("flash").length === 1 && drew(accent).length === 1, `${element} impact: ${v.fx.map((f) => f.effect)}`);
+  assert.ok(v.fx.every((f) => f.color && f.scale > 0), "every layer is tinted and sized");
+}
+advance(1); v.fx = []; vfx.spark(v.dimension, origin5, "fire"); assert.equal(drew("ember").length, 1, "fire also throws embers");
+// a magic circle is two rings turning against each other, with runes rising from the large ones
+advance(1); v.fx = []; vfx.circle(v.dimension, origin5, "arcane", 1.2); assert.deepEqual(v.fx.map((f) => f.effect), ["overlord:magic_circle", "overlord:magic_circle_inner"]);
+assert.ok(drew("magic_circle_inner")[0].scale < drew("magic_circle")[0].scale);
+advance(1); v.fx = []; vfx.circle(v.dimension, origin5, "arcane", 3); assert.equal(drew("glyph").length, 1);
+// rings: small ones are plain, large ones roll out as a shock wave with dust
+advance(1); v.fx = []; vfx.ring(v.dimension, origin5, "none", 1); assert.deepEqual(v.fx.map((f) => f.effect), ["overlord:ring"]);
+advance(1); v.fx = []; vfx.ring(v.dimension, origin5, "none", 5); assert.ok(drew("shockwave").length === 1 && drew("dust").length === 1);
+// a beam is a row of motes around one bright core laid from end to end, with the element's trail along it
+advance(1); v.fx = []; vfx.beam(v.dimension, origin5, { x: 0, y: 64, z: 10 }, "lightning");
+assert.equal(drew("mote").length, 21); const core = drew("beam_core")[0]; assert.ok(core, "beam core");
+assert.equal(core.vars["variable.length"], 10); assert.deepEqual(core.vars["variable.direction"], { x: 0, y: 0, z: 1 }); assert.deepEqual(core.loc, { x: 0, y: 64, z: 5 });
+assert.equal(drew("arc").length, 5, "lightning crackles every two blocks along the beam");
+// a pillar is a shaft of light placed half-way up, with its height passed to the particle
+advance(1); v.fx = []; vfx.pillar(v.dimension, origin5, "holy", 8); const shaft = drew("pillar_light")[0];
+assert.equal(shaft.vars["variable.height"], 8); assert.equal(shaft.loc.y, 68);
+// a nova is streaks, a flash and a shock wave
+advance(1); v.fx = []; vfx.nova(v.dimension, origin5, "fire", 6); assert.ok(drew("nova").length === 1 && drew("flash").length === 1 && drew("shockwave").length === 1);
+// when a great deal is drawn in one tick the decoration is dropped first, never the base layers
+advance(1); v.fx = []; for (let i = 0; i < 200; i++) vfx.spark(v.dimension, origin5, "fire");
+assert.equal(drew("spark").length, 200, "every impact still shows its sparks"); assert.ok(drew("flame").length < 100 && v.fx.length < 200 + vfx.DECORATION_BUDGET, `decoration is capped: ${v.fx.length}`);
+advance(1); v.fx = []; vfx.spark(v.dimension, origin5, "fire"); assert.equal(drew("flame").length, 1, "the next tick starts afresh");
+// the cast flourish grows with the tier; super-tier magic has its own long pose
+advance(1); v.fx = []; v.anims = []; vfx.castFx(v, "fire", 2, "point"); const low = v.fx.length;
+advance(1); v.fx = []; vfx.castFx(v, "fire", 9, "raise"); assert.ok(v.fx.length > low && drew("implode").length === 1 && drew("magic_circle").length === 2, "high tiers gather power under a second circle");
+advance(1); v.anims = []; vfx.castFx(v, "holy", 11, "point"); assert.deepEqual(v.anims, ["animation.overlord.cast_super"]);
+for (const pose of vfx.POSE_NAMES) { v.anims = []; vfx.pose(v, pose); assert.ok(v.anims[0].startsWith("animation.overlord."), pose); }
+assert.equal(vfx.POSE_NAMES.length, 12);
+// scrolls are read, tomes are held open and weapon skills are swung - each in the right colour
+pv.level = 100; rpg.restoreMana(v, 1e6); v.fx = []; v.anims = []; use(v, "overlord:scroll_of_fly");
+assert.deepEqual(v.anims, ["animation.overlord.use_scroll"]); assert.ok(drew("glyph").length >= 1 && drew("aura").length === 1, "the scroll's runes lift off and the wind takes hold");
+advance(60); v.fx = []; v.anims = []; use(v, "overlord:scroll_of_heavy_recover"); assert.deepEqual(drew("magic_circle")[0].color, { red: 1.0, green: 0.9, blue: 0.6 }, "a healing scroll glows holy gold");
+advance(60); v.fx = []; v.anims = []; use(v, "overlord:tome_reality_slash"); assert.deepEqual(v.anims, ["animation.overlord.use_tome"]); assert.equal(drew("slash").length, 4, "the cut is drawn along its line");
+advance(60); v.fx = []; v.anims = []; use(v, "overlord:charons_guidance"); assert.deepEqual(v.anims, ["animation.overlord.weapon_slash"]); assert.ok(drew("slash").length === 1);
+advance(60); v.fx = []; v.anims = []; use(v, "overlord:giants_maul"); assert.deepEqual(v.anims, ["animation.overlord.weapon_slam"]);
+// death magic leaves a skull over what it kills
+const victim = mob("minecraft:cow", 5); Object.assign(victim, { dimension: v.dimension, matches: () => false, applyDamage() { victim.isValid = false; } });
+advance(1); v.fx = []; v.aimed = [victim]; const deathSpell = spells.SPELLS.find((sp) => sp.key === "death"); assert.equal(deathSpell.cast(v, 1), true); assert.equal(drew("skull").length, 1); v.aimed = [];
+// screen effects are optional extras: they use the camera and a command when the game offers them and never fail without
+const faded = []; v.camera = { fade: (o) => faded.push(o) }; const ran = []; v.runCommand = (c) => ran.push(c);
+vfx.wash(v, { red: 1, green: 1, blue: 1 }); assert.equal(faded.length, 1); vfx.shake(v.dimension, v.location, 10, 0.5, 0.4); assert.deepEqual(ran, ["camerashake add @s 0.50 0.40 positional"]);
+delete v.camera; delete v.runCommand; vfx.wash(v, { red: 1, green: 1, blue: 1 }); vfx.shake(v.dimension, v.location, 10);
+// the Grimoire's preview plays every element without a hitch
+advance(1); v.fx = []; vfx.showcase(v); advance(200); for (const name of ["flame", "shard", "arc", "ray", "wisp", "droplet", "glyph", "streak", "pillar_light", "nova"]) assert.ok(drew(name).length > 0, name);
 
 // persistence: saved profile is restored after leaving
 advance(100);
