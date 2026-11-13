@@ -86,6 +86,7 @@ VANILLA = {
         "beacon.activate", "item.trident.riptide_1", "ambient.weather.thunder", "random.glass",
         "random.levelup", "mob.zombie.say", "mob.wither.shoot", "mob.ravager.ambient", "raid.horn",
         "mob.ravager.roar", "random.totem", "horn.call.0", "random.anvil_land", "random.anvil_use",
+        "mob.enderdragon.growl", "mob.enderdragon.flap", "mob.enderdragon.hit", "mob.enderdragon.death",
     },
     # verified against the vanilla particle definitions
     "particle": {

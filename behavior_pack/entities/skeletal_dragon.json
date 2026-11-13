@@ -20,8 +20,8 @@
         ]
       },
       "minecraft:collision_box": {
-        "width": 2.0,
-        "height": 2.2
+        "width": 1.4,
+        "height": 2.0
       },
       "minecraft:health": {
         "value": 550,
@@ -79,7 +79,7 @@
         "table": "loot_tables/entities/overlord/skeletal_dragon.json"
       },
       "minecraft:scale": {
-        "value": 2.4
+        "value": 2.8
       },
       "minecraft:knockback_resistance": {
         "value": 1.0
@@ -139,6 +139,11 @@
             "max_dist": 48
           }
         ]
+      },
+      "minecraft:variable_max_auto_step": {
+        "base_value": 2.0625,
+        "controlled_value": 2.0625,
+        "jump_prevented_value": 1.0625
       }
     },
     "events": {}

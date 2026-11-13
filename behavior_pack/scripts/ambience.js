@@ -26,7 +26,6 @@ export const AURAS = {
   [id("skeleton_mage")]: [["glyph", "arcane", 0.3, 0.7]],
   [id("soul_eater")]: [["ember", "ice", 0.9, 1.0]],
   [id("khajiit")]: [["wisp", "dark", 1.2, 0.9]],
-  [id("skeletal_dragon")]: [["wisp", "dark", 2.4, 2.4]],
   [id("shalltear")]: [["ember", "fire", 1.0, 0.9]],
   [id("albedo")]: [["wisp", "dark", 1.2, 0.8]],
   [id("zesshi")]: [["wisp", "dark", 1.0, 0.7]],
@@ -42,14 +41,12 @@ export const AURAS = {
   [id("gargantua")]: [["ember", "fire", 3.0, 2.4]],
   // ice
   [id("cocytus")]: [["ember", "ice", 1.8, 1.4]],
-  [id("frost_dragon")]: [["ember", "ice", 2.2, 2.4]],
   [id("frost_giant")]: [["ember", "ice", 2.4, 1.6]],
   // the holy
   [id("archangel_flame")]: [["ray", "holy", 0.2, 0.6]],
   [id("dominion_authority")]: [["ray", "holy", 0.4, 1.4], ["glyph", "holy", 0.6, 1.6]],
   // lightning
   [id("narberal")]: [["arc", "lightning", 1.3, 0.6]],
-  [id("platinum_dragon_lord")]: [["arc", "lightning", 3.0, 2.6]],
   // arcane and the wilds
   [id("evileye")]: [["glyph", "arcane", 0.2, 0.6]],
   [id("fluder")]: [["glyph", "arcane", 0.3, 0.8]],
@@ -62,6 +59,10 @@ export const AURAS = {
 /** The colour of a creature's blows and of its death, where it is not the colour of its aura. */
 /** @type {Record<string, string>} */
 const THEME = {
+  // the dragons' own visuals are in dragons.js; these colour their bites and their deaths
+  [id("frost_dragon")]: "ice",
+  [id("skeletal_dragon")]: "dark",
+  [id("platinum_dragon_lord")]: "lightning",
   [id("old_guarder")]: "dark",
   [id("vampire_bride")]: "dark",
   [id("eight_edge_assassin")]: "dark",

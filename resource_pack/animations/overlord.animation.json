@@ -262,6 +262,136 @@
         }
       }
     },
+    "animation.overlord.dragon.wings": {
+      "loop": true,
+      "bones": {
+        "rightWing": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 110.0 + 90.0) * 4.0",
+            "math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0)"
+          ]
+        },
+        "leftWing": {
+          "rotation": [
+            0.0,
+            "-math.sin(query.life_time * 110.0 + 90.0) * 4.0",
+            "-math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0)"
+          ]
+        },
+        "rightWingTip": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 110.0 - 60.0) * 16.0"
+          ]
+        },
+        "leftWingTip": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-math.sin(query.life_time * 110.0 - 60.0) * 16.0"
+          ]
+        }
+      }
+    },
+    "animation.overlord.dragon.neck": {
+      "loop": true,
+      "bones": {
+        "neck": {
+          "rotation": [
+            "math.sin(query.life_time * 40.0) * 3.0",
+            "math.sin(query.life_time * 27.0) * 6.0",
+            0.0
+          ]
+        },
+        "neck2": {
+          "rotation": [
+            "math.sin(query.life_time * 40.0 - 50.0) * 4.0",
+            "math.sin(query.life_time * 27.0 - 40.0) * 7.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.overlord.dragon.jaw": {
+      "loop": true,
+      "bones": {
+        "jaw": {
+          "rotation": [
+            "math.max(math.sin(variable.attack_time * 180.0) * 32.0, math.clamp(math.sin(query.life_time * 45.0) * 60.0 - 50.0, 0.0, 14.0))",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.overlord.dragon.tail": {
+      "loop": true,
+      "bones": {
+        "tail": {
+          "rotation": [
+            "math.sin(query.life_time * 55.0) * 2.0",
+            "math.sin(query.life_time * 70.0) * 7.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 70.0 - 55.0) * 11.0",
+            0.0
+          ]
+        },
+        "tail3": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 70.0 - 110.0) * 14.0",
+            0.0
+          ]
+        },
+        "tail4": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 70.0 - 165.0) * 17.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.overlord.dragon.lunge": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 4.0",
+            0.0,
+            0.0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 18.0",
+            0.0,
+            0.0
+          ]
+        },
+        "neck2": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 14.0",
+            0.0,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 10.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
     "animation.overlord.breathe": {
       "loop": true,
       "bones": {

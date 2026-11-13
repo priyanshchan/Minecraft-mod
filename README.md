@@ -125,6 +125,39 @@ Every mob has its own spawn egg.
   A melee blow leaves a crescent in the attacker's colour, deaths are marked with a burst (a skull over the
   undead, a nova for a great foe), and any great foe arrives inside a magic circle.
 
+### The great dragons
+
+The Frost Dragon, the Skeletal Dragon and the Platinum Dragon Lord are the largest creatures in the add-on
+and each has its own model on a shared skeleton — a long neck in two parts, a hinged jaw, four clawed legs, a
+four-part tail and two-part wings.
+
+| Dragon | Length | Wingspan | Look | Breath |
+| --- | --- | --- | --- | --- |
+| **Frost Dragon** | about 23 blocks | about 20 | Pale blue scales, tall ice spines, a beard of icicles, a mace of ice on its tail | *Frost Breath*: a blast of cold (14 damage, Slowness III) that leaves the ground freezing for a moment |
+| **Skeletal Dragon** | about 24 blocks | about 22 | An open ribcage round a green soul fire, a bare skull, tattered wings | *Breath of Undeath*: negative energy (12 damage, Wither) |
+| **Platinum Dragon Lord** | about 30 blocks | about 27 | Plated flanks, a crown of golden horns, a glowing gem in its chest, a bladed tail | *Judgment*: five bolts of lightning, one on the mark and four around it (10 damage each) |
+
+- **Animation:** wings beat in two parts, harder when the dragon is moving; the neck weaves; the jaw gapes to
+  bite and now and then to snarl; a wave runs down the tail; a bite is a lunge of the whole neck; and like
+  every creature they breathe and recoil when struck.
+- **Roar:** a dragon roars at the first player it sees, with rings rolling out from its feet and the view
+  shaking for everyone within 48 blocks.
+- **Presence:** frost drifts from the Frost Dragon's wings and tail, ice falls from them and mist rolls off
+  its flanks; soul fire burns in the Skeletal Dragon's ribs, shadow curls round it and its eye sockets glow;
+  lightning crawls along the Platinum Dragon Lord's wings, light rises beneath it and runes circle its crown.
+- **Footfalls:** the ground shudders and dust rises as a dragon walks.
+- **Breath** (every 9 seconds, up to 34 blocks): a circle marks where it will land while light gathers in the
+  dragon's jaws; about a second later the breath strikes that spot. Step off the mark and it misses.
+- **Wing buffet** (every 14 seconds, when you are close): the wings draw back, then a gale hurts and throws
+  back everyone near.
+- **Enrage:** at half health a dragon roars again in a pillar of its element, gains Speed and Strength, and
+  breathes and buffets a third faster.
+- **Death:** its element tears loose along its whole length — pillars at the head, wings, tail and chest in
+  turn, then a dome of magic circles.
+
+Hit boxes are the dragons' trunks (about 4 to 5 blocks wide and 5 to 7 tall), so they can walk through open
+country; they also step over ledges two blocks high. They stay on the ground — they do not fly.
+
 ### Items
 
 | Item | What it does |

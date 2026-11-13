@@ -16,9 +16,11 @@
         "animate": [
           "look_at_target",
           "hamsuke_walk",
-          "hamsuke_tail",
-          "hamsuke_attack",
           "dragon_wings",
+          "dragon_neck",
+          "dragon_jaw",
+          "dragon_tail",
+          "dragon_lunge",
           "breathe",
           "flinch"
         ]
@@ -26,9 +28,11 @@
       "animations": {
         "look_at_target": "animation.overlord.look_at_target",
         "hamsuke_walk": "animation.overlord.hamsuke.walk",
-        "hamsuke_tail": "animation.overlord.hamsuke.tail",
-        "hamsuke_attack": "animation.overlord.hamsuke.attack",
-        "dragon_wings": "animation.overlord.dragon_wings",
+        "dragon_wings": "animation.overlord.dragon.wings",
+        "dragon_neck": "animation.overlord.dragon.neck",
+        "dragon_jaw": "animation.overlord.dragon.jaw",
+        "dragon_tail": "animation.overlord.dragon.tail",
+        "dragon_lunge": "animation.overlord.dragon.lunge",
         "breathe": "animation.overlord.breathe",
         "flinch": "animation.overlord.flinch"
       },

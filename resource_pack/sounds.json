@@ -689,13 +689,13 @@
       "overlord:frost_dragon": {
         "volume": 1.0,
         "pitch": [
-          0.9,
-          1.0
+          0.7,
+          0.85
         ],
         "events": {
-          "ambient": "mob.ravager.ambient",
-          "hurt": "mob.irongolem.hit",
-          "death": "mob.wither.death",
+          "ambient": "mob.enderdragon.growl",
+          "hurt": "mob.enderdragon.hit",
+          "death": "mob.enderdragon.death",
           "step": "mob.irongolem.walk",
           "shoot": "random.glass"
         }
@@ -716,13 +716,13 @@
       "overlord:skeletal_dragon": {
         "volume": 1.0,
         "pitch": [
-          0.9,
-          1.0
+          0.7,
+          0.85
         ],
         "events": {
-          "ambient": "mob.ravager.ambient",
-          "hurt": "mob.irongolem.hit",
-          "death": "mob.wither.death",
+          "ambient": "mob.enderdragon.growl",
+          "hurt": "mob.enderdragon.hit",
+          "death": "mob.enderdragon.death",
           "step": "mob.irongolem.walk",
           "shoot": "random.glass"
         }
@@ -978,13 +978,13 @@
       "overlord:platinum_dragon_lord": {
         "volume": 1.0,
         "pitch": [
-          0.9,
-          1.0
+          0.7,
+          0.85
         ],
         "events": {
-          "ambient": "mob.ravager.ambient",
-          "hurt": "mob.irongolem.hit",
-          "death": "mob.wither.death",
+          "ambient": "mob.enderdragon.growl",
+          "hurt": "mob.enderdragon.hit",
+          "death": "mob.enderdragon.death",
           "step": "mob.irongolem.walk",
           "shoot": "random.glass"
         }

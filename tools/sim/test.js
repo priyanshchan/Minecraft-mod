@@ -13,6 +13,7 @@ import * as mount from "./mount.js";
 import * as vfx from "./vfx.js";
 import * as arena from "./arena.js";
 import * as ambience from "./ambience.js";
+import * as dragons from "./dragons.js";
 await import("./main.js"); // must load without touching the world
 
 // Everything random in the add-on goes through Math.random. A seeded generator makes each run identical
@@ -43,7 +44,7 @@ function mkPlayer(name) {
     getHeadLocation: () => ({ x: 0, y: 65.6, z: 0 }), getViewDirection: () => ({ x: 0, y: 0, z: 1 }),
     dimension: { id: "overworld", mobs: [], spawnParticle(effect, loc, vars) { p.fx.push({ effect, loc, scale: vars?.v?.["variable.scale"], color: vars?.v?.["variable.color"], vars: vars?.v ?? {} }); }, spawnItem() {}, getPlayers: () => players, playSound() {},
       getBlock: () => ({ isAir: true }), getTopmostBlock: ({ x, z }) => ({ location: { x, y: 63, z } }),
-      spawnEntity(typeId) { const e = { typeId, tags: new Set(), isValid: true, addTag(t) { this.tags.add(t); }, remove: () => { p.dimension.mobs = p.dimension.mobs.filter((m) => m !== e); } }; p.dimension.mobs.push(e); return e; },
+      spawnEntity(typeId, location = { x: 0, y: 64, z: 0 }) { const e = { typeId, location, tags: new Set(), isValid: true, addTag(t) { this.tags.add(t); }, remove: () => { p.dimension.mobs = p.dimension.mobs.filter((m) => m !== e); } }; p.dimension.mobs.push(e); return e; },
       getEntities: (q) => p.dimension.mobs.filter((m) => (q.tags ?? []).every((t) => m.tags.has(t))) } };
   players.push(p); return p;
 }
@@ -783,6 +784,51 @@ world.afterEvents.entitySpawn.fire({ entity: creature("overlord:evil_lord_wrath"
 assert.deepEqual(seen65("magic_circle")[0].color, { red: 1.0, green: 0.45, blue: 0.1 }, "in the demon's own colour");
 for (const [type, auras] of Object.entries(ambience.AURAS)) for (const [, , height, size] of auras) assert.ok(type.startsWith("overlord:") && height >= 0 && size > 0, type);
 players.splice(0, players.length, ...everyone, zoe);
+}
+
+// ---- v6.6: the great dragons ----
+{
+  const ray = mkPlayer("ray"); ray.dimension = makeLand(); ray.location = { x: 0, y: 64, z: 8 };
+  ray.dimension.getPlayers = (q) => (!q || !q.maxDistance || Math.hypot(ray.location.x - q.location.x, ray.location.z - q.location.z) <= q.maxDistance ? [ray] : []);
+  ray.dimension.spawnParticle = (effect, loc, vars) => ray.fx.push({ effect, loc, color: vars?.v?.["variable.color"], scale: vars?.v?.["variable.scale"] });
+  const drawn = (name) => ray.fx.filter((f) => f.effect === `overlord:${name}`); const others = players.splice(0, players.length, ray);
+  const hits = []; ray.applyDamage = (n) => hits.push(n); const thrown = []; ray.applyKnockback = (v, up) => thrown.push([v, up]); const shook = []; ray.runCommand = (c) => shook.push(c);
+  const hatch = (type, hp) => { const e = ray.dimension.spawnEntity(type, { x: 0, y: 64, z: -12 }); e.health.effectiveMax = hp; e.health.currentValue = hp;
+    e.matches = (q) => q.families.every((f) => ["dragon", "monster", "mob"].includes(f)); e.getViewDirection = () => ({ x: 0, y: 0, z: 1 }); e.getVelocity = () => ({ x: 0, y: 0, z: 0 });
+    e.getEffect = () => undefined; return e; };
+  const wyrm = hatch("overlord:frost_dragon", 700); const frost = dragons.DRAGONS["overlord:frost_dragon"];
+  // the script knows where a dragon's jaws, wings and tail are from its size and the way it faces
+  const parts = dragons.anatomy(wyrm, frost); assert.ok(Math.abs(parts.mouth.z - (-12 + 3.3 * 2.6)) < 1e-9 && Math.abs(parts.mouth.y - (64 + 2.5 * 2.6)) < 1e-9);
+  assert.ok(parts.leftWing.x * parts.rightWing.x < 0 && parts.tail.z < wyrm.location.z, "wings to either side, tail behind");
+  // it roars at the first player it sees - once - and is always wreathed in its element
+  ray.fx = []; assert.equal(dragons.pass(), 1); assert.ok(dragons.stateOf(wyrm).roared && shook.length >= 1); assert.ok(drawn("ember").length >= 2, "frost hangs on its wings and tail");
+  const roars = shook.length; dragons.tend(wyrm); assert.equal(shook.length, roars, "it does not roar twice");
+  // breath: a circle marks the spot and the breath lands there a moment later - step off the mark and it misses
+  const quiet = dragons.stateOf(wyrm); quiet.breathAt = 1e9; quiet.buffetAt = 1e9;
+  advance(1); ray.fx = []; dragons.breathe(wyrm, frost, { ...ray.location }); assert.ok(drawn("magic_circle").length === 1 && drawn("implode").length === 1, "warning circle and gathering light");
+  assert.equal(hits.length, 0, "nothing lands during the warning"); ray.location = { x: 20, y: 64, z: 8 }; advance(60); assert.equal(hits.length, 0, "dodged");
+  assert.ok(drawn("beam_core").length >= 1 && drawn("nova").length >= 1, "the breath itself");
+  ray.location = { x: 0, y: 64, z: 8 }; dragons.breathe(wyrm, frost, { ...ray.location }); advance(19); assert.equal(hits[0], 14); assert.ok(ray.effects.has("slowness"), "frost breath slows");
+  advance(40); assert.ok(hits.length >= 3, "the ground stays freezing for a moment"); hits.length = 0;
+  // wing buffet: a gale that hurts and throws back everyone standing close
+  ray.location = { x: 0, y: 64, z: -7 }; dragons.buffet(wyrm, frost); assert.equal(thrown.length, 0); advance(13);
+  assert.equal(hits.length, 1); assert.ok(thrown.length === 1 && thrown[0][0].z > 2 && thrown[0][1] > 0.5, "thrown back, away from the dragon");
+  // at half health it is enraged, once, and everything comes faster
+  wyrm.health.currentValue = 300; ray.msgs.length = 0; dragons.tend(wyrm); assert.ok(dragons.stateOf(wyrm).enraged && ray.msgs.some((m) => m.includes("enraged")) && wyrm.effects.has("speed"));
+  ray.msgs.length = 0; dragons.tend(wyrm); assert.ok(!ray.msgs.some((m) => m.includes("enraged")));
+  // left to itself it breathes at a player in range - but never at one in creative mode
+  ray.location = { x: 0, y: 64, z: 8 }; hits.length = 0; ray.getGameMode = () => "Creative"; quiet.breathAt = 0; dragons.tend(wyrm); advance(25); assert.equal(hits.length, 0, "creative players are left alone");
+  ray.getGameMode = () => "Survival"; quiet.breathAt = 0; dragons.tend(wyrm); advance(25); assert.ok(hits.length >= 1, "it breathes on its own"); assert.ok(quiet.breathAt > 100, "and then recovers its breath");
+  // the Platinum Dragon Lord's breath is five bolts; the Skeletal Dragon's withers
+  const lordly = hatch("overlord:platinum_dragon_lord", 1200); advance(1); ray.fx = [];
+  dragons.breathe(lordly, dragons.DRAGONS["overlord:platinum_dragon_lord"], { ...ray.location }); advance(45); assert.equal(drawn("pillar_light").length, 5, "five bolts");
+  const bones = hatch("overlord:skeletal_dragon", 550); ray.effects.clear(); dragons.breathe(bones, dragons.DRAGONS["overlord:skeletal_dragon"], { ...ray.location }); advance(20);
+  assert.ok(ray.effects.has("wither") && drawn("skull").length >= 1);
+  // its death is staged along its whole length, and it is forgotten afterwards
+  advance(1); ray.fx = []; ray.msgs.length = 0; world.afterEvents.entityDie.fire({ deadEntity: wyrm, damageSource: {} }); wyrm.remove(); advance(50);
+  assert.ok(drawn("pillar_light").length >= 5 && ray.msgs.some((m) => m.includes("Frost Dragon has fallen"))); assert.equal(dragons.stateOf(wyrm).roared, false);
+  for (const kind of Object.values(dragons.DRAGONS)) assert.ok(kind.size >= 2.5, `${kind.name} is big`);
+  players.splice(0, players.length, ...others, ray);
 }
 
 // persistence: saved profile is restored after leaving
