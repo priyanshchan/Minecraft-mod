@@ -1,0 +1,50 @@
+# Publishes a GitHub release with the packaged add-on attached.
+# Run it from the Actions tab (Release -> Run workflow) and give the version tag, e.g. v5.1.0.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag for the release, e.g. v5.1.0 (must match the pack version)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that the tag matches the pack version
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          version="v$(python3 -c "import json; print('.'.join(str(n) for n in json.load(open('behavior_pack/manifest.json'))['header']['version']))")"
+          if [ "$TAG" != "$version" ]; then
+            echo "::error::Tag $TAG does not match the pack version $version"
+            exit 1
+          fi
+
+      - name: Check the packs and the script logic
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 tools/validate.py
+          python3 tools/test_rpg.py
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          notes="docs/releases/${TAG}.md"
+          if [ -f "$notes" ]; then
+            gh release create "$TAG" dist/Overlord_Tomb_of_Nazarick.mcaddon \
+              --target "$GITHUB_SHA" --title "Overlord: Tomb of Nazarick $TAG" --notes-file "$notes"
+          else
+            gh release create "$TAG" dist/Overlord_Tomb_of_Nazarick.mcaddon \
+              --target "$GITHUB_SHA" --title "Overlord: Tomb of Nazarick $TAG" --generate-notes
+          fi

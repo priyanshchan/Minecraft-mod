@@ -1,8 +1,14 @@
 // Overlord: Tomb of Nazarick - faction camps and outposts.
 // The overworld is divided into regions; some regions hold one site (a camp, outpost
 // or village of a faction), chosen deterministically from a per-world salt. A site is
-// built from blocks the first time a player explores near it, and its garrison is
+// built from blocks the first time a player comes near it, and its garrison is
 // posted - and later replenished - when a player comes close.
+//
+// Blocks can only be read and placed in chunks that are loaded and ticking, which with a
+// low simulation distance is little more than 60 blocks around a player, and the game
+// raises an error for anything further out. Every block query here is therefore guarded,
+// a site that cannot be surveyed yet is simply tried again a moment later, and one
+// region failing never stops the others from being looked at.
 import { world, system, BlockVolume, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { addRep, creditedPlayer, giveItem, grantXp, notify, profileOf, questEvent, registerMenu, touch } from "./rpg.js";
@@ -13,14 +19,18 @@ const id = (/** @type {string} */ name) => `${NS}:${name}`;
 const mc = (/** @type {string} */ name) => `minecraft:${name}`;
 const TICKS = 20;
 
-export const REGION = 192; // blocks per region side
-const SITE_CHANCE = 0.4; // share of regions that hold a site
-const SPAWN_CLEARANCE = 120; // no sites this close to the world spawn
-const BUILD_NEAR = 40; // a site is built when a player is between these distances...
-const BUILD_FAR = 110;
-const WAKE_RANGE = 44; // ...and garrisoned when a player comes this close
+export const REGION = 160; // blocks per region side
+const SITE_CHANCE = 0.65; // share of regions that hold a site
+const SPAWN_CLEARANCE = 64; // no sites this close to the world spawn
+export const BUILD_FAR = 72; // a site is built once a player is this close...
+const KEEP_CLEAR = 6; // ...but not while they stand this near its edge, so nobody is walled in
+const WAKE_RANGE = 44; // the garrison is posted when a player comes this close
 const REFILL_TICKS = 10 * 60 * TICKS; // a cleared camp is re-manned after ten minutes
-const MAX_SLOPE = 4;
+const MAX_SLOPE = 8; // the ground under a site may differ this much in height; the pad evens it out
+/** If the planned spot is unsuitable, these offsets around it are tried in turn. */
+const SHIFTS = [[0, 0], [24, 0], [-24, 0], [0, 24], [0, -24], [24, 24], [-24, 24], [24, -24], [-24, -24]];
+/** World property prefix for processed regions. Versions before 5.1 used "overlord:site:", which is no longer read. */
+const STORE = "overlord:camp:";
 
 /** @typedef {import("@minecraft/server").Dimension} Dimension */
 /** @typedef {import("@minecraft/server").Vector3} Vector3 */
@@ -33,11 +43,19 @@ const MAX_SLOPE = 4;
  * }} SiteType
  */
 
-/** Blocks a site may stand on. Anything else (water, lava, leaves...) is not ground. */
-const GROUND = new Set(
-  ["grass_block", "dirt", "coarse_dirt", "podzol", "sand", "red_sand", "stone", "gravel", "snow", "mycelium", "mud",
-    "moss_block", "sandstone", "red_sandstone", "grass_path", "packed_mud"].map(mc)
-);
+/** Blocks a site may stand on: soil, sand, stone, snow and the like. Leaves, logs, plants and liquids are not ground. */
+const GROUND = /(grass_block|dirt|dirt_with_roots|podzol|mycelium|sand|sandstone|stone|gravel|clay|terracotta|snow|ice|mud|moss_block|grass_path|deepslate|andesite|diorite|granite|tuff|calcite|basalt)$/;
+
+/** @param {string} typeId */
+export function isGround(typeId) {
+  return GROUND.test(typeId) && !typeId.endsWith("snow_layer");
+}
+
+/** Whether an error means "that chunk is not loaded yet" rather than a real fault. @param {unknown} error */
+function isUnloaded(error) {
+  const text = `${/** @type {any} */ (error)?.name ?? ""} ${error}`;
+  return /unloaded|not loaded|outside of the world|out of world/i.test(text);
+}
 
 // ------------------------------------------------------------------ builder
 
@@ -56,14 +74,28 @@ export class Builder {
     return { x: this.origin.x + x, y: this.origin.y + y, z: this.origin.z + z };
   }
 
+  /**
+   * Runs one placement. An unloaded chunk stops the build (it is tried again later); any other
+   * fault - such as a block this game version does not have - only skips that one placement.
+   * @param {() => void} place @param {string} block
+   */
+  guard(place, block) {
+    try {
+      place();
+    } catch (error) {
+      if (isUnloaded(error)) throw error;
+      console.warn(`[Overlord] could not place ${block}: ${error}`);
+    }
+  }
+
   /** @param {number} x @param {number} y @param {number} z @param {string} block */
   set(x, y, z, block) {
-    this.dimension.setBlockType(this.at(x, y, z), block);
+    this.guard(() => this.dimension.setBlockType(this.at(x, y, z), block), block);
   }
 
   /** @param {number} x0 @param {number} y0 @param {number} z0 @param {number} x1 @param {number} y1 @param {number} z1 @param {string} block */
   fill(x0, y0, z0, x1, y1, z1, block) {
-    this.dimension.fillBlocks(new BlockVolume(this.at(x0, y0, z0), this.at(x1, y1, z1)), block);
+    this.guard(() => this.dimension.fillBlocks(new BlockVolume(this.at(x0, y0, z0), this.at(x1, y1, z1)), block), block);
   }
 
   /** Hollow box: walls only. @param {number} x0 @param {number} y0 @param {number} z0 @param {number} x1 @param {number} y1 @param {number} z1 @param {string} block */
@@ -491,7 +523,7 @@ const camps = new Map();
 function campIn(rx, rz) {
   const key = `${rx},${rz}`;
   if (camps.has(key)) return camps.get(key);
-  const stored = world.getDynamicProperty(`overlord:site:${key}`);
+  const stored = world.getDynamicProperty(`${STORE}${key}`);
   if (typeof stored !== "string") return undefined; // not processed yet
   /** @type {Camp | null} */
   let camp = null;
@@ -509,7 +541,7 @@ function remember(rx, rz, camp) {
   const key = `${rx},${rz}`;
   camps.set(key, camp);
   world.setDynamicProperty(
-    `overlord:site:${key}`,
+    `${STORE}${key}`,
     camp ? `${camp.type.key}|${camp.x}|${camp.y}|${camp.z}|${camp.found ? 1 : 0}` : "-"
   );
 }
@@ -517,62 +549,98 @@ function remember(rx, rz, camp) {
 // ----------------------------------------------------------------- building
 
 /**
- * Height of the ground at a column: the y of the highest ground block, or undefined
- * when the column is unloaded, under water or has no ground near the surface.
+ * Height of the ground at a column: the y of the highest ground block, null when the column
+ * is under water or has no ground near the surface, or undefined when it cannot be read yet
+ * (the chunk is not loaded and ticking).
  * @param {Dimension} dimension @param {number} x @param {number} z
+ * @returns {number | null | undefined}
  */
 function groundAt(dimension, x, z) {
-  const top = dimension.getTopmostBlock({ x, z });
-  if (!top) return undefined;
-  let y = top.location.y;
-  for (let i = 0; i < 24; i++, y--) {
-    const block = dimension.getBlock({ x, y, z });
-    if (!block) return undefined;
-    if (block.isLiquid) return null;
-    if (GROUND.has(block.typeId)) return y;
+  try {
+    const top = dimension.getTopmostBlock({ x, z });
+    if (!top) return undefined;
+    let y = top.location.y;
+    for (let i = 0; i < 40; i++, y--) { // down through tree tops, plants and snow cover
+      const block = dimension.getBlock({ x, y, z });
+      if (!block) return undefined;
+      if (block.isLiquid) return null;
+      if (isGround(block.typeId)) return y;
+    }
+    return null;
+  } catch {
+    return undefined; // the game raises an error for chunks that are not loaded and ticking
   }
-  return null;
 }
 
 /**
- * Tries to build the site. Returns the camp, null when the place is unsuitable, or
- * undefined when the area is not loaded yet (try again later).
- * @param {Dimension} dimension @param {{ x: number, z: number, type: SiteType }} site
- * @returns {Camp | null | undefined}
+ * Looks at the ground under a would-be site. Returns the y of its floor, null when the place
+ * is unsuitable (water or too steep), or undefined when the area cannot be read yet.
+ * @param {Dimension} dimension @param {number} x @param {number} z @param {number} r
+ * @returns {number | null | undefined}
  */
-export function buildSite(dimension, site) {
-  const r = site.type.radius;
+function survey(dimension, x, z, r) {
   const heights = [];
   for (const [dx, dz] of [[0, 0], [-r, -r], [r, -r], [-r, r], [r, r], [0, -r], [0, r], [-r, 0], [r, 0]]) {
-    const y = groundAt(dimension, site.x + dx, site.z + dz);
+    const y = groundAt(dimension, x + dx, z + dz);
     if (y === undefined) return undefined;
     if (y === null) return null;
     heights.push(y);
   }
   if (Math.max(...heights) - Math.min(...heights) > MAX_SLOPE) return null;
+  heights.sort((a, b) => a - b);
+  return heights[4] + 1; // the pad sits on the median height, so as little as possible is dug or filled
+}
 
-  const b = new Builder(dimension, { x: site.x, y: heights[0] + 1, z: site.z });
-  b.fill(-r, -3, -r, r, -2, r, mc("dirt")); // foundation under the pad
-  b.fill(-r, -1, -r, r, -1, r, site.type.pad);
-  b.fill(-r, 0, -r, r, 8, r, mc("air"));
-  site.type.build(b);
-
-  // Chest contents are added a tick later, once the chest blocks exist.
-  system.runTimeout(() => {
-    for (const chest of b.chests) {
-      try {
-        const container = dimension.getBlock(chest.at)?.getComponent("minecraft:inventory")?.container;
-        if (!container) continue;
-        for (const [item, min, max] of chest.loot) {
-          const amount = min + Math.floor(Math.random() * (max - min + 1));
-          if (amount > 0) container.addItem(new ItemStack(item, amount));
-        }
-      } catch (error) {
-        console.warn(`[Overlord] could not stock a camp chest: ${error}`);
-      }
+/**
+ * Tries to build the site at its planned spot or, failing that, a little to one side. Returns
+ * the camp, null when nowhere around is suitable, or undefined when the area is not loaded
+ * yet (try again later).
+ * @param {Dimension} dimension @param {{ x: number, z: number, type: SiteType }} site
+ * @returns {Camp | null | undefined}
+ */
+export function buildSite(dimension, site) {
+  const r = site.type.radius;
+  let waiting = false;
+  for (const [ox, oz] of SHIFTS) {
+    const x = site.x + ox;
+    const z = site.z + oz;
+    const y = survey(dimension, x, z, r);
+    if (y === undefined) {
+      if (ox === 0 && oz === 0) return undefined; // the planned spot comes first: wait until it can be read
+      waiting = true;
+      continue;
     }
-  }, 2);
-  return { x: site.x, y: heights[0] + 1, z: site.z, type: site.type, found: false };
+    if (y === null) continue;
+
+    const b = new Builder(dimension, { x, y, z });
+    try {
+      b.fill(-r, -6, -r, r, -2, r, mc("dirt")); // foundation under the pad
+      b.fill(-r, -1, -r, r, -1, r, site.type.pad);
+      b.fill(-r, 0, -r, r, 11, r, mc("air"));
+      site.type.build(b);
+    } catch (error) {
+      if (!isUnloaded(error)) console.warn(`[Overlord] could not build ${site.type.name}: ${error}`);
+      return undefined; // part of the footprint is not ticking yet: the whole site is laid again later
+    }
+
+    // Chest contents are added a moment later, once the chest blocks exist.
+    system.runTimeout(() => {
+      for (const chest of b.chests) {
+        try {
+          const container = dimension.getBlock(chest.at)?.getComponent("minecraft:inventory")?.container;
+          if (!container) continue;
+          for (const [item, min, max] of chest.loot) {
+            const amount = min + Math.floor(Math.random() * (max - min + 1));
+            if (amount > 0) container.addItem(new ItemStack(item, amount));
+          }
+        } catch (error) {
+          console.warn(`[Overlord] could not stock a camp chest: ${error}`);
+        }
+      }
+    }, 2);
+    return { x, y, z, type: site.type, found: false };
+  }
+  return waiting ? undefined : null;
 }
 
 // ----------------------------------------------------------------- garrison
@@ -625,59 +693,73 @@ export function garrison(dimension, camp, tier) {
  */
 export function explore(player) {
   if (player.dimension.id !== "minecraft:overworld") return;
-  const px = player.location.x;
-  const pz = player.location.z;
-  const rx0 = Math.floor(px / REGION);
-  const rz0 = Math.floor(pz / REGION);
+  const rx0 = Math.floor(player.location.x / REGION);
+  const rz0 = Math.floor(player.location.z / REGION);
   for (let rx = rx0 - 1; rx <= rx0 + 1; rx++) {
     for (let rz = rz0 - 1; rz <= rz0 + 1; rz++) {
-      let camp = campIn(rx, rz);
-      if (camp === undefined) {
-        const site = siteOf(rx, rz);
-        if (!site) {
-          remember(rx, rz, null);
-          continue;
-        }
-        const spawn = world.getDefaultSpawnLocation();
-        if (Math.hypot(site.x - spawn.x, site.z - spawn.z) < SPAWN_CLEARANCE) {
-          remember(rx, rz, null);
-          continue;
-        }
-        const distance = Math.hypot(site.x - px, site.z - pz);
-        if (distance < BUILD_NEAR || distance > BUILD_FAR) continue; // wait for a better moment
-        const built = buildSite(player.dimension, site);
-        if (built === undefined) continue; // chunks not loaded yet
-        remember(rx, rz, built);
-        camp = built;
+      try {
+        visit(player, rx, rz);
+      } catch (error) {
+        // One region in trouble must never keep the others from being looked at.
+        if (!isUnloaded(error)) console.warn(`[Overlord] site check failed for region ${rx},${rz}: ${error}`);
       }
-      if (!camp) continue;
-      if (Math.hypot(camp.x - px, camp.z - pz) > WAKE_RANGE) continue;
-      const key = `${rx},${rz}`;
-      if (!camp.found) {
-        camp.found = true;
-        remember(rx, rz, camp);
-        notify(player, `§6Discovered: §f${camp.type.name}`);
-        grantXp(player, 80, "discovery");
-        questEvent(player, "site");
-      }
-      // Everyone who visits a friendly camp can travel back to it later.
-      if (FRIENDLY_SITES.has(camp.type.key)) {
-        const known = profileOf(player).sites;
-        const entry = `${camp.type.key}|${camp.x}|${camp.y}|${camp.z}`;
-        if (!known.includes(entry)) {
-          known.push(entry);
-          if (known.length > 24) known.shift();
-          touch(player);
-        }
-      }
-      const last = manned.get(key);
-      if (last !== undefined && system.currentTick - last < REFILL_TICKS) continue;
-      manned.set(key, system.currentTick);
-      const tier = tierFor(profileOf(player).level);
-      garrison(player.dimension, camp, tier);
-      sieges.set(key, { size: camp.type.garrison(tier).reduce((n, [, count]) => n + count, 0), tier, slain: 0 });
     }
   }
+}
+
+/**
+ * One region as seen by one player: builds its site if it came into range, discovers it and posts its garrison.
+ * @param {Player} player @param {number} rx @param {number} rz
+ */
+function visit(player, rx, rz) {
+  const px = player.location.x;
+  const pz = player.location.z;
+  let camp = campIn(rx, rz);
+  if (camp === undefined) {
+    const site = siteOf(rx, rz);
+    if (!site) {
+      remember(rx, rz, null);
+      return;
+    }
+    const spawn = world.getDefaultSpawnLocation();
+    if (Math.hypot(site.x - spawn.x, site.z - spawn.z) < SPAWN_CLEARANCE) {
+      remember(rx, rz, null);
+      return;
+    }
+    const distance = Math.hypot(site.x - px, site.z - pz);
+    if (distance > BUILD_FAR) return; // too far to be loaded
+    if (distance < site.type.radius + KEEP_CLEAR) return; // standing on the spot: wait until they step away
+    const built = buildSite(player.dimension, site);
+    if (built === undefined) return; // not loaded yet: tried again in a moment
+    remember(rx, rz, built);
+    camp = built;
+  }
+  if (!camp) return;
+  if (Math.hypot(camp.x - px, camp.z - pz) > WAKE_RANGE) return;
+  const key = `${rx},${rz}`;
+  if (!camp.found) {
+    camp.found = true;
+    remember(rx, rz, camp);
+    notify(player, `§6Discovered: §f${camp.type.name}`);
+    grantXp(player, 80, "discovery");
+    questEvent(player, "site");
+  }
+  // Everyone who visits a friendly camp can travel back to it later.
+  if (FRIENDLY_SITES.has(camp.type.key)) {
+    const known = profileOf(player).sites;
+    const entry = `${camp.type.key}|${camp.x}|${camp.y}|${camp.z}`;
+    if (!known.includes(entry)) {
+      known.push(entry);
+      if (known.length > 24) known.shift();
+      touch(player);
+    }
+  }
+  const last = manned.get(key);
+  if (last !== undefined && system.currentTick - last < REFILL_TICKS) return;
+  manned.set(key, system.currentTick);
+  const tier = tierFor(profileOf(player).level);
+  garrison(player.dimension, camp, tier);
+  sieges.set(key, { size: camp.type.garrison(tier).reduce((n, [, count]) => n + count, 0), tier, slain: 0 });
 }
 
 // A hostile camp is cleared when as many of its defenders have been slain as were posted.
@@ -756,7 +838,7 @@ system.runInterval(() => {
       console.warn(`[Overlord] site check failed: ${error}`);
     }
   }
-}, 5 * TICKS);
+}, 2 * TICKS);
 
 // ------------------------------------------------------------------- travel
 
@@ -790,12 +872,14 @@ registerMenu(
   (player) => `Travel (${waypoints(player).length})`,
   (player) => {
     const places = waypoints(player);
+    const lead = rumour(player);
     const form = new ActionFormData()
       .title("Travel")
       .body(
-        places.length > 0
+        (lead ? `${lead.replace("Word is there's", "Nearest site nobody has found yet:")}\n\n` : "") +
+          (places.length > 0
           ? `Return to a friendly camp you have discovered for ${TRAVEL_COST} Gold Coins. Your party follows.`
-          : "You have not discovered any friendly camps yet. Adventurers' camps, Kingdom and Empire army posts, Dwarven Forges, Lizardman villages and Carne Village can be travelled to once found."
+          : "You have not discovered any friendly camps yet. Adventurers' camps, Kingdom and Empire army posts, Dwarven Forges, Lizardman villages and Carne Village can be travelled to once found.")
       );
     for (const place of places) {
       const distance = Math.round(Math.hypot(place.x - player.location.x, place.z - player.location.z));
