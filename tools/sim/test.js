@@ -12,6 +12,20 @@ import * as forge from "./forge.js";
 import * as mount from "./mount.js";
 await import("./main.js"); // must load without touching the world
 
+// Everything random in the add-on goes through Math.random. A seeded generator makes each run identical
+// on every machine, so a rare roll (an elite spawn, a far-off site) cannot fail the suite by chance.
+// Set OVERLORD_TEST_SEED to try other sequences.
+{
+  let state = Number(process.env.OVERLORD_TEST_SEED ?? 7) >>> 0;
+  Math.random = () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function mkPlayer(name) {
   const props = new Map(), effects = new Map(), msgs = [], inv = [];
   const p = { id: name, name, typeId: "minecraft:player", isValid: true, location: { x: 0, y: 64, z: 0 }, msgs, inv, effects, bar: "",
@@ -204,8 +218,9 @@ assert.equal(spawnMob("overlord:goblin", 16, d).removed, false, "goblins are not
 d.getGameMode = () => "Creative"; assert.equal(spawnMob("overlord:death_knight", 80, d).removed, false, "creative players can spawn anything");
 d.getGameMode = () => "Survival";
 // mob levels follow the player: level 40 -> 28..48, with health boost and strength; bosses and non-monsters are left alone
-pd.level = 40; const dk = spawnMob("overlord:death_knight", 80, d);
-const dkLevel = rpg.mobLevel(dk); assert.ok(dkLevel >= 28 && dkLevel <= 48, String(dkLevel));
+// (the rolls are pinned to the middle here, so this one is an ordinary mob and not the one-in-twenty elite)
+const anyRoll = Math.random; Math.random = () => 0.5; pd.level = 40; const dk = spawnMob("overlord:death_knight", 80, d); Math.random = anyRoll;
+const dkLevel = rpg.mobLevel(dk); assert.ok(!rpg.isElite(dk) && dkLevel >= 28 && dkLevel <= 48, String(dkLevel));
 assert.equal(dk.effects.get("health_boost"), Math.floor(dkLevel / 10) - 1); assert.equal(dk.effects.get("strength"), dkLevel >= 30 ? 0 : undefined);
 assert.equal(rpg.mobLevel(spawnMob("overlord:ainz", 500, d)), 0, "bosses keep their own numbers");
 assert.equal(rpg.mobLevel(spawnMob("minecraft:cow", 10, d, ["mob"])), 0);
