@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:vestment_boots"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "A A",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:blessed_cloth"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:blessed_cloth"
+      }
+    ],
+    "result": {
+      "item": "overlord:vestment_boots",
+      "count": 1
+    }
+  }
+}

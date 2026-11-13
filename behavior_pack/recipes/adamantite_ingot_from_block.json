@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "overlord:adamantite_ingot_from_block"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "overlord:adamantite_block"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "overlord:adamantite_block"
+      }
+    ],
+    "result": {
+      "item": "overlord:adamantite_ingot",
+      "count": 9
+    }
+  }
+}

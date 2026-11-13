@@ -1,0 +1,28 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:negative_burst",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/negative_burst"
+      },
+      "geometry": {
+        "default": "geometry.overlord.negative_burst"
+      },
+      "scripts": {
+        "animate": [
+          "projectile_spin"
+        ]
+      },
+      "animations": {
+        "projectile_spin": "animation.overlord.projectile.spin"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ]
+    }
+  }
+}

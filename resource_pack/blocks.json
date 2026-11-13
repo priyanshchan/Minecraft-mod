@@ -1,0 +1,30 @@
+{
+  "format_version": "1.21.40",
+  "overlord:nazarick_bricks": {
+    "sound": "stone"
+  },
+  "overlord:data_crystal_block": {
+    "sound": "glass"
+  },
+  "overlord:nazarick_tiles": {
+    "sound": "stone"
+  },
+  "overlord:nazarick_lamp": {
+    "sound": "glass"
+  },
+  "overlord:adamantite_block": {
+    "sound": "metal"
+  },
+  "overlord:gilded_nazarick_bricks": {
+    "sound": "stone"
+  },
+  "overlord:cracked_nazarick_bricks": {
+    "sound": "stone"
+  },
+  "overlord:glacier_bricks": {
+    "sound": "glass"
+  },
+  "overlord:nazarick_pillar": {
+    "sound": "stone"
+  }
+}

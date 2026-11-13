@@ -1,0 +1,44 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:regalia_leggings",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_regalia_leggings"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.regalia_leggings.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:wearable": {
+        "slot": "slot.armor.legs",
+        "protection": 5
+      },
+      "minecraft:durability": {
+        "max_durability": 495
+      },
+      "minecraft:enchantable": {
+        "slot": "armor_legs",
+        "value": 15
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "overlord:soul_fragment"
+            ],
+            "repair_amount": "query.max_durability * 0.25"
+          }
+        ]
+      },
+      "minecraft:rarity": "rare"
+    }
+  }
+}

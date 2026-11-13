@@ -1,0 +1,28 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:frost_breath",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/frost_breath"
+      },
+      "geometry": {
+        "default": "geometry.overlord.frost_breath"
+      },
+      "scripts": {
+        "animate": [
+          "projectile_spin"
+        ]
+      },
+      "animations": {
+        "projectile_spin": "animation.overlord.projectile.spin"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ]
+    }
+  }
+}

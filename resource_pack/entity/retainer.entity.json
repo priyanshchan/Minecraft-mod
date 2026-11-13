@@ -1,0 +1,56 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:retainer",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "v0": "textures/entity/overlord/retainer_0",
+        "v1": "textures/entity/overlord/retainer_1",
+        "v2": "textures/entity/overlord/retainer_2",
+        "v3": "textures/entity/overlord/retainer_3",
+        "v4": "textures/entity/overlord/retainer_4",
+        "v5": "textures/entity/overlord/retainer_5",
+        "v6": "textures/entity/overlord/retainer_6",
+        "v7": "textures/entity/overlord/retainer_7",
+        "v8": "textures/entity/overlord/retainer_8",
+        "v9": "textures/entity/overlord/retainer_9",
+        "v10": "textures/entity/overlord/retainer_10",
+        "v11": "textures/entity/overlord/retainer_11"
+      },
+      "geometry": {
+        "v0": "geometry.overlord.retainer_0",
+        "v1": "geometry.overlord.retainer_1",
+        "v2": "geometry.overlord.retainer_2",
+        "v3": "geometry.overlord.retainer_3",
+        "v4": "geometry.overlord.retainer_4",
+        "v5": "geometry.overlord.retainer_5",
+        "v6": "geometry.overlord.retainer_6",
+        "v7": "geometry.overlord.retainer_7",
+        "v8": "geometry.overlord.retainer_8",
+        "v9": "geometry.overlord.retainer_9",
+        "v10": "geometry.overlord.retainer_10",
+        "v11": "geometry.overlord.retainer_11"
+      },
+      "scripts": {
+        "animate": [
+          "look_at_target",
+          "idle",
+          "walk",
+          "attack"
+        ]
+      },
+      "animations": {
+        "look_at_target": "animation.overlord.look_at_target",
+        "idle": "animation.overlord.idle",
+        "walk": "animation.overlord.walk",
+        "attack": "animation.overlord.attack"
+      },
+      "render_controllers": [
+        "controller.render.overlord.retainer"
+      ]
+    }
+  }
+}

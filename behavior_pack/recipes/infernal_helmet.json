@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "overlord:infernal_helmet"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "overlord:dark_warrior_helmet"
+      },
+      {
+        "item": "overlord:demon_heart"
+      },
+      {
+        "item": "minecraft:magma"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:magma"
+      }
+    ],
+    "result": {
+      "item": "overlord:infernal_helmet",
+      "count": 1
+    }
+  }
+}

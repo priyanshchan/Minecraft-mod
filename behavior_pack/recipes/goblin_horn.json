@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:goblin_horn"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "BEB",
+      "BGB",
+      " B "
+    ],
+    "key": {
+      "B": {
+        "item": "minecraft:bone"
+      },
+      "E": {
+        "item": "minecraft:emerald"
+      },
+      "G": {
+        "item": "minecraft:gold_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:emerald"
+      }
+    ],
+    "result": {
+      "item": "overlord:goblin_horn",
+      "count": 1
+    }
+  }
+}

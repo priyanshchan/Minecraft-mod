@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:kilineyram"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "F",
+      "A",
+      "S"
+    ],
+    "key": {
+      "F": {
+        "item": "overlord:soul_fragment"
+      },
+      "A": {
+        "item": "overlord:adamantite_ingot"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:soul_fragment"
+      }
+    ],
+    "result": {
+      "item": "overlord:kilineyram",
+      "count": 1
+    }
+  }
+}

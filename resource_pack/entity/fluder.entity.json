@@ -1,0 +1,38 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:fluder",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/fluder"
+      },
+      "geometry": {
+        "default": "geometry.overlord.fluder"
+      },
+      "scripts": {
+        "animate": [
+          "look_at_target",
+          "idle",
+          "robe_walk",
+          "attack"
+        ]
+      },
+      "animations": {
+        "look_at_target": "animation.overlord.look_at_target",
+        "idle": "animation.overlord.idle",
+        "robe_walk": "animation.overlord.robe_walk",
+        "attack": "animation.overlord.attack"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ],
+      "spawn_egg": {
+        "texture": "overlord_egg_fluder",
+        "texture_index": 0
+      }
+    }
+  }
+}

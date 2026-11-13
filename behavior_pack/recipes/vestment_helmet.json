@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:vestment_helmet"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "AAA",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:blessed_cloth"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:blessed_cloth"
+      }
+    ],
+    "result": {
+      "item": "overlord:vestment_helmet",
+      "count": 1
+    }
+  }
+}

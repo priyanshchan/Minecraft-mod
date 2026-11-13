@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:nazarick_tiles"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "SS",
+      "SS"
+    ],
+    "key": {
+      "S": {
+        "item": "overlord:nazarick_bricks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:nazarick_bricks"
+      }
+    ],
+    "result": {
+      "item": "overlord:nazarick_tiles",
+      "count": 4
+    }
+  }
+}

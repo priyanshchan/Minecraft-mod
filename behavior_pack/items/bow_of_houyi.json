@@ -1,0 +1,30 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:bow_of_houyi",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_bow_of_houyi"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.bow_of_houyi.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:rarity": "epic",
+      "minecraft:can_destroy_in_creative": false,
+      "minecraft:glint": true,
+      "minecraft:cooldown": {
+        "category": "overlord_houyi",
+        "duration": 0.8
+      }
+    }
+  }
+}

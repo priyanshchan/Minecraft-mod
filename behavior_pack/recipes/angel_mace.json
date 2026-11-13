@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:angel_mace"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "F",
+      "G",
+      "S"
+    ],
+    "key": {
+      "F": {
+        "item": "overlord:angel_feather"
+      },
+      "G": {
+        "item": "minecraft:gold_block"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:angel_feather"
+      }
+    ],
+    "result": {
+      "item": "overlord:angel_mace",
+      "count": 1
+    }
+  }
+}

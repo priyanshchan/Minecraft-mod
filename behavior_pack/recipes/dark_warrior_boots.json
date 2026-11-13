@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:dark_warrior_boots"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "A A",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:adamantite_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:adamantite_ingot"
+      }
+    ],
+    "result": {
+      "item": "overlord:dark_warrior_boots",
+      "count": 1
+    }
+  }
+}

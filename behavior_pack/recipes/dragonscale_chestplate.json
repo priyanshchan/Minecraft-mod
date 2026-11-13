@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:dragonscale_chestplate"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "A A",
+      "AAA",
+      "AAA"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:frost_dragon_scale"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:frost_dragon_scale"
+      }
+    ],
+    "result": {
+      "item": "overlord:dragonscale_chestplate",
+      "count": 1
+    }
+  }
+}

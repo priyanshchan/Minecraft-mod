@@ -1,0 +1,22 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:vampire_fang",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_vampire_fang"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.vampire_fang.name"
+      },
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

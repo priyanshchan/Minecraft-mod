@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:bonedragon_boots"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "A A",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:dragon_bone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:dragon_bone"
+      }
+    ],
+    "result": {
+      "item": "overlord:bonedragon_boots",
+      "count": 1
+    }
+  }
+}

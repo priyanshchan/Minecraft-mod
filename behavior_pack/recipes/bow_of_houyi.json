@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:bow_of_houyi"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " BT",
+      "B T",
+      " BT"
+    ],
+    "key": {
+      "B": {
+        "item": "minecraft:blaze_rod"
+      },
+      "T": {
+        "item": "minecraft:string"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:blaze_rod"
+      }
+    ],
+    "result": {
+      "item": "overlord:bow_of_houyi",
+      "count": 1
+    }
+  }
+}

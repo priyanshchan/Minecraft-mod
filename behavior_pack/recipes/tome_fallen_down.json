@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:tome_fallen_down"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "DCD",
+      "CBC",
+      "DCD"
+    ],
+    "key": {
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "D": {
+        "item": "minecraft:diamond_block"
+      },
+      "B": {
+        "item": "minecraft:book"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:data_crystal"
+      }
+    ],
+    "result": {
+      "item": "overlord:tome_fallen_down",
+      "count": 1
+    }
+  }
+}

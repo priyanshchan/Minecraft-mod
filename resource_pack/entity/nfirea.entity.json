@@ -1,0 +1,36 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:nfirea",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/nfirea"
+      },
+      "geometry": {
+        "default": "geometry.overlord.nfirea"
+      },
+      "scripts": {
+        "animate": [
+          "look_at_target",
+          "idle",
+          "walk"
+        ]
+      },
+      "animations": {
+        "look_at_target": "animation.overlord.look_at_target",
+        "idle": "animation.overlord.idle",
+        "walk": "animation.overlord.walk"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ],
+      "spawn_egg": {
+        "texture": "overlord_egg_nfirea",
+        "texture_index": 0
+      }
+    }
+  }
+}

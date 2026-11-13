@@ -1,0 +1,22 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:data_crystal",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_data_crystal"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.data_crystal.name"
+      },
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:beasthide_leggings"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "AAA",
+      "A A",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:beast_hide"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:beast_hide"
+      }
+    ],
+    "result": {
+      "item": "overlord:beasthide_leggings",
+      "count": 1
+    }
+  }
+}

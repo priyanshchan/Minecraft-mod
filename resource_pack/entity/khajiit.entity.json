@@ -1,0 +1,40 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:khajiit",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/khajiit"
+      },
+      "geometry": {
+        "default": "geometry.overlord.khajiit"
+      },
+      "scripts": {
+        "animate": [
+          "look_at_target",
+          "idle",
+          "walk",
+          "attack",
+          "cast"
+        ]
+      },
+      "animations": {
+        "look_at_target": "animation.overlord.look_at_target",
+        "idle": "animation.overlord.idle",
+        "walk": "animation.overlord.walk",
+        "attack": "animation.overlord.attack",
+        "cast": "animation.overlord.cast"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ],
+      "spawn_egg": {
+        "texture": "overlord_egg_khajiit",
+        "texture_index": 0
+      }
+    }
+  }
+}

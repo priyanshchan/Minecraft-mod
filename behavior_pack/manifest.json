@@ -1,0 +1,64 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Overlord: Tomb of Nazarick [BP]",
+    "description": "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. \u00a77v5.0.0",
+    "uuid": "e6440d11-49cb-4a78-994b-2621743284c3",
+    "version": [
+      5,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      21,
+      90
+    ]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "92b407c1-2afe-47be-96e5-2ca63d6e95e3",
+      "version": [
+        5,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "953c5275-23d2-4160-bd35-cc41791660c6",
+      "entry": "scripts/main.js",
+      "version": [
+        5,
+        0,
+        0
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "c0efa9f1-85eb-41e8-a663-b693b3f36197",
+      "version": [
+        5,
+        0,
+        0
+      ]
+    },
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.0.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "2.0.0"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      "Overlord Add-on contributors"
+    ],
+    "license": "MIT"
+  }
+}

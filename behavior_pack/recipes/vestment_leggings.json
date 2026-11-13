@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:vestment_leggings"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "AAA",
+      "A A",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:blessed_cloth"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:blessed_cloth"
+      }
+    ],
+    "result": {
+      "item": "overlord:vestment_leggings",
+      "count": 1
+    }
+  }
+}

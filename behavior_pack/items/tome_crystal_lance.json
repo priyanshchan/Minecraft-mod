@@ -1,0 +1,28 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:tome_crystal_lance",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_tome_crystal_lance"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.tome_crystal_lance.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "rare",
+      "minecraft:glint": true,
+      "minecraft:cooldown": {
+        "category": "overlord_lance",
+        "duration": 1.5
+      }
+    }
+  }
+}

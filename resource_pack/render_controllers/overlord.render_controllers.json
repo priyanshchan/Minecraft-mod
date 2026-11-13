@@ -1,0 +1,61 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.overlord.entity": {
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Texture.default"
+      ]
+    },
+    "controller.render.overlord.retainer": {
+      "arrays": {
+        "textures": {
+          "Array.skins": [
+            "Texture.v0",
+            "Texture.v1",
+            "Texture.v2",
+            "Texture.v3",
+            "Texture.v4",
+            "Texture.v5",
+            "Texture.v6",
+            "Texture.v7",
+            "Texture.v8",
+            "Texture.v9",
+            "Texture.v10",
+            "Texture.v11"
+          ]
+        },
+        "geometries": {
+          "Array.models": [
+            "Geometry.v0",
+            "Geometry.v1",
+            "Geometry.v2",
+            "Geometry.v3",
+            "Geometry.v4",
+            "Geometry.v5",
+            "Geometry.v6",
+            "Geometry.v7",
+            "Geometry.v8",
+            "Geometry.v9",
+            "Geometry.v10",
+            "Geometry.v11"
+          ]
+        }
+      },
+      "geometry": "Array.models[query.variant]",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.skins[query.variant]"
+      ]
+    }
+  }
+}

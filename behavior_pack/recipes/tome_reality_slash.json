@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:tome_reality_slash"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "DCD",
+      "CBC",
+      "DCD"
+    ],
+    "key": {
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "D": {
+        "item": "minecraft:amethyst_shard"
+      },
+      "B": {
+        "item": "minecraft:book"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:data_crystal"
+      }
+    ],
+    "result": {
+      "item": "overlord:tome_reality_slash",
+      "count": 1
+    }
+  }
+}

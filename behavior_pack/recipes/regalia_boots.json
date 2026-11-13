@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:regalia_boots"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "A A",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:soul_fragment"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:soul_fragment"
+      }
+    ],
+    "result": {
+      "item": "overlord:regalia_boots",
+      "count": 1
+    }
+  }
+}

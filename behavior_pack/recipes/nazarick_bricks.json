@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:nazarick_bricks"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "SSS",
+      "SOS",
+      "SSS"
+    ],
+    "key": {
+      "O": {
+        "item": "minecraft:obsidian"
+      },
+      "S": {
+        "item": "minecraft:stone_bricks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:obsidian"
+      }
+    ],
+    "result": {
+      "item": "overlord:nazarick_bricks",
+      "count": 8
+    }
+  }
+}

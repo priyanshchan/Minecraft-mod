@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:nazarick_lamp"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " S ",
+      "SGS",
+      " S "
+    ],
+    "key": {
+      "S": {
+        "item": "overlord:nazarick_bricks"
+      },
+      "G": {
+        "item": "minecraft:glowstone"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:nazarick_bricks"
+      }
+    ],
+    "result": {
+      "item": "overlord:nazarick_lamp",
+      "count": 2
+    }
+  }
+}

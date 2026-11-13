@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:dragonscale_boots"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "A A",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:frost_dragon_scale"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:frost_dragon_scale"
+      }
+    ],
+    "result": {
+      "item": "overlord:dragonscale_boots",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:dragonbone_blade"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "B",
+      "B",
+      "S"
+    ],
+    "key": {
+      "B": {
+        "item": "overlord:dragon_bone"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:dragon_bone"
+      }
+    ],
+    "result": {
+      "item": "overlord:dragonbone_blade",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:giants_maul",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_giants_maul"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.giants_maul.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:damage": 13,
+      "minecraft:can_destroy_in_creative": false,
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 15
+      },
+      "minecraft:rarity": "epic",
+      "minecraft:cooldown": {
+        "category": "overlord_quake",
+        "duration": 10.0
+      }
+    }
+  }
+}
