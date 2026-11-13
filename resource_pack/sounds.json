@@ -514,6 +514,138 @@
           "shoot": "random.bow"
         }
       },
+      "overlord:hellhound": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.75
+        ],
+        "events": {
+          "ambient": "mob.wither.ambient",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:shadow_demon": {
+        "volume": 1.0,
+        "pitch": [
+          1.4,
+          1.6
+        ],
+        "events": {
+          "ambient": "mob.zombie.say",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:evil_lord_wrath": {
+        "volume": 1.0,
+        "pitch": [
+          0.4,
+          0.5
+        ],
+        "events": {
+          "ambient": "mob.ravager.ambient",
+          "hurt": "mob.irongolem.hit",
+          "death": "mob.wither.death",
+          "step": "mob.irongolem.walk",
+          "shoot": "mob.ghast.fireball"
+        }
+      },
+      "overlord:archangel_flame": {
+        "volume": 1.0,
+        "pitch": [
+          1.3,
+          1.45
+        ],
+        "events": {
+          "hurt": "mob.irongolem.hit",
+          "death": "random.glass",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:dominion_authority": {
+        "volume": 1.0,
+        "pitch": [
+          0.8,
+          0.9
+        ],
+        "events": {
+          "hurt": "mob.irongolem.hit",
+          "death": "random.glass",
+          "step": "mob.irongolem.walk",
+          "shoot": "ambient.weather.lightning.impact"
+        }
+      },
+      "overlord:theocracy_priest": {
+        "volume": 1.0,
+        "pitch": [
+          0.9,
+          1.0
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "mob.shulker.shoot",
+          "cast.spell": "mob.evocation_illager.cast_spell",
+          "prepare.summon": "mob.evocation_illager.prepare_summon"
+        }
+      },
+      "overlord:nigun": {
+        "volume": 1.0,
+        "pitch": [
+          0.75,
+          0.85
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "mob.shulker.shoot",
+          "cast.spell": "mob.evocation_illager.cast_spell",
+          "prepare.summon": "mob.evocation_illager.prepare_summon"
+        }
+      },
+      "overlord:climb": {
+        "volume": 1.0,
+        "pitch": [
+          1.05,
+          1.15
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:zesshi": {
+        "volume": 1.0,
+        "pitch": [
+          1.2,
+          1.3
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:eclair": {
+        "volume": 1.0,
+        "pitch": [
+          1.5,
+          1.7
+        ],
+        "events": {
+          "ambient": "mob.rabbit.idle",
+          "hurt": "mob.rabbit.hurt",
+          "death": "mob.rabbit.death",
+          "step": "mob.zombie.step"
+        }
+      },
       "overlord:war_troll": {
         "volume": 1.0,
         "pitch": [

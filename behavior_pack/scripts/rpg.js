@@ -2,7 +2,7 @@
 // Levels and XP, stat points, mana, classes, guild quests with adventurer ranks,
 // an action-bar HUD, party XP sharing and a level tag under player names.
 // Uses only stable @minecraft/server 2.0.0 and @minecraft/server-ui 2.0.0 APIs.
-import { world, system, DisplaySlotId, EntityDamageCause, ItemStack } from "@minecraft/server";
+import { world, system, DisplaySlotId, EntityDamageCause, EquipmentSlot, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 
 const NS = "overlord";
@@ -28,7 +28,7 @@ const PARTY_SHARE = 0.5;
  *   quest: ActiveQuest | null,
  *   spells: string[], slots: string[], slot: number, casts: Record<string, number>,
  *   party: any[], stance: string, kills: Record<string, number>, rep: Record<string, number>,
- *   daily: object, title: string, titles: string[],
+ *   daily: object, title: string, titles: string[], sites: string[],
  * }} Profile
  */
 
@@ -77,6 +77,9 @@ const QUESTS = [
   { key: "elder_liches", title: "Silence the Liches", target: id("elder_lich"), what: "Elder Liches", count: 5, coins: 14, xp: 200, rank: 1 },
   { key: "death_knights", title: "Knights of Death", target: id("death_knight"), what: "Death Knights", count: 5, coins: 20, xp: 350, rank: 2 },
   { key: "soul_eaters", title: "Devourers of Souls", target: id("soul_eater"), what: "Soul Eaters", count: 5, coins: 22, xp: 400, rank: 2 },
+  { key: "shadow_demons", title: "Things in the Dark", target: id("shadow_demon"), what: "Shadow Demons", count: 8, coins: 16, xp: 260, rank: 1 },
+  { key: "hellhounds", title: "Hounds of the Pit", target: id("hellhound"), what: "Hellhounds", count: 6, coins: 22, xp: 380, rank: 2 },
+  { key: "priests", title: "The Sunlight Scripture", target: id("theocracy_priest"), what: "Sunlight Scripture Priests", count: 6, coins: 22, xp: 380, rank: 2 },
   { key: "vampire_brides", title: "Brides of the Night", target: id("vampire_bride"), what: "Vampire Brides", count: 5, coins: 24, xp: 420, rank: 2 },
   { key: "clementine", title: "The Fallen Scripture", target: id("clementine"), what: "Clementine", count: 1, coins: 24, xp: 400, rank: 2 },
   { key: "narberal", title: "Storm Maid", target: id("narberal"), what: "Narberal Gamma", count: 1, coins: 32, xp: 700, rank: 3 },
@@ -86,8 +89,12 @@ const QUESTS = [
   { key: "solution", title: "The Hungry Slime", target: id("solution"), what: "Solution Epsilon", count: 1, coins: 32, xp: 700, rank: 3 },
   { key: "yuri", title: "Captain of the Pleiades", target: id("yuri"), what: "Yuri Alpha", count: 1, coins: 36, xp: 800, rank: 4 },
   { key: "war_trolls", title: "Troll Hunt", target: id("war_troll"), what: "War Trolls", count: 3, coins: 36, xp: 800, rank: 3 },
+  { key: "nigun", title: "Captain of the Scripture", target: id("nigun"), what: "Nigun Grid Luin", count: 1, coins: 36, xp: 800, rank: 3 },
   { key: "fluder", title: "The Triad Caster", target: id("fluder"), what: "Fluder Paradyne", count: 1, coins: 36, xp: 800, rank: 3 },
   { key: "gargantua", title: "The Stone Colossus", target: id("gargantua"), what: "Gargantua", count: 1, coins: 56, xp: 1500, rank: 5 },
+  { key: "dominion", title: "The Highest Angel", target: id("dominion_authority"), what: "Dominion Authority", count: 1, coins: 52, xp: 1400, rank: 4 },
+  { key: "evil_lord", title: "Lord of Wrath", target: id("evil_lord_wrath"), what: "Evil Lord Wrath", count: 1, coins: 60, xp: 1800, rank: 5 },
+  { key: "zesshi", title: "Certain Death", target: id("zesshi"), what: "Zesshi Zetsumei", count: 1, coins: 64, xp: 2400, rank: 6 },
   { key: "frost_dragon", title: "Lord of the White Peaks", target: id("frost_dragon"), what: "the Frost Dragon", count: 1, coins: 60, xp: 1800, rank: 5 },
   { key: "cocytus", title: "Ruler of the Frozen Glacier", target: id("cocytus"), what: "Cocytus", count: 1, coins: 48, xp: 1200, rank: 4 },
   { key: "shalltear", title: "The Bloody Valkyrie", target: id("shalltear"), what: "Shalltear Bloodfallen", count: 1, coins: 48, xp: 1200, rank: 4 },
@@ -111,6 +118,10 @@ const KILL_XP = {
   [id("cz_delta")]: 300,
   [id("gargantua")]: 700,
   [id("frost_dragon")]: 900,
+  [id("evil_lord_wrath")]: 900,
+  [id("zesshi")]: 1000,
+  [id("dominion_authority")]: 700,
+  [id("nigun")]: 250,
   [id("war_troll")]: 90,
   [id("fluder")]: 250,
   [id("evileye")]: 250,
@@ -153,6 +164,14 @@ export const TIPS = {
   [id("war_troll")]: "War Trolls heal their wounds as you watch. Hit hard and do not let up.",
   [id("vampire_bride")]: "Vampire Brides drink back the blood they spill. Holy magic burns them.",
   [id("frost_dragon")]: "The Frost Dragon breathes ice from afar and shrugs off the cold. Fight it up close with fire.",
+  [id("hellhound")]: "Hellhounds leap and set you alight. Ice and holy magic hurt them; fire does nothing.",
+  [id("shadow_demon")]: "Shadow Demons are quick but frail. Holy magic tears them apart.",
+  [id("evil_lord_wrath")]: "Evil Lord Wrath is wreathed in flame. Bring ice, and keep moving between his fireballs.",
+  [id("theocracy_priest")]: "Scripture priests call angels to fight for them. Kill the priest first.",
+  [id("archangel_flame")]: "Angels shrug off holy magic and fire. Darkness is what they fear.",
+  [id("nigun")]: "Nigun hides behind his angels. Reach him and the rest falls apart.",
+  [id("dominion_authority")]: "Dominion Authority smites from afar. Dark magic wounds it most.",
+  [id("zesshi")]: "Zesshi turns aside nearly a third of every blow and never tires. There is no trick - only strength.",
   [id("ainz")]: "Ainz raises Death Knights and withers what he touches. Holy magic bites deepest.",
   "minecraft:zombie": "Zombies burn in daylight. Holy magic hurts all undead.",
   "minecraft:skeleton": "Skeletons keep their distance. A shield or a charge ends it.",
@@ -238,7 +257,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [] };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [] };
 }
 
 /**
@@ -556,6 +575,20 @@ export function mobLevel(mob) {
 }
 
 /**
+ * Reinforcement level (+0 to +5) of the weapon a player is holding.
+ * @param {import("@minecraft/server").Player} player
+ */
+export function heldPlus(player) {
+  try {
+    const held = player.getComponent("minecraft:equippable")?.getEquipment(EquipmentSlot.Mainhand);
+    const plus = held?.getDynamicProperty("overlord:plus");
+    return typeof plus === "number" ? plus : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Whether the world director made this mob an elite.
  * @param {import("@minecraft/server").Entity} mob
  */
@@ -724,7 +757,7 @@ world.afterEvents.entityHurt.subscribe((event) => {
     const player = /** @type {import("@minecraft/server").Player} */ (attacker);
     const p = profileOf(player);
 
-    let factor = p.str * 0.02 + (p.cls === "warrior" ? 0.2 : 0) + knowledgeOf(p, victim.typeId) * 0.05;
+    let factor = p.str * 0.02 + (p.cls === "warrior" ? 0.2 : 0) + knowledgeOf(p, victim.typeId) * 0.05 + heldPlus(player) * 0.06;
     if (p.cls === "cleric" && victim.matches({ families: ["undead"] })) factor += 0.3;
     let crit = false;
     // Agility gives everyone a small critical chance; assassins add 25% on top.
@@ -991,6 +1024,9 @@ function openHelp(player) {
         "§eElites§r: about one monster in twenty spawns as an elite - tougher, five levels higher, worth triple XP and carrying coins and a Data Crystal.\n\n" +
         "§eDaily bounty§r: every in-game day the guild posts one bounty for everyone. Finish bounties on consecutive days to build a streak worth up to +50%.\n\n" +
         "§eTitles§r: great deeds earn titles; wear one in front of your name from this menu.\n\n" +
+        "§eWorld bosses§r: some mornings a great foe appears near a strong adventurer and the whole world is told. Everyone nearby when it falls is rewarded.\n\n" +
+        "§eReinforcing§r: stand near a Dwarf Runesmith and choose Reinforce weapon to raise the weapon in your hand up to +5 (6% melee damage each) for Gold Coins and adamantite.\n\n" +
+        "§eTravel§r: friendly camps you have discovered can be returned to from the Travel entry for 5 Gold Coins.\n\n" +
         "§eCamps§r: the wilds hold camps and outposts of the factions - Kingdom, Empire, goblins, bandits, adventurers, lizardmen and Nazarick. Finding one gives XP; adventurers, guards and soldiers may tell you where the nearest lies. Cleared camps are re-manned after ten minutes.\n\n" +
         "§eCombat§r: hitting a mob shows its remaining health. Agility adds a 0.4% critical chance per point (+50% damage). Dying costs a tenth of the XP gathered towards your next level.\n\n" +
         "§eSpells§r: open the Grimoire to learn tier magic with Data Crystals and assign up to four spells; cast them with the Magic Wand (sneak + use switches spell). Each spell grows stronger with use.\n\n" +

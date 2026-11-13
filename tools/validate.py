@@ -43,6 +43,7 @@ VANILLA = {
         "cobblestone_wall", "white_wool", "blue_wool", "red_wool", "brown_wool", "green_wool", "black_wool",
         "furnace", "anvil", "gold_block", "blue_ice", "packed_ice", "cobblestone", "mossy_cobblestone",
         "deepslate_bricks", "iron_bars", "smooth_stone",
+        "obsidian", "netherrack", "magma", "crying_obsidian", "yellow_wool", "soul_lantern",
     },
     "script_entity": {"minecraft:villager_v2", "minecraft:zombie", "minecraft:lightning_bolt"},
     # verified against @minecraft/vanilla-data 1.26.60
@@ -62,7 +63,7 @@ VANILLA = {
         "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
         "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
         "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool", "minecraft:blue_ice",
-        "minecraft:coal",
+        "minecraft:coal", "minecraft:netherrack", "minecraft:quartz_block", "minecraft:blaze_powder",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
     "sound": {
@@ -80,7 +81,7 @@ VANILLA = {
         "note.bell", "mob.irongolem.throw", "dig.grass", "random.fizz", "crossbow.shoot",
         "beacon.activate", "item.trident.riptide_1", "ambient.weather.thunder", "random.glass",
         "random.levelup", "mob.zombie.say", "mob.wither.shoot", "mob.ravager.ambient", "raid.horn",
-        "mob.ravager.roar", "random.totem", "horn.call.0", "random.anvil_land",
+        "mob.ravager.roar", "random.totem", "horn.call.0", "random.anvil_land", "random.anvil_use",
     },
     # verified against the vanilla particle definitions
     "particle": {
@@ -412,7 +413,7 @@ def main():
     for name in sorted(set(re.findall(r'\bid\("([a-z0-9_]+)"\)', script))):
         ident = f"{NS}:{name}"
         events = {e for d in entities.values() for e in d.get("events", {})}
-        check(ident in items or ident in entities or ident in events or ident in blocks or name == "elite_foes",
+        check(ident in items or ident in entities or ident in events or ident in blocks or name in ("elite_foes", "world_bosses"),
               f"scripts: unknown identifier {ident}")
     for name in sorted(set(re.findall(r'\bmc\("([a-z_]+)"\)', script))):
         check(name in VANILLA["script_block"] or f"minecraft:{name}" in VANILLA["item"],

@@ -62,6 +62,16 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 | **War Troll** | 120 | Huge brute in hills, taiga and forests; regenerates constantly | Troll Blood, Gold Coins, Leather |
 | **Vampire Bride** | 60 | Fast night stalker that heals itself with every hit | Vampire Fangs, Gold Coins |
 | **Dwarf Runesmith** | 40 | Peaceful merchant found at Dwarven Forges; sells adamantite, iron and the Runic Hammer | — |
+| **Evil Lord Wrath** (boss bar) | 650 | Demon lord at Demon Gates; hurls fireballs from range, then closes in with burning claws; immune to fire, weak to ice | Demon Heart, Hellfire Blade, Guardian Crests |
+| **Zesshi Zetsumei** (boss bar) | 600 | The Black Scripture's strongest; 18-damage scythe and takes 30% less damage from everything | Charon's Guidance, Guardian Crests |
+| **Dominion Authority** (boss bar) | 500 | Highest angel; smites with lightning from afar; nearly immune to holy magic, weak to dark | Angel Feathers, Guardian Crests |
+| **Nigun Grid Luin** | 180 | Captain of the Sunlight Scripture; magic bullets and summoned angels; leads Scripture camps | Sealing Crystal, Blessed Cloth |
+| **Sunlight Scripture Priest** | 40 | Hostile caster, roams at night in groups of 2–3 (from level 10) and calls Archangel Flames | Blessed Cloth, Gold Coins |
+| **Archangel Flame** | 50 | Angel summoned by the Scripture; immune to fire; can be summoned as your ally | Angel Feathers |
+| **Hellhound** | 45 | Night demon (from level 12) that leaps and sets you on fire; immune to fire, weak to ice and holy | Blaze Powder, Gold Coins |
+| **Shadow Demon** | 35 | Fast, frail night demon (from level 8); weak to holy | Data Crystals, Gold Coins |
+| **Climb** | 70 | Neutral Kingdom swordsman found in plains; hunts monsters | Iron |
+| **Eclair** | 20 | Peaceful penguin butler of Nazarick, found in cold biomes | — |
 | **Brain Unglaus** | 110 | Neutral swordsman found in taiga; hunts monsters | Brain's Katana |
 | **Zaryusu Shasha** | 100 | Neutral lizardman found in swamps; hunts monsters, chilling strikes | Frost Pain |
 | **Nfirea Bareare** | 30 | Peaceful herbalist found in plains; trades potions and ingredients for Gold Coins | — |
@@ -127,6 +137,13 @@ Every mob has its own spawn egg.
 | **Bow of Houyi** | Use: looses an arrow of sunfire at the mob you look at (12 fire damage, 40 blocks, 0.8 s between shots). Three blaze rods and three strings in a bow shape |
 | **Ranger's Leathers** | Light early armour made from leather in the usual shapes. Full set: Speed and Jump Boost |
 | **Crimson Valkyrie armour** | Upgrade of a Dark Warrior piece with two Vampire Fangs and a redstone block. Full set: melee blows heal you for a tenth of their damage |
+| **Charon's Guidance** | 14 damage war scythe. Use: *Reap* — strikes everything within 5 blocks and kills outright any lesser foe below a fifth of its health. Dropped by Zesshi |
+| **Hellfire Blade** | 12 damage, sets foes alight. Use: *Hellfire Wall* — a 12-block line of flame. Dropped by Evil Lord Wrath |
+| **Angel's Mace** | 9 damage; undead are set on holy fire and struck a second time. Angel Feather / gold block / stick in a column |
+| **Sealing Crystal** | Single use: releases up to three Archangel Flames that fight for you for 2 minutes. Dropped by Nigun |
+| **Infernal armour** | Upgrade of a Dark Warrior piece with a Demon Heart and a magma block. Full set: Fire Resistance, Strength, and melee attackers are set on fire |
+| **Scripture Vestments** | Light armour made from Blessed Cloth in the usual shapes. Full set: Regeneration |
+| Angel Feather, Demon Heart, Blessed Cloth | Crafting materials from angels, Evil Lord Wrath and Scripture priests |
 | **Tome: Create Undead** | Summons a Death Knight that follows and defends you for 5 minutes (max. 3) |
 | **Minor Healing Potion** | Drink for instant health and regeneration |
 | **Dark Warrior armour** | Helmet, chestplate, leggings, boots (netherite-level protection). Full set grants Strength and Resistance |
@@ -162,7 +179,7 @@ character menu.
 - **Class skills:** sneak and use the plate to trigger your class's active skill (45 s cooldown) — Fortress
   (Warrior: Resistance II), Mana Surge (Magic Caster: refills mana), Shadow Step (Assassin: invisible and
   fast), Sanctuary (Cleric: heals you and nearby players).
-- **Guild quests:** 28 kill requests, one at a time, paying Gold Coins and XP. Completed quests raise your
+- **Guild quests:** 35 kill requests, one at a time, paying Gold Coins and XP. Completed quests raise your
   adventurer rank — Copper, Iron, Silver, Gold, Platinum, Mithril, Orichalcum, Adamantite — which unlocks
   harder requests, up to defeating Ainz Ooal Gown.
 - **Party play:** players within 24 blocks of a kill receive half its XP and quest credit.
@@ -209,11 +226,25 @@ sticks in a flag shape).
 - **Elite mobs:** about one levelled monster in twenty spawns as an elite — five levels higher, with 10 extra
   hearts, more damage and Resistance. Elites are marked in the target readout, give triple XP and drop Gold
   Coins and a Data Crystal.
-- **Titles:** eleven titles are earned through deeds (Goblin Slayer, Undead Bane, Elite Hunter, Bounty Hunter,
-  Commander, Archmage, Giant Killer, Dragon Slayer, Guardian's Bane, Adamantite Adventurer, Rival of the
+- **Titles:** thirteen titles are earned through deeds (Goblin Slayer, Undead Bane, Demon Hunter, World's Shield,
+  Elite Hunter, Bounty Hunter, Commander, Archmage, Giant Killer, Dragon Slayer, Guardian's Bane, Adamantite Adventurer, Rival of the
   Sorcerer King). Each pays 10 Gold Coins when earned, and one can be worn in front of your name.
 
 All three are reached from the Adventurer's Plate menu.
+
+### World bosses, reinforcing and travel
+
+- **World bosses:** once an in-game day there is a 30% chance that a boss appears 36 blocks from a random
+  overworld player of level 25 or higher, and every player is told who it is and in which direction. Below
+  level 50 it is Gargantua, Dominion Authority or Evil Lord Wrath; from level 50 the Frost Dragon, Evil Lord
+  Wrath or Zesshi. Every player within 64 blocks when it dies receives 30 Gold Coins, 6 Data Crystals and
+  1500 XP on top of its normal drops.
+- **Reinforcing weapons:** stand within 10 blocks of a Dwarf Runesmith, hold one of the add-on's weapons and
+  choose *Reinforce weapon* in the plate menu. Each level adds 6% melee damage, up to +5, and is written on
+  the item. Level *n* costs 15 × *n* Gold Coins and *n* Adamantite Ingots (75 coins and 5 ingots for +5).
+- **Travel:** friendly sites you have visited (Adventurers' Camps, Kingdom Army Camps, Empire Outposts,
+  Dwarven Forges and Lizardman Villages) are remembered — the latest 24. The *Travel* entry in the plate menu
+  takes you back to one for 5 Gold Coins, within the overworld.
 
 ### Living world
 
@@ -221,7 +252,8 @@ All three are reached from the Adventurer's Plate menu.
   within 64 blocks). Every 10 levels adds 2 hearts, levels 30/60/90 add Strength I/II/III, and each level adds
   3% XP. The level shows next to the mob's name when you hit it. Bosses keep their own numbers.
 - **Level-gated spawns:** dangerous mobs only appear once someone nearby is strong enough — Skeleton Mage 3,
-  Ogre 4, Elder Lich 5, Death Knight 8, Clementine 10, Soul Eater 12, Fluder 15. Raids, patrols, summons and
+  Ogre 4, Elder Lich 5, Death Knight 8, Shadow Demon 8, Clementine 10, Scripture Priest 10, Hellhound 12,
+  Soul Eater 12, Fluder 15. Raids, patrols, summons and
   creative-mode spawning are not affected.
 - **Night patrols:** from level 5, each night has a 35% chance that Nazarick sends a patrol towards you. Its
   make-up follows your level (5+, 20+, 50+).
@@ -233,7 +265,7 @@ All three are reached from the Adventurer's Plate menu.
   projectile damage and its human victims rise as zombies.
 - **Biomes:** goblins keep to forests, plains and taiga; ogres to plains, forests, hills and savanna; lizardmen
   to swamps; Quagoa underground.
-- **Dialogue:** talk to adventurers, guards, Gazef, Brain, Zaryusu or Evileye for a line of advice.
+- **Dialogue:** talk to adventurers, guards, Gazef, Climb, Brain, Zaryusu, Evileye or Eclair for a line of advice.
 
 ### Camps and outposts
 
@@ -251,6 +283,9 @@ guards and soldiers will sometimes tell you where the nearest undiscovered one l
 | **Empire Outpost** | Stone watchtower, low wall, banner, chest | 4–6 Imperial Knights |
 | **Nazarick Outpost** | Dais with pillars, lamps and an altar, crystal chest | Old Guarders and Skeleton Mages; Death Knights, Elder Liches and a Soul Eater at higher levels |
 | **Lizardman Village** | Three mud huts, campfire, fish chest | 5 Lizardman Warriors |
+| **Sunlight Scripture Camp** | Two white tents, field altar, yellow banners, chest | 3 Priests; Archangel Flames and Nigun at higher levels |
+| **Demon Gate** | Dead obsidian gate inside a ring of magma, soul fires, chest | Shadow Demons; Hellhounds from level 20; Evil Lord Wrath from level 50 |
+| **Katze Graveyard** | Rows of graves inside a low wall, soul lanterns, chest | Old Guarders and a Skeleton Mage; Elder Liches, Vampire Brides and Death Knights at higher levels |
 | **Dwarven Forge** | Deepslate smithy with furnaces and an anvil, ore chest | 1 Dwarf Runesmith (merchant) |
 | **Troll Den** | Ring of boulders, bones, campfire, loot chest | 1 War Troll; more trolls and Ogres at higher levels |
 | **Dragon's Hoard** | Ice spires around a pile of gold, rich treasure chest | Skeleton Mages below level 20; the Frost Dragon from level 20 |
@@ -277,15 +312,18 @@ gold ingot / stick in a column).
 | --- | --- |
 | 1 | Magic Arrow, Light Healing, Sleep |
 | 2 | Shock Wave, Reinforce Armor, Lesser Strength, Acid Arrow, Thunderlance |
-| 3 | Fireball, Lightning, Freezing Bullet, Fly, Haste |
-| 4 | Ice Lance, Regenerate, Holy Ray |
+| 3 | Fireball, Lightning, Freezing Bullet, Fly, Haste, Summon Undead 3rd Tier (2 Old Guarders, 2 min) |
+| 4 | Ice Lance, Regenerate, Holy Ray, Summon Angel 4th Tier (Archangel Flame, 2 min) |
 | 5 | Dragon Lightning (jumps to 4 mobs), Dimensional Move, Fire Rain, Sand Field: All |
-| 6 | Heal (you and nearby players), Thousand Bone Lance, Ice Pillar, Wall of Hell |
+| 6 | Heal (you and nearby players), Thousand Bone Lance, Ice Pillar, Wall of Hell, Summon Undead 6th Tier (Death Knight, 5 min) |
 | 7 | Chain Dragon Lightning (8 mobs), Napalm, Hell Flame, Holy Smite |
 | 8 | Gravity Maelstrom (drags mobs in), Greater Full Potential, Death, Energy Drain |
 | 9 | Vermilion Nova, Call Greater Thunder, Grasp Heart |
 | 10 | Reality Slash, Time Stop, Meteor Fall, Nuclear Blast, Implosion |
 | Super | Fallen Down, Ia Shub-Niggurath, Sword of Damocles |
+
+Summoned creatures follow you and attack monsters. You can command four at a time between summoning spells
+and Sealing Crystals; Death Knights from the Tome: Create Undead are counted separately.
 
 Spell names and tiers follow the Overlord fan wiki's Tier Spells and character pages where it lists them;
 the in-game effects are this add-on's own interpretation.
@@ -323,7 +361,8 @@ with Guardian Crests and Soul Fragments at the higher tiers). The raid fails if 
 3. Craft a **guardian sigil**: 4 data crystals in the corners, 1 gold coin in the centre and 4 of the guardian's material on the edges —
    obsidian (Albedo), redstone block (Shalltear), packed ice (Cocytus), magma block (Demiurge), iron block (Sebas),
    copper block (Narberal Gamma), gold block (Pandora's Actor), oak log (Aura), moss block (Mare), gunpowder (CZ2128 Delta), bone block (Lupusregina), string (Entoma),
-   slime ball (Solution), iron ingot (Yuri), stone (Gargantua), blue ice (Frost Dragon).
+   slime ball (Solution), iron ingot (Yuri), stone (Gargantua), blue ice (Frost Dragon), netherrack (Evil Lord Wrath),
+   glowstone (Dominion Authority), block of quartz (Zesshi).
 4. Defeat the guardians for their weapons and **Guardian Crests**.
 5. Craft the **Sigil of Ainz Ooal Gown** (4 crests in the corners, 4 data crystals on the edges, diamond block in the centre) and face the Overlord.
 
@@ -347,7 +386,10 @@ Horn of the Goblin General (same shape with an emerald in place of the crystal),
 Scroll: Rebirth (paper + golden apple + data crystal),
 Gilded Nazarick Bricks (3 Nazarick Bricks + gold ingot in a 2×2 → 3), Cracked Nazarick Bricks (brick + gunpowder),
 Glacier Bricks (2×2 packed ice → 4),
-World Champion armour (matching Dark Warrior piece + diamond block + Guardian Crest, any arrangement).
+World Champion armour (matching Dark Warrior piece + diamond block + Guardian Crest, any arrangement),
+Infernal armour (matching Dark Warrior piece + Demon Heart + magma block, any arrangement),
+Scripture Vestments (the usual armour shapes with Blessed Cloth),
+Angel's Mace (Angel Feather / gold block / stick in a column).
 
 ## Repository layout
 
@@ -362,7 +404,7 @@ tools/test_rpg.py  runs the script logic against a mock of the game API (needs N
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers) and `guild.js` (daily bounty, titles) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles) and `forge.js` (weapon reinforcement) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

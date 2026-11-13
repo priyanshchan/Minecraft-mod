@@ -4,7 +4,9 @@
 // built from blocks the first time a player explores near it, and its garrison is
 // posted - and later replenished - when a player comes close.
 import { world, system, BlockVolume, ItemStack } from "@minecraft/server";
-import { addRep, creditedPlayer, giveItem, grantXp, notify, profileOf } from "./rpg.js";
+import { ActionFormData } from "@minecraft/server-ui";
+import { addRep, creditedPlayer, giveItem, grantXp, notify, profileOf, registerMenu, touch } from "./rpg.js";
+import { countItem, takeItem } from "./spells.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -232,6 +234,70 @@ export const SITES = [
     garrison: () => [[id("lizardman"), 5]],
   },
   {
+    key: "theocracy_camp", name: "Sunlight Scripture Camp", weight: 8, radius: 7, pad: mc("grass_path"),
+    build(b) {
+      b.tent(-4, 1, mc("white_wool"));
+      b.tent(4, 1, mc("white_wool"));
+      b.fill(-1, 0, -5, 1, 0, -5, mc("smooth_stone")); // field altar
+      b.set(0, 1, -5, mc("lantern"));
+      b.flag(-6, -6, mc("yellow_wool"));
+      b.flag(6, -6, mc("yellow_wool"));
+      b.campfire(0, -1);
+      b.chest(0, 0, 5, [[id("blessed_cloth"), 1, 4], [mc("gold_ingot"), 1, 4], [id("red_potion"), 1, 3], [id("yggdrasil_gold_coin"), 3, 8], [id("scroll_of_heavy_recover"), 0, 1]]);
+    },
+    garrison: (tier) =>
+      tier === 0
+        ? [[id("theocracy_priest"), 3]]
+        : [[id("theocracy_priest"), 3], [id("archangel_flame"), 1 + tier], [id("nigun"), 1]],
+  },
+  {
+    key: "demon_gate", name: "Demon Gate", weight: 7, radius: 7, pad: mc("netherrack"),
+    build(b) {
+      b.fill(-2, 0, 0, 2, 0, 0, mc("obsidian")); // a dead gate frame
+      b.fill(-2, 1, 0, -2, 4, 0, mc("obsidian"));
+      b.fill(2, 1, 0, 2, 4, 0, mc("obsidian"));
+      b.fill(-2, 5, 0, 2, 5, 0, mc("crying_obsidian"));
+      for (let i = 0; i < 8; i++) { // ritual ring
+        const a = (i / 8) * Math.PI * 2;
+        b.set(Math.round(Math.cos(a) * 6), 0, Math.round(Math.sin(a) * 6), i % 2 ? mc("magma") : mc("obsidian"));
+      }
+      b.set(-4, 0, -3, mc("soul_campfire"));
+      b.set(4, 0, -3, mc("soul_campfire"));
+      b.set(3, 0, 3, mc("bone_block"));
+      b.chest(0, 0, -4, [[mc("blaze_powder"), 2, 6], [mc("gold_ingot"), 1, 4], [id("data_crystal"), 2, 5], [id("yggdrasil_gold_coin"), 4, 10], [id("demon_heart"), 0, 1]]);
+    },
+    garrison: (tier) =>
+      tier === 0
+        ? [[id("shadow_demon"), 3]]
+        : tier === 1
+          ? [[id("hellhound"), 3], [id("shadow_demon"), 2]]
+          : [[id("evil_lord_wrath"), 1], [id("hellhound"), 2]],
+  },
+  {
+    key: "graveyard", name: "Katze Graveyard", weight: 8, radius: 7, pad: mc("coarse_dirt"),
+    build(b) {
+      for (const x of [-5, -2, 1, 4]) { // rows of graves
+        for (const z of [-4, 0, 4]) {
+          b.set(x, 0, z, mc("mossy_cobblestone"));
+          b.set(x, 0, z - 1, mc("cobblestone_wall")); // headstone
+        }
+      }
+      b.fill(-7, 0, -7, 7, 0, -7, mc("cobblestone_wall"));
+      b.fill(-7, 0, 7, -1, 0, 7, mc("cobblestone_wall"));
+      b.fill(1, 0, 7, 7, 0, 7, mc("cobblestone_wall"));
+      b.set(-7, 1, -7, mc("soul_lantern"));
+      b.set(7, 1, -7, mc("soul_lantern"));
+      b.set(6, 0, 2, mc("bone_block"));
+      b.chest(6, 0, -5, [[mc("bone"), 3, 8], [id("soul_fragment"), 0, 3], [id("data_crystal"), 1, 4], [id("yggdrasil_gold_coin"), 3, 8], [id("vampire_fang"), 0, 2]]);
+    },
+    garrison: (tier) =>
+      tier === 0
+        ? [[id("old_guarder"), 4], [id("skeleton_mage"), 1]]
+        : tier === 1
+          ? [[id("old_guarder"), 3], [id("elder_lich"), 1], [id("vampire_bride"), 2]]
+          : [[id("death_knight"), 2], [id("vampire_bride"), 2], [id("elder_lich"), 2]],
+  },
+  {
     key: "dwarven_forge", name: "Dwarven Forge", weight: 8, radius: 6, pad: mc("smooth_stone"),
     build(b) {
       b.walls(-3, 0, -3, 3, 3, 3, mc("deepslate_bricks"));
@@ -430,7 +496,11 @@ const manned = new Map();
 /** @type {Map<string, { size: number, tier: number, slain: number }>} */
 const sieges = new Map();
 /** Sites whose garrison is hostile: clearing them out is rewarded. */
-const HOSTILE_SITES = new Set(["goblin_camp", "bandit_camp", "nazarick_outpost", "troll_den", "dragon_hoard"]);
+const HOSTILE_SITES = new Set(["goblin_camp", "bandit_camp", "nazarick_outpost", "troll_den", "dragon_hoard", "theocracy_camp", "demon_gate",
+  "graveyard"]);
+/** Sites a player can travel back to once discovered. */
+const FRIENDLY_SITES = new Set(["adventurer_camp", "kingdom_camp", "empire_outpost", "dwarven_forge", "lizardman_village"]);
+export const TRAVEL_COST = 5;
 
 /** @param {number} level */
 function tierFor(level) {
@@ -501,6 +571,16 @@ export function explore(player) {
         remember(rx, rz, camp);
         notify(player, `§6Discovered: §f${camp.type.name}`);
         grantXp(player, 80, "discovery");
+      }
+      // Everyone who visits a friendly camp can travel back to it later.
+      if (FRIENDLY_SITES.has(camp.type.key)) {
+        const known = profileOf(player).sites;
+        const entry = `${camp.type.key}|${camp.x}|${camp.y}|${camp.z}`;
+        if (!known.includes(entry)) {
+          known.push(entry);
+          if (known.length > 24) known.shift();
+          touch(player);
+        }
       }
       const last = manned.get(key);
       if (last !== undefined && system.currentTick - last < REFILL_TICKS) continue;
@@ -588,3 +668,58 @@ system.runInterval(() => {
     }
   }
 }, 5 * TICKS);
+
+// ------------------------------------------------------------------- travel
+
+/**
+ * Friendly sites the player has discovered and may travel to.
+ * @param {Player} player
+ */
+export function waypoints(player) {
+  return profileOf(player)
+    .sites.map((entry) => {
+      const [key, x, y, z] = entry.split("|");
+      const type = SITES.find((s) => s.key === key);
+      return type && FRIENDLY_SITES.has(key) ? { name: type.name, x: Number(x), y: Number(y), z: Number(z) } : undefined;
+    })
+    .filter((w) => w !== undefined);
+}
+
+/**
+ * Travels to a discovered friendly site for a few Gold Coins. Returns a message describing the outcome.
+ * @param {Player} player @param {{ name: string, x: number, y: number, z: number }} to
+ */
+export function travel(player, to) {
+  if (player.dimension.id !== "minecraft:overworld") return "§7You can only travel within the overworld";
+  if (countItem(player, id("yggdrasil_gold_coin")) < TRAVEL_COST) return `§7Travel costs ${TRAVEL_COST} Gold Coins`;
+  takeItem(player, id("yggdrasil_gold_coin"), TRAVEL_COST);
+  player.teleport({ x: to.x + 0.5, y: to.y, z: to.z - 0.5 });
+  return `§dYou arrive at the ${to.name}`;
+}
+
+registerMenu(
+  (player) => `Travel (${waypoints(player).length})`,
+  (player) => {
+    const places = waypoints(player);
+    const form = new ActionFormData()
+      .title("Travel")
+      .body(
+        places.length > 0
+          ? `Return to a friendly camp you have discovered for ${TRAVEL_COST} Gold Coins. Your party follows.`
+          : "You have not discovered any friendly camps yet. Adventurers' camps, Kingdom and Empire army posts, Dwarven Forges and Lizardman villages can be travelled to once found."
+      );
+    for (const place of places) {
+      const distance = Math.round(Math.hypot(place.x - player.location.x, place.z - player.location.z));
+      form.button(`${place.name}\n${distance} blocks away`);
+    }
+    form.button("Close");
+    form
+      .show(player)
+      .then((response) => {
+        if (response.canceled || response.selection === undefined || !player.isValid) return;
+        const place = places[response.selection];
+        if (place) notify(player, travel(player, place));
+      })
+      .catch(() => {});
+  }
+);

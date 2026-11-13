@@ -119,6 +119,8 @@ export const TITLES = [
   { key: "bounty_hunter", name: "Bounty Hunter", how: "Complete 7 daily bounties", earned: (p) => Number(/** @type {any} */ (p.daily).total ?? 0) >= 7 },
   { key: "commander", name: "Commander", how: "Lead a full party of three", earned: (_p, player) => partyOf(player).length >= 3 },
   { key: "archmage", name: "Archmage", how: "Learn 30 spells", earned: (p) => p.spells.length >= 30 },
+  { key: "demon_hunter", name: "Demon Hunter", how: "Slay 50 demons", earned: (p) => slain(p, [id("hellhound"), id("shadow_demon"), id("evil_lord_wrath")]) >= 50 },
+  { key: "worlds_shield", name: "World's Shield", how: "Help defeat 3 world bosses", earned: (p) => slain(p, [id("world_bosses")]) >= 3 },
   { key: "giant_killer", name: "Giant Killer", how: "Defeat Gargantua", earned: (p) => slain(p, [id("gargantua")]) >= 1 },
   { key: "dragon_slayer", name: "Dragon Slayer", how: "Defeat the Frost Dragon", earned: (p) => slain(p, [id("frost_dragon"), "minecraft:ender_dragon"]) >= 1 },
   { key: "guardians_bane", name: "Guardian's Bane", how: "Defeat a Floor Guardian", earned: (p) => slain(p, GUARDIANS) >= 1 },

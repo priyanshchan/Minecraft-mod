@@ -8,11 +8,20 @@
     "overlord_adventurer_plate": {
       "textures": "textures/items/overlord/adventurer_plate"
     },
+    "overlord_angel_feather": {
+      "textures": "textures/items/overlord/angel_feather"
+    },
+    "overlord_angel_mace": {
+      "textures": "textures/items/overlord/angel_mace"
+    },
     "overlord_aura_whip": {
       "textures": "textures/items/overlord/aura_whip"
     },
     "overlord_blade_bug": {
       "textures": "textures/items/overlord/blade_bug"
+    },
+    "overlord_blessed_cloth": {
+      "textures": "textures/items/overlord/blessed_cloth"
     },
     "overlord_blue_potion": {
       "textures": "textures/items/overlord/blue_potion"
@@ -22,6 +31,9 @@
     },
     "overlord_brain_katana": {
       "textures": "textures/items/overlord/brain_katana"
+    },
+    "overlord_charons_guidance": {
+      "textures": "textures/items/overlord/charons_guidance"
     },
     "overlord_command_banner": {
       "textures": "textures/items/overlord/command_banner"
@@ -59,6 +71,9 @@
     "overlord_death_knight_sword": {
       "textures": "textures/items/overlord/death_knight_sword"
     },
+    "overlord_demon_heart": {
+      "textures": "textures/items/overlord/demon_heart"
+    },
     "overlord_dragonscale_boots": {
       "textures": "textures/items/overlord/dragonscale_boots"
     },
@@ -80,6 +95,9 @@
     "overlord_egg_albedo": {
       "textures": "textures/items/overlord/egg_albedo"
     },
+    "overlord_egg_archangel_flame": {
+      "textures": "textures/items/overlord/egg_archangel_flame"
+    },
     "overlord_egg_archer": {
       "textures": "textures/items/overlord/egg_archer"
     },
@@ -95,6 +113,9 @@
     "overlord_egg_clementine": {
       "textures": "textures/items/overlord/egg_clementine"
     },
+    "overlord_egg_climb": {
+      "textures": "textures/items/overlord/egg_climb"
+    },
     "overlord_egg_cocytus": {
       "textures": "textures/items/overlord/egg_cocytus"
     },
@@ -107,14 +128,23 @@
     "overlord_egg_demiurge": {
       "textures": "textures/items/overlord/egg_demiurge"
     },
+    "overlord_egg_dominion_authority": {
+      "textures": "textures/items/overlord/egg_dominion_authority"
+    },
     "overlord_egg_dwarf": {
       "textures": "textures/items/overlord/egg_dwarf"
+    },
+    "overlord_egg_eclair": {
+      "textures": "textures/items/overlord/egg_eclair"
     },
     "overlord_egg_elder_lich": {
       "textures": "textures/items/overlord/egg_elder_lich"
     },
     "overlord_egg_entoma": {
       "textures": "textures/items/overlord/egg_entoma"
+    },
+    "overlord_egg_evil_lord_wrath": {
+      "textures": "textures/items/overlord/egg_evil_lord_wrath"
     },
     "overlord_egg_evileye": {
       "textures": "textures/items/overlord/egg_evileye"
@@ -140,6 +170,9 @@
     "overlord_egg_hamsuke": {
       "textures": "textures/items/overlord/egg_hamsuke"
     },
+    "overlord_egg_hellhound": {
+      "textures": "textures/items/overlord/egg_hellhound"
+    },
     "overlord_egg_imperial_knight": {
       "textures": "textures/items/overlord/egg_imperial_knight"
     },
@@ -161,6 +194,9 @@
     "overlord_egg_nfirea": {
       "textures": "textures/items/overlord/egg_nfirea"
     },
+    "overlord_egg_nigun": {
+      "textures": "textures/items/overlord/egg_nigun"
+    },
     "overlord_egg_ogre": {
       "textures": "textures/items/overlord/egg_ogre"
     },
@@ -175,6 +211,9 @@
     },
     "overlord_egg_sebas": {
       "textures": "textures/items/overlord/egg_sebas"
+    },
+    "overlord_egg_shadow_demon": {
+      "textures": "textures/items/overlord/egg_shadow_demon"
     },
     "overlord_egg_shalltear": {
       "textures": "textures/items/overlord/egg_shalltear"
@@ -191,6 +230,9 @@
     "overlord_egg_soul_eater": {
       "textures": "textures/items/overlord/egg_soul_eater"
     },
+    "overlord_egg_theocracy_priest": {
+      "textures": "textures/items/overlord/egg_theocracy_priest"
+    },
     "overlord_egg_vampire_bride": {
       "textures": "textures/items/overlord/egg_vampire_bride"
     },
@@ -202,6 +244,9 @@
     },
     "overlord_egg_zaryusu": {
       "textures": "textures/items/overlord/egg_zaryusu"
+    },
+    "overlord_egg_zesshi": {
+      "textures": "textures/items/overlord/egg_zesshi"
     },
     "overlord_fang_dagger": {
       "textures": "textures/items/overlord/fang_dagger"
@@ -236,8 +281,23 @@
     "overlord_guardian_crest": {
       "textures": "textures/items/overlord/guardian_crest"
     },
+    "overlord_hellfire_blade": {
+      "textures": "textures/items/overlord/hellfire_blade"
+    },
     "overlord_holy_staff": {
       "textures": "textures/items/overlord/holy_staff"
+    },
+    "overlord_infernal_boots": {
+      "textures": "textures/items/overlord/infernal_boots"
+    },
+    "overlord_infernal_chestplate": {
+      "textures": "textures/items/overlord/infernal_chestplate"
+    },
+    "overlord_infernal_helmet": {
+      "textures": "textures/items/overlord/infernal_helmet"
+    },
+    "overlord_infernal_leggings": {
+      "textures": "textures/items/overlord/infernal_leggings"
     },
     "overlord_iron_gauntlets": {
       "textures": "textures/items/overlord/iron_gauntlets"
@@ -329,6 +389,9 @@
     "overlord_scroll_of_time_stop": {
       "textures": "textures/items/overlord/scroll_of_time_stop"
     },
+    "overlord_sealing_crystal": {
+      "textures": "textures/items/overlord/sealing_crystal"
+    },
     "overlord_shadow_of_yggdrasil": {
       "textures": "textures/items/overlord/shadow_of_yggdrasil"
     },
@@ -353,8 +416,14 @@
     "overlord_sigil_of_demiurge": {
       "textures": "textures/items/overlord/sigil_of_demiurge"
     },
+    "overlord_sigil_of_dominion_authority": {
+      "textures": "textures/items/overlord/sigil_of_dominion_authority"
+    },
     "overlord_sigil_of_entoma": {
       "textures": "textures/items/overlord/sigil_of_entoma"
+    },
+    "overlord_sigil_of_evil_lord_wrath": {
+      "textures": "textures/items/overlord/sigil_of_evil_lord_wrath"
     },
     "overlord_sigil_of_frost_dragon": {
       "textures": "textures/items/overlord/sigil_of_frost_dragon"
@@ -385,6 +454,9 @@
     },
     "overlord_sigil_of_yuri": {
       "textures": "textures/items/overlord/sigil_of_yuri"
+    },
+    "overlord_sigil_of_zesshi": {
+      "textures": "textures/items/overlord/sigil_of_zesshi"
     },
     "overlord_soul_fragment": {
       "textures": "textures/items/overlord/soul_fragment"
@@ -421,6 +493,18 @@
     },
     "overlord_vampire_fang": {
       "textures": "textures/items/overlord/vampire_fang"
+    },
+    "overlord_vestment_boots": {
+      "textures": "textures/items/overlord/vestment_boots"
+    },
+    "overlord_vestment_chestplate": {
+      "textures": "textures/items/overlord/vestment_chestplate"
+    },
+    "overlord_vestment_helmet": {
+      "textures": "textures/items/overlord/vestment_helmet"
+    },
+    "overlord_vestment_leggings": {
+      "textures": "textures/items/overlord/vestment_leggings"
     },
     "overlord_world_champion_boots": {
       "textures": "textures/items/overlord/world_champion_boots"

@@ -8,6 +8,7 @@ import * as director from "./director.js";
 import * as sites from "./structures.js";
 import * as party from "./party.js";
 import * as guild from "./guild.js";
+import * as forge from "./forge.js";
 await import("./main.js"); // must load without touching the world
 
 function mkPlayer(name) {
@@ -156,7 +157,7 @@ assert.equal(spells.masteryOf(c, "magic_arrow"), 2);
 advance(20); dummy.damaged = []; spells.castSelected(c); assert.deepEqual(dummy.damaged, [8], "7 * 1.08 rounds to 8");
 // every spell is castable without throwing and has sane data
 assert.equal(new Set(spells.SPELLS.map((s) => s.key)).size, spells.SPELLS.length);
-assert.equal(spells.SPELLS.length, 43);
+assert.equal(spells.SPELLS.length, 46);
 for (let tier = 1; tier <= 11; tier++) assert.ok(spells.SPELLS.filter((s) => s.tier === tier).length >= 3, `tier ${tier}`);
 // dark magic is weak against undead: Death (52) on an undead dummy deals a quarter
 pc.level = 100; c.inv.push(new ItemStack("overlord:data_crystal", 64)); assert.ok(spells.learnSpell(c, "death").includes("Learned"));
@@ -173,7 +174,7 @@ for (const s of spells.SPELLS) assert.ok(s.mana > 0 && s.cooldown > 0 && s.tier 
 // cast every spell once with a target and a block in view: none may throw, each must draw something and pose
 dummy.applyKnockback = () => {}; dummy.isValid = true; dummy.health.currentValue = 1e9;
 c.getBlockFromViewDirection = () => ({ block: { location: { x: 3, y: 63, z: 3 } }, face: "Up" }); c.tryTeleport = () => true;
-c.dimension.getEntities = () => [dummy]; c.dimension.spawnEntity = () => ({ getComponent: () => ({ shoot() {} }), applyImpulse() {} });
+c.dimension.getEntities = () => [dummy]; c.dimension.spawnEntity = () => ({ isValid: true, addTag() {}, getComponent: () => ({ shoot() {}, tame() {} }), applyImpulse() {} });
 for (const s of spells.SPELLS) {
   c.fx = []; c.anims = [];
   const ok = s.cast(c, 1); advance(100);
@@ -215,10 +216,11 @@ assert.ok(d.bar.includes(`Lv.${rpg.mobLevel(lv)}`), d.bar);
 d.dimension.id = "minecraft:overworld"; d.dimension.mobs = []; const realRandom = Math.random; Math.random = () => 0.1;
 world.clock.time = 6000; advance(200); assert.equal(d.dimension.mobs.length, 0, "no patrols by day");
 world.clock.time = 15000; world.clock.day = 3; advance(200);
-assert.equal(d.dimension.mobs.length, 5, "tier 2 patrol: death knight, 3 guarders, elder lich");
-assert.ok(d.dimension.mobs.every((m) => m.tags.has("overlord_patrol")) && d.msgs.some((m) => m.includes("patrol")));
-advance(400); assert.equal(d.dimension.mobs.length, 5, "one roll per night");
-world.clock.day = 4; advance(200); assert.equal(d.dimension.mobs.length, 10); Math.random = realRandom; world.clock.time = 6000;
+const patrolling = () => d.dimension.mobs.filter((m) => m.tags.has("overlord_patrol")).length; // a world boss may also turn up
+assert.equal(patrolling(), 5, "tier 2 patrol: death knight, 3 guarders, elder lich");
+assert.ok(d.msgs.some((m) => m.includes("patrol")));
+advance(400); assert.equal(patrolling(), 5, "one roll per night");
+world.clock.day = 4; advance(200); assert.equal(patrolling(), 10); Math.random = realRandom; world.clock.time = 6000;
 // village guards: two per village, none without villagers
 d.dimension.mobs = []; assert.equal(director.postGuards(d), 0);
 const villagers = [0, 1, 2].map((i) => ({ typeId: "minecraft:villager_v2", location: { x: i, y: 64, z: 0 } }));
@@ -389,6 +391,76 @@ const purseT = coinsOf(g); assert.deepEqual(guild.checkTitles(g).sort(), ["Drago
 assert.deepEqual(guild.checkTitles(g), [], "titles are granted once");
 assert.equal(guild.wearTitle(g, "archmage"), false, "cannot wear what is not earned"); assert.equal(guild.wearTitle(g, "dragon_slayer"), true);
 assert.equal(g.nameTag, "§e[Dragon Slayer]§r gil"); guild.wearTitle(g, ""); assert.equal(g.nameTag, "gil");
+
+// ---- v4.5: summons, world bosses, travel and reinforcement ----
+const h = mkPlayer("hana"); const ph = rpg.profileOf(h); h.dimension = makeLand(); h.dimension.getPlayers = () => [h];
+// summoning: allies appear in their summoned form, are bound to the caster two ticks later, and are capped
+assert.equal(spells.summonAlly(h, "overlord:old_guarder", 2), 2); advance(3);
+const allies = h.dimension.mobs.filter((m) => m.tags.has("overlord_ally_hana"));
+assert.equal(allies.length, 2); assert.ok(allies.every((m) => m.tags.has("overlord_summoned") && m.tamedBy === "hana" && m.typeId === "overlord:old_guarder"));
+assert.equal(spells.summonAlly(h, "overlord:archangel_flame", 3), 2, "only room for two more"); assert.equal(spells.summonAlly(h, "overlord:death_knight", 1), 0);
+const summon3 = spells.SPELLS.find((s) => s.key === "summon_undead_3"); h.msgs.length = 0; h.bar = "";
+assert.equal(summon3.cast(h, 1), false, "a full retinue refuses the cast"); assert.ok((h.bar + h.msgs.join()).includes("already command"));
+allies[0].remove(); assert.equal(summon3.cast(h, 1), true, "one slot free again"); advance(3);
+assert.equal(h.dimension.mobs.filter((m) => m.tags.has("overlord_ally_hana")).length, spells.MAX_ALLIES);
+for (const key of ["hellhound", "shadow_demon", "evil_lord_wrath", "archangel_flame", "dominion_authority"]) assert.ok(spells.AFFINITY[`overlord:${key}`], key);
+// world bosses: once a day at most, only for level 25+, announced to all, and everyone near the kill is rewarded
+const others = players.splice(0, players.length, h); world.clock.day = 40; h.location = { x: 0, y: 64, z: 0 };
+ph.level = 10; assert.equal(director.rollWorldBoss(() => 0), undefined, "nobody strong enough");
+world.clock.day = 41; ph.level = 30; assert.equal(director.rollWorldBoss(() => 0.9), undefined, "the roll failed");
+assert.equal(director.rollWorldBoss(() => 0), undefined, "one roll a day");
+world.clock.day = 42; world.said.length = 0; const worldBoss = director.rollWorldBoss(() => 0);
+assert.ok(worldBoss && worldBoss.typeId === "overlord:gargantua" && worldBoss.tags.has("overlord_worldboss"));
+assert.ok(Math.abs(Math.hypot(worldBoss.location.x, worldBoss.location.z) - 36) < 1e-6); assert.ok(world.said.some((m) => m.includes("Gargantua") && m.includes("east of") && m.includes("hana")), world.said.join());
+world.clock.day = 43; ph.level = 60; const greater = director.rollWorldBoss(() => 0); assert.equal(greater.typeId, "overlord:frost_dragon");
+const purseH = coinsOf(h); const xpH = ph.xp; const lvH = ph.level;
+world.afterEvents.entityDie.fire({ deadEntity: worldBoss, damageSource: { damagingEntity: h } });
+assert.equal(coinsOf(h) - purseH, 30); assert.equal(ph.kills["overlord:world_bosses"], 1); assert.ok(ph.level > lvH || ph.xp > xpH); assert.ok(h.msgs.some((m) => m.includes("World Boss")));
+ph.kills["overlord:world_bosses"] = 3; ph.kills["overlord:hellhound"] = 50; assert.deepEqual(guild.checkTitles(h).sort(), ["Demon Hunter", "Giant Killer", "World's Shield"], "the slain Gargantua counts too");
+players.splice(0, players.length, ...others, h);
+// travel: only friendly camps are remembered; the journey costs five coins
+let haven; for (let rx = 3; rx < 400 && !haven; rx++) { const site = sites.siteOf(rx, 11); if (site && site.type.key === "adventurer_camp") haven = site; }
+assert.ok(haven, "an adventurers' camp exists somewhere"); assert.equal(sites.waypoints(h).length, 0);
+h.dimension = makeLand(); h.dimension.getPlayers = () => [h];
+h.location = { x: haven.x - 80, y: 64, z: haven.z }; sites.explore(h); h.location = { x: haven.x - 20, y: 64, z: haven.z }; sites.explore(h);
+const ways = sites.waypoints(h); assert.equal(ways.length, 1); assert.equal(ways[0].name, haven.type.name);
+const visitor = mkPlayer("ivy"); visitor.dimension = h.dimension; visitor.location = { ...h.location }; sites.explore(visitor);
+assert.equal(sites.waypoints(visitor).length, 1, "a later visitor learns the camp too");
+ph.sites.push("goblin_camp|5|64|5"); assert.equal(sites.waypoints(h).length, 1, "hostile camps are not waypoints");
+h.inv.length = 0; h.teleport = (to) => { h.location = to; }; h.location = { x: 0, y: 64, z: 0 };
+assert.ok(sites.travel(h, ways[0]).includes("costs 5")); assert.equal(h.location.x, 0);
+h.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 7)); assert.ok(sites.travel(h, ways[0]).includes("arrive"));
+assert.equal(coinsOf(h), 2); assert.ok(Math.abs(h.location.x - ways[0].x) < 1 && Math.abs(h.location.z - ways[0].z) < 1);
+// reinforcement: needs a weapon, a runesmith and the price; each level is written on the item and adds 6% melee damage
+h.inv.length = 0; h.selectedSlotIndex = 0; const blade = new ItemStack("overlord:razor_edge"); h.inv.push(blade);
+h.getComponent = ((base) => (c) => (c === "minecraft:equippable" ? { getEquipment: () => h.inv[h.selectedSlotIndex] } : base(c)))(h.getComponent);
+assert.ok(forge.reinforce(h).includes("Dwarf Runesmith")); h.dimension.spawnEntity("overlord:dwarf", h.location);
+assert.ok(forge.reinforce(h).includes("costs 15 Gold Coins and 1 Adamantite Ingot"));
+h.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 64), new ItemStack("overlord:adamantite_ingot", 3));
+assert.ok(forge.reinforce(h).includes("+1")); assert.equal(blade.getDynamicProperty("overlord:plus"), 1); assert.ok(blade.lore[0].includes("+1"));
+assert.equal(coinsOf(h), 49); assert.equal(rpg.heldPlus(h), 1);
+assert.ok(forge.reinforce(h).includes("+2")); assert.equal(coinsOf(h), 19); assert.ok(forge.reinforce(h).includes("costs 45"), "cannot afford +3");
+h.inv[0] = new ItemStack("minecraft:stick"); assert.ok(forge.reinforce(h).includes("Hold one")); assert.equal(rpg.heldPlus(h), 0); h.inv[0] = blade;
+blade.setDynamicProperty("overlord:plus", 5); assert.ok(forge.reinforce(h).includes("already +5"));
+ph.cls = "none"; ph.str = 0; const post = mob("minecraft:cow", 100);
+world.afterEvents.entityHurt.fire({ hurtEntity: post, damage: 10, damageSource: { damagingEntity: h, cause: "entityAttack" } });
+assert.ok(post.health.currentValue < 100 - 2.9 && post.health.currentValue > 100 - 3.6, `+5 weapon adds about 30%: ${post.health.currentValue}`);
+// new weapon abilities, driven through the item-use event like the game does
+const use = (pl, typeId) => world.afterEvents.itemUse.fire({ source: pl, itemStack: { typeId } });
+h.dimension = makeLand(); h.dimension.getPlayers = () => [h]; h.location = { x: 0, y: 64, z: 0 }; rpg.restoreMana(h, 1e6);
+const foe = (hp, max) => { const m = mob("minecraft:zombie", max, ["monster"]); m.health.currentValue = hp; m.id = `foe${hp}`; m.tags = new Set(); m.burning = 0; m.setOnFire = (n) => { m.burning = n; };
+  m.applyDamage = function (n) { this.damaged.push(n); }; h.dimension.mobs.push(m); return m; };
+const hale = foe(100, 100), dying = foe(6, 40), lord = foe(40, 500);
+use(h, "overlord:charons_guidance");
+assert.equal(hale.damaged.length, 1); assert.ok(hale.damaged[0] >= 20 && hale.damaged[0] < 60, String(hale.damaged)); assert.deepEqual(dying.damaged, [160], "the weak are reaped outright");
+assert.equal(lord.damaged[0], hale.damaged[0], "bosses are never reaped"); assert.ok(h.bar.includes("struck 3, 1 reaped"), h.bar);
+const manaR = ph.mana; use(h, "overlord:charons_guidance"); assert.equal(hale.damaged.length, 1, "Reap is on cooldown"); assert.equal(ph.mana, manaR);
+use(h, "overlord:hellfire_blade"); assert.equal(hale.damaged.length, 2, "each foe burns once"); assert.equal(hale.burning, 6); assert.ok(h.bar.includes("burned 3"), h.bar);
+h.dimension.mobs.length = 0; h.inv.length = 0; h.selectedSlotIndex = 0; h.inv.push(new ItemStack("overlord:sealing_crystal", 3));
+use(h, "overlord:sealing_crystal"); advance(3);
+assert.equal(h.dimension.mobs.filter((m) => m.typeId === "overlord:archangel_flame" && m.tamedBy === "hana").length, 3); assert.equal(h.inv[0].amount, 2);
+advance(40); use(h, "overlord:sealing_crystal"); assert.equal(h.dimension.mobs.length, 4, "only one more fits"); assert.equal(h.inv[0].amount, 1);
+advance(40); use(h, "overlord:sealing_crystal"); assert.equal(h.dimension.mobs.length, 4); assert.equal(h.inv[0].amount, 1, "a crystal is not wasted on a full retinue");
 
 // persistence: saved profile is restored after leaving
 advance(100);

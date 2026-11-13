@@ -322,6 +322,9 @@ SIGIL_COLORS = {
     "yuri": ("#3f6fb0", "#1b1a22", "#3d8a3f", "#f4f3f5"),
     "gargantua": ("#8f95a3", "#16171c", "#454954", "#ff5a3d"),
     "frost_dragon": ("#bfe3f5", "#15202b", "#5f8fb8", "#f2c21b"),
+    "evil_lord_wrath": ("#c2452a", "#2a0a08", "#ff7a1a", "#ffd23d"),
+    "zesshi": ("#f4f3f5", "#1b1a22", "#8e96a6", "#d4202a"),
+    "dominion_authority": ("#f6d968", "#2a5aa8", "#f4f1ea", "#ffffff"),
 }
 
 
@@ -909,6 +912,107 @@ def sun_bow():
     ], {"G": GOLD, "L": GOLD_L, "s": "#f1ede4", "R": "#ff7a1a", "W": "#fff6c9"})
 
 
+INFERNAL_PAL = {"K": "#2a0a08", "k": "#8f1a14", "l": "#c2452a", "G": "#ff7a1a", "g": "#c2452a", "R": "#ffd23d"}
+VESTMENT_PAL = {"K": "#8a8478", "k": "#f4f1ea", "l": "#ffffff", "G": GOLD, "g": GOLD_D, "R": "#3f7fe0"}
+
+
+def infernal_layers():
+    return armor_layers("#8f1a14", "#c2452a", "#4a0d0a", "#ffd23d", GOLD="#ff7a1a", GOLD_D="#c2452a")
+
+
+def vestment_layers():
+    return armor_layers("#e9e6dc", "#ffffff", "#b9b4a4", "#3f7fe0")
+
+
+def feather():
+    return sprite16([
+        "................",
+        "...........WW...",
+        "..........WWWw..",
+        ".........WWWWw..",
+        "........WWWWw...",
+        ".......WWWWw....",
+        "......WWWWw.....",
+        ".....WWWWw......",
+        "....WWWWw.......",
+        "....WWWw........",
+        "...GWWw.........",
+        "...GWw..........",
+        "..G.............",
+        ".G..............",
+        "................",
+        "................",
+    ], {"W": "#fffbe8", "w": "#f6d968", "G": GOLD})
+
+
+def heart():
+    return sprite16([
+        "................",
+        "................",
+        "...RRR....RRR...",
+        "..RrrRR..RRrRR..",
+        "..RrRRRRRRRRRD..",
+        "..RRRRRORRRRRD..",
+        "..RRRROOORRRDD..",
+        "...RRROYORRDD...",
+        "...RRRROORRDD...",
+        "....RRRRRRDD....",
+        ".....RRRRDD.....",
+        "......RRDD......",
+        ".......DD.......",
+        "................",
+        "................",
+        "................",
+    ], {"R": "#8f1a14", "r": "#c2452a", "D": "#4a0d0a", "O": "#ff7a1a", "Y": "#ffd23d"})
+
+
+def cloth():
+    return sprite16([
+        "................",
+        "................",
+        "..WWWWWWWWWWW...",
+        "..WWWWWWWWWWWw..",
+        "..WWGWWWWWGWWw..",
+        "..WWWWWBBWWWWw..",
+        "..WWWWBBBBWWWw..",
+        "..WWWWWBBWWWWw..",
+        "..WWGWWWWWGWWw..",
+        "..WWWWWWWWWWWw..",
+        "..WwwwwwwwwwWw..",
+        "...wwwwwwwwwww..",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], {"W": "#f4f1ea", "w": "#c9c3b5", "G": GOLD, "B": "#3f7fe0"})
+
+
+def scythe():
+    s = Sprite()
+    s.shaft(1, 14, 11, "#35323f", "#1b1a22")
+    s.stamp([
+        "..SSSSS.",
+        ".SsssssS",
+        "Sss...sS",
+        "Ss.....S",
+        "S.......",
+    ], {"S": "#c9d1df", "s": "#f2f5f9"}, 4, 1)
+    return s.outline().img
+
+
+def mace():
+    s = Sprite()
+    s.shaft(1, 14, 9, "#f6d968", "#96701a")
+    s.stamp([
+        ".GLG.",
+        "GLWLG",
+        "LWWWL",
+        "GLWLG",
+        ".GLG.",
+    ], {"G": GOLD, "L": GOLD_L, "W": "#fffbe8"}, 9, 1)
+    return s.outline().img
+
+
 DRAGON_PAL = {"K": "#3f6a8a", "k": "#bfe3f5", "l": "#ffffff", "G": "#5f8fb8", "g": "#3f6a8a", "R": "#f2c21b"}
 
 
@@ -1261,6 +1365,16 @@ EGG_COLORS = {
     "vampire_bride": ("#e9e6ee", "#a3121f"),
     "dwarf": ("#7a4a2a", "#b5651d"),
     "frost_dragon": ("#bfe3f5", "#5f8fb8"),
+    "hellhound": ("#2a1210", "#ff7a1a"),
+    "shadow_demon": ("#221a2c", "#d4202a"),
+    "evil_lord_wrath": ("#8f1a14", "#ff7a1a"),
+    "archangel_flame": ("#f4f1ea", "#d9a92b"),
+    "dominion_authority": ("#c9d1df", "#3f7fe0"),
+    "theocracy_priest": ("#f4f1ea", "#3a2a1f"),
+    "nigun": ("#2a2a33", "#e9e6dc"),
+    "climb": ("#e9edf2", "#e6c463"),
+    "zesshi": ("#1b1a22", "#f4f3f5"),
+    "eclair": ("#1b1a22", "#f2a01b"),
 }
 
 
@@ -1320,6 +1434,21 @@ def all_item_icons():
         "dragonscale_chestplate": chestplate(DRAGON_PAL),
         "dragonscale_leggings": leggings(DRAGON_PAL),
         "dragonscale_boots": boots(DRAGON_PAL),
+        "angel_feather": feather(),
+        "demon_heart": heart(),
+        "blessed_cloth": cloth(),
+        "charons_guidance": scythe(),
+        "angel_mace": mace(),
+        "hellfire_blade": blade_icon("#2a0a08", "#150504", "#ff7a1a", "#ffd23d", "#ff7a1a", "#8f1a14", glow="#fff6c9"),
+        "sealing_crystal": crystal("#dff1ff", "#ffffff", "#ffffff", "#9fd4ff"),
+        "infernal_helmet": helmet(INFERNAL_PAL),
+        "infernal_chestplate": chestplate(INFERNAL_PAL),
+        "infernal_leggings": leggings(INFERNAL_PAL),
+        "infernal_boots": boots(INFERNAL_PAL),
+        "vestment_helmet": helmet(VESTMENT_PAL),
+        "vestment_chestplate": chestplate(VESTMENT_PAL),
+        "vestment_leggings": leggings(VESTMENT_PAL),
+        "vestment_boots": boots(VESTMENT_PAL),
         "ranger_helmet": helmet(RANGER_PAL),
         "ranger_chestplate": chestplate(RANGER_PAL),
         "ranger_leggings": leggings(RANGER_PAL),

@@ -2387,8 +2387,15 @@ def gargantua():
 
 
 def soul_eater():
-    m = Model("soul_eater", bounds=(3.5, 3, 0.9))
-    dark, dark_l, glow = "#1c2026", "#343b45", "#59e0c8"
+    return _beast()
+
+
+def hellhound():
+    return _beast("hellhound", "#2a1210", "#4a1f18", "#ff7a1a", "#3a1a14", "#241008")
+
+
+def _beast(name="soul_eater", dark="#1c2026", dark_l="#343b45", glow="#59e0c8", BONE=BONE, BONE_D=BONE_D):
+    m = Model(name, bounds=(3.5, 3, 0.9))
     pal = {"K": dark, "k": dark_l, "B": BONE, "b": BONE_D, "G": glow, "g": "#b8fff2", "N": "#07080a",
            "T": "#d6cfb6"}
     body = m.bone("body", (0, 12, 0))
@@ -2543,7 +2550,24 @@ def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, 
         leg.band(4, 6, armor)
         leg.band(8, 12, "#3a2a1e")
     weapon = m.bone("weapon", (-6, 13, -2), parent="rightArm")
-    if weapon_kind == "bow":
+    if weapon_kind == "scythe":
+        shaft = weapon.cube((-6.5, 1, -3.5), (1, 34, 1))
+        shaft.fill("#1b1a22", noise=3)
+        blade = weapon.cube((-6.5, 28, -13), (1, 7, 10))
+        blade.fill(None, noise=0)
+        curve = [
+            ".....sssss",
+            "...ssSSSSS",
+            ".ssSSSSSSS",
+            "sSSSss....",
+            "sSss......",
+            "ss........",
+            "s.........",
+        ]
+        spal = {"s": "#c9d1df", "S": "#f2f5f9", ".": None}
+        art(blade.left, curve, spal)
+        art(blade.right, [r[::-1] for r in curve], spal)
+    elif weapon_kind == "bow":
         grip = weapon.cube((-6.5, 9, -4), (1, 8, 1))
         grip.fill("#6b4a2a", noise=5)
         for y0 in (6, 17):
@@ -2645,6 +2669,143 @@ def _retainer(n):
 
 
 RETAINERS = [_retainer(n) for n in range(len(RETAINER_LOOKS))]
+
+
+def _wings(m, color, light, span=10):
+    """Adds a pair of flat feathered wings (rightWing / leftWing) to a humanoid model."""
+    for name, x, pivot, ry in (("rightWing", -3 - span, (-3, 20, 2), 28), ("leftWing", 3, (3, 20, 2), -28)):
+        wing = m.bone(name, pivot, parent="body", rotation=(0, ry, 0)).cube((x, 10, 2), (span, 14, 1))
+        wing.fill(None, noise=0)
+        outer_left = name == "rightWing"
+        for f, flip in ((wing.front, not outer_left), (wing.back, outer_left)):
+            for xx in range(span):
+                d = span - 1 - xx if flip else xx  # 0 = tip
+                top = max(0, 3 - d)
+                bottom = 13 - (2, 0, 1)[d % 3] - max(0, 4 - d)
+                for yy in range(top, bottom + 1):
+                    f.px(xx, yy, light if (yy + d) % 3 == 0 or yy == bottom else color)
+
+
+def _angel(name, armor, armor_l, armor_d, cloth, cloth_d, weapon_kind, orb, wing, wing_l):
+    m = _soldier(name, "#fff1c9", "#f6d968", armor, armor_l, armor_d, cloth, cloth_d, helmet=True,
+                 weapon_kind=weapon_kind, orb=orb)
+    _wings(m, wing, wing_l)
+    head = next(b for b in m.bones if b.name == "head")
+    halo = head.cube((-3, 34, -3), (6, 1, 6))
+    halo.fill("#ffe14d", noise=0)
+    halo.top.fill(None, 1, 1, 5, 5)
+    halo.bottom.fill(None, 1, 1, 5, 5)
+    return m
+
+
+def archangel_flame():
+    return _angel("archangel_flame", "#d9a92b", "#f6d968", "#96701a", "#f4f1ea", "#c9c3b5", "sword", "#ff7a1a",
+                  "#f4f1ea", "#ffd9a0")
+
+
+def dominion_authority():
+    return _angel("dominion_authority", "#c9d1df", "#f2f5f9", "#8e96a6", "#3f7fe0", "#2a5aa8", "staff", "#fff6c9",
+                  "#eaf7ff", "#bfe3f5")
+
+
+def theocracy_priest():
+    return _soldier("theocracy_priest", "#e0b48c", "#3a2a1f", "#d9d4c4", "#f4f1ea", "#a8a290", "#f4f1ea", "#c9c3b5",
+                    helmet=False, weapon_kind="staff", orb="#f6d968")
+
+
+def nigun():
+    return _soldier("nigun", "#d2a07a", "#1f1a16", "#2a2a33", "#45454f", "#15151a", "#e9e6dc", "#b9b4a4",
+                    helmet=False, weapon_kind="staff", orb="#9fd4ff")
+
+
+def climb():
+    return _soldier("climb", "#f0d2b8", "#e6c463", "#e9edf2", "#ffffff", "#aab2c0", "#3f66a8", "#2a4a80",
+                    helmet=False, weapon_kind="sword")
+
+
+def zesshi():
+    m = _soldier("zesshi", "#f1dccb", "#f4f3f5", "#1b1a22", "#35323f", "#0c0b10", "#2a2433", "#17141d",
+                 helmet=False, weapon_kind="scythe")
+    head = next(b for b in m.bones if b.name == "head").cubes[0]
+    # Her hair is white on one side and black on the other.
+    for f in (head.front, head.top, head.back):
+        for y in range(f.h):
+            for x in range(f.w // 2, f.w):
+                if f.get(x, y)[:3] in ((244, 243, 245),) or sum(f.get(x, y)[:3]) > 600:
+                    f.px(x, y, "#1b1a22")
+    head.left.fill("#1b1a22", 0, 0, None, 3)
+    head.left.fill("#1b1a22", 4, 3, 8, 5)
+    head.front.px(1, 4, "#1b1a22")
+    head.front.px(6, 4, "#e9e6dc")
+    return m
+
+
+def shadow_demon():
+    m = _brute("shadow_demon", "#221a2c", "#3d3050", "#120d18")
+    head = next(b for b in m.bones if b.name == "head")
+    for sx in (-4, 2):
+        horn = head.cube((sx, 30, -1), (2, 3, 2))
+        horn.fill("#0d0a12")
+        horn.band(0, 1, "#d4202a")
+    return m
+
+
+def evil_lord_wrath():
+    m = _brute("evil_lord_wrath", "#8f1a14", "#c2452a", "#4a0d0a")
+    head = next(b for b in m.bones if b.name == "head")
+    for sx in (-5, 3):
+        base = head.cube((sx, 29, -1), (2, 2, 2))
+        base.fill("#2a1210")
+        up = head.cube((sx + (-1 if sx < 0 else 1), 31, -1), (2, 5, 2))
+        up.fill("#1b0d0a")
+        up.band(0, 2, "#ff7a1a")
+    _wings(m, "#2a1210", "#8f1a14", span=12)
+    return m
+
+
+def eclair():
+    m = Model("eclair", bounds=(2, 2.5, 0.8))
+    black, black_l, white = "#1b1a22", "#35323f", "#f4f3f5"
+    pal = {"K": black, "k": black_l, "W": white, "w": "#c9c7d0", "Y": "#f2a01b", "y": "#c97a10", "R": "#b3261f",
+           "e": "#0b090d"}
+    body = m.bone("body", (0, 8, 0))
+    torso = body.cube((-4, 2, -3), (8, 10, 6))
+    torso.fill(black)
+    art(torso.front, [
+        "KkWWWWkK",
+        "KWRRRRWK",
+        "KWWRRWWK",
+        "KWWWWWWK",
+        "KWWWWWWK",
+        "KWWWWWWK",
+        "KWWWWWWK",
+        "KWWWWWWK",
+        "KkWWWWkK",
+        "KKwWWwKK",
+    ], pal)
+    torso.back.vline(3, black_l, 0, 10)
+    tail = body.cube((-1, 2, 3), (2, 2, 2))
+    tail.fill(black_l)
+    head = m.bone("head", (0, 12, 0), parent="body")
+    hd = head.cube((-3, 12, -3), (6, 6, 6))
+    hd.fill(black, noise=3)
+    art(hd.front, ["KKKKKK", "KkKKkK", "WeKKeW", "WWYYWW", "KWYYWK", "KKWWKK"], pal)
+    for f in (hd.right, hd.left):
+        f.fill(white, 0, 2, 2, 5)
+    beak = head.cube((-1, 13, -5), (2, 2, 2))
+    beak.fill("#f2a01b")
+    beak.bottom.fill("#c97a10")
+    crest = head.cube((-1, 18, -2), (2, 2, 3))
+    crest.fill("#f2a01b")
+    for name, x, px in (("rightArm", -5, -4), ("leftArm", 4, 4)):
+        arm = m.bone(name, (px, 11, 0), parent="body").cube((x, 4, -2), (1, 7, 4))
+        arm.fill(black)
+        arm.band(6, 7, black_l)
+    for name, x, px in (("rightLeg", -3, -2), ("leftLeg", 1, 2)):
+        leg = m.bone(name, (px, 2, 0)).cube((x, 0, -4), (2, 2, 5))
+        leg.fill("#f2a01b")
+        leg.band(1, 2, "#c97a10")
+    return m
 
 
 def vampire_bride():
@@ -2767,4 +2928,6 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        skeleton_mage, lizardman, evileye, fluder, gargantua, soul_eater, quagoa, adventurer, guard,
        soldier, archer, imperial_knight, bandit, *RETAINERS,
        war_troll, vampire_bride, dwarf, frost_dragon, frost_breath,
+       hellhound, shadow_demon, evil_lord_wrath, archangel_flame, dominion_authority, theocracy_priest, nigun,
+       climb, zesshi, eclair,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

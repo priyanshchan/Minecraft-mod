@@ -4,7 +4,7 @@
 // squire zombies and small talk from the human NPCs.
 import { world, system, EntityInitializationCause, GameMode } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { FACTIONS, addRep, creditedPlayer, profileOf, registerMenu, standingOf } from "./rpg.js";
+import { FACTIONS, addRep, creditedPlayer, giveItem, grantXp, profileOf, registerMenu, standingOf, touch } from "./rpg.js";
 import { rumour } from "./structures.js";
 
 const NS = "overlord";
@@ -15,7 +15,7 @@ export const LEVEL_KEY = "overlord:lvl";
 export const ELITE_CHANCE = 0.05;
 
 /** Tags of mobs the add-on spawned on purpose; they are never removed by the level gate. */
-const SCRIPTED_TAGS = ["overlord_raid", "overlord_patrol", "overlord_summoned", "overlord_guard", "overlord_camp"];
+const SCRIPTED_TAGS = ["overlord_raid", "overlord_patrol", "overlord_summoned", "overlord_guard", "overlord_camp", "overlord_worldboss"];
 
 /** Naturally spawning mobs that only appear once a nearby player has reached this level. */
 export const SPAWN_GATE = {
@@ -25,6 +25,9 @@ export const SPAWN_GATE = {
   [id("death_knight")]: 8,
   [id("clementine")]: 10,
   [id("vampire_bride")]: 10,
+  [id("shadow_demon")]: 8,
+  [id("theocracy_priest")]: 10,
+  [id("hellhound")]: 12,
   [id("war_troll")]: 14,
   [id("soul_eater")]: 12,
   [id("fluder")]: 15,
@@ -67,6 +70,8 @@ const DIALOGUE = {
     "This post belongs to the Baharuth Empire. State your business or move along.",
     "The Emperor's knights do not fear the Kingdom's rabble.",
   ],
+  [id("climb")]: ["I will become strong enough to protect the Princess. Until then, I train.", "Sir Gazef says a blade is only as true as the arm behind it."],
+  [id("eclair")]: ["One day I, Eclair Ecleir Eicler, shall rule the Great Tomb of Nazarick!", "You there - polish something. A clean tomb is a conquered tomb."],
   [id("gazef")]: ["I am Gazef Stronoff, Warrior-Captain of the Kingdom. These lands are under my protection."],
   [id("brain")]: ["I am looking for an opponent worth my blade. You are not there yet."],
   [id("zaryusu")]: ["The tribes stand together now. Leave our swamp in peace and we will do the same."],
@@ -211,6 +216,78 @@ system.runInterval(() => {
     }
   }
 }, 10 * TICKS);
+
+// -------------------------------------------------------------- world bosses
+
+const WORLD_BOSS_LEVEL = 25;
+const WORLD_BOSS_CHANCE = 0.3; // per in-game day
+/** Bosses that may appear, for players below and from level 50. */
+const WORLD_BOSSES = [
+  [id("gargantua"), id("dominion_authority"), id("evil_lord_wrath")],
+  [id("frost_dragon"), id("evil_lord_wrath"), id("zesshi")],
+];
+export const WORLD_BOSS_KEY = id("world_bosses");
+let bossDay = -1;
+
+/** @param {number} dx @param {number} dz */
+function heading(dx, dz) {
+  const d = Math.hypot(dx, dz) || 1;
+  const ns = dz < -d * 0.38 ? "north" : dz > d * 0.38 ? "south" : "";
+  const ew = dx > d * 0.38 ? "east" : dx < -d * 0.38 ? "west" : "";
+  return ns && ew ? `${ns}-${ew}` : ns || ew;
+}
+
+/**
+ * Once a day, perhaps sends a world boss against one of the stronger players. Returns the boss, if any.
+ * @param {() => number} [random]
+ */
+export function rollWorldBoss(random = Math.random) {
+  const day = world.getDay();
+  if (day === bossDay) return undefined;
+  bossDay = day;
+  if (random() > WORLD_BOSS_CHANCE) return undefined;
+  const heroes = world.getAllPlayers().filter((p) => p.dimension.id === "minecraft:overworld" && profileOf(p).level >= WORLD_BOSS_LEVEL);
+  if (heroes.length === 0) return undefined;
+  const hero = heroes[Math.floor(random() * heroes.length)];
+  const pool = WORLD_BOSSES[profileOf(hero).level >= 50 ? 1 : 0];
+  const type = pool[Math.floor(random() * pool.length)];
+  const angle = random() * Math.PI * 2;
+  const x = hero.location.x + Math.cos(angle) * 36;
+  const z = hero.location.z + Math.sin(angle) * 36;
+  const ground = hero.dimension.getTopmostBlock({ x, z });
+  if (!ground) return undefined;
+  const boss = hero.dimension.spawnEntity(type, { x, y: ground.location.y + 1, z });
+  boss.addTag("overlord_worldboss");
+  const name = type.split(":")[1].split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  world.sendMessage(`§6[World Boss] §c${name}§f has appeared ${heading(x - hero.location.x, z - hero.location.z)} of §e${hero.name}§f! All who are near when it falls will be rewarded.`);
+  return boss;
+}
+
+world.afterEvents.entityDie.subscribe((event) => {
+  try {
+    const dead = event.deadEntity;
+    if (!dead.hasTag("overlord_worldboss")) return;
+    for (const hero of dead.dimension.getPlayers({ location: dead.location, maxDistance: 64 })) {
+      const p = profileOf(hero);
+      p.kills[WORLD_BOSS_KEY] = (p.kills[WORLD_BOSS_KEY] ?? 0) + 1;
+      touch(hero);
+      giveItem(hero, id("yggdrasil_gold_coin"), 30);
+      giveItem(hero, id("data_crystal"), 6);
+      hero.sendMessage("§6[World Boss] §fThe world boss has fallen! Reward: §630 Gold Coins§f, §b6 Data Crystals§f, §a1500 XP§f.");
+      grantXp(hero, 1500, "world boss");
+    }
+  } catch {
+    // the boss is already unloaded
+  }
+});
+
+system.runInterval(() => {
+  try {
+    rollWorldBoss();
+  } catch (error) {
+    console.warn(`[Overlord] world boss roll failed: ${error}`);
+  }
+}, 30 * TICKS);
 
 // ---------------------------------------------------------- village guards
 

@@ -1,0 +1,42 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:dominion_authority",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/dominion_authority"
+      },
+      "geometry": {
+        "default": "geometry.overlord.dominion_authority"
+      },
+      "scripts": {
+        "animate": [
+          "look_at_target",
+          "idle",
+          "walk",
+          "attack",
+          "wings",
+          "cast"
+        ]
+      },
+      "animations": {
+        "look_at_target": "animation.overlord.look_at_target",
+        "idle": "animation.overlord.idle",
+        "walk": "animation.overlord.walk",
+        "attack": "animation.overlord.attack",
+        "wings": "animation.overlord.wings",
+        "cast": "animation.overlord.cast"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ],
+      "spawn_egg": {
+        "texture": "overlord_egg_dominion_authority",
+        "texture_index": 0
+      }
+    }
+  }
+}

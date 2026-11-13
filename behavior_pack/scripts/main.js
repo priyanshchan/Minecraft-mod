@@ -20,12 +20,13 @@ import {
   useClassSkill,
 } from "./rpg.js";
 import { startRaid } from "./raid.js";
-import { castSelected, cycleSpell, openGrimoire } from "./spells.js";
+import { castSelected, cycleSpell, openGrimoire, summonAlly } from "./spells.js";
 import * as fx from "./vfx.js";
 import "./director.js";
 import "./structures.js";
 import { cycleStance, openParty } from "./party.js";
 import "./guild.js";
+import "./forge.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -53,6 +54,9 @@ const SIGILS = {
   [id("sigil_of_yuri")]: id("yuri"),
   [id("sigil_of_gargantua")]: id("gargantua"),
   [id("sigil_of_frost_dragon")]: id("frost_dragon"),
+  [id("sigil_of_evil_lord_wrath")]: id("evil_lord_wrath"),
+  [id("sigil_of_dominion_authority")]: id("dominion_authority"),
+  [id("sigil_of_zesshi")]: id("zesshi"),
 };
 
 /** @type {[EquipmentSlot, string][]} */
@@ -100,6 +104,8 @@ const FLOURISH = {
   overlord_safarlisia: ["holy", 7, "point"],
   overlord_kings: ["none", 6, "point"],
   overlord_fracture: ["none", 4, "raise"],
+  overlord_reap: ["dark", 7, "raise"],
+  overlord_hellfire: ["fire", 7, "point"],
 };
 
 /** Own cooldown bookkeeping: `${playerId}|${category}` -> tick when usable again. */
@@ -843,6 +849,71 @@ function castGroundSlam(player) {
   actionBar(player, count > 0 ? `§7Ground Slam stunned ${count}!` : "§7Ground Slam!");
 }
 
+/** Charon's Guidance: Reap - a sweep that finishes the weak. @param {import("@minecraft/server").Player} player */
+function castReap(player) {
+  if (!tryCooldown(player, "overlord_reap", 9.0, 28)) return;
+  const damage = Math.round(20 * spellPower(player));
+  let count = 0;
+  let reaped = 0;
+  for (const foe of foesNear(player.dimension, player.location, 5)) {
+    try {
+      const health = foe.getComponent("minecraft:health");
+      // Lesser foes already below a fifth of their health are cut down outright.
+      const doomed = health !== undefined && health.effectiveMax < 200 && health.currentValue <= health.effectiveMax * 0.2;
+      foe.applyDamage(doomed ? health.effectiveMax * 4 : damage, { cause: EntityDamageCause.magic, damagingEntity: player });
+      fx.spark(player.dimension, add(foe.location, { x: 0, y: 1, z: 0 }), "dark", 1.1);
+      count++;
+      if (doomed) reaped++;
+    } catch {
+      // already dead
+    }
+  }
+  fx.ring(player.dimension, add(player.location, { x: 0, y: 0.8, z: 0 }), "dark", 5);
+  playSound(player.dimension, "item.trident.riptide_1", player.location, 0.7);
+  actionBar(player, count > 0 ? `§5Reap struck ${count}${reaped > 0 ? `, ${reaped} reaped` : ""}!` : "§5Reap!");
+}
+
+/** Hellfire Blade: Hellfire Wall - a line of flame. @param {import("@minecraft/server").Player} player */
+function castHellfireWall(player) {
+  if (!tryCooldown(player, "overlord_hellfire", 7.0, 22)) return;
+  const origin = add(player.location, { x: 0, y: 1, z: 0 });
+  const view = player.getViewDirection();
+  const len = Math.hypot(view.x, view.z) || 1;
+  const dir = { x: view.x / len, y: 0, z: view.z / len };
+  const struck = new Set();
+  for (let step = 1; step <= 12; step += 1.5) {
+    const point = add(origin, dir, step);
+    fx.pillar(player.dimension, add(point, { x: 0, y: -1, z: 0 }), "fire", 2.5, 1);
+    for (const foe of foesNear(player.dimension, point, 1.8)) {
+      if (struck.has(foe.id)) continue;
+      struck.add(foe.id);
+      try {
+        foe.applyDamage(Math.round(20 * spellPower(player)), { cause: EntityDamageCause.fire, damagingEntity: player });
+        if (foe.isValid) foe.setOnFire(6, true);
+      } catch {
+        // already dead
+      }
+    }
+  }
+  playSound(player.dimension, "mob.ghast.fireball", player.location, 0.7);
+  actionBar(player, struck.size > 0 ? `§6Hellfire Wall burned ${struck.size}!` : "§6Hellfire Wall!");
+}
+
+/** Sealing Crystal: releases the angels sealed inside. @param {import("@minecraft/server").Player} player */
+function breakSealingCrystal(player) {
+  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  const count = summonAlly(player, id("archangel_flame"), 3);
+  if (count === 0) {
+    actionBar(player, "§7You already command as many summoned creatures as you can");
+    return;
+  }
+  consumeHeldItem(player);
+  fx.dome(player.dimension, player.location, "holy");
+  playSound(player.dimension, "random.glass", player.location, 1.4);
+  playSound(player.dimension, "beacon.activate", player.location, 1.4);
+  actionBar(player, `§eThe crystal shatters - ${count} Archangel Flame${count === 1 ? "" : "s"} answer!`);
+}
+
 /** Kilineyram: Dark Blade Mega Impact - a burst of darkness around the wielder. @param {import("@minecraft/server").Player} player */
 function castDarkBlade(player) {
   if (!tryCooldown(player, "overlord_kilineyram", 10.0, 30)) return;
@@ -1070,6 +1141,12 @@ world.afterEvents.itemUse.subscribe((event) => {
       castGroundSlam(player);
     } else if (item === id("scroll_of_rebirth")) {
       castRebirth(player);
+    } else if (item === id("charons_guidance")) {
+      castReap(player);
+    } else if (item === id("hellfire_blade")) {
+      castHellfireWall(player);
+    } else if (item === id("sealing_crystal")) {
+      breakSealingCrystal(player);
     } else if (item === id("kilineyram")) {
       castDarkBlade(player);
     } else if (item === id("safarlisia")) {
@@ -1167,6 +1244,10 @@ world.afterEvents.entityHurt.subscribe((event) => {
     const victim = event.hurtEntity;
     if (!attacker || !attacker.isValid || event.damageSource.cause !== EntityDamageCause.entityAttack) return;
 
+    if (attacker.typeId === id("hellhound") || attacker.typeId === id("evil_lord_wrath")) {
+      if (victim.isValid) victim.setOnFire(3, true); // jaws and claws of fire
+      return;
+    }
     if (attacker.typeId === id("vampire_bride")) {
       heal(attacker, Math.max(1, event.damage * 0.4)); // she drinks what she spills
       return;
@@ -1190,6 +1271,17 @@ world.afterEvents.entityHurt.subscribe((event) => {
       const dz = victim.location.z - attacker.location.z;
       const len = Math.hypot(dx, dz) || 1;
       victim.applyKnockback({ x: (dx / len) * 2.4, z: (dz / len) * 2.4 }, 0.55); // dragon-fist punch
+    } else if (held === id("hellfire_blade") && victim.isValid) {
+      victim.setOnFire(5, true);
+    } else if (held === id("angel_mace") && victim.isValid && victim.matches({ families: ["undead"] })) {
+      victim.setOnFire(4, true); // holy fire
+      system.runTimeout(() => {
+        try {
+          if (victim.isValid && attacker.isValid) victim.applyDamage(6, { cause: EntityDamageCause.magic, damagingEntity: attacker });
+        } catch {
+          // target is gone
+        }
+      }, 11);
     } else if (held === id("safarlisia") && victim.isValid && victim.matches({ families: ["undead"] })) {
       // The holy blade bites twice into the undead; the second cut waits out the hurt cooldown.
       system.runTimeout(() => {
@@ -1274,6 +1366,11 @@ system.runInterval(() => {
         player.addEffect("strength", 3 * TICKS, { amplifier: 1, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("speed", 3 * TICKS, { amplifier: 0, showParticles: false });
+      } else if (wearsFullSet(gear, "infernal")) {
+        player.addEffect("fire_resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
+        player.addEffect("strength", 3 * TICKS, { amplifier: 0, showParticles: false });
+      } else if (wearsFullSet(gear, "vestment")) {
+        player.addEffect("regeneration", 3 * TICKS, { amplifier: 0, showParticles: false });
       } else if (wearsFullSet(gear, "ranger")) {
         player.addEffect("speed", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("jump_boost", 3 * TICKS, { amplifier: 0, showParticles: false });
@@ -1301,7 +1398,13 @@ world.afterEvents.entityHurt.subscribe((event) => {
     if (victim.typeId !== "minecraft:player" || !attacker || !attacker.isValid || attacker.typeId === "minecraft:player") return;
     if (event.damageSource.cause !== EntityDamageCause.entityAttack) return;
     const gear = victim.getComponent("minecraft:equippable");
-    if (!gear || !wearsFullSet(gear, "dragonscale")) return;
+    if (!gear) return;
+    if (wearsFullSet(gear, "infernal")) {
+      attacker.setOnFire(4, true); // Infernal armour burns whoever strikes it
+      fx.spark(victim.dimension, add(attacker.location, { x: 0, y: 1, z: 0 }), "fire", 0.8);
+      return;
+    }
+    if (!wearsFullSet(gear, "dragonscale")) return;
     attacker.addEffect("slowness", 3 * TICKS, { amplifier: 2 });
     fx.spark(victim.dimension, add(attacker.location, { x: 0, y: 1, z: 0 }), "ice", 0.8);
   } catch {

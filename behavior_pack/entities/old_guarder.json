@@ -7,7 +7,69 @@
       "is_summonable": true,
       "is_experimental": false
     },
-    "component_groups": {},
+    "component_groups": {
+      "overlord:summoned": {
+        "minecraft:type_family": {
+          "family": [
+            "old_guarder",
+            "nazarick_ally",
+            "undead",
+            "mob"
+          ]
+        },
+        "minecraft:persistent": {},
+        "minecraft:loot": {
+          "table": "loot_tables/entities/overlord/empty.json"
+        },
+        "minecraft:tameable": {
+          "probability": 1.0,
+          "tame_items": [
+            "overlord:data_crystal"
+          ]
+        },
+        "minecraft:behavior.follow_owner": {
+          "priority": 4,
+          "speed_multiplier": 1.2,
+          "start_distance": 10,
+          "stop_distance": 3
+        },
+        "minecraft:behavior.owner_hurt_by_target": {
+          "priority": 1
+        },
+        "minecraft:behavior.owner_hurt_target": {
+          "priority": 2
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 3,
+          "must_see": true,
+          "reselect_targets": true,
+          "entity_types": [
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "monster"
+              },
+              "max_dist": 16
+            }
+          ]
+        },
+        "minecraft:timer": {
+          "looping": false,
+          "time": 120,
+          "time_down_event": {
+            "event": "overlord:expire",
+            "target": "self"
+          }
+        }
+      },
+      "overlord:despawn": {
+        "minecraft:instant_despawn": {}
+      },
+      "overlord:wild": {
+        "minecraft:burns_in_daylight": {}
+      }
+    },
     "components": {
       "minecraft:is_hidden_when_invisible": {},
       "minecraft:type_family": {
@@ -122,9 +184,35 @@
             "max_dist": 16
           }
         ]
-      },
-      "minecraft:burns_in_daylight": {}
+      }
     },
-    "events": {}
+    "events": {
+      "overlord:become_summoned": {
+        "remove": {
+          "component_groups": [
+            "overlord:wild"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:summoned"
+          ]
+        }
+      },
+      "overlord:expire": {
+        "add": {
+          "component_groups": [
+            "overlord:despawn"
+          ]
+        }
+      },
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": [
+            "overlord:wild"
+          ]
+        }
+      }
+    }
   }
 }

@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:sigil_of_evil_lord_wrath"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "CXC",
+      "XGX",
+      "CXC"
+    ],
+    "key": {
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "X": {
+        "item": "minecraft:netherrack"
+      },
+      "G": {
+        "item": "overlord:yggdrasil_gold_coin"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:data_crystal"
+      }
+    ],
+    "result": {
+      "item": "overlord:sigil_of_evil_lord_wrath",
+      "count": 1
+    }
+  }
+}

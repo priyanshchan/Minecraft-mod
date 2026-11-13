@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [4, 3, 0]
+VERSION = [4, 5, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v4.3.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v4.5.0"
 
 
 def oid(name):
@@ -105,6 +105,9 @@ SIGILS = {
     "yuri": ("Yuri Alpha", "minecraft:iron_ingot"),
     "gargantua": ("Gargantua", "minecraft:stone"),
     "frost_dragon": ("the Frost Dragon", "minecraft:blue_ice"),
+    "evil_lord_wrath": ("Evil Lord Wrath", "minecraft:netherrack"),
+    "dominion_authority": ("Dominion Authority", "minecraft:glowstone"),
+    "zesshi": ("Zesshi Zetsumei", "minecraft:quartz_block"),
 }
 
 ITEMS = {
@@ -223,6 +226,23 @@ ITEMS = {
     "dragonscale_leggings": ("Dragonscale Greaves", "equipment",
                              _armor("slot.armor.legs", 6, 710, "armor_legs")),
     "dragonscale_boots": ("Dragonscale Boots", "equipment", _armor("slot.armor.feet", 3, 615, "armor_feet")),
+    "angel_feather": ("Angel Feather", "items", {"minecraft:max_stack_size": 64}),
+    "demon_heart": ("Demon's Heart", "items", {"minecraft:max_stack_size": 16, "minecraft:rarity": "rare"}),
+    "blessed_cloth": ("Blessed Cloth", "items", {"minecraft:max_stack_size": 64}),
+    "sealing_crystal": ("Sealing Crystal", "items", {
+        "minecraft:max_stack_size": 16, "minecraft:rarity": "epic", "minecraft:glint": True,
+        **_cooldown("overlord_scroll", 1.5)}),
+    "charons_guidance": ("Charon's Guidance", "equipment", _weapon(14, _cooldown("overlord_reap", 9.0))),
+    "angel_mace": ("Angel's Mace", "equipment", _weapon(9, rarity="rare")),
+    "hellfire_blade": ("Hellfire Blade", "equipment", _weapon(12, _cooldown("overlord_hellfire", 7.0))),
+    "infernal_helmet": ("Infernal Helm", "equipment", _armor("slot.armor.head", 3, 500, "armor_head")),
+    "infernal_chestplate": ("Infernal Plate", "equipment", _armor("slot.armor.chest", 8, 730, "armor_torso")),
+    "infernal_leggings": ("Infernal Greaves", "equipment", _armor("slot.armor.legs", 6, 680, "armor_legs")),
+    "infernal_boots": ("Infernal Boots", "equipment", _armor("slot.armor.feet", 3, 590, "armor_feet")),
+    "vestment_helmet": ("Scripture Cowl", "equipment", _armor("slot.armor.head", 2, 220, "armor_head")),
+    "vestment_chestplate": ("Scripture Vestment", "equipment", _armor("slot.armor.chest", 6, 320, "armor_torso")),
+    "vestment_leggings": ("Scripture Leggings", "equipment", _armor("slot.armor.legs", 5, 300, "armor_legs")),
+    "vestment_boots": ("Scripture Sandals", "equipment", _armor("slot.armor.feet", 2, 260, "armor_feet")),
     "ranger_helmet": ("Ranger's Hood", "equipment", _armor("slot.armor.head", 2, 165, "armor_head")),
     "ranger_chestplate": ("Ranger's Jerkin", "equipment", _armor("slot.armor.chest", 5, 240, "armor_torso")),
     "ranger_leggings": ("Ranger's Leggings", "equipment", _armor("slot.armor.legs", 4, 225, "armor_legs")),
@@ -290,6 +310,9 @@ ITEMS = {
 }
 for _piece in ("helmet", "chestplate", "leggings", "boots"):
     ITEMS[f"world_champion_{_piece}"][2]["minecraft:rarity"] = "epic"
+    ITEMS[f"infernal_{_piece}"][2]["minecraft:rarity"] = "epic"
+    ITEMS[f"vestment_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
+        {"items": [oid("blessed_cloth")], "repair_amount": "query.max_durability * 0.25"}]}
     ITEMS[f"ranger_{_piece}"][2]["minecraft:rarity"] = "uncommon"
     ITEMS[f"ranger_{_piece}"][2]["minecraft:repairable"] = {"repair_items": [
         {"items": ["minecraft:leather"], "repair_amount": "query.max_durability * 0.25"}]}
@@ -512,6 +535,15 @@ def recipe_files():
                                   oid("glacier_bricks"), 4),
         "shooting_star": _shaped("shooting_star", ["EEE", "EGE", "EEE"], {
             "E": oid("pleiades_emblem"), "G": "minecraft:gold_block"}, oid("shooting_star")),
+        **{f"vestment_{piece}": _shaped(f"vestment_{piece}", pattern, {"A": oid("blessed_cloth")},
+                                        oid(f"vestment_{piece}"))
+           for piece, pattern in (("helmet", ["AAA", "A A"]), ("chestplate", ["A A", "AAA", "AAA"]),
+                                  ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
+        **{f"infernal_{piece}": _shapeless(f"infernal_{piece}", [
+            oid(f"dark_warrior_{piece}"), oid("demon_heart"), "minecraft:magma"],
+            oid(f"infernal_{piece}")) for piece in ("helmet", "chestplate", "leggings", "boots")},
+        "angel_mace": _shaped("angel_mace", ["F", "G", "S"], {
+            "F": oid("angel_feather"), "G": "minecraft:gold_block", "S": "minecraft:stick"}, oid("angel_mace")),
         **{f"ranger_{piece}": _shaped(f"ranger_{piece}", pattern, {"A": "minecraft:leather"},
                                       oid(f"ranger_{piece}"))
            for piece, pattern in (("helmet", ["AAA", "A A"]), ("chestplate", ["A A", "AAA", "AAA"]),
@@ -572,7 +604,7 @@ VANILLA_ITEMS_USED = [
     "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
     "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
     "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool", "minecraft:blue_ice",
-    "minecraft:coal",
+    "minecraft:coal", "minecraft:netherrack", "minecraft:quartz_block", "minecraft:blaze_powder",
 ]
 
 
@@ -653,6 +685,19 @@ def loot_files():
         "quagoa": [_pool(_entry("minecraft:raw_iron", 0, 2)), _pool(_entry(coin, 0, 2))],
         "goblin": [_pool(_entry(coin, 0, 1)), _pool(_entry("minecraft:rotten_flesh", 0, 1))],
         "ogre": [_pool(_entry(coin, 1, 3)), _pool(_entry("minecraft:leather", 0, 2))],
+        "hellhound": [_pool(_entry(coin, 0, 2)), _pool(_entry("minecraft:blaze_powder", 0, 1))],
+        "shadow_demon": [_pool(_entry(coin, 0, 2)), _pool(_entry(cry, 0, 1))],
+        "evil_lord_wrath": [_pool(_entry(oid("demon_heart"), 3, 5, looting=False)), one(oid("hellfire_blade")),
+                            one(crest), _pool(_entry(cry, 6, 10)), _pool(_entry(coin, 30, 48))],
+        "archangel_flame": [_pool(_entry(oid("angel_feather"), 0, 2))],
+        "dominion_authority": [_pool(_entry(oid("angel_feather"), 6, 10, looting=False)), one(crest),
+                               _pool(_entry(cry, 6, 10)), _pool(_entry(coin, 30, 48))],
+        "theocracy_priest": [_pool(_entry(oid("blessed_cloth"), 0, 2)), _pool(_entry(coin, 1, 3))],
+        "nigun": [one(oid("sealing_crystal")), _pool(_entry(oid("blessed_cloth"), 3, 6, looting=False)),
+                  _pool(_entry(coin, 10, 20))],
+        "climb": [_pool(_entry("minecraft:iron_ingot", 1, 3))],
+        "zesshi": [one(oid("charons_guidance")), _pool(_entry(crest, 2, 2, looting=False)),
+                   _pool(_entry(cry, 8, 12)), _pool(_entry(coin, 40, 64))],
         "frost_dragon": [_pool(_entry(oid("frost_dragon_scale"), 8, 12, looting=False)),
                          _pool(_entry(crest, 2, 2, looting=False)), _pool(_entry(cry, 8, 14)),
                          _pool(_entry(coin, 40, 64)), _pool(_entry("minecraft:diamond", 2, 5))],
@@ -1080,6 +1125,112 @@ def entity_files():
     c["minecraft:behavior.panic"] = {"priority": 3, "speed_multiplier": 1.4}
     out["dwarf"] = _entity("dwarf", c)
 
+    # ----------------------------------------------- Slane Theocracy and its angels
+    def caster(name, families, health, projectile_id, lo, hi, radius, **kw):
+        c = _mob(name, families, health, kw.pop("speed", 0.28), kw.pop("box", (0.7, 2.0)), loot=name, **kw)
+        c["minecraft:shooter"] = {"def": projectile_id}
+        c["minecraft:behavior.ranged_attack"] = {
+            "priority": 3, "attack_interval_min": lo, "attack_interval_max": hi, "attack_radius": radius,
+            "speed_multiplier": 1.0}
+        c["minecraft:behavior.nearest_attackable_target"] = _target_players(28, [ally])
+        return c
+
+    def angel_call(cooldown, count, cap):
+        return {"priority": 2, "summon_choices": [{
+            "weight": 1, "cooldown_time": cooldown, "cast_duration": 2.0, "particle_color": "#FFFFF6C9",
+            "start_sound_event": "cast.spell",
+            "sequence": [{"shape": "circle", "target": "self", "base_delay": 1.5, "num_entities_spawned": count,
+                          "entity_type": oid("archangel_flame"), "summon_cap": cap, "summon_cap_radius": 24.0,
+                          "size": 2.0, "sound_event": "prepare.summon"}]}]}
+
+    theocracy = ["theocracy", "human", "monster", "mob"]
+    c = caster("theocracy_priest", ["theocracy_priest", *theocracy], 40, oid("magic_bullet"), 1.8, 3.0, 16.0, xp=15)
+    c["minecraft:behavior.summon_entity"] = angel_call(25.0, 1, 2)
+    out["theocracy_priest"] = _entity("theocracy_priest", c)
+
+    c = caster("nigun", ["nigun", *theocracy], 180, oid("magic_bullet"), 1.2, 2.2, 20.0, xp=120, kb=0.4,
+               persistent=True)
+    c["minecraft:behavior.summon_entity"] = angel_call(18.0, 2, 4)
+    out["nigun"] = _entity("nigun", c)
+
+    c = _mob("archangel_flame", ["archangel_flame", "angel", "theocracy", "monster", "mob"], 50, 0.3, (0.7, 2.0),
+             loot="archangel_flame", xp=15, kb=0.3, fire_immune=True)
+    c["minecraft:attack"] = {"damage": 8}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.25, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally])
+    c["minecraft:damage_sensor"] = _no_fall()
+    out["archangel_flame"] = _entity("archangel_flame", c)
+
+    c = caster("dominion_authority", ["dominion_authority", "angel", "theocracy", "monster", "mob"], 500,
+               oid("lightning_bolt"), 1.2, 2.2, 26.0, xp=300, kb=1.0, scale=1.6, fire_immune=True, persistent=True,
+               follow=40)
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": False}
+    c["minecraft:damage_sensor"] = _no_fall()
+    out["dominion_authority"] = _entity("dominion_authority", c)
+
+    # --------------------------------------------------------------- demons
+    demon = ["demon", "monster", "mob"]
+    c = _mob("hellhound", ["hellhound", *demon], 45, 0.38, (0.9, 1.2), loot="hellhound", xp=18, kb=0.2,
+             fire_immune=True)
+    del c["minecraft:can_climb"]
+    c["minecraft:attack"] = {"damage": 7}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:behavior.leap_at_target"] = {"priority": 2, "yd": 0.4, "must_be_on_ground": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(28, [ally, "human"])
+    out["hellhound"] = _entity("hellhound", c)
+
+    c = _mob("shadow_demon", ["shadow_demon", *demon], 35, 0.4, (0.6, 1.9), loot="shadow_demon", xp=14, scale=0.7,
+             fire_immune=True)
+    c["minecraft:attack"] = {"damage": 6}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally, "human"])
+    out["shadow_demon"] = _entity("shadow_demon", c)
+
+    c = _mob("evil_lord_wrath", ["evil_lord_wrath", *demon], 650, 0.26, (1.0, 2.2), loot="evil_lord_wrath", xp=400,
+             scale=1.6, kb=1.0, follow=48, fire_immune=True, persistent=True)
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": True}
+    c["minecraft:damage_sensor"] = _no_fall()
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(48, [ally, "human"])
+    out["evil_lord_wrath"] = _entity("evil_lord_wrath", c, {
+        "overlord:mode_switcher": {"minecraft:target_nearby_sensor": {
+            "inside_range": 4.5, "outside_range": 6.5, "must_see": True,
+            "on_inside_range": {"event": "overlord:switch_to_melee", "target": "self"},
+            "on_outside_range": {"event": "overlord:switch_to_ranged", "target": "self"}}},
+        "overlord:ranged_mode": {
+            "minecraft:shooter": {"def": oid("fireball")},
+            "minecraft:behavior.ranged_attack": {
+                "priority": 3, "burst_shots": 2, "burst_interval": 0.4, "attack_interval_min": 2.5,
+                "attack_interval_max": 4.0, "attack_radius": 26.0, "speed_multiplier": 1.0}},
+        "overlord:melee_mode": {
+            "minecraft:attack": {"damage": 20},
+            "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.2, "track_target": True}},
+    }, {
+        "minecraft:entity_spawned": {"add": {"component_groups": ["overlord:mode_switcher",
+                                                                   "overlord:ranged_mode"]}},
+        "overlord:switch_to_melee": {"remove": {"component_groups": ["overlord:ranged_mode"]},
+                                     "add": {"component_groups": ["overlord:melee_mode"]}},
+        "overlord:switch_to_ranged": {"remove": {"component_groups": ["overlord:melee_mode"]},
+                                      "add": {"component_groups": ["overlord:ranged_mode"]}},
+    })
+
+    # ------------------------------------------------- Zesshi, Climb, Eclair
+    c = _mob("zesshi", ["zesshi", "theocracy", "human", "monster", "mob"], 600, 0.4, (0.7, 2.0), loot="zesshi",
+             xp=500, kb=1.0, follow=48, persistent=True)
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": False}
+    c["minecraft:attack"] = {"damage": 18}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:damage_sensor"] = {"triggers": [{"cause": "fall", "deals_damage": False},
+                                                 {"cause": "all", "damage_multiplier": 0.7}]}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(48, [ally])
+    out["zesshi"] = _entity("zesshi", c)
+
+    out["climb"] = hunter("climb", "human", 70, 0.32, 8)
+
+    c = _mob("eclair", ["eclair", "mob"], 20, 0.2, (0.5, 1.1), xp=0)
+    del c["minecraft:behavior.hurt_by_target"]
+    c["minecraft:behavior.panic"] = {"priority": 1, "speed_multiplier": 1.6}
+    out["eclair"] = _entity("eclair", c)
+
     # ------------------------------------- War Troll, Vampire Bride, Frost Dragon
     c = _mob("war_troll", ["war_troll", "monster", "mob"], 120, 0.26, (0.9, 2.0), loot="war_troll", xp=40,
              scale=1.5, kb=0.8)
@@ -1452,9 +1603,35 @@ def _apply_ai(out):
     for name, group in (("death_knight", "overlord:wild"), ("goblin", "overlord:wild"), ("old_guarder", None),
                         ("elder_lich", None), ("skeleton_mage", None), ("soul_eater", None), ("ogre", None),
                         ("quagoa", None), ("clementine", None), ("war_troll", None),
-                        ("vampire_bride", None)):
+                        ("vampire_bride", None), ("archangel_flame", None)):
         parts(name, group)["minecraft:behavior.nearest_attackable_target"]["entity_types"].append(
             {"filters": _is_family("human"), "max_dist": 16})
+
+    # Creatures that tier magic can summon as allies get the same "summoned" form as Death Knights.
+    for name, families in (("old_guarder", ["old_guarder", "nazarick_ally", "undead", "mob"]),
+                           ("archangel_flame", ["archangel_flame", "nazarick_ally", "angel", "mob"])):
+        entity = out[name]["minecraft:entity"]
+        entity["component_groups"]["overlord:summoned"] = {
+            "minecraft:type_family": {"family": families},
+            "minecraft:persistent": {},
+            "minecraft:loot": {"table": loot_path("empty")},
+            "minecraft:tameable": {"probability": 1.0, "tame_items": [oid("data_crystal")]},
+            "minecraft:behavior.follow_owner": {"priority": 4, "speed_multiplier": 1.2,
+                                                "start_distance": 10, "stop_distance": 3},
+            "minecraft:behavior.owner_hurt_by_target": {"priority": 1},
+            "minecraft:behavior.owner_hurt_target": {"priority": 2},
+            "minecraft:behavior.nearest_attackable_target": {
+                "priority": 3, "must_see": True, "reselect_targets": True,
+                "entity_types": [{"filters": _is_family("monster"), "max_dist": 16}]},
+            "minecraft:timer": {"looping": False, "time": 120,
+                                "time_down_event": {"event": "overlord:expire", "target": "self"}},
+        }
+        entity["component_groups"]["overlord:despawn"] = {"minecraft:instant_despawn": {}}
+        entity["events"]["overlord:become_summoned"] = {"add": {"component_groups": ["overlord:summoned"]}}
+        entity["events"]["overlord:expire"] = {"add": {"component_groups": ["overlord:despawn"]}}
+
+    # Climb serves the Kingdom as well.
+    parts("climb")["minecraft:type_family"]["family"].insert(1, "kingdom")
 
     # Gazef and the village guards belong to the Kingdom, so Empire troops fight them too.
     for name in ("guard", "gazef"):
@@ -1473,6 +1650,14 @@ def _apply_ai(out):
     # Lesser skeletons burn in daylight like vanilla ones, so they do not pile up by day.
     for name in ("old_guarder", "skeleton_mage"):
         parts(name)["minecraft:burns_in_daylight"] = {}
+
+    # A summoned Old Guarder serves by day as well: only the wild ones burn in sunlight.
+    entity = out["old_guarder"]["minecraft:entity"]
+    entity["component_groups"]["overlord:wild"] = {
+        "minecraft:burns_in_daylight": entity["components"].pop("minecraft:burns_in_daylight")}
+    entity["events"]["minecraft:entity_spawned"] = {"add": {"component_groups": ["overlord:wild"]}}
+    entity["events"]["overlord:become_summoned"] = {"remove": {"component_groups": ["overlord:wild"]},
+                                                    "add": {"component_groups": ["overlord:summoned"]}}
 
     parts("soul_eater")["minecraft:behavior.leap_at_target"] = {"priority": 2, "yd": 0.4,
                                                                 "must_be_on_ground": True}
@@ -1510,7 +1695,9 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
         "lupusregina", "entoma", "solution", "yuri", "goblin", "ogre",
         "skeleton_mage", "lizardman", "evileye", "fluder", "gargantua", "soul_eater", "quagoa",
         "adventurer", "guard", "soldier", "archer", "imperial_knight", "bandit",
-        "war_troll", "vampire_bride", "dwarf", "frost_dragon"]
+        "war_troll", "vampire_bride", "dwarf", "frost_dragon",
+        "hellhound", "shadow_demon", "evil_lord_wrath", "archangel_flame", "dominion_authority",
+        "theocracy_priest", "nigun", "climb", "zesshi", "eclair"]
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard", "frost_breath"]
 
 ENTITY_NAMES = {
@@ -1527,6 +1714,10 @@ ENTITY_NAMES = {
     "skeleton_mage": "Skeleton Mage", "lizardman": "Lizardman Warrior", "evileye": "Evileye",
     "fluder": "Fluder Paradyne", "gargantua": "Gargantua", "soul_eater": "Soul Eater",
     "quagoa": "Quagoa", "crystal_shard": "Crystal Lance", "adventurer": "Adventurer",
+    "hellhound": "Hellhound", "shadow_demon": "Shadow Demon", "evil_lord_wrath": "Evil Lord Wrath",
+    "archangel_flame": "Archangel Flame", "dominion_authority": "Dominion Authority",
+    "theocracy_priest": "Sunlight Scripture Priest", "nigun": "Nigun Grid Luin", "climb": "Climb",
+    "zesshi": "Zesshi Zetsumei", "eclair": "Eclair",
     "war_troll": "War Troll", "vampire_bride": "Vampire Bride", "dwarf": "Dwarf Runesmith",
     "frost_dragon": "Frost Dragon", "frost_breath": "Frost Breath",
     "retainer": "Retainer", "guard": "Kingdom Guard", "soldier": "Kingdom Soldier", "archer": "Kingdom Archer",
@@ -1643,6 +1834,12 @@ def spawn_rule_files():
             "adventurer", ["plains", "forest", "taiga", "savanna"], 4, herd=(2, 3)),
         "spawn_rules/bandit.json": monster("bandit", 6, herd=(2, 3),
                                             biomes=["forest", "plains", "taiga", "savanna"]),
+        "spawn_rules/hellhound.json": monster("hellhound", 3, herd=(1, 2)),
+        "spawn_rules/shadow_demon.json": monster("shadow_demon", 3, herd=(1, 2)),
+        "spawn_rules/theocracy_priest.json": monster("theocracy_priest", 2, herd=(2, 3),
+                                                     biomes=["plains", "forest", "savanna"]),
+        "spawn_rules/climb.json": day_creature("climb", "plains", 1),
+        "spawn_rules/eclair.json": day_creature("eclair", "cold", 2),
         "spawn_rules/war_troll.json": monster("war_troll", 2, biomes=["extreme_hills", "taiga", "forest"]),
         "spawn_rules/vampire_bride.json": monster("vampire_bride", 3),
         "spawn_rules/clementine.json": monster("clementine", 2),
@@ -1768,6 +1965,32 @@ SOUNDS = {
                                  "step": "mob.zombie.step"}),
     "retainer": (1.0, [0.95, 1.1], {"hurt": "game.player.hurt", "death": "game.player.die",
                                     "step": "mob.zombie.step", "shoot": "random.bow"}),
+    "hellhound": (1.0, [0.6, 0.75], {"ambient": "mob.wither.ambient", "hurt": "mob.husk.hurt",
+                                     "death": "mob.husk.death", "step": "mob.zombie.step"}),
+    "shadow_demon": (1.0, [1.4, 1.6], {"ambient": "mob.zombie.say", "hurt": "mob.husk.hurt",
+                                        "death": "mob.husk.death", "step": "mob.zombie.step"}),
+    "evil_lord_wrath": (1.0, [0.4, 0.5], {"ambient": "mob.ravager.ambient", "hurt": "mob.irongolem.hit",
+                                          "death": "mob.wither.death", "step": "mob.irongolem.walk",
+                                          "shoot": "mob.ghast.fireball"}),
+    "archangel_flame": (1.0, [1.3, 1.45], {"hurt": "mob.irongolem.hit", "death": "random.glass",
+                                           "step": "mob.zombie.step"}),
+    "dominion_authority": (1.0, [0.8, 0.9], {"hurt": "mob.irongolem.hit", "death": "random.glass",
+                                             "step": "mob.irongolem.walk",
+                                             "shoot": "ambient.weather.lightning.impact"}),
+    "theocracy_priest": (1.0, [0.9, 1.0], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                           "step": "mob.zombie.step", "shoot": "mob.shulker.shoot",
+                                           "cast.spell": "mob.evocation_illager.cast_spell",
+                                           "prepare.summon": "mob.evocation_illager.prepare_summon"}),
+    "nigun": (1.0, [0.75, 0.85], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                  "step": "mob.zombie.step", "shoot": "mob.shulker.shoot",
+                                  "cast.spell": "mob.evocation_illager.cast_spell",
+                                  "prepare.summon": "mob.evocation_illager.prepare_summon"}),
+    "climb": (1.0, [1.05, 1.15], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                  "step": "mob.zombie.step"}),
+    "zesshi": (1.0, [1.2, 1.3], {"hurt": "game.player.hurt", "death": "game.player.die",
+                                 "step": "mob.zombie.step"}),
+    "eclair": (1.0, [1.5, 1.7], {"ambient": "mob.rabbit.idle", "hurt": "mob.rabbit.hurt",
+                                 "death": "mob.rabbit.death", "step": "mob.zombie.step"}),
     "war_troll": (1.0, [0.45, 0.55], {"ambient": "mob.zombie.say", "hurt": "mob.husk.hurt",
                                      "death": "mob.husk.death", "step": "mob.irongolem.walk"}),
     "vampire_bride": (1.0, [1.3, 1.45], {"hurt": "game.player.hurt", "death": "game.player.die",
@@ -1892,6 +2115,16 @@ ENTITY_ANIMS = {
     "archer": ["look_at_target", "idle", "walk", "attack"],
     "imperial_knight": ["look_at_target", "idle", "walk", "attack"],
     "bandit": ["look_at_target", "idle", "walk", "attack"],
+    "hellhound": ["look_at_target", "hamsuke.walk", "hamsuke.attack"],
+    "shadow_demon": ["look_at_target", "idle", "walk", "attack"],
+    "evil_lord_wrath": ["look_at_target", "idle", "walk", "attack", "wings"],
+    "archangel_flame": ["look_at_target", "idle", "walk", "attack", "wings"],
+    "dominion_authority": ["look_at_target", "idle", "walk", "attack", "wings", "cast"],
+    "theocracy_priest": ["look_at_target", "idle", "walk", "attack", "cast"],
+    "nigun": ["look_at_target", "idle", "walk", "attack", "cast"],
+    "climb": ["look_at_target", "idle", "walk", "attack"],
+    "zesshi": ["look_at_target", "idle", "walk", "attack"],
+    "eclair": ["look_at_target", "idle", "walk"],
     "war_troll": ["look_at_target", "idle", "walk", "attack"],
     "vampire_bride": ["look_at_target", "idle", "robe_walk", "attack"],
     "dwarf": ["look_at_target", "idle", "walk"],
@@ -2093,6 +2326,8 @@ WEARABLES = {
     **{f"regalia_{piece}": (piece, f"{NS}_regalia_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"dragonscale_{piece}": (piece, f"{NS}_dragonscale_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"ranger_{piece}": (piece, f"{NS}_ranger_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    **{f"infernal_{piece}": (piece, f"{NS}_infernal_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    **{f"vestment_{piece}": (piece, f"{NS}_vestment_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"crimson_{piece}": (piece, f"{NS}_crimson_{layer}") for piece, (layer, _s) in ARMOR.items()},
 }
 

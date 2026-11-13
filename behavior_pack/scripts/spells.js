@@ -94,7 +94,7 @@ function aimPoint(player, reach) {
 
 /** Creatures with an unusual reaction to an element: multiplier on the damage they take. */
 /** @type {Record<string, Partial<Record<Element, number>>>} */
-const AFFINITY = {
+export const AFFINITY = {
   [id("cocytus")]: { ice: 0.25, fire: 1.5 },
   [id("demiurge")]: { fire: 0.25, ice: 1.5 },
   [id("fluder")]: { fire: 0.5 },
@@ -103,6 +103,11 @@ const AFFINITY = {
   [id("narberal")]: { lightning: 0.25 },
   [id("solution")]: { fire: 1.5 },
   [id("frost_dragon")]: { ice: 0.1, fire: 1.5 },
+  [id("hellhound")]: { fire: 0.1, ice: 1.5, holy: 1.25 },
+  [id("shadow_demon")]: { fire: 0.5, holy: 1.5, dark: 0.5 },
+  [id("evil_lord_wrath")]: { fire: 0.1, ice: 1.5, holy: 1.25 },
+  [id("archangel_flame")]: { holy: 0.25, fire: 0.5, dark: 1.5 },
+  [id("dominion_authority")]: { holy: 0.1, lightning: 0.5, dark: 1.5 },
   [id("war_troll")]: { fire: 1.5, acid: 1.5 },
   [id("vampire_bride")]: { fire: 1.25 },
   "minecraft:blaze": { fire: 0.25, ice: 1.5 },
@@ -362,6 +367,61 @@ function drain(damage, healShare, mana) {
   };
 }
 
+/** Most creatures a player may command through summoning spells and Sealing Crystals at one time. */
+export const MAX_ALLIES = 4;
+
+/**
+ * Summons allied creatures that follow and fight for the player until their time runs out.
+ * Returns how many appeared (0 when the player already commands as many as allowed).
+ * @param {Player} player @param {string} type @param {number} count
+ */
+export function summonAlly(player, type, count) {
+  const tag = `overlord_ally_${player.id}`;
+  let present = 0;
+  try {
+    present = player.dimension.getEntities({ tags: [tag] }).length;
+  } catch {
+    // dimension unloading
+  }
+  const room = Math.min(count, MAX_ALLIES - present);
+  /** @type {Entity[]} */
+  const allies = [];
+  for (let i = 0; i < room; i++) {
+    const angle = ((present + i) / MAX_ALLIES) * Math.PI * 2;
+    const spot = { x: player.location.x + Math.cos(angle) * 2, y: player.location.y, z: player.location.z + Math.sin(angle) * 2 };
+    const ally = player.dimension.spawnEntity(type, spot, { spawnEvent: `${NS}:become_summoned` });
+    ally.addTag("overlord_summoned");
+    ally.addTag(tag);
+    fx.circle(player.dimension, spot, "arcane", 1.1);
+    fx.rise(player.dimension, spot, "arcane", 0.7);
+    allies.push(ally);
+  }
+  // Ownership can only be set once the summoned form has been applied.
+  system.runTimeout(() => {
+    for (const ally of allies) {
+      try {
+        if (ally.isValid && player.isValid) ally.getComponent("minecraft:tameable")?.tame(player);
+      } catch {
+        // it still fights monsters even if it could not be bound
+      }
+    }
+  }, 2);
+  return allies.length;
+}
+
+/** Summoning spell. */
+/** @param {string} type @param {number} count @param {string} sound */
+function summoning(type, count, sound) {
+  return (/** @type {Player} */ player) => {
+    if (summonAlly(player, type, count) === 0) {
+      notify(player, `§7You already command ${MAX_ALLIES} summoned creatures`);
+      return false;
+    }
+    playSound(player.dimension, sound, player.location, 1.2);
+    return true;
+  };
+}
+
 /** Self buff. */
 /** @param {[string, number, number][]} effects [effect, seconds, amplifier] @param {Element} [color] */
 function buff(effects, color = "none") {
@@ -465,6 +525,7 @@ function castTimeStop(player) {
 /** @type {Record<string, fx.Pose>} */
 const POSE = {};
 for (const key of ["light_healing", "heal", "reinforce_armor", "lesser_strength", "haste", "fly", "regenerate", "full_potential", "dimensional_move"]) POSE[key] = "self";
+for (const key of ["summon_undead_3", "summon_angel_4", "summon_undead_6"]) POSE[key] = "raise";
 for (const key of ["fire_rain", "ice_pillar", "napalm", "holy_smite", "gravity_maelstrom", "sand_field_all", "meteor_fall", "nuclear_blast", "time_stop", "shock_wave"]) POSE[key] = "raise";
 
 // -------------------------------------------------------------------- spells
@@ -486,10 +547,12 @@ export const SPELLS = [
   { key: "lightning", name: "Lightning", tier: 3, mana: 9, cooldown: 1.5, element: "lightning", help: "Bolt that stuns for a moment.", cast: bolt(28, 13, "lightning", SPARK, "ambient.weather.lightning.impact") },
   { key: "freezing_bullet", name: "Freezing Bullet", tier: 3, mana: 9, cooldown: 1.5, element: "ice", help: "Bolt of ice that slows.", cast: bolt(28, 11, "ice", FROST, "random.glass") },
   { key: "haste", name: "Haste", tier: 3, mana: 12, cooldown: 20, element: "none", help: "Speed II for 30 seconds.", cast: buff([["speed", 30, 1]], "lightning") },
+  { key: "summon_undead_3", name: "Summon Undead 3rd Tier", tier: 3, mana: 20, cooldown: 30, element: "dark", help: "Two Old Guarders fight for you for 2 minutes.", cast: summoning(id("old_guarder"), 2, "mob.wither.spawn") },
   { key: "fly", name: "Fly", tier: 3, mana: 15, cooldown: 12, element: "none", help: "Lifts you up, then lets you glide.", cast: buff([["levitation", 6, 2], ["slow_falling", 25, 0]]) },
   { key: "ice_lance", name: "Ice Lance", tier: 4, mana: 11, cooldown: 2, element: "ice", help: "Piercing lance of ice that slows.", cast: line(16, 14, "ice", FROST, "random.glass") },
   { key: "regenerate", name: "Regenerate", tier: 4, mana: 16, cooldown: 15, element: "none", help: "Regeneration II for 12 seconds.", cast: buff([["regeneration", 12, 1]], "holy") },
   { key: "holy_ray", name: "Holy Ray", tier: 4, mana: 12, cooldown: 2, element: "holy", help: "Ray of holy light; strong against undead.", cast: bolt(28, 17, "holy", TOTEM, "random.orb") },
+  { key: "summon_angel_4", name: "Summon Angel 4th Tier", tier: 4, mana: 28, cooldown: 40, element: "holy", help: "An Archangel Flame fights for you for 2 minutes.", cast: summoning(id("archangel_flame"), 1, "beacon.activate") },
   { key: "dragon_lightning", name: "Dragon Lightning", tier: 5, mana: 16, cooldown: 3, element: "lightning", help: "Lightning that jumps to 4 mobs.", cast: chain(4, 16) },
   { key: "dimensional_move", name: "Dimensional Move", tier: 5, mana: 14, cooldown: 3, element: "none", help: "Teleport to the block you look at (32 blocks).", cast: castDimensionalMove },
   { key: "fire_rain", name: "Fire Rain", tier: 5, mana: 18, cooldown: 4, element: "fire", help: "Burning rain where you aim (4 blocks).", cast: burst(4, 16, "fire", { effect: FLAME, sound: "mob.ghast.fireball" }) },
@@ -498,6 +561,7 @@ export const SPELLS = [
   { key: "bone_lance", name: "Thousand Bone Lance", tier: 6, mana: 18, cooldown: 3, element: "arcane", help: "Volley of lances through everything ahead.", cast: line(20, 24, "arcane", CRIT, "item.trident.riptide_1") },
   { key: "ice_pillar", name: "Ice Pillar", tier: 6, mana: 20, cooldown: 4, element: "ice", help: "Pillar of ice where you aim (4 blocks).", cast: burst(4, 22, "ice", { effect: FROST, sound: "random.glass" }) },
   { key: "wall_of_hell", name: "Wall of Hell", tier: 6, mana: 20, cooldown: 4, element: "fire", help: "Wall of hellfire through everything ahead (14 blocks).", cast: line(14, 24, "fire", FLAME, "mob.ghast.fireball") },
+  { key: "summon_undead_6", name: "Summon Undead 6th Tier", tier: 6, mana: 45, cooldown: 60, element: "dark", help: "A Death Knight fights for you for 5 minutes.", cast: summoning(id("death_knight"), 1, "mob.wither.spawn") },
   { key: "chain_dragon_lightning", name: "Chain Dragon Lightning", tier: 7, mana: 26, cooldown: 4, element: "lightning", help: "Lightning that jumps to 8 mobs.", cast: chain(8, 24) },
   { key: "napalm", name: "Napalm", tier: 7, mana: 24, cooldown: 4, element: "fire", help: "Pillar of fire where you aim (4 blocks).", cast: burst(4, 22, "fire", { effect: FLAME }) },
   { key: "hell_flame", name: "Hell Flame", tier: 7, mana: 28, cooldown: 5, element: "fire", help: "A small black flame that consumes one mob.", cast: bolt(30, 42, "fire", FLAME, "mob.ghast.fireball") },
