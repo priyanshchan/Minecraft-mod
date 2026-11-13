@@ -404,15 +404,47 @@ the in-game effects are this add-on's own interpretation.
 
 ### Spell visuals
 
-Every spell and item ability has its own effects, drawn with five custom particles tinted by element
-(purple arcane, orange fire, pale-blue ice, yellow lightning, gold holy, green acid, violet dark):
+Every spell, scroll, tome and weapon skill has its own effects, drawn with 25 custom particle effects that
+are tinted by element (purple arcane, orange fire, pale-blue ice, yellow lightning, gold holy, green acid,
+violet dark, white for the unaligned) and rendered additively so they glow.
 
-- a rotating **magic circle** under the caster, larger at higher tiers, and a stacked dome of circles for super-tier magic;
-- **beams** from the caster's hand, **impact bursts** and expanding **shock rings** on targets;
-- target circles that pulse while delayed spells charge, then something **falls from the sky** onto them;
-- **spirals and rising motes** around the caster for buffs and heals;
-- three **casting poses** on the player model (hand thrust, both arms raised, arms spread), visible in third
-  person and to other players.
+- **Magic circles:** an outer ring of runes and an inner hexagram turning against it under the caster,
+  larger at higher tiers; runes drift up from the big ones, and super-tier magic stacks them into a dome.
+- **Gathering power:** light flares in the casting hand, and from the sixth tier sparkles rush inwards as
+  the spell builds. Delayed spells pulse their target circle while power gathers overhead.
+- **Beams:** a row of motes around one bright core laid from hand to target, with a flash where it leaves
+  the caster.
+- **Impacts:** sparkles and a flash, then the element's own signature —
+
+  | Element | On impact | Along a beam | Rising from the ground |
+  | --- | --- | --- | --- |
+  | Fire | Licking flames and embers | Embers | Embers |
+  | Ice | Tumbling shards | Shards | — |
+  | Lightning | Jagged arcs that flicker for an instant | Arcs every two blocks | — |
+  | Holy | Shafts of light | — | Shafts of light |
+  | Dark | Curling wisps of shadow | Wisps | Wisps |
+  | Acid | A spatter of droplets | Droplets | — |
+  | Arcane | Drifting runes | — | Runes |
+  | Unaligned | Streaks of light | — | — |
+
+- **Area spells:** a pillar of light, a nova of streaks, and a shock wave that rolls out along the ground
+  with dust behind it. The largest shake the view of everyone nearby.
+- **Buffs and heals:** a second of sparkles climbing around whoever is affected.
+- **Death magic:** a skull rises over anything a dark spell kills, and over the victim of Grasp Heart.
+- **Teleporting:** you vanish in a rush of gathered light and arrive in a shaft of it; your view darkens for
+  a blink. Time Stop blanches it.
+- **Scrolls** are held open and read — runes lift off the page and it burns away in the colour of its
+  spell — and each has its own effect (a thunderbolt with a nova, a whirl of wind for Fly, a fireball's
+  blast for Explosion, and so on). **Tomes** are held open in the off hand while the other traces the words.
+- **Weapon skills** are swings: a crescent in the air for cuts, a ground ring for slams.
+- **Twelve poses** on the player model, each with a wind-up, a strike and a recovery: hand thrust, arms
+  raised, arms spread then drawn in, sweep, slam, channelling, summoning, the long super-tier cast, reading
+  a scroll, reading a tome, weapon slash and weapon slam. They are visible in third person and to other
+  players.
+
+When a great deal is drawn in the same instant the decorative layers are dropped first, so a big fight keeps
+its basic effects without flooding the screen. **Grimoire → Preview the eight elements** plays each
+element's effects around you, which is the quickest way to see them all.
 
 ### Combat mechanics
 

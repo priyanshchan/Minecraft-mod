@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [5, 1, 0]
+VERSION = [5, 5, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v5.1.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v5.5.0"
 
 
 def oid(name):
@@ -2353,119 +2353,422 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
 # Every spell effect is drawn with these five emitters.  The script passes
 # variable.color (element colour) and variable.scale (size) with each spawn.
 def particle_files():
+    """The add-on's own particle effects. Each is tinted with variable.color and sized with variable.scale,
+    both set by the script; most are drawn additively so they glow."""
     tint = ["variable.color.r", "variable.color.g", "variable.color.b"]
-    life = "variable.particle_age / variable.particle_lifetime"
+    life = "(variable.particle_age / variable.particle_lifetime)"
+    # white-hot at birth, cooling to the spell's colour
+    hot = [f"math.lerp(1.0, variable.color.{c}, {life})" for c in "rgb"]
+    pale = [f"math.lerp(1.0, variable.color.{c}, 0.6)" for c in "rgb"]
+    fade = f"(1.0 - {life})"
+    swell = f"(1.0 - (1.0 - {life}) * (1.0 - {life}))"  # fast at first, easing out
+    pulse = ("math.clamp(math.min(variable.particle_age * 6.0, "
+             "(variable.particle_lifetime - variable.particle_age) * 3.0), 0.0, 1.0)")
+    twinkle = "(0.65 + 0.35 * math.sin(variable.particle_age * 1400.0 + variable.particle_random_1 * 360.0))"
 
-    def effect(name, texture, tex_size, components):
+    def effect(name, texture, components, material="particles_add", active=0.1):
         return {
             "format_version": "1.10.0",
             "particle_effect": {
                 "description": {
                     "identifier": oid(name),
-                    "basic_render_parameters": {"material": "particles_blend",
+                    "basic_render_parameters": {"material": material,
                                                 "texture": f"textures/particle/{NS}/{texture}"},
                 },
                 "components": {
-                    "minecraft:emitter_lifetime_once": {"active_time": 0.1},
+                    "minecraft:emitter_lifetime_once": {"active_time": active},
                     **components,
                 },
             },
         }
 
-    def billboard(size, mode, tex_size):
-        return {"size": [size, size], "facing_camera_mode": mode,
-                "uv": {"texture_width": tex_size, "texture_height": tex_size, "uv": [0, 0],
-                       "uv_size": [tex_size, tex_size]}}
+    def quad(size, mode, tex, uv=None, uv_size=None, flipbook=None, direction=None):
+        """Billboard appearance. tex is (width, height) of the texture."""
+        w, h = tex
+        size = size if isinstance(size, list) else [size, size]
+        uvs = {"texture_width": w, "texture_height": h}
+        if flipbook:
+            uvs["flipbook"] = flipbook
+        else:
+            uvs["uv"] = uv or [0, 0]
+            uvs["uv_size"] = uv_size or [w, h]
+        out = {"size": size, "facing_camera_mode": mode, "uv": uvs}
+        if direction:
+            out["direction"] = direction
+        return out
+
+    burst = lambda n: {"minecraft:emitter_rate_instant": {"num_particles": n}}
+    point = {"minecraft:emitter_shape_point": {}}
+    lifetime = lambda lo, hi=None: {"minecraft:particle_lifetime_expression": {
+        "max_lifetime": lo if hi is None else f"math.random({lo}, {hi})"}}
+    colour = lambda rgb, alpha: {"minecraft:particle_appearance_tinting": {"color": [*rgb, alpha]}}
+    along_velocity = {"mode": "derive_from_velocity", "min_speed_threshold": 0.01}
+    moving = {"minecraft:particle_motion_dynamic": {}}  # a particle only keeps its starting speed with a motion component
 
     out = {
-        # burst of glowing motes flying outwards (impacts)
-        "spark": effect("spark", "glow", 16, {
-            "minecraft:emitter_rate_instant": {"num_particles": 14},
+        # ---------------------------------------------------------------- basics
+        # burst of sparkles flying outwards (the heart of every impact)
+        "spark": effect("spark", "star", {
+            **burst(18),
             "minecraft:emitter_shape_sphere": {"radius": 0.2, "direction": "outwards"},
-            "minecraft:particle_lifetime_expression": {"max_lifetime": "math.random(0.35, 0.8)"},
-            "minecraft:particle_initial_speed": "math.random(1.5, 4.0) * variable.scale",
+            **lifetime(0.35, 0.85),
+            "minecraft:particle_initial_speed": "math.random(1.5, 4.5) * variable.scale",
             "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, -2.0, 0],
                                                   "linear_drag_coefficient": 2.5},
-            "minecraft:particle_appearance_billboard": billboard(
-                f"0.12 * variable.scale * (1.0 - {life})", "lookat_xyz", 16),
-            "minecraft:particle_appearance_tinting": {"color": [*tint, 1.0]},
+            "minecraft:particle_appearance_billboard": quad(f"0.16 * variable.scale * {fade}", "lookat_xyz", (32, 32)),
+            **colour(hot, 1.0),
         }),
         # one still mote (beams and trails are drawn as rows of these)
-        "mote": effect("mote", "glow", 16, {
-            "minecraft:emitter_rate_instant": {"num_particles": 1},
-            "minecraft:emitter_shape_point": {},
-            "minecraft:particle_lifetime_expression": {"max_lifetime": 0.45},
-            "minecraft:particle_appearance_billboard": billboard(
-                f"0.2 * variable.scale * (1.0 - 0.7 * {life})", "lookat_xyz", 16),
-            "minecraft:particle_appearance_tinting": {"color": [*tint, f"1.0 - {life}"]},
+        "mote": effect("mote", "glow", {
+            **burst(1), **point, **lifetime(0.45),
+            "minecraft:particle_appearance_billboard": quad(
+                f"0.22 * variable.scale * (1.0 - 0.7 * {life})", "lookat_xyz", (32, 32)),
+            **colour(tint, fade),
         }),
-        # motes rising from a disc on the ground (heals, buffs, charging spells)
-        "rise": effect("rise", "glow", 16, {
-            "minecraft:emitter_rate_instant": {"num_particles": 16},
+        # sparkles rising from a disc on the ground (heals, buffs, charging spells)
+        "rise": effect("rise", "star", {
+            **burst(18),
             "minecraft:emitter_shape_disc": {"radius": "variable.scale", "plane_normal": [0, 1, 0],
                                              "direction": [0, 1, 0]},
-            "minecraft:particle_lifetime_expression": {"max_lifetime": "math.random(0.7, 1.4)"},
+            **lifetime(0.7, 1.4),
             "minecraft:particle_initial_speed": "math.random(1.0, 2.6)",
             "minecraft:particle_motion_dynamic": {"linear_drag_coefficient": 0.8},
-            "minecraft:particle_appearance_billboard": billboard(
-                f"0.1 * (1.0 - {life})", "lookat_xyz", 16),
-            "minecraft:particle_appearance_tinting": {"color": [*tint, 1.0]},
+            "minecraft:particle_appearance_billboard": quad(f"0.13 * {fade}", "lookat_xyz", (32, 32)),
+            **colour(tint, twinkle),
         }),
-        # flat rotating magic circle
-        "magic_circle": effect("magic_circle", "magic_circle", 64, {
-            "minecraft:emitter_rate_instant": {"num_particles": 1},
-            "minecraft:emitter_shape_point": {},
-            "minecraft:particle_lifetime_expression": {"max_lifetime": 1.3},
-            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)", "rotation_rate": 80},
-            "minecraft:particle_appearance_billboard": billboard("variable.scale", "emitter_transform_xz", 64),
-            "minecraft:particle_appearance_tinting": {"color": [
-                *tint, "math.clamp(math.min(variable.particle_age * 6.0, "
-                       "(variable.particle_lifetime - variable.particle_age) * 3.0), 0.0, 1.0)"]},
+        # outer ring of a magic circle, turning slowly
+        "magic_circle": effect("magic_circle", "magic_circle", {
+            **burst(1), **point, **lifetime(1.4),
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)", "rotation_rate": 60},
+            "minecraft:particle_appearance_billboard": quad(
+                f"variable.scale * (0.85 + 0.15 * math.min(1.0, variable.particle_age * 5.0))",
+                "emitter_transform_xz", (128, 128)),
+            **colour(tint, pulse),
+        }),
+        # inner figure of a magic circle, turning the other way
+        "magic_circle_inner": effect("magic_circle_inner", "magic_circle_inner", {
+            **burst(1), **point, **lifetime(1.4),
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)", "rotation_rate": -110},
+            "minecraft:particle_appearance_billboard": quad("variable.scale", "emitter_transform_xz", (128, 128)),
+            **colour(hot, pulse),
         }),
         # flat ring that expands and fades (shock waves)
-        "ring": effect("ring", "ring", 32, {
-            "minecraft:emitter_rate_instant": {"num_particles": 1},
-            "minecraft:emitter_shape_point": {},
-            "minecraft:particle_lifetime_expression": {"max_lifetime": 0.55},
-            "minecraft:particle_appearance_billboard": billboard(
-                f"variable.scale * (0.15 + 0.85 * {life})", "emitter_transform_xz", 32),
-            "minecraft:particle_appearance_tinting": {"color": [*tint, f"1.0 - {life}"]},
+        "ring": effect("ring", "ring", {
+            **burst(1), **point, **lifetime(0.6),
+            "minecraft:particle_appearance_billboard": quad(
+                f"variable.scale * (0.15 + 0.85 * {swell})", "emitter_transform_xz", (64, 64)),
+            **colour(tint, fade),
         }),
+        # --------------------------------------------------------------- impacts
+        # a flash of light at the moment of impact
+        "flash": effect("flash", "glow", {
+            **burst(1), **point, **lifetime(0.22),
+            "minecraft:particle_appearance_billboard": quad(
+                f"variable.scale * (0.6 + 1.6 * {life})", "lookat_xyz", (32, 32)),
+            **colour(hot, f"0.9 * {fade}"),
+        }),
+        # sparks drawn out along their flight
+        "streak": effect("streak", "streak", {
+            **burst(14),
+            "minecraft:emitter_shape_sphere": {"radius": 0.15, "direction": "outwards"},
+            **lifetime(0.25, 0.5),
+            "minecraft:particle_initial_speed": "math.random(4.0, 9.0) * variable.scale",
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, -3.0, 0],
+                                                  "linear_drag_coefficient": 3.0},
+            "minecraft:particle_appearance_billboard": quad(
+                ["0.05 * variable.scale", f"0.35 * variable.scale * {fade}"], "lookat_direction", (16, 64),
+                direction=along_velocity),
+            **colour(hot, 1.0),
+        }),
+        # a great many streaks at once (explosions and novas)
+        "nova": effect("nova", "streak", {
+            **burst(46),
+            "minecraft:emitter_shape_sphere": {"radius": 0.3, "direction": "outwards"},
+            **lifetime(0.35, 0.6),
+            "minecraft:particle_initial_speed": "math.random(2.2, 3.8) * variable.scale",
+            "minecraft:particle_motion_dynamic": {"linear_drag_coefficient": 1.5},
+            "minecraft:particle_appearance_billboard": quad(
+                ["0.1", f"0.8 * {fade}"], "lookat_direction", (16, 64), direction=along_velocity),
+            **colour(hot, 1.0),
+        }),
+        # sparkles rushing inwards to a point (spells gathering power)
+        "implode": effect("implode", "star", {
+            **burst(26),
+            "minecraft:emitter_shape_sphere": {"radius": "variable.scale", "surface_only": True,
+                                               "direction": "inwards"},
+            **lifetime(0.5),
+            "minecraft:particle_initial_speed": "variable.scale * 1.9",
+            **moving,
+            "minecraft:particle_appearance_billboard": quad(f"0.1 + 0.12 * {life}", "lookat_xyz", (32, 32)),
+            **colour([f"math.lerp(variable.color.{c}, 1.0, {life})" for c in "rgb"], pulse),
+        }),
+        # heavy ring along the ground with dust thrown up behind it
+        "shockwave": effect("shockwave", "shockwave", {
+            **burst(1), **point, **lifetime(0.7),
+            "minecraft:particle_appearance_billboard": quad(
+                f"variable.scale * (0.2 + 0.9 * {swell})", "emitter_transform_xz", (64, 64)),
+            **colour(pale, f"0.85 * {fade}"),
+        }),
+        "dust": effect("dust", "smoke", {
+            **burst(16),
+            "minecraft:emitter_shape_disc": {"radius": 0.3, "plane_normal": [0, 1, 0], "direction": "outwards"},
+            **lifetime(0.6, 1.0),
+            "minecraft:particle_initial_speed": "variable.scale * math.random(2.0, 3.5)",
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)", "rotation_rate": "math.random(-60, 60)"},
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, 0.6, 0], "linear_drag_coefficient": 3.0},
+            "minecraft:particle_appearance_billboard": quad(f"0.25 + 0.5 * {life}", "lookat_xyz", (32, 32)),
+            **colour([f"(0.45 + 0.3 * variable.color.{c})" for c in "rgb"], f"0.5 * {fade}"),
+        }, material="particles_blend"),
+        # the crescent a blade leaves in the air
+        "slash": effect("slash", "slash", {
+            **burst(1), **point, **lifetime(0.28),
+            "minecraft:particle_initial_spin": {"rotation": "math.random(-40, 40)"},
+            "minecraft:particle_appearance_billboard": quad(
+                f"variable.scale * (0.6 + 0.6 * {swell})", "lookat_xyz", (64, 64)),
+            **colour(hot, fade),
+        }),
+        # --------------------------------------------------- the eight elements
+        # fire: licking flames and drifting embers
+        "flame": effect("flame", "flame", {
+            **burst(10),
+            "minecraft:emitter_shape_sphere": {"radius": "0.35 * variable.scale", "direction": [0, 1, 0]},
+            **lifetime(0.45, 0.8),
+            "minecraft:particle_initial_speed": "math.random(0.8, 2.2)",
+            **moving,
+            "minecraft:particle_appearance_billboard": quad(
+                f"0.3 * variable.scale * (1.0 - 0.6 * {life})", "lookat_xyz", (128, 32),
+                flipbook={"base_UV": [0, 0], "size_UV": [32, 32], "step_UV": [32, 0],
+                          "frames_per_second": 10, "max_frame": 4, "loop": True}),
+            **colour(hot, f"math.min(1.0, 2.5 * {fade})"),
+        }),
+        "ember": effect("ember", "glow", {
+            **burst(10),
+            "minecraft:emitter_shape_sphere": {"radius": "0.5 * variable.scale", "direction": "outwards"},
+            **lifetime(0.9, 1.8),
+            "minecraft:particle_initial_speed": "math.random(0.3, 1.0)",
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, 1.2, 0], "linear_drag_coefficient": 0.6},
+            "minecraft:particle_appearance_billboard": quad(0.07, "lookat_xyz", (32, 32)),
+            **colour(hot, f"{twinkle} * {fade}"),
+        }),
+        # ice: tumbling shards
+        "shard": effect("shard", "shard", {
+            **burst(9),
+            "minecraft:emitter_shape_sphere": {"radius": 0.15, "direction": "outwards"},
+            **lifetime(0.5, 0.9),
+            "minecraft:particle_initial_speed": "math.random(3.0, 6.0) * variable.scale",
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)", "rotation_rate": "math.random(-400, 400)"},
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, -9.0, 0], "linear_drag_coefficient": 1.0},
+            "minecraft:particle_appearance_billboard": quad("0.18 * variable.scale", "lookat_xyz", (32, 32)),
+            **colour(pale, f"math.min(1.0, 3.0 * {fade})"),
+        }),
+        # lightning: jagged arcs that flicker for an instant
+        "arc": effect("arc", "arc", {
+            **burst(7),
+            "minecraft:emitter_shape_sphere": {"radius": "0.8 * variable.scale", "direction": "outwards"},
+            **lifetime(0.06, 0.16),
+            "minecraft:particle_initial_speed": 0.0,
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)"},
+            "minecraft:particle_appearance_billboard": quad(
+                ["0.3 * variable.scale", "0.6 * variable.scale"], "lookat_xyz", (128, 64),
+                uv=["math.floor(variable.particle_random_1 * 3.99) * 32", 0], uv_size=[32, 64]),
+            **colour(hot, 1.0),
+        }),
+        # holy: shafts of light rising
+        "ray": effect("ray", "streak", {
+            **burst(10),
+            "minecraft:emitter_shape_disc": {"radius": "variable.scale", "plane_normal": [0, 1, 0],
+                                             "direction": [0, 1, 0]},
+            **lifetime(0.5, 0.9),
+            "minecraft:particle_initial_speed": "math.random(2.0, 4.5)",
+            **moving,
+            "minecraft:particle_appearance_billboard": quad(
+                ["0.07", f"0.7 * (1.0 - 0.5 * {life})"], "lookat_y", (16, 64)),
+            **colour(hot, fade),
+        }),
+        # dark: curling wisps of shadow and, for death magic, a rising skull
+        "wisp": effect("wisp", "smoke", {
+            **burst(8),
+            "minecraft:emitter_shape_sphere": {"radius": "0.4 * variable.scale", "direction": "outwards"},
+            **lifetime(0.8, 1.4),
+            "minecraft:particle_initial_speed": "math.random(0.3, 0.9)",
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)", "rotation_rate": "math.random(-60, 60)"},
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, 0.8, 0], "linear_drag_coefficient": 1.0},
+            "minecraft:particle_appearance_billboard": quad(
+                f"0.3 * variable.scale * (0.6 + 0.8 * {life})", "lookat_xyz", (32, 32)),
+            **colour([f"(0.8 * variable.color.{c})" for c in "rgb"], f"0.7 * {fade}"),
+        }, material="particles_blend"),
+        "skull": effect("skull", "skull", {
+            **burst(1), **lifetime(1.1),
+            "minecraft:emitter_shape_custom": {"offset": [0, 0, 0], "direction": [0, 1, 0]},
+            "minecraft:particle_initial_speed": 0.8,
+            **moving,
+            "minecraft:particle_appearance_billboard": quad("0.45 * variable.scale", "lookat_xyz", (32, 32)),
+            **colour(pale, pulse),
+        }),
+        # acid: a spatter of droplets
+        "droplet": effect("droplet", "glow", {
+            **burst(12),
+            "minecraft:emitter_shape_sphere": {"radius": 0.15, "direction": "outwards"},
+            **lifetime(0.4, 0.8),
+            "minecraft:particle_initial_speed": "math.random(2.0, 5.0) * variable.scale",
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, -12.0, 0], "linear_drag_coefficient": 0.6},
+            "minecraft:particle_appearance_billboard": quad("0.1 * variable.scale", "lookat_xyz", (32, 32)),
+            **colour(tint, f"math.min(1.0, 3.0 * {fade})"),
+        }),
+        # arcane: runes that drift up and fade
+        "glyph": effect("glyph", "glyphs", {
+            **burst(8),
+            "minecraft:emitter_shape_disc": {"radius": "variable.scale", "plane_normal": [0, 1, 0],
+                                             "surface_only": True, "direction": [0, 1, 0]},
+            **lifetime(1.0, 1.5),
+            "minecraft:particle_initial_speed": "math.random(0.25, 0.6)",
+            **moving,
+            "minecraft:particle_appearance_billboard": quad(
+                0.24, "lookat_xyz", (256, 32),
+                uv=["math.floor(variable.particle_random_1 * 7.99) * 32", 0], uv_size=[32, 32]),
+            **colour(tint, pulse),
+        }),
+        # ------------------------------------------------------- beams and auras
+        # one shaft of light standing on the ground (the script places it half-way up)
+        "pillar_light": effect("pillar_light", "streak", {
+            **burst(1), **point, **lifetime(0.7),
+            "minecraft:particle_appearance_billboard": quad(
+                [f"0.5 * variable.scale * (1.0 - 0.5 * {life})", "variable.height * 0.5"], "lookat_y", (16, 64)),
+            **colour(hot, pulse),
+        }),
+        # the bright core of a beam, laid from one point to another (the script places it at the middle)
+        "beam_core": effect("beam_core", "streak", {
+            **burst(1), **point, **lifetime(0.3),
+            "minecraft:particle_appearance_billboard": quad(
+                [f"0.1 * variable.scale * (1.0 + {life})", "variable.length * 0.5"], "lookat_direction", (16, 64),
+                direction={"mode": "custom", "custom_direction": [
+                    "variable.direction.x", "variable.direction.y", "variable.direction.z"]}),
+            **colour(hot, fade),
+        }),
+        # a second of sparkles climbing around whoever stands in the middle (buffs)
+        "aura": effect("aura", "star", {
+            "minecraft:emitter_rate_steady": {"spawn_rate": 34, "max_particles": 60},
+            "minecraft:emitter_shape_disc": {"radius": "variable.scale", "plane_normal": [0, 1, 0],
+                                             "surface_only": True, "direction": [0, 1, 0]},
+            **lifetime(0.6, 1.0),
+            "minecraft:particle_initial_speed": "math.random(1.4, 2.4)",
+            **moving,
+            "minecraft:particle_appearance_billboard": quad(f"0.11 * {fade}", "lookat_xyz", (32, 32)),
+            **colour(tint, twinkle),
+        }, active=1.1),
     }
     return {f"particles/{name}.json": data for name, data in out.items()}
 
 
-PARTICLES = ["spark", "mote", "rise", "magic_circle", "ring"]
+PARTICLES = ["spark", "mote", "rise", "magic_circle", "magic_circle_inner", "ring", "flash", "streak", "nova",
+             "implode", "shockwave", "dust", "slash", "flame", "ember", "shard", "arc", "ray", "wisp", "skull",
+             "droplet", "glyph", "pillar_light", "beam_core", "aura"]
 PLAYER_BONES = ["head", "body", "rightArm", "leftArm", "rightLeg", "leftLeg"]
 
 
 def player_animations_json():
-    """Casting poses played on the player with Entity.playAnimation."""
+    """Casting and weapon poses played on the player with Entity.playAnimation.
+
+    Each pose winds up, strikes and settles, so a cast reads as a gesture rather than a held stance.
+    Rotations are in degrees on the vanilla player bones; a negative x on an arm swings it forward and up.
+    """
     def keys(*frames):
         return {f"{t:.2f}": list(v) for t, v in frames}
 
+    def anim(length, **bones):
+        return {"animation_length": length,
+                "bones": {bone: {"rotation": keys(*frames)} for bone, frames in bones.items()}}
+
+    Z = (0, 0, 0)
     return {"format_version": "1.8.0", "animations": {
-        # one hand thrust at the target
-        "animation.overlord.cast_point": {"animation_length": 0.6, "bones": {
-            "rightArm": {"rotation": keys((0, (0, 0, 0)), (0.12, (-95, -8, 0)), (0.42, (-95, -8, 0)),
-                                          (0.6, (0, 0, 0)))},
-            "body": {"rotation": keys((0, (0, 0, 0)), (0.12, (0, 8, 0)), (0.42, (0, 8, 0)), (0.6, (0, 0, 0)))},
-        }},
-        # both arms raised to the sky (area and super-tier magic)
-        "animation.overlord.cast_raise": {"animation_length": 1.0, "bones": {
-            "rightArm": {"rotation": keys((0, (0, 0, 0)), (0.2, (-165, 0, 18)), (0.75, (-165, 0, 18)),
-                                          (1.0, (0, 0, 0)))},
-            "leftArm": {"rotation": keys((0, (0, 0, 0)), (0.2, (-165, 0, -18)), (0.75, (-165, 0, -18)),
-                                         (1.0, (0, 0, 0)))},
-            "head": {"rotation": keys((0, (0, 0, 0)), (0.2, (-18, 0, 0)), (0.75, (-18, 0, 0)), (1.0, (0, 0, 0)))},
-        }},
-        # arms spread wide (healing, buffs, self-targeted magic)
-        "animation.overlord.cast_self": {"animation_length": 0.8, "bones": {
-            "rightArm": {"rotation": keys((0, (0, 0, 0)), (0.2, (-20, 0, 75)), (0.6, (-20, 0, 75)),
-                                          (0.8, (0, 0, 0)))},
-            "leftArm": {"rotation": keys((0, (0, 0, 0)), (0.2, (-20, 0, -75)), (0.6, (-20, 0, -75)),
-                                         (0.8, (0, 0, 0)))},
-        }},
+        # one hand drawn back, thrust at the target, then a short recoil
+        "animation.overlord.cast_point": anim(
+            0.65,
+            rightArm=[(0, Z), (0.08, (20, -10, 0)), (0.18, (-102, -8, 0)), (0.3, (-88, -8, 0)),
+                      (0.48, (-92, -8, 0)), (0.65, Z)],
+            leftArm=[(0, Z), (0.18, (18, 0, -12)), (0.48, (14, 0, -10)), (0.65, Z)],
+            body=[(0, Z), (0.08, (0, -8, 0)), (0.18, (0, 12, 0)), (0.48, (0, 9, 0)), (0.65, Z)],
+            head=[(0, Z), (0.18, (-4, 0, 0)), (0.65, Z)]),
+        # both arms swept up to the sky and held (area magic)
+        "animation.overlord.cast_raise": anim(
+            1.1,
+            rightArm=[(0, Z), (0.1, (10, 0, 12)), (0.28, (-172, 0, 22)), (0.5, (-164, 0, 16)),
+                      (0.82, (-168, 0, 20)), (1.1, Z)],
+            leftArm=[(0, Z), (0.1, (10, 0, -12)), (0.28, (-172, 0, -22)), (0.5, (-164, 0, -16)),
+                     (0.82, (-168, 0, -20)), (1.1, Z)],
+            head=[(0, Z), (0.28, (-22, 0, 0)), (0.82, (-20, 0, 0)), (1.1, Z)],
+            body=[(0, Z), (0.1, (6, 0, 0)), (0.28, (-5, 0, 0)), (0.82, (-4, 0, 0)), (1.1, Z)]),
+        # arms spread wide, then drawn in to the chest (healing, buffs, self-targeted magic)
+        "animation.overlord.cast_self": anim(
+            0.9,
+            rightArm=[(0, Z), (0.2, (-20, 0, 80)), (0.45, (-24, 0, 74)), (0.65, (-62, -34, 6)), (0.9, Z)],
+            leftArm=[(0, Z), (0.2, (-20, 0, -80)), (0.45, (-24, 0, -74)), (0.65, (-62, 34, -6)), (0.9, Z)],
+            head=[(0, Z), (0.2, (-10, 0, 0)), (0.65, (8, 0, 0)), (0.9, Z)]),
+        # an arm swept across the body (lines and cones)
+        "animation.overlord.cast_sweep": anim(
+            0.7,
+            rightArm=[(0, Z), (0.12, (-70, 55, 0)), (0.36, (-84, -52, 0)), (0.5, (-78, -44, 0)), (0.7, Z)],
+            leftArm=[(0, Z), (0.36, (16, 0, -18)), (0.7, Z)],
+            body=[(0, Z), (0.12, (0, -22, 0)), (0.36, (0, 26, 0)), (0.5, (0, 20, 0)), (0.7, Z)]),
+        # both hands raised and brought down hard (bursts around the caster)
+        "animation.overlord.cast_slam": anim(
+            0.8,
+            rightArm=[(0, Z), (0.26, (-170, 0, 14)), (0.4, (-38, 0, 8)), (0.58, (-30, 0, 6)), (0.8, Z)],
+            leftArm=[(0, Z), (0.26, (-170, 0, -14)), (0.4, (-38, 0, -8)), (0.58, (-30, 0, -6)), (0.8, Z)],
+            body=[(0, Z), (0.26, (-8, 0, 0)), (0.4, (22, 0, 0)), (0.58, (18, 0, 0)), (0.8, Z)],
+            head=[(0, Z), (0.26, (-14, 0, 0)), (0.4, (16, 0, 0)), (0.8, Z)]),
+        # both hands held out, shaking with the strain (curses and drains)
+        "animation.overlord.cast_channel": anim(
+            1.2,
+            rightArm=[(0, Z), (0.2, (-86, -14, 0)), (0.4, (-90, -10, 0)), (0.6, (-84, -15, 0)),
+                      (0.8, (-90, -11, 0)), (1.0, (-86, -14, 0)), (1.2, Z)],
+            leftArm=[(0, Z), (0.2, (-86, 14, 0)), (0.4, (-82, 10, 0)), (0.6, (-88, 15, 0)),
+                     (0.8, (-83, 11, 0)), (1.0, (-86, 14, 0)), (1.2, Z)],
+            body=[(0, Z), (0.2, (6, 0, 0)), (1.0, (6, 0, 0)), (1.2, Z)],
+            head=[(0, Z), (0.2, (6, 0, 0)), (1.0, (4, 0, 0)), (1.2, Z)]),
+        # a hand pressed towards the ground, then lifted as the summoned rise
+        "animation.overlord.cast_summon": anim(
+            1.2,
+            rightArm=[(0, Z), (0.25, (-48, 0, 0)), (0.5, (-52, 0, 0)), (0.85, (-150, 0, 14)), (1.0, (-146, 0, 12)),
+                      (1.2, Z)],
+            leftArm=[(0, Z), (0.25, (12, 0, -16)), (0.85, (-20, 0, -30)), (1.2, Z)],
+            body=[(0, Z), (0.25, (32, 0, 0)), (0.5, (34, 0, 0)), (0.85, (-6, 0, 0)), (1.2, Z)],
+            head=[(0, Z), (0.25, (24, 0, 0)), (0.85, (-16, 0, 0)), (1.2, Z)]),
+        # super-tier magic: arms rise slowly, hold, then come down as the spell is loosed
+        "animation.overlord.cast_super": anim(
+            2.6,
+            rightArm=[(0, Z), (1.1, (-172, 0, 24)), (1.5, (-166, 0, 18)), (1.9, (-172, 0, 24)), (2.2, (-64, -6, 0)),
+                      (2.35, (-56, -6, 0)), (2.6, Z)],
+            leftArm=[(0, Z), (1.1, (-172, 0, -24)), (1.5, (-166, 0, -18)), (1.9, (-172, 0, -24)), (2.2, (-64, 6, 0)),
+                     (2.35, (-56, 6, 0)), (2.6, Z)],
+            head=[(0, Z), (1.1, (-26, 0, 0)), (1.9, (-26, 0, 0)), (2.2, (10, 0, 0)), (2.6, Z)],
+            body=[(0, Z), (1.1, (-7, 0, 0)), (1.9, (-7, 0, 0)), (2.2, (12, 0, 0)), (2.6, Z)]),
+        # a scroll held open in both hands, read, then cast away
+        "animation.overlord.use_scroll": anim(
+            0.9,
+            rightArm=[(0, Z), (0.18, (-68, -26, 0)), (0.5, (-70, -24, 0)), (0.68, (-128, -6, 0)), (0.9, Z)],
+            leftArm=[(0, Z), (0.18, (-68, 26, 0)), (0.5, (-70, 24, 0)), (0.68, (-40, 12, 0)), (0.9, Z)],
+            head=[(0, Z), (0.18, (22, 0, 0)), (0.5, (20, 0, 0)), (0.68, (-8, 0, 0)), (0.9, Z)]),
+        # a tome held in the off hand while the other traces the words
+        "animation.overlord.use_tome": anim(
+            1.0,
+            leftArm=[(0, Z), (0.2, (-56, 22, 0)), (0.8, (-56, 22, 0)), (1.0, Z)],
+            rightArm=[(0, Z), (0.2, (-70, -30, 0)), (0.45, (-96, -8, 0)), (0.6, (-88, -18, 0)), (0.8, (-100, -4, 0)),
+                      (1.0, Z)],
+            head=[(0, Z), (0.2, (24, 8, 0)), (0.6, (10, 0, 0)), (0.8, (-6, 0, 0)), (1.0, Z)]),
+        # a blade drawn back over the shoulder and cut down across the body
+        "animation.overlord.weapon_slash": anim(
+            0.5,
+            rightArm=[(0, Z), (0.1, (-150, -24, 0)), (0.24, (-22, 38, 0)), (0.34, (-12, 34, 0)), (0.5, Z)],
+            body=[(0, Z), (0.1, (0, -18, 0)), (0.24, (8, 24, 0)), (0.34, (6, 18, 0)), (0.5, Z)],
+            leftArm=[(0, Z), (0.24, (20, 0, -14)), (0.5, Z)]),
+        # a two-handed overhead blow into the ground
+        "animation.overlord.weapon_slam": anim(
+            0.7,
+            rightArm=[(0, Z), (0.22, (-165, 14, 0)), (0.36, (-42, 12, 0)), (0.5, (-36, 12, 0)), (0.7, Z)],
+            leftArm=[(0, Z), (0.22, (-165, -14, 0)), (0.36, (-42, -12, 0)), (0.5, (-36, -12, 0)), (0.7, Z)],
+            body=[(0, Z), (0.22, (-10, 0, 0)), (0.36, (26, 0, 0)), (0.5, (22, 0, 0)), (0.7, Z)],
+            head=[(0, Z), (0.22, (-12, 0, 0)), (0.36, (14, 0, 0)), (0.7, Z)]),
     }}
 
 

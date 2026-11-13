@@ -452,7 +452,7 @@ def main():
         check(ident == f"{NS}:{f.stem}", f"{rel(f)}: identifier does not match file name")
         own_particles.add(ident)
         params = d["description"]["basic_render_parameters"]
-        check(params["material"] in {"particles_blend", "particles_alpha"}, f"{rel(f)}: unknown material")
+        check(params["material"] in {"particles_blend", "particles_alpha", "particles_add"}, f"{rel(f)}: unknown material")
         tex = params["texture"]
         used_textures.add(tex)
         if check(png(tex).is_file(), f"{rel(f)}: missing texture {tex}.png"):
@@ -462,9 +462,30 @@ def main():
         text = json.dumps(d)
         check(text.count("(") == text.count(")"), f"{rel(f)}: unbalanced parentheses in an expression")
         for var in set(re.findall(r"variable\.([a-z_]+)", text)):
-            check(var in {"color", "scale", "particle_age", "particle_lifetime"}, f"{rel(f)}: unexpected variable.{var}")
+            # set by the script (color, scale, height, length, direction) or built in to every particle
+            check(var in {"color", "scale", "height", "length", "direction", "particle_age", "particle_lifetime",
+                          "particle_random_"}, f"{rel(f)}: unexpected variable.{var}")
+        billboard = d["components"]["minecraft:particle_appearance_billboard"]
+        check(billboard["facing_camera_mode"] in {
+            "rotate_xyz", "rotate_y", "lookat_xyz", "lookat_y", "lookat_direction", "direction_x", "direction_y",
+            "direction_z", "emitter_transform_xy", "emitter_transform_xz", "emitter_transform_yz"},
+            f"{rel(f)}: unknown facing mode")
+        book = billboard["uv"].get("flipbook")
+        if book and png(tex).is_file():
+            width = Image.open(png(tex)).size[0]
+            check(book["base_UV"][0] + book["step_UV"][0] * (book["max_frame"] - 1) + book["size_UV"][0] <= width,
+                  f"{rel(f)}: flipbook runs past the edge of its texture")
+        shapes = [c for c in d["components"] if c.startswith("minecraft:emitter_shape_")]
+        check(len(shapes) == 1, f"{rel(f)}: needs exactly one emitter shape, has {shapes}")
+        speed = d["components"].get("minecraft:particle_initial_speed", 0.0)
+        check(speed in (0, 0.0) or "minecraft:particle_motion_dynamic" in d["components"],
+              f"{rel(f)}: has a starting speed but no motion component, so it would not move")
+        rates = [c for c in d["components"] if c.startswith("minecraft:emitter_rate_")]
+        check(len(rates) == 1, f"{rel(f)}: needs exactly one emitter rate, has {rates}")
     for ident in set(re.findall(r'"(overlord:[a-z_]+)"', script)) & {f"{NS}:{p.stem}" for p in (RP / "particles").glob("*.json")} | \
-            set(re.findall(r'emit\([^,]+, "([a-z_]+)"', script)):
+            set(re.findall(r'(?:emit|adorn)\([^,]+, "([a-z_]+)"', script)) | \
+            {name for line in re.findall(r'const (?:ACCENT|RISING|TRAIL) = \{([^}]*)\}', script)
+             for name in re.findall(r'[:\[] ?"([a-z_]+)"', line)}:
         name = ident.split(":")[-1]
         check(f"{NS}:{name}" in own_particles, f"scripts: unknown particle {ident}")
     player_bones = {"head", "body", "rightArm", "leftArm", "rightLeg", "leftLeg"}

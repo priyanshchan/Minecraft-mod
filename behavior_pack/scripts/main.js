@@ -84,35 +84,37 @@ function wearsFullSet(gear, set) {
 
 /**
  * Visual flourish for item abilities, by cooldown category: [element, tier-like size, pose].
+ * The poses "scroll", "tome", "slash" and "smash" also choose the kind of flourish: a scroll is read,
+ * a tome is held open, and a weapon skill is a swing rather than a spell.
  * Categories that are not listed (sigils, the rifle, the whip...) cast nothing visible.
  * @type {Record<string, [string, number, fx.Pose]>}
  */
 const FLOURISH = {
   overlord_staff: ["fire", 3, "point"],
   overlord_ring: ["arcane", 5, "self"],
-  overlord_ginnungagap: ["arcane", 6, "raise"],
-  overlord_tome: ["dark", 7, "raise"],
-  overlord_scroll: ["arcane", 4, "raise"],
+  overlord_ginnungagap: ["arcane", 6, "smash"],
+  overlord_tome: ["dark", 7, "tome"],
+  overlord_scroll: ["arcane", 4, "scroll"],
   overlord_sustenance: ["holy", 2, "self"],
-  overlord_yggdrasil: ["acid", 6, "raise"],
-  overlord_slash: ["arcane", 10, "point"],
-  overlord_fallen: ["holy", 11, "raise"],
-  overlord_frost: ["ice", 4, "point"],
+  overlord_yggdrasil: ["acid", 6, "sweep"],
+  overlord_slash: ["arcane", 10, "tome"],
+  overlord_fallen: ["holy", 11, "tome"],
+  overlord_frost: ["ice", 4, "sweep"],
   overlord_lance: ["ice", 4, "point"],
   overlord_fluder: ["fire", 5, "point"],
-  overlord_slam: ["none", 5, "raise"],
+  overlord_slam: ["none", 5, "smash"],
   overlord_holy: ["holy", 5, "self"],
   overlord_goblins: ["acid", 3, "raise"],
-  overlord_rune: ["lightning", 6, "raise"],
-  overlord_kilineyram: ["dark", 8, "raise"],
-  overlord_safarlisia: ["holy", 7, "point"],
-  overlord_kings: ["none", 6, "point"],
-  overlord_fracture: ["none", 4, "raise"],
-  overlord_reap: ["dark", 7, "raise"],
-  overlord_hellfire: ["fire", 7, "point"],
-  overlord_orb: ["dark", 6, "raise"],
-  overlord_quake: ["ice", 5, "raise"],
-  overlord_flurry: ["none", 4, "point"],
+  overlord_rune: ["lightning", 6, "smash"],
+  overlord_kilineyram: ["dark", 8, "smash"],
+  overlord_safarlisia: ["holy", 7, "slash"],
+  overlord_kings: ["none", 6, "slash"],
+  overlord_fracture: ["none", 4, "smash"],
+  overlord_reap: ["dark", 7, "slash"],
+  overlord_hellfire: ["fire", 7, "slash"],
+  overlord_orb: ["dark", 6, "summon"],
+  overlord_quake: ["ice", 5, "smash"],
+  overlord_flurry: ["none", 4, "slash"],
 };
 
 /** Own cooldown bookkeeping: `${playerId}|${category}` -> tick when usable again. */
@@ -124,8 +126,9 @@ const cooldowns = new Map();
  * @param {string} category
  * @param {number} seconds
  * @param {number} [mana] mana the ability costs (0 for scrolls and passive items)
+ * @param {string} [element] colours the flourish; defaults to the category's own element
  */
-function tryCooldown(player, category, seconds, mana = 0) {
+function tryCooldown(player, category, seconds, mana = 0, element) {
   const key = `${player.id}|${category}`;
   const now = system.currentTick;
   const readyAt = cooldowns.get(key) ?? 0;
@@ -136,7 +139,14 @@ function tryCooldown(player, category, seconds, mana = 0) {
   }
   if (!spendMana(player, mana)) return false;
   const flourish = FLOURISH[category];
-  if (flourish) fx.castFx(player, flourish[0], flourish[1], flourish[2]);
+  if (flourish) {
+    const [own, tier, how] = flourish;
+    const tint = element ?? own;
+    if (how === "scroll") fx.scroll(player, tint);
+    else if (how === "tome") fx.tome(player, tint, tier);
+    else if (how === "slash" || how === "smash") fx.swing(player, tint, how, 1 + tier * 0.08);
+    else fx.castFx(player, tint, tier, how);
+  }
   cooldowns.set(key, now + Math.round(seconds * TICKS));
   try {
     player.startItemCooldown(category, Math.round(seconds * TICKS));
@@ -404,7 +414,7 @@ function castLightning(player) {
     actionBar(player, "§7Call Greater Thunder: nothing in range");
     return;
   }
-  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "lightning")) return;
   creditCast(player, "call_greater_thunder"); // a scroll of a spell you know counts towards its mastery
   /** @type {import("@minecraft/server").Vector3} */
   let strike;
@@ -415,6 +425,9 @@ function castLightning(player) {
     strike = { x: b.x + 0.5, y: b.y + 1, z: b.z + 0.5 };
   }
   player.dimension.spawnEntity("minecraft:lightning_bolt", strike);
+  fx.pillar(player.dimension, strike, "lightning", 10, 1.4);
+  fx.nova(player.dimension, add(strike, { x: 0, y: 0.6, z: 0 }), "lightning", 4);
+  fx.shake(player.dimension, strike, 16, 0.5, 0.4);
   if (entityHit && entityHit.isValid) {
     entityHit.applyDamage(Math.round(12 * spellPower(player)), { cause: EntityDamageCause.magic, damagingEntity: player });
   }
@@ -424,11 +437,13 @@ function castLightning(player) {
 
 /** Scroll: Fly. @param {import("@minecraft/server").Player} player */
 function castFly(player) {
-  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "none")) return;
   creditCast(player, "fly"); // a scroll of a spell you know counts towards its mastery
   player.addEffect("levitation", 6 * TICKS, { amplifier: 2, showParticles: false });
   player.addEffect("slow_falling", 25 * TICKS, { showParticles: false });
   consumeHeldItem(player);
+  fx.spiral(player.dimension, () => (player.isValid ? player.location : undefined), "none", 1.0, 3);
+  fx.ring(player.dimension, player.location, "none", 2.2);
   particle(player.dimension, "minecraft:totem_particle", add(player.location, { x: 0, y: 1, z: 0 }));
   playSound(player.dimension, "mob.bat.takeoff", player.location, 0.8);
   actionBar(player, "§bFly!");
@@ -445,9 +460,11 @@ function useSustenance(player) {
 
 /** Scroll: Invisibility. @param {import("@minecraft/server").Player} player */
 function castInvisibility(player) {
-  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "dark")) return;
   player.addEffect("invisibility", 45 * TICKS, { showParticles: false });
   consumeHeldItem(player);
+  fx.implode(player.dimension, add(player.location, { x: 0, y: 1, z: 0 }), "dark", 1.6);
+  fx.rise(player.dimension, player.location, "dark", 0.9);
   playSound(player.dimension, "random.fizz", player.location, 1.4);
   actionBar(player, "§7Invisibility!");
 }
@@ -459,13 +476,19 @@ function castGreaterTeleportation(player) {
     actionBar(player, "§7Greater Teleportation: set a respawn point (bed) first");
     return;
   }
-  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "arcane")) return;
   creditCast(player, "dimensional_move"); // a scroll of a spell you know counts towards its mastery
   const from = player.location;
   const fromDimension = player.dimension;
   player.teleport({ x: home.x + 0.5, y: home.y, z: home.z + 0.5 }, { dimension: home.dimension });
   consumeHeldItem(player);
   particle(fromDimension, "minecraft:totem_particle", add(from, { x: 0, y: 1, z: 0 }));
+  fx.implode(fromDimension, add(from, { x: 0, y: 1, z: 0 }), "arcane", 1.8);
+  fx.ring(fromDimension, from, "arcane", 2);
+  const arrival = { x: home.x + 0.5, y: home.y, z: home.z + 0.5 };
+  fx.circle(home.dimension, arrival, "arcane", 1.6);
+  fx.pillar(home.dimension, arrival, "arcane", 3, 1);
+  fx.wash(player, { red: 0.08, green: 0.02, blue: 0.14 }, 0.5);
   playSound(home.dimension, "mob.endermen.portal", home, 1);
   actionBar(player, "§dGreater Teleportation!");
 }
@@ -621,15 +644,18 @@ function castExplosion(player) {
     actionBar(player, "§7Explosion: nothing in range");
     return;
   }
-  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "fire")) return;
   player.dimension.createExplosion(target, 4, { breaksBlocks: false, causesFire: false, source: player });
   consumeHeldItem(player);
+  fx.nova(player.dimension, target, "fire", 5);
+  fx.spark(player.dimension, target, "fire", 2);
+  fx.shake(player.dimension, target, 18, 0.6, 0.4);
   actionBar(player, "§6Explosion!");
 }
 
 /** Scroll: Time Stop - freezes nearby foes. @param {import("@minecraft/server").Player} player */
 function castTimeStop(player) {
-  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "none")) return;
   creditCast(player, "time_stop"); // a scroll of a spell you know counts towards its mastery
   let count = 0;
   for (const foe of foesNear(player.dimension, player.location, 12)) {
@@ -642,16 +668,26 @@ function castTimeStop(player) {
     }
   }
   consumeHeldItem(player);
+  for (let i = 0; i < 3; i++) {
+    system.runTimeout(() => {
+      if (player.isValid) fx.ring(player.dimension, player.location, "none", 4 + i * 4);
+    }, i * 3);
+  }
+  fx.circle(player.dimension, player.location, "none", 6);
+  fx.wash(player, { red: 0.85, green: 0.85, blue: 0.95 }, 0.35);
   playSound(player.dimension, "beacon.activate", player.location, 0.5);
   actionBar(player, `§8Time Stop! §7(${count} frozen)`);
 }
 
 /** Scroll: Heavy Recover - heals the caster and nearby pets. @param {import("@minecraft/server").Player} player */
 function castHeavyRecover(player) {
-  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "holy")) return;
   creditCast(player, "heal"); // a scroll of a spell you know counts towards its mastery
   player.addEffect("instant_health", 1, { amplifier: 3 });
   player.addEffect("regeneration", 10 * TICKS, { amplifier: 2 });
+  fx.spiral(player.dimension, () => (player.isValid ? player.location : undefined), "holy", 1.0, 2.4);
+  fx.rise(player.dimension, player.location, "holy", 1.2);
+  fx.ring(player.dimension, player.location, "holy", 8);
   for (const ally of player.dimension.getEntities({ location: player.location, maxDistance: 8 })) {
     try {
       if (ally.getComponent("minecraft:is_tamed")) {
@@ -674,6 +710,11 @@ function castRealitySlash(player) {
   creditCast(player, "reality_slash");
   const hits = strikeLine(player, player.getHeadLocation(), player.getViewDirection(), 18, Math.round(22 * spellPower(player)),
     EntityDamageCause.magic, "minecraft:critical_hit_emitter");
+  // The cut itself: a white line through the air with crescents along it.
+  const eye = player.getHeadLocation();
+  const view = player.getViewDirection();
+  fx.beam(player.dimension, eye, add(eye, view, 18), "none", 2);
+  for (let d = 3; d <= 18; d += 5) fx.slash(player.dimension, add(eye, view, d), "arcane", 2.2);
   playSound(player.dimension, "item.trident.riptide_1", player.location, 1.4);
   actionBar(player, hits > 0 ? `§bReality Slash cut ${hits}!` : "§bReality Slash!");
 }
@@ -691,14 +732,23 @@ function castFallenDown(player) {
   actionBar(player, "§eSuper-tier magic: Fallen Down...");
   playSound(dimension, "beacon.activate", target, 1.2);
   for (let i = 0; i < 3; i++) {
-    system.runTimeout(() => particle(dimension, "minecraft:totem_particle", add(target, { x: 0, y: 1, z: 0 })), i * TICKS);
+    system.runTimeout(() => {
+      particle(dimension, "minecraft:totem_particle", add(target, { x: 0, y: 1, z: 0 }));
+      fx.circle(dimension, target, "holy", 7); // the target circle pulses while the spell gathers
+      fx.rise(dimension, target, "holy", 5);
+      fx.implode(dimension, add(target, { x: 0, y: 6, z: 0 }), "holy", 6);
+    }, i * TICKS);
   }
+  system.runTimeout(() => fx.fall(dimension, target, "holy", 10, 0), 3 * TICKS - 10);
   system.runTimeout(() => {
     try {
       for (let h = 0; h <= 8; h += 2) {
         particle(dimension, "minecraft:knockback_roar_particle", add(target, { x: 0, y: h, z: 0 }));
       }
       particle(dimension, "minecraft:totem_particle", add(target, { x: 0, y: 1, z: 0 }));
+      fx.pillar(dimension, target, "holy", 14, 3);
+      fx.nova(dimension, add(target, { x: 0, y: 1, z: 0 }), "holy", 7);
+      fx.shake(dimension, target, 32, 1.0, 0.7);
       playSound(dimension, "ambient.weather.thunder", target, 0.7);
       playSound(dimension, "random.explode", target, 0.5);
       const caster = player.isValid ? player : undefined;
@@ -915,7 +965,7 @@ function castHellfireWall(player) {
 
 /** Sealing Crystal: releases the angels sealed inside. @param {import("@minecraft/server").Player} player */
 function breakSealingCrystal(player) {
-  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "holy")) return;
   const count = summonAlly(player, id("archangel_flame"), 3);
   if (count === 0) {
     actionBar(player, "§7You already command as many summoned creatures as you can");
@@ -997,7 +1047,7 @@ function castFlurry(player) {
 
 /** Basilisk Eye: a single use that petrifies everything nearby for a few seconds. @param {import("@minecraft/server").Player} player */
 function usePetrify(player) {
-  if (!tryCooldown(player, "overlord_scroll", 1.5)) return;
+  if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "acid")) return;
   let count = 0;
   for (const foe of foesNear(player.dimension, player.location, 8)) {
     try {

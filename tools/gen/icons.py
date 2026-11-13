@@ -4,7 +4,8 @@ from __future__ import annotations
 import math
 import random
 
-from PIL import Image
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter
 
 from modelkit import Cube, rgba, shade, mix
 
@@ -1330,71 +1331,227 @@ def mask_layer():
 
 # ------------------------------------------------------- particle textures
 # Drawn in white so the particle definitions can tint them per element.
+# ------------------------------------------------------------ particle textures
+# Every particle texture is white with an alpha shape; the particle tints it with the spell's colour
+# and draws it additively, so brightness reads as glow.
+def _alpha_image(alpha):
+    """RGBA image from a 2-D float array of alpha values (0-1)."""
+    a = np.clip(alpha, 0.0, 1.0)
+    out = np.zeros((*a.shape, 4), np.uint8)
+    out[..., :3] = 255
+    out[..., 3] = (a * 255 + 0.5).astype(np.uint8)
+    return Image.fromarray(out, "RGBA")
+
+
+def _grid(w, h):
+    """Coordinates in -1..1 across a w x h image."""
+    ys, xs = np.mgrid[0:h, 0:w]
+    return (xs + 0.5) / w * 2 - 1, (ys + 0.5) / h * 2 - 1
+
+
+def _drawn(size, draw_fn, scale=4, blur=0.0, glow=0.0):
+    """Draws white strokes on a supersampled canvas, optionally adds a soft glow, and scales down."""
+    w, h = size
+    big = Image.new("L", (w * scale, h * scale), 0)
+    draw_fn(ImageDraw.Draw(big), scale)
+    if blur:
+        big = big.filter(ImageFilter.GaussianBlur(blur * scale))
+    alpha = np.asarray(big.resize((w, h), Image.LANCZOS), np.float32) / 255
+    if glow:
+        halo = np.asarray(big.filter(ImageFilter.GaussianBlur(glow * scale)).resize((w, h), Image.LANCZOS),
+                          np.float32) / 255
+        alpha = np.maximum(alpha, halo * 0.55)
+    return _alpha_image(alpha)
+
+
 def particle_glow():
-    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-    for y in range(16):
-        for x in range(16):
-            d = math.hypot(x - 7.5, y - 7.5) / 7.5
-            if d < 1:
-                img.putpixel((x, y), (255, 255, 255, int(255 * min(1.0, (1 - d) ** 1.5 * 1.6))))
-    return img
+    x, y = _grid(32, 32)
+    d = np.hypot(x, y)
+    return _alpha_image(np.minimum(1.0, np.clip(1 - d, 0, 1) ** 1.6 * 1.7))
+
+
+def particle_star():
+    """Four-pointed sparkle with a soft core."""
+    x, y = _grid(32, 32)
+    d = np.hypot(x, y)
+    core = np.clip(1 - d * 2.6, 0, 1) ** 1.3
+    rays = np.maximum(np.exp(-np.abs(y) * 14) * np.clip(1 - np.abs(x), 0, 1) ** 1.5,
+                      np.exp(-np.abs(x) * 14) * np.clip(1 - np.abs(y), 0, 1) ** 1.5)
+    return _alpha_image(np.maximum(core, rays * 0.95))
+
+
+def particle_streak():
+    """A streak of light: bright along the middle, fading towards both ends (16 x 64)."""
+    x, y = _grid(16, 64)
+    return _alpha_image(np.clip(1 - np.abs(x), 0, 1) ** 2.2 * np.clip(1 - np.abs(y), 0, 1) ** 0.8 * 1.25)
 
 
 def particle_ring():
-    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-    for y in range(32):
-        for x in range(32):
-            d = math.hypot(x - 15.5, y - 15.5)
-            if 12.5 <= d <= 15:
-                img.putpixel((x, y), (255, 255, 255, 255))
-            elif 10.5 <= d < 12.5:
-                img.putpixel((x, y), (255, 255, 255, 110))
-    return img
+    x, y = _grid(64, 64)
+    d = np.hypot(x, y)
+    band = np.exp(-((d - 0.86) / 0.045) ** 2)
+    inner = np.clip((d - 0.45) / 0.41, 0, 1) ** 3 * (d < 0.86) * 0.35
+    return _alpha_image(np.maximum(band, inner))
+
+
+def particle_shockwave():
+    """Thick ground ring broken up by radial streaks, like kicked-up dust."""
+    x, y = _grid(64, 64)
+    d = np.hypot(x, y)
+    angle = np.arctan2(y, x)
+    grain = 0.65 + 0.35 * np.sin(angle * 23) * np.sin(angle * 7 + 1.3)
+    return _alpha_image(np.exp(-((d - 0.8) / 0.11) ** 2) * grain)
+
+
+def _polar(c, r, deg):
+    return (c + math.cos(math.radians(deg)) * r, c + math.sin(math.radians(deg)) * r)
 
 
 def particle_magic_circle():
-    n = 64
-    img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
-    c = (n - 1) / 2
+    """Outer ring of a magic circle: double border, tick marks and a band of runes (128 px)."""
+    n = 128
 
-    def dot(x, y, a=255):
-        xi, yi = int(round(x)), int(round(y))
-        if 0 <= xi < n and 0 <= yi < n:
-            img.putpixel((xi, yi), (255, 255, 255, a))
+    def draw(d, k):
+        c = n * k / 2
+        ring = lambda r, w: d.ellipse([c - r * k, c - r * k, c + r * k, c + r * k], outline=255, width=int(w * k))
+        ring(62, 1.6)
+        ring(58.5, 0.8)
+        ring(46, 1.2)
+        for i in range(48):  # tick marks between the two borders
+            d.line([_polar(c, 59 * k, i * 7.5), _polar(c, (62 if i % 4 else 56) * k, i * 7.5)], fill=255, width=k)
+        rnd = random.Random(11)
+        for i in range(12):  # runes
+            base = i * 30 + 15
+            pts = [_polar(c, (48.5 + rnd.random() * 7) * k, base + (rnd.random() - 0.5) * 16) for _ in range(4)]
+            d.line(pts, fill=255, width=int(1.2 * k))
+            d.line([_polar(c, 49 * k, base - 6), _polar(c, 55.5 * k, base - 6)], fill=255, width=k)
 
-    def circle(r, a=255):
-        for i in range(720):
-            t = math.radians(i / 2)
-            dot(c + math.cos(t) * r, c + math.sin(t) * r, a)
-
-    def segment(p, q, a=255):
-        steps = int(max(abs(q[0] - p[0]), abs(q[1] - p[1])) * 2) + 1
-        for i in range(steps + 1):
-            dot(p[0] + (q[0] - p[0]) * i / steps, p[1] + (q[1] - p[1]) * i / steps, a)
-
-    for r in (30.5, 29.5, 24, 11):
-        circle(r)
-    circle(17.5, 150)
-    for k in range(2):  # hexagram
-        pts = [(c + math.cos(math.radians(90 + 180 * k + 120 * i)) * 24, c + math.sin(math.radians(90 + 180 * k + 120 * i)) * 24)
-               for i in range(3)]
-        for i in range(3):
-            segment(pts[i], pts[(i + 1) % 3])
-    for i in range(24):  # rune ticks in the outer band
-        t = math.radians(i * 15 + 7.5)
-        r0, r1 = (25.5, 28.5) if i % 2 == 0 else (26.5, 27.5)
-        segment((c + math.cos(t) * r0, c + math.sin(t) * r0), (c + math.cos(t) * r1, c + math.sin(t) * r1), 220)
-    for i in range(6):  # small glyph circles on the hexagram points
-        t = math.radians(30 + i * 60)
-        for j in range(60):
-            u = math.radians(j * 6)
-            dot(c + math.cos(t) * 24 + math.cos(u) * 2.5, c + math.sin(t) * 24 + math.sin(u) * 2.5)
-    for dx, dy in ((0, 0), (1, 0), (0, 1), (1, 1)):
-        dot(c - 0.5 + dx, c - 0.5 + dy)
-    return img
+    return _drawn((n, n), draw, glow=1.6)
 
 
-PARTICLE_TEXTURES = {"glow": particle_glow, "ring": particle_ring, "magic_circle": particle_magic_circle}
+def particle_magic_circle_inner():
+    """Inner figure of a magic circle: hexagram, hexagon and a small star (128 px)."""
+    n = 128
+
+    def draw(d, k):
+        c = n * k / 2
+        d.ellipse([c - 60 * k, c - 60 * k, c + 60 * k, c + 60 * k], outline=255, width=int(1.4 * k))
+        for turn in (0, 180):
+            d.polygon([_polar(c, 59 * k, 90 + turn + 120 * i) for i in range(3)], outline=255)
+            pts = [_polar(c, 59 * k, 90 + turn + 120 * i) for i in range(4)]
+            d.line(pts, fill=255, width=int(1.4 * k))
+        d.line([_polar(c, 30 * k, 60 * i) for i in range(7)], fill=255, width=k)
+        d.ellipse([c - 16 * k, c - 16 * k, c + 16 * k, c + 16 * k], outline=255, width=k)
+        for i in range(4):
+            d.line([_polar(c, 4 * k, 90 * i + 45), _polar(c, 14 * k, 90 * i)], fill=255, width=k)
+            d.line([_polar(c, 4 * k, 90 * i - 45), _polar(c, 14 * k, 90 * i)], fill=255, width=k)
+
+    return _drawn((n, n), draw, glow=1.6)
+
+
+def particle_glyphs():
+    """Strip of eight runes, 32 px each."""
+    def draw(d, k):
+        rnd = random.Random(29)
+        for g in range(8):
+            ox = g * 32 * k
+            nodes = [(ox + (6 + rnd.random() * 20) * k, (5 + rnd.random() * 22) * k) for _ in range(5)]
+            d.line(nodes, fill=255, width=int(2.2 * k))
+            d.line([(ox + 16 * k, 4 * k), (ox + 16 * k, 28 * k)], fill=255, width=int(1.8 * k))
+            if g % 2:
+                d.ellipse([ox + 11 * k, 11 * k, ox + 21 * k, 21 * k], outline=255, width=int(1.6 * k))
+
+    return _drawn((256, 32), draw, glow=1.2)
+
+
+def particle_flame():
+    """Four frames of a licking flame, 32 px each."""
+    frames = []
+    for f in range(4):
+        x, y = _grid(32, 32)
+        wobble = 0.22 * np.sin(y * 3.2 + f * 1.57) * (1 - (y + 1) / 2)
+        width = 0.62 * np.clip((y + 1) / 2, 0, 1) ** 0.75 + 0.05
+        body = np.clip(1 - np.abs(x - wobble) / width, 0, 1)
+        frames.append(body ** 1.2 * np.clip((y + 1.0) * 1.6, 0, 1) * np.clip((1.0 - y) * 4.0, 0, 1))
+    return _alpha_image(np.concatenate(frames, axis=1))
+
+
+def particle_smoke():
+    x, y = _grid(32, 32)
+    rnd = random.Random(5)
+    a = np.zeros_like(x)
+    for _ in range(7):
+        cx, cy, r = (rnd.random() - 0.5) * 0.9, (rnd.random() - 0.5) * 0.9, 0.28 + rnd.random() * 0.25
+        a = np.maximum(a, np.exp(-(((x - cx) ** 2 + (y - cy) ** 2) / (r * r))))
+    return _alpha_image(a * np.clip(1.15 - np.hypot(x, y), 0, 1) * 0.9)
+
+
+def particle_shard():
+    """A sliver of ice: a long diamond with one bright facet."""
+    def draw(d, k):
+        d.polygon([(16 * k, 1 * k), (22 * k, 14 * k), (16 * k, 31 * k), (10 * k, 14 * k)], fill=150)
+        d.polygon([(16 * k, 1 * k), (22 * k, 14 * k), (16 * k, 31 * k)], fill=255)
+        d.line([(16 * k, 1 * k), (16 * k, 31 * k)], fill=210, width=k)
+
+    return _drawn((32, 32), draw, glow=0.8)
+
+
+def particle_arc():
+    """Four jagged lightning segments, 32 x 64 each."""
+    def draw(d, k):
+        rnd = random.Random(41)
+        for f in range(4):
+            ox = f * 32 * k
+            pts = [(ox + 16 * k, 0)]
+            for step in range(1, 8):
+                pts.append((ox + (16 + (rnd.random() - 0.5) * 20) * k, step * 8 * k))
+            pts.append((ox + 16 * k, 64 * k))
+            d.line(pts, fill=255, width=int(2.4 * k), joint="curve")
+            fork = pts[3 + f % 3]
+            d.line([fork, (fork[0] + (rnd.random() - 0.5) * 16 * k, fork[1] + 12 * k)], fill=220, width=int(1.4 * k))
+
+    return _drawn((128, 64), draw, glow=1.4)
+
+
+def particle_slash():
+    """A crescent - the trail of a blade."""
+    x, y = _grid(64, 64)
+    outer = np.clip((0.92 - np.hypot(x, y)) * 14, 0, 1)
+    inner = np.clip((np.hypot(x + 0.22, y) - 0.86) * 9, 0, 1)
+    taper = np.clip((x + 0.15) * 1.6, 0, 1) ** 0.6
+    return _alpha_image(outer * inner * taper)
+
+
+def particle_skull():
+    art = [
+        "................",
+        "....WWWWWWWW....",
+        "...WWWWWWWWWW...",
+        "..WWWWWWWWWWWW..",
+        "..WWWWWWWWWWWW..",
+        "..WW..WWWW..WW..",
+        "..WW..WWWW..WW..",
+        "..WWWWWWWWWWWW..",
+        "..WWWWW..WWWWW..",
+        "...WWWWWWWWWW...",
+        "....WWWWWWWW....",
+        "....W.WW.WW.W...",
+        "....W.WW.WW.W...",
+        "....WWWWWWWW....",
+        "................",
+        "................",
+    ]
+    a = np.array([[1.0 if ch == "W" else 0.0 for ch in row] for row in art], np.float32)
+    return _alpha_image(np.kron(a, np.ones((2, 2), np.float32)))
+
+
+PARTICLE_TEXTURES = {
+    "glow": particle_glow, "star": particle_star, "streak": particle_streak, "ring": particle_ring,
+    "shockwave": particle_shockwave, "magic_circle": particle_magic_circle,
+    "magic_circle_inner": particle_magic_circle_inner, "glyphs": particle_glyphs, "flame": particle_flame,
+    "smoke": particle_smoke, "shard": particle_shard, "arc": particle_arc, "slash": particle_slash,
+    "skull": particle_skull,
+}
 
 
 BLOCK_TEXTURES = {
