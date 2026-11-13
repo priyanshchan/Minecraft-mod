@@ -78,7 +78,7 @@
         "table": "loot_tables/entities/overlord/gigant_basilisk.json"
       },
       "minecraft:scale": {
-        "value": 1.5
+        "value": 2.0
       },
       "minecraft:knockback_resistance": {
         "value": 0.8

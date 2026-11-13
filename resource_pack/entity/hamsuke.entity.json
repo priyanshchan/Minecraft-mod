@@ -17,14 +17,18 @@
           "look_at_target",
           "hamsuke_walk",
           "hamsuke_tail",
-          "hamsuke_attack"
+          "hamsuke_attack",
+          "breathe",
+          "flinch"
         ]
       },
       "animations": {
         "look_at_target": "animation.overlord.look_at_target",
         "hamsuke_walk": "animation.overlord.hamsuke.walk",
         "hamsuke_tail": "animation.overlord.hamsuke.tail",
-        "hamsuke_attack": "animation.overlord.hamsuke.attack"
+        "hamsuke_attack": "animation.overlord.hamsuke.attack",
+        "breathe": "animation.overlord.breathe",
+        "flinch": "animation.overlord.flinch"
       },
       "render_controllers": [
         "controller.render.overlord.entity"

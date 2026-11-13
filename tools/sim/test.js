@@ -12,6 +12,7 @@ import * as forge from "./forge.js";
 import * as mount from "./mount.js";
 import * as vfx from "./vfx.js";
 import * as arena from "./arena.js";
+import * as ambience from "./ambience.js";
 await import("./main.js"); // must load without touching the world
 
 // Everything random in the add-on goes through Math.random. A seeded generator makes each run identical
@@ -752,6 +753,37 @@ use(w, "overlord:martial_lord_club"); assert.ok(thug.damaged.length === 1 && thu
 w.dimension.mobs.length = 0; use(w, "overlord:elf_kings_staff"); advance(3); assert.equal(w.dimension.mobs.filter((m) => m.typeId === "overlord:behemoth" && m.tamedBy === "wren").length, 1);
 wornW = "platinum"; w.effects.clear(); advance(45); assert.ok(w.effects.get("resistance").amplifier === 1 && w.effects.has("regeneration"), "Platinum armour"); wornW = "";
 pw.kills["overlord:go_gin"] = 1; assert.ok(guild.checkTitles(w).includes("Martial Lord"));
+
+// ---- v6.5: creature visuals ----
+{
+const zoe = mkPlayer("zoe"); zoe.dimension = makeLand(); zoe.dimension.getPlayers = () => [zoe]; zoe.location = { x: 0, y: 64, z: 0 };
+zoe.dimension.spawnParticle = (effect, loc, vars) => zoe.fx.push({ effect, loc, color: vars?.v?.["variable.color"], scale: vars?.v?.["variable.scale"] });
+const seen65 = (name) => zoe.fx.filter((f) => f.effect === `overlord:${name}`); const everyone = players.splice(0, players.length, zoe);
+const creature = (type, hp = 40, families = []) => { const e = zoe.dimension.spawnEntity(type, { x: 3, y: 64, z: 3 }); e.health.effectiveMax = hp; e.health.currentValue = hp;
+  e.getEffect = (name) => (e.effects.has(name) ? {} : undefined); e.matches = (q) => q.families.every((f) => families.includes(f)); return e; };
+// something hangs in the air around the notable ones, at their own height - and nothing gives away the unseen
+const lord = creature("overlord:ainz", 500, ["undead"]); creature("overlord:goblin"); const hound = creature("overlord:hellhound", 45, ["demon"]); hound.effects.set("invisibility", 0);
+advance(1); zoe.fx = []; assert.equal(ambience.dress(), 1, "only the lord is dressed: goblins have no aura and the hound is unseen");
+assert.ok(seen65("wisp").length === 1 && seen65("glyph").length === 1); assert.equal(seen65("wisp")[0].loc.y, 65.4); assert.equal(seen65("ember").length, 0);
+hound.effects.clear(); advance(1); zoe.fx = []; assert.equal(ambience.dress(), 2); assert.equal(seen65("ember").length, 1, "embers round the hound once it shows itself");
+// each creature's effects are drawn in its own colour
+assert.equal(ambience.themeOf(lord), "dark"); assert.equal(ambience.themeOf(hound), "fire"); assert.equal(ambience.themeOf(creature("overlord:paladin")), "holy");
+assert.equal(ambience.themeOf(creature("overlord:bandit")), "none"); assert.equal(ambience.themeOf(creature("overlord:quagoa", 35, ["undead"])), "dark", "by family where nothing else says");
+// a melee blow leaves a crescent - one per blow, not one per tick - and a great foe's shakes the view
+const blow = (from) => world.afterEvents.entityHurt.fire({ hurtEntity: zoe, damage: 4, damageSource: { damagingEntity: from, cause: "entityAttack" } });
+advance(1); zoe.fx = []; blow(hound); assert.equal(seen65("slash").length, 1); blow(hound); assert.equal(seen65("slash").length, 1, "the same swing is not drawn twice");
+advance(10); blow(hound); assert.equal(seen65("slash").length, 2); const shakes = []; zoe.runCommand = (cmd) => shakes.push(cmd); blow(lord); assert.ok(seen65("slash").length === 3 && shakes.length === 1, "a great foe's blow shakes the view");
+world.afterEvents.entityHurt.fire({ hurtEntity: zoe, damage: 4, damageSource: { damagingEntity: hound, cause: "magic" } }); assert.equal(seen65("slash").length, 3, "only melee");
+// deaths are marked: a burst for the ordinary, a nova and a skull for a great undead
+advance(1); zoe.fx = []; world.afterEvents.entityDie.fire({ deadEntity: hound, damageSource: {} }); assert.ok(seen65("spark").length === 1 && seen65("nova").length === 0);
+advance(1); zoe.fx = []; world.afterEvents.entityDie.fire({ deadEntity: lord, damageSource: {} }); assert.ok(seen65("nova").length === 1 && seen65("skull").length === 1 && seen65("pillar_light").length === 1);
+// a great foe arrives inside a magic circle; lesser ones simply appear
+advance(1); zoe.fx = []; world.afterEvents.entitySpawn.fire({ entity: creature("overlord:goblin"), cause: "Spawned" }); advance(3); assert.equal(seen65("magic_circle").length, 0);
+world.afterEvents.entitySpawn.fire({ entity: creature("overlord:evil_lord_wrath", 650, ["demon"]), cause: "Spawned" }); advance(3); assert.equal(seen65("magic_circle").length, 1);
+assert.deepEqual(seen65("magic_circle")[0].color, { red: 1.0, green: 0.45, blue: 0.1 }, "in the demon's own colour");
+for (const [type, auras] of Object.entries(ambience.AURAS)) for (const [, , height, size] of auras) assert.ok(type.startsWith("overlord:") && height >= 0 && size > 0, type);
+players.splice(0, players.length, ...everyone, zoe);
+}
 
 // persistence: saved profile is restored after leaving
 advance(100);

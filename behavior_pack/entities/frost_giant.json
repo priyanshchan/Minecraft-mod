@@ -79,7 +79,7 @@
         "table": "loot_tables/entities/overlord/frost_giant.json"
       },
       "minecraft:scale": {
-        "value": 1.7
+        "value": 2.3
       },
       "minecraft:knockback_resistance": {
         "value": 0.9

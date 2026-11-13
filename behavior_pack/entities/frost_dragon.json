@@ -120,7 +120,7 @@
         "table": "loot_tables/entities/overlord/frost_dragon.json"
       },
       "minecraft:scale": {
-        "value": 1.4
+        "value": 2.2
       },
       "minecraft:knockback_resistance": {
         "value": 1.0

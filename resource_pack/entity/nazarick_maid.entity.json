@@ -16,13 +16,19 @@
         "animate": [
           "look_at_target",
           "idle",
-          "robe_walk"
+          "robe_walk",
+          "breathe",
+          "flinch",
+          "lean"
         ]
       },
       "animations": {
         "look_at_target": "animation.overlord.look_at_target",
         "idle": "animation.overlord.idle",
-        "robe_walk": "animation.overlord.robe_walk"
+        "robe_walk": "animation.overlord.robe_walk",
+        "breathe": "animation.overlord.breathe",
+        "flinch": "animation.overlord.flinch",
+        "lean": "animation.overlord.lean"
       },
       "render_controllers": [
         "controller.render.overlord.entity"

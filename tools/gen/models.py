@@ -3037,6 +3037,174 @@ def rubedo():
     return m
 
 
+
+# ------------------------------------------------- v6.5: more detail on every body
+# The shared bodies are dressed after they are built: hair with depth, pauldrons, capes, pouches,
+# tusks, ears, tails and spines.  Each wrapper keeps the name of the builder it extends, so every
+# creature made from that body gets the detail.
+def _bone(m, name):
+    return next(b for b in m.bones if b.name == name)
+
+
+def _hair_layer(m, hair, long=False):
+    """A second, slightly larger head layer carrying the hair, so it stands off the face."""
+    layer = _bone(m, "head").cube((-4, 24, -4), (8, 8, 8), inflate=0.45)
+    hair_d = shade(hair, 0.82)
+    layer.top.fill(hair)
+    layer.top.noise(8, 3)
+    layer.back.fill(hair, 0, 0, None, 8 if long else 6)
+    layer.back.noise(8, 4)
+    layer.back.hline(7 if long else 5, hair_d)
+    for face, x0, x1 in ((layer.right, 0, 8), (layer.left, 0, 8)):
+        face.fill(hair, x0, 0, x1, 4)
+        face.noise(8, 5)
+        face.hline(3, hair_d)
+    layer.right.fill(hair, 0, 4, 4, 7 if long else 5)   # the back half hangs lower
+    layer.left.fill(hair, 4, 4, 8, 7 if long else 5)
+    layer.front.fill(hair, 0, 0, None, 2)
+    layer.front.fill(hair_d, 0, 1, 2, 3)
+    layer.front.fill(hair_d, 6, 1, 8, 3)
+    return layer
+
+
+# Who wears a cape, and in which colour (None: the darker cloth colour of their outfit).
+CAPES = {"climb": "#2a4a80", "lakyus": None, "remedios": "#f4f1ea", "paladin": None, "imperial_knight": "#a8262a",
+         "guard": None, "zesshi": "#17141d", "nigun": "#e9e6dc", "khajiit": "#3a0c0c", "decem": "#d9a92b",
+         "arena_master": "#96701a", "theocracy_priest": None, "zero": None, "soldier": None}
+
+_plain_soldier = _soldier
+
+
+def _soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, weapon_kind, mask=None,
+             orb="#c05bff"):
+    m = _plain_soldier(name, skin, hair, armor, armor_l, armor_d, cloth, cloth_d, helmet, weapon_kind, mask, orb)
+    body = _bone(m, "body")
+    if helmet:
+        for bname, x in (("rightArm", -8), ("leftArm", 4)):  # pauldrons
+            pad = _bone(m, bname).cube((x, 21, -2), (4, 3, 4), inflate=0.7)
+            pad.fill(armor_l)
+            pad.band(2, 3, armor_d)
+            pad.top.border(armor)
+    elif hair != skin:  # the bald keep their heads bare
+        _hair_layer(m, hair)
+    pouch = body.cube((2, 10, -3), (3, 3, 1))
+    pouch.fill("#6b4a36")
+    pouch.front.hline(0, "#8a6a4a")
+    pouch.front.px(1, 1, GOLD)
+    if name in CAPES or name.startswith("retainer_"):
+        colour = CAPES.get(name) or cloth_d
+        if not name.startswith("retainer_") or helmet:
+            # Named characters get a cape that swings on its own bone; the retainer looks share one
+            # skeleton, so theirs hangs from the body.
+            hanger = body if name.startswith("retainer_") else m.bone("cape", (0, 24, 2), parent="body")
+            cape = hanger.cube((-4, 11, 2), (8, 13, 1))
+            cape.fill(colour)
+            cape.back.vshade(1.0, 0.75)
+            cape.back.ragged_bottom(2, 7)
+            cape.back.hline(0, shade(colour, 1.3))
+    return m
+
+
+_plain_pleiades = _pleiades
+
+
+def _pleiades(name, skin, hair, hair_d, eye, dress="#1f1e28", accent="#b3261f", face=None, glasses=False,
+              sleeve=None, glove=None, bun=True):
+    m, head, body, pal = _plain_pleiades(name, skin, hair, hair_d, eye, dress, accent, face, glasses, sleeve, glove,
+                                         bun)
+    _hair_layer(m, hair, long=True)
+    bow = body.cube((-3, 13, 2), (6, 4, 1))  # the bow of the apron at the back
+    bow.fill(accent)
+    bow.back.vline(2, shade(accent, 0.7))
+    bow.back.vline(3, shade(accent, 0.7))
+    return m, head, body, pal
+
+
+_plain_brute = _brute
+
+
+def _brute(name="ogre", o="#b08a5a", o_l="#cba878", o_d="#7d5f3a"):
+    m = _plain_brute(name, o, o_l, o_d)
+    head, body = _bone(m, "head"), _bone(m, "body")
+    for x in (-3, 2):  # tusks
+        tusk = head.cube((x, 25, -5), (1, 2, 1))
+        tusk.fill("#f1eee0")
+    for x in (-6, 4):  # ears
+        ear = head.cube((x, 28, -1), (2, 3, 1))
+        ear.fill(o_d)
+        ear.front.fill(o, 0, 0, None, 2)
+    for x in (-8, 6):  # knots of muscle on the shoulders
+        knot = body.cube((x, 22, -2), (2, 3, 4))
+        knot.fill(o_l)
+    flap = body.cube((-3, 7, -4), (6, 5, 1))  # loincloth
+    flap.fill("#4a3323")
+    flap.front.ragged_bottom(2, 5)
+    flap.front.hline(0, "#6b4a32")
+    return m
+
+
+_plain_beast = _beast
+
+
+def _beast(name="soul_eater", dark="#1c2026", dark_l="#343b45", glow="#59e0c8", BONE=BONE, BONE_D=BONE_D):
+    m = _plain_beast(name, dark, dark_l, glow, BONE, BONE_D)
+    head, body = _bone(m, "head"), _bone(m, "body")
+    for z in (-6, -2, 2):  # spines along the back
+        spine = body.cube((-1, 19, z), (2, 2, 2))
+        spine.fill(BONE)
+        spine.top.fill(BONE_D)
+    for x in (-3, 2):  # ears
+        ear = head.cube((x, 16, -10), (1, 2, 1))
+        ear.fill(dark_l)
+    tail = m.bone("tail", (0, 13, 8), parent="body", rotation=(-25, 0, 0))
+    t1 = tail.cube((-1, 12, 8), (2, 2, 7))
+    t1.fill(dark)
+    tip = tail.cube((-1.5, 11.5, 15), (3, 3, 3))
+    tip.fill(glow)
+    return m
+
+
+_plain_lizard = _lizard
+
+
+def _lizard(name="zaryusu", sc="#3f7a4a", sc_l="#5fa068", sc_d="#27502f", belly="#c9c58f",
+            blade_c=("#bfe8ff", "#f4fbff")):
+    m = _plain_lizard(name, sc, sc_l, sc_d, belly, blade_c)
+    body = _bone(m, "body")
+    for y in (21, 18, 15):  # a ridge of scales down the back
+        ridge = body.cube((-0.5, y, 2), (1, 2, 2))
+        ridge.fill(sc_d)
+        ridge.top.fill(sc_l)
+    for bname, x in (("rightArm", -8), ("leftArm", 4)):  # bracers
+        bracer = _bone(m, bname).cube((x, 14, -2), (4, 3, 4), inflate=0.3)
+        bracer.fill("#6b4226")
+        bracer.band(0, 1, "#8a5a36")
+    return m
+
+
+_plain_dragon = frost_dragon
+
+
+def frost_dragon(name="frost_dragon", sc="#bfe3f5", sc_l="#eaf7ff", sc_d="#7fb4d6", belly="#5f8fb8",
+                 eye="#f2c21b"):
+    m = _plain_dragon(name, sc, sc_l, sc_d, belly, eye)
+    head, body = _bone(m, "head"), _bone(m, "body")
+    for x in (-5, 4):  # a second, swept-back pair of horns and cheek spikes
+        horn = head.cube((x, 20, -17), (1, 4, 1))
+        horn.fill(sc_l)
+        cheek = head.cube((x, 16, -22), (1, 1, 3))
+        cheek.fill(sc_d)
+    for z in (-14, -4, 6):  # plates along the flanks
+        for x in (-7, 6):
+            plate = body.cube((x, 12, z), (1, 4, 5))
+            plate.fill(sc_d)
+            plate.top.fill(sc_l)
+    spike = _bone(m, "tail3").cube((-2, 11, 36), (4, 4, 3))  # a club of spikes at the tip of the tail
+    spike.fill(sc_l)
+    spike.back.fill(sc_d)
+    return m
+
+
 ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_lich, hamsuke,
        narberal, pandoras_actor, old_guarder, aura, mare, gazef, clementine, nazarick_maid,
        brain, zaryusu, cz_delta, nfirea,

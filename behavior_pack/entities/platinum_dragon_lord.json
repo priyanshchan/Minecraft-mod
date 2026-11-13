@@ -118,7 +118,7 @@
         "table": "loot_tables/entities/overlord/platinum_dragon_lord.json"
       },
       "minecraft:scale": {
-        "value": 1.6
+        "value": 2.8
       },
       "minecraft:knockback_resistance": {
         "value": 1.0

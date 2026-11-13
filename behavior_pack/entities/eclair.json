@@ -76,6 +76,9 @@
       "minecraft:behavior.panic": {
         "priority": 1,
         "speed_multiplier": 1.6
+      },
+      "minecraft:scale": {
+        "value": 0.9
       }
     },
     "events": {}

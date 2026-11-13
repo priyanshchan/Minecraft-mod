@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [6, 0, 0]
+VERSION = [6, 5, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v6.0.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v6.5.0"
 
 
 def oid(name):
@@ -1909,6 +1909,7 @@ def entity_files():
     out["retainer"] = _entity("retainer", c, groups, events, spawnable=False)
 
     _apply_ai(out)
+    _resize(out)
     out["frost_breath"] = projectile("frost_breath", 0.4, {
         "impact_damage": {"damage": 10, "knockback": True, "semi_random_diff_damage": False},
         "mob_effect": {"effect": "slowness", "durationeasy": 60, "durationnormal": 100,
@@ -1920,6 +1921,45 @@ def entity_files():
         "remove_on_hit": {},
     }, {}, {})
     return {f"entities/{k}.json": v for k, v in out.items()}
+
+
+# How large each creature stands.  The models are drawn two blocks tall, so 0.94 puts a grown man at the
+# player's own height; everything else is sized against that.  People without an entry use 0.94.
+SIZES = {
+    # men and women of note
+    "gazef": 1.0, "sebas": 0.98, "zero": 1.04, "brain": 0.96, "demiurge": 0.96, "pandoras_actor": 0.96,
+    "albedo": 0.95, "narberal": 0.92, "lupusregina": 0.92, "solution": 0.93, "yuri": 0.93, "lakyus": 0.92,
+    "remedios": 0.93, "vampire_bride": 0.92, "rubedo": 0.9, "nazarick_maid": 0.9, "clementine": 0.9, "enri": 0.9,
+    "nfirea": 0.9, "climb": 0.92, "neia": 0.88, "zesshi": 0.86, "entoma": 0.86, "cz_delta": 0.86,
+    # the small
+    "shalltear": 0.8, "evileye": 0.78, "aura": 0.74, "mare": 0.74, "dwarf": 0.74, "goblin": 0.68,
+    "shadow_demon": 0.8, "eclair": 0.9, "quagoa": 0.9,
+    # the undead
+    "ainz": 1.12, "death_knight": 1.4, "elder_lich": 0.96, "skeleton_mage": 0.92,
+    # demi-humans
+    "lizardman": 1.02, "zaryusu": 1.06, "beastman": 1.08, "bafolk": 1.0, "cocytus": 1.45,
+    # the big
+    "ogre": 1.5, "war_troll": 1.8, "go_gin": 2.0, "frost_giant": 2.3, "behemoth": 2.6, "gargantua": 3.0,
+    "evil_lord_wrath": 1.9, "jaldabaoth": 1.3, "dominion_authority": 2.0, "archangel_flame": 1.0,
+    # beasts
+    "hamsuke": 1.5, "soul_eater": 1.2, "hellhound": 1.1, "eight_edge_assassin": 1.2, "gigant_basilisk": 2.0,
+    "dark_young": 3.0,
+    # dragons
+    "frost_dragon": 2.2, "skeletal_dragon": 2.4, "platinum_dragon_lord": 2.8,
+}
+
+
+def _resize(out):
+    for name, entity in out.items():
+        c = entity["minecraft:entity"]["components"]
+        if "minecraft:collision_box" not in c:
+            continue
+        scale = SIZES.get(name)
+        if scale is None:
+            if c["minecraft:collision_box"]["height"] < 1.9:
+                continue
+            scale = 0.94
+        c["minecraft:scale"] = {"value": scale}
 
 
 def _apply_ai(out):
@@ -2436,6 +2476,26 @@ def animations_json():
         "animation.overlord.dragon_wings": {"loop": True, "bones": {
             "rightWing": {"rotation": [0.0, 0.0, "math.sin(query.life_time * 140.0) * 12.0"]},
             "leftWing": {"rotation": [0.0, 0.0, "-math.sin(query.life_time * 140.0) * 12.0"]}}},
+        # ------------------------------------------------ life: small motions every creature shares
+        # breathing: the chest swells and settles
+        "animation.overlord.breathe": {"loop": True, "bones": {
+            "body": {"scale": ["1.0 + math.sin(query.life_time * 100.0) * 0.008",
+                               "1.0 + math.sin(query.life_time * 100.0) * 0.015",
+                               "1.0 + math.sin(query.life_time * 100.0) * 0.008"]}}},
+        # leaning into a walk or run
+        "animation.overlord.lean": {"loop": True, "bones": {
+            "body": {"rotation": ["math.clamp(query.modified_move_speed, 0.0, 1.0) * 5.0", 0.0, 0.0]}}},
+        # recoiling when struck
+        "animation.overlord.flinch": {"loop": True, "bones": {
+            "body": {"rotation": ["-query.hurt_time * 1.0", 0.0, "math.sin(query.hurt_time * 40.0) * 2.0"]}}},
+        # the rest of the body follows a swing: the off arm counters it and the head dips
+        "animation.overlord.follow": {"loop": True, "bones": {
+            "leftArm": {"rotation": [f"{swing} * 25.0", 0.0, 0.0]},
+            "head": {"rotation": [f"{swing} * 6.0", 0.0, 0.0]}}},
+        # a cape stirs when standing and streams out when moving
+        "animation.overlord.cape": {"loop": True, "bones": {
+            "cape": {"rotation": ["6.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 28.0 + "
+                                  "math.sin(query.life_time * 95.0) * 3.0", 0.0, 0.0]}}},
         "animation.overlord.projectile.spin": {"loop": True, "bones": {
             "body": {"rotation": ["query.life_time * 420.0", "query.life_time * 300.0", 0.0]}}},
     }
@@ -2514,6 +2574,25 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("eight_edge_assassin", "soul_eater"), ("arena_master", "nfirea"),
                     ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri")):
     ENTITY_ANIMS[_new] = ENTITY_ANIMS[_like]
+
+# Every creature breathes and flinches; walkers lean into their stride, fighters follow their swings
+# through, the caped have capes that move and the beasts have tails that do.
+CAPED = ["climb", "lakyus", "remedios", "paladin", "imperial_knight", "guard", "zesshi", "nigun", "khajiit",
+         "decem", "arena_master", "theocracy_priest", "zero", "soldier"]
+TAILED = ["soul_eater", "hellhound", "gigant_basilisk", "dark_young", "eight_edge_assassin"]
+for _name in list(ENTITY_ANIMS):
+    if _name in PROJECTILES:
+        continue
+    _anims = list(ENTITY_ANIMS[_name]) + ["breathe", "flinch"]
+    if "walk" in _anims or "robe_walk" in _anims:
+        _anims.append("lean")
+    if "attack" in _anims:
+        _anims.append("follow")
+    if _name in CAPED:
+        _anims.append("cape")
+    if _name in TAILED:
+        _anims.append("tail")
+    ENTITY_ANIMS[_name] = _anims
 
 # ---------------------------------------------------------------- particles
 # Every spell effect is drawn with these five emitters.  The script passes

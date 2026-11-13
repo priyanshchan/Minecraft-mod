@@ -12,6 +12,7 @@ mob's right arm sits on -X.
 """
 from __future__ import annotations
 
+import zlib
 import math
 import random
 
@@ -180,14 +181,55 @@ class Bone:
         return c
 
 
+def _enhance(region, low, k, rng, side):
+    """Adds fine detail to one face of a cube, in place.
+
+    `region` is the face at k times the painted resolution (already scaled up), `low` the face as
+    painted.  The painted texture stays the design; this pass gives it depth: light falling from
+    above, a bevel around the face, a thin shadow under every painted feature and a little grain.
+    """
+    h, w = low.shape[:2]
+    if h == 0 or w == 0:
+        return
+    opaque = low[..., 3] > 0
+    lum = low[..., :3].mean(axis=2)
+    mult = np.ones((h * k, w * k), np.float32)
+    if side and h > 1:  # light from above: the sides of things darken towards the ground
+        mult *= np.linspace(1.05, 0.92, h * k, dtype=np.float32)[:, None]
+    # painted features (belts, trim, eyes...) cast a thin shadow on what lies below and to their right
+    for axis in (0, 1):
+        before = np.roll(lum, 1, axis=axis)
+        before_opaque = np.roll(opaque, 1, axis=axis)
+        edge = (np.abs(lum - before) > 12) & opaque & before_opaque
+        if axis == 0:
+            edge[0, :] = False
+            big = np.repeat(np.repeat(edge, k, axis=0), k, axis=1)
+            big[np.arange(h * k) % k != 0, :] = False  # only the first sub-row of the lower texel
+            mult[big] *= 0.86
+        else:
+            edge[:, 0] = False
+            big = np.repeat(np.repeat(edge, k, axis=0), k, axis=1)
+            big[:, np.arange(w * k) % k != 0] = False
+            mult[big] *= 0.93
+    if h >= 3 and w >= 3:  # a bevel: lit along the top and left, shaded along the bottom and right
+        mult[0, :] *= 1.08
+        mult[:, 0] *= 1.05
+        mult[-1, :] *= 0.86
+        mult[:, -1] *= 0.92
+    mult *= 1.0 + rng.uniform(-0.035, 0.035, mult.shape).astype(np.float32)  # grain
+    region[..., :3] *= mult[..., None]
+
+
 class Model:
     SIZES = [(32, 32), (64, 32), (64, 64), (128, 64), (128, 128), (256, 128), (256, 256)]
+    HD = 2  # texels per painted pixel in the texture that is shipped
 
     def __init__(self, name, bounds=(3.0, 3.5, 1.25)):
         self.name = name
         self.bones: list[Bone] = []
         self.bounds = bounds  # visible bounds width, height, y offset (blocks)
         self.texture = None
+        self._hd = None
 
     def bone(self, name, pivot, parent=None, rotation=None):
         b = Bone(name, pivot, parent, rotation)
@@ -223,6 +265,29 @@ class Model:
                 self.texture = tex
                 return tex
         raise ValueError(f"{self.name}: cubes do not fit the largest atlas")
+
+    def hd(self):
+        """The texture that is shipped: the painted one at HD times its resolution with detail added.
+
+        The geometry keeps the painted size as its texture size; the game maps UVs proportionally, so a
+        finer image simply shows more detail on the same model.
+        """
+        if self.texture is None:
+            self.pack()
+        if self._hd is not None:
+            return self._hd
+        k = self.HD
+        src = np.asarray(self.texture).astype(np.float32)
+        out = np.repeat(np.repeat(src, k, axis=0), k, axis=1)
+        rng = np.random.default_rng(zlib.crc32(self.name.encode()))
+        for b in self.bones:
+            for c in b.cubes:
+                for face in c.faces:
+                    x0, y0 = c.uv[0] + face.x, c.uv[1] + face.y
+                    _enhance(out[y0 * k:(y0 + face.h) * k, x0 * k:(x0 + face.w) * k],
+                             src[y0:y0 + face.h, x0:x0 + face.w], k, rng, face in c.sides)
+        self._hd = Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGBA")
+        return self._hd
 
     # ------------------------------------------------------------ geometry
     def geometry(self):
@@ -269,7 +334,8 @@ class Model:
         """Orthographic z-buffered render of the rest pose."""
         if self.texture is None:
             self.pack()
-        tex = np.asarray(self.texture).astype(np.float32)
+        tex = np.asarray(self.hd()).astype(np.float32)
+        K = self.HD
         W, H = size
         color = np.zeros((H, W, 4), np.float32)
         color[:, :] = bg
@@ -346,8 +412,8 @@ class Model:
                     t = (e1[0] * ry_ - e1[1] * rx_) / det
                     inside = (s >= 0) & (s < 1) & (t >= 0) & (t < 1)
                     z = sz_[0] + s * (sz_[1] - sz_[0]) + t * (sz_[2] - sz_[0])
-                    txi = np.clip((tx + s * tw_).astype(int), 0, tex.shape[1] - 1)
-                    tyi = np.clip((ty + t * th_).astype(int), 0, tex.shape[0] - 1)
+                    txi = np.clip(((tx + s * tw_) * K).astype(int), 0, tex.shape[1] - 1)
+                    tyi = np.clip(((ty + t * th_) * K).astype(int), 0, tex.shape[0] - 1)
                     sample = tex[tyi, txi]
                     sub_d = depth[by0:by1 + 1, bx0:bx1 + 1]
                     sub_c = color[by0:by1 + 1, bx0:bx1 + 1]

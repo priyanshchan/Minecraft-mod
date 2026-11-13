@@ -79,7 +79,7 @@
         "table": "loot_tables/entities/overlord/cocytus.json"
       },
       "minecraft:scale": {
-        "value": 1.25
+        "value": 1.45
       },
       "minecraft:knockback_resistance": {
         "value": 0.9

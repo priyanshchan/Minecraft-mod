@@ -134,6 +134,9 @@
       },
       "minecraft:home": {
         "restriction_radius": 24
+      },
+      "minecraft:scale": {
+        "value": 0.94
       }
     },
     "events": {

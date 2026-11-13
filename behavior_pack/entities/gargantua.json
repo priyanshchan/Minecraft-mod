@@ -79,7 +79,7 @@
         "table": "loot_tables/entities/overlord/gargantua.json"
       },
       "minecraft:scale": {
-        "value": 1.6
+        "value": 3.0
       },
       "minecraft:knockback_resistance": {
         "value": 1.0

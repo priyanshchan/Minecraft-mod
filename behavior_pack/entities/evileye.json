@@ -78,7 +78,7 @@
         "table": "loot_tables/entities/overlord/evileye.json"
       },
       "minecraft:scale": {
-        "value": 0.85
+        "value": 0.78
       },
       "minecraft:knockback_resistance": {
         "value": 0.4

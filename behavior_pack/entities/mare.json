@@ -79,7 +79,7 @@
         "table": "loot_tables/entities/overlord/mare.json"
       },
       "minecraft:scale": {
-        "value": 0.8
+        "value": 0.74
       },
       "minecraft:knockback_resistance": {
         "value": 0.4

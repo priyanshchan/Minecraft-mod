@@ -105,6 +105,26 @@ Consoles cannot open `.mcaddon` files directly; use a Realm or a world prepared 
 
 Every mob has its own spawn egg.
 
+### How the creatures look and move
+
+- **True to size.** A grown man stands exactly as tall as the player; women, youths, goblins and dwarves are
+  smaller; and the big things are big — an Ogre is half again a man's height, a War Troll nearly twice, a
+  Frost Giant well over twice, a Primal Earth Elemental and the Dark Young about three times, and the dragons
+  dwarf them all (the Platinum Dragon Lord is the largest creature in the add-on). Hit boxes match.
+- **More detail.** Every creature's texture is drawn at twice the resolution with light falling from above,
+  bevelled edges, a thin shadow under each painted feature and a little grain. The shared body types gained
+  geometry as well: hair that stands off the head, pauldrons on armoured soldiers, capes on knights, captains
+  and priests, belt pouches, tusks, ears and loincloths on ogres, trolls and giants, spines, ears and tails
+  on the four-legged beasts, back ridges and bracers on lizardmen and beastmen, and extra horns, flank
+  plates and a spiked tail on the dragons.
+- **Alive.** Every creature breathes, recoils when struck and leans into its stride; a fighter's off arm and
+  head follow each swing; capes stir at rest and stream out behind a runner; beasts' tails sway.
+- **Presence.** Something hangs in the air around the notable ones — shadow round Ainz, Death Knights and
+  the undead lords, embers round demons, drifting frost round Cocytus and the ice dragons, shafts of light
+  round angels, crackling arcs round Narberal and the Platinum Dragon Lord, runes round the great casters.
+  A melee blow leaves a crescent in the attacker's colour, deaths are marked with a burst (a skull over the
+  undead, a nova for a great foe), and any great foe arrives inside a magic circle.
+
 ### Items
 
 | Item | What it does |

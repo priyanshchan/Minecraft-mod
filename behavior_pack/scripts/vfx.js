@@ -91,6 +91,14 @@ function adorn(dimension, effect, location, element, scale, shape) {
   emit(dimension, effect, location, element, scale, shape);
 }
 
+/**
+ * One decorative puff of any of the add-on's particles (used for what hangs in the air around creatures).
+ * @param {Dimension} dimension @param {string} effect @param {Vector3} at @param {string} element @param {number} [scale]
+ */
+export function puff(dimension, effect, at, element, scale = 1) {
+  adorn(dimension, effect, at, element, scale);
+}
+
 /** @param {Vector3} v @param {number} dy */
 function up(v, dy) {
   return { x: v.x, y: v.y + dy, z: v.z };

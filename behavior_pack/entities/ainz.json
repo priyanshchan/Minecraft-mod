@@ -121,7 +121,7 @@
         "table": "loot_tables/entities/overlord/ainz.json"
       },
       "minecraft:scale": {
-        "value": 1.15
+        "value": 1.12
       },
       "minecraft:knockback_resistance": {
         "value": 1.0

@@ -80,7 +80,7 @@
         "table": "loot_tables/entities/overlord/dominion_authority.json"
       },
       "minecraft:scale": {
-        "value": 1.6
+        "value": 2.0
       },
       "minecraft:knockback_resistance": {
         "value": 1.0

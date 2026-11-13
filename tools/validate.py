@@ -288,7 +288,11 @@ def main():
             if check(png(tex).is_file(), f"{rel(f)}: missing texture {tex}.png") and geo:
                 size = Image.open(png(tex)).size
                 want = (geo["description"]["texture_width"], geo["description"]["texture_height"])
-                check(size == want, f"{rel(f)}: texture is {size} but geometry expects {want}")
+                # The image may be a whole multiple of the size the geometry names: UVs are proportional,
+                # so a finer image shows more detail on the same model.
+                factor = size[0] // want[0] if want[0] else 0
+                check(factor >= 1 and size == (want[0] * factor, want[1] * factor),
+                      f"{rel(f)}: texture is {size}, not a whole multiple of the geometry's {want}")
         for rc in d["render_controllers"]:
             check(rc in render_controllers, f"{rel(f)}: render controller {rc} is not defined")
         # an animated bone must exist in every model the entity can use

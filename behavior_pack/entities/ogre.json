@@ -78,7 +78,7 @@
         "table": "loot_tables/entities/overlord/ogre.json"
       },
       "minecraft:scale": {
-        "value": 1.4
+        "value": 1.5
       },
       "minecraft:knockback_resistance": {
         "value": 0.7

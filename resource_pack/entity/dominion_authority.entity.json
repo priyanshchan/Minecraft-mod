@@ -19,7 +19,11 @@
           "walk",
           "attack",
           "wings",
-          "cast"
+          "cast",
+          "breathe",
+          "flinch",
+          "lean",
+          "follow"
         ]
       },
       "animations": {
@@ -28,7 +32,11 @@
         "walk": "animation.overlord.walk",
         "attack": "animation.overlord.attack",
         "wings": "animation.overlord.wings",
-        "cast": "animation.overlord.cast"
+        "cast": "animation.overlord.cast",
+        "breathe": "animation.overlord.breathe",
+        "flinch": "animation.overlord.flinch",
+        "lean": "animation.overlord.lean",
+        "follow": "animation.overlord.follow"
       },
       "render_controllers": [
         "controller.render.overlord.entity"

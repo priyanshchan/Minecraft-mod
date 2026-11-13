@@ -79,7 +79,7 @@
         "table": "loot_tables/entities/overlord/shadow_demon.json"
       },
       "minecraft:scale": {
-        "value": 0.7
+        "value": 0.8
       },
       "minecraft:fire_immune": {},
       "minecraft:despawn": {
