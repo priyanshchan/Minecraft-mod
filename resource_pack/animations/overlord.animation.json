@@ -262,6 +262,73 @@
         }
       }
     },
+    "animation.overlord.breathe": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "scale": [
+            "1.0 + math.sin(query.life_time * 100.0) * 0.008",
+            "1.0 + math.sin(query.life_time * 100.0) * 0.015",
+            "1.0 + math.sin(query.life_time * 100.0) * 0.008"
+          ]
+        }
+      }
+    },
+    "animation.overlord.lean": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            "math.clamp(query.modified_move_speed, 0.0, 1.0) * 5.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.overlord.flinch": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            "-query.hurt_time * 1.0",
+            0.0,
+            "math.sin(query.hurt_time * 40.0) * 2.0"
+          ]
+        }
+      }
+    },
+    "animation.overlord.follow": {
+      "loop": true,
+      "bones": {
+        "leftArm": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 6.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.overlord.cape": {
+      "loop": true,
+      "bones": {
+        "cape": {
+          "rotation": [
+            "6.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 28.0 + math.sin(query.life_time * 95.0) * 3.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
     "animation.overlord.projectile.spin": {
       "loop": true,
       "bones": {

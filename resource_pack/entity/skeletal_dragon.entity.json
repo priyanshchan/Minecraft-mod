@@ -18,7 +18,9 @@
           "hamsuke_walk",
           "hamsuke_tail",
           "hamsuke_attack",
-          "dragon_wings"
+          "dragon_wings",
+          "breathe",
+          "flinch"
         ]
       },
       "animations": {
@@ -26,7 +28,9 @@
         "hamsuke_walk": "animation.overlord.hamsuke.walk",
         "hamsuke_tail": "animation.overlord.hamsuke.tail",
         "hamsuke_attack": "animation.overlord.hamsuke.attack",
-        "dragon_wings": "animation.overlord.dragon_wings"
+        "dragon_wings": "animation.overlord.dragon_wings",
+        "breathe": "animation.overlord.breathe",
+        "flinch": "animation.overlord.flinch"
       },
       "render_controllers": [
         "controller.render.overlord.entity"

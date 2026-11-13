@@ -80,7 +80,7 @@
         "table": "loot_tables/entities/overlord/shalltear.json"
       },
       "minecraft:scale": {
-        "value": 0.9
+        "value": 0.8
       },
       "minecraft:knockback_resistance": {
         "value": 0.5

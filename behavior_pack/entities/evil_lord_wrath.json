@@ -119,7 +119,7 @@
         "table": "loot_tables/entities/overlord/evil_lord_wrath.json"
       },
       "minecraft:scale": {
-        "value": 1.6
+        "value": 1.9
       },
       "minecraft:knockback_resistance": {
         "value": 1.0

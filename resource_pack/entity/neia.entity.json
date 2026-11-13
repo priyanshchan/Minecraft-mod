@@ -17,14 +17,22 @@
           "look_at_target",
           "idle",
           "walk",
-          "attack"
+          "attack",
+          "breathe",
+          "flinch",
+          "lean",
+          "follow"
         ]
       },
       "animations": {
         "look_at_target": "animation.overlord.look_at_target",
         "idle": "animation.overlord.idle",
         "walk": "animation.overlord.walk",
-        "attack": "animation.overlord.attack"
+        "attack": "animation.overlord.attack",
+        "breathe": "animation.overlord.breathe",
+        "flinch": "animation.overlord.flinch",
+        "lean": "animation.overlord.lean",
+        "follow": "animation.overlord.follow"
       },
       "render_controllers": [
         "controller.render.overlord.entity"

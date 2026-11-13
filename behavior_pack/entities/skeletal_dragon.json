@@ -79,7 +79,7 @@
         "table": "loot_tables/entities/overlord/skeletal_dragon.json"
       },
       "minecraft:scale": {
-        "value": 1.4
+        "value": 2.4
       },
       "minecraft:knockback_resistance": {
         "value": 1.0

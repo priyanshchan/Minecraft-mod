@@ -146,6 +146,9 @@
         "attack_interval_max": 3.0,
         "attack_radius": 15.0,
         "speed_multiplier": 1.0
+      },
+      "minecraft:scale": {
+        "value": 0.94
       }
     },
     "events": {

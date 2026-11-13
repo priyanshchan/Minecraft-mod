@@ -88,7 +88,7 @@ def main():
         m.pack()
         built[m.name] = m
         write_json(RP / f"models/entity/{m.name}.geo.json", m.geometry())
-        save_png(RP / f"textures/entity/{content.NS}/{m.name}.png", m.texture)
+        save_png(RP / f"textures/entity/{content.NS}/{m.name}.png", m.hd())
 
     item_icons = icons.all_item_icons()
     for name, img in item_icons.items():

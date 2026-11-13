@@ -97,6 +97,9 @@
             "deals_damage": false
           }
         ]
+      },
+      "minecraft:scale": {
+        "value": 0.98
       }
     },
     "events": {}

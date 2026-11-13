@@ -124,6 +124,9 @@
             "max_dist": 40
           }
         ]
+      },
+      "minecraft:scale": {
+        "value": 0.95
       }
     },
     "events": {}

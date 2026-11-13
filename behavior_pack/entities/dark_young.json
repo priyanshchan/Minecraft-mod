@@ -77,7 +77,7 @@
         "table": "loot_tables/entities/overlord/dark_young.json"
       },
       "minecraft:scale": {
-        "value": 2.4
+        "value": 3.0
       },
       "minecraft:knockback_resistance": {
         "value": 1.0

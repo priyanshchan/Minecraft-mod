@@ -138,7 +138,7 @@
         "table": "loot_tables/entities/overlord/behemoth.json"
       },
       "minecraft:scale": {
-        "value": 1.9
+        "value": 2.6
       },
       "minecraft:knockback_resistance": {
         "value": 1.0

@@ -34,6 +34,7 @@ import { cycleStance, openParty, orderUnison } from "./party.js";
 import "./guild.js";
 import { runeOf } from "./forge.js";
 import "./arena.js";
+import "./ambience.js";
 import "./mount.js";
 
 const NS = "overlord";

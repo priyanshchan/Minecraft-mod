@@ -79,7 +79,7 @@
         "table": "loot_tables/entities/overlord/go_gin.json"
       },
       "minecraft:scale": {
-        "value": 1.7
+        "value": 2.0
       },
       "minecraft:knockback_resistance": {
         "value": 1.0
