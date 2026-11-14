@@ -47,6 +47,12 @@ VANILLA = {
         "oak_planks", "composter", "bell", "purple_wool", "orange_wool", "mossy_stone_bricks",
         "cracked_stone_bricks", "polished_blackstone", "acacia_log", "acacia_fence", "bookshelf",
         "chiseled_stone_bricks", "amethyst_block",
+        # structure overhaul (v7.0), verified against @minecraft/vanilla-data
+        "basalt", "blackstone", "blast_furnace", "brewing_stand", "brown_carpet", "cauldron", "chiseled_quartz_block", "coal_block",
+        "dark_oak_log", "dark_oak_planks", "deepslate", "emerald_block", "glass_pane", "gray_wool", "grindstone", "lapis_block",
+        "lectern", "lime_wool", "moss_carpet", "nether_brick", "oak_leaves", "oak_slab", "quartz_pillar", "raw_gold_block",
+        "raw_iron_block", "red_carpet", "red_nether_brick", "scaffolding", "sea_lantern", "smithing_table", "smoker", "smooth_quartz",
+        "spruce_log", "spruce_slab", "stone_brick_slab", "stone_brick_wall", "web", "white_carpet", "yellow_stained_glass",
     },
     "script_entity": {"minecraft:villager_v2", "minecraft:zombie", "minecraft:lightning_bolt"},
     # verified against @minecraft/vanilla-data 1.26.60

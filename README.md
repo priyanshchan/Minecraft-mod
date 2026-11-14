@@ -346,8 +346,8 @@ sticks in a flag shape).
 - **Reputation:** the Kingdom, the Empire, the Adventurers' Guild and the Lizardman Tribes each track their
   opinion of you (−100 to 100). Killing their people costs 15; at −30 their troops attack you on sight.
   Grudges fade by 1 a minute. Guild quests (+3), slain bandits (+1) and cleared camps (+5) raise it.
-- **Clearing camps:** defeat every defender of a Goblin Camp, Bandit Camp, Nazarick Outpost, Troll Den or
-  Dragon's Hoard to clear it for
+- **Clearing camps:** defeat every defender of a hostile site (a Goblin Camp, Bandit Camp, Nazarick Outpost,
+  Troll Den, Ruined Keep, Mage Tower, Besieged Mine, Dragon's Hoard and the like) to clear it for
   Gold Coins and XP (more at higher levels). A cleared camp stays quiet for twenty minutes instead of ten.
 
 ### Daily bounty, elites and titles
@@ -398,7 +398,8 @@ All three are reached from the Adventurer's Plate menu.
   choose *Reinforce weapon* in the plate menu. Each level adds 6% melee damage, up to +5, and is written on
   the item. Level *n* costs 15 × *n* Gold Coins and *n* Adamantite Ingots (75 coins and 5 ingots for +5).
 - **Travel:** friendly sites you have visited (Adventurers' Camps, Kingdom Army Camps, Empire Outposts,
-  Dwarven Forges, Lizardman Villages, Carne Village, Imperial Arenas, Holy Kingdom Forts and Elven Groves) are
+  Dwarven Forges, Lizardman Villages, Carne Village, Roadside Inns, Imperial Arenas, Holy Kingdom Forts and
+  Elven Groves) are
   remembered — the latest 24. The *Travel* entry in the plate menu
   takes you back to one for 5 Gold Coins, within the overworld.
 
@@ -433,39 +434,57 @@ ten minutes. Finding a site gives 80 XP. The **Travel** entry of the Adventurer'
 nearest site nobody has found yet with its distance and direction, and adventurers, guards and soldiers will
 sometimes tell you the same.
 
+Since **7.0** every site is a proper little settlement — up to 27 blocks across, with houses that have
+floors, doorways, glass windows and pitched roofs, towers with battlements and arrow slits, curtain walls
+with gates, palisades, market stalls, wells, trees, paths and lamp posts. Each one is laid out the same way
+every time from its position, its middle is kept clear for its garrison, and most hold more than one chest.
+
 | Site | What is there | Garrison |
 | --- | --- | --- |
-| **Goblin Camp** | Spiked ring, two tents, campfire, loot chest | 5 Goblins, plus Ogres at higher levels |
-| **Bandit Camp** | Two tents, stolen barrels, loot chest | 4–5 Bandits; from level 50 Zero of the Six Arms with 5 Bandits |
-| **Carne Village** | Two cottages, hay, a bell, supply chest | Enri Emmot and Nfirea (merchants), 2–4 Kingdom Guards; can be travelled to |
-| **Mausoleum of Nazarick** | Walled court of Nazarick brick with lamp pillars, a dais, a Block of Data Crystal and a rich chest | Old Guarders, Skeleton Mages and an Elder Lich; Lupusregina with Death Knights from level 20; Shalltear with her Vampire Brides from level 50 |
-| **Zurrernorn Shrine** | Bone altar between obsidian pillars, soul fires, chest | Skeleton Mages and Old Guarders; Khajiit from level 20; Khajiit and the Skeletal Dragon from level 50 |
-| **Beastman Warcamp** | Three hide tents inside a ring of stakes, chest | 4–6 Beastman Warriors; Gigant Basilisks at higher levels |
-| **Imperial Arena** | Ring wall of stone brick around a sand floor, red banners, chest | The Arena Master and 2–4 Imperial Knights; can be travelled to |
-| **Holy Kingdom Fort** | Walled yard with corner lanterns, two tents, chest | 4–6 Paladins and Neia Baraja; Remedios from level 20; can be travelled to |
-| **Elven Grove** | Lantern-topped log pillars on moss, two tents, chest | 4–6 Elf Rangers; can be travelled to |
-| **Bafolk Raid Camp** | Two hide tents, bone trophies, chest | 4–6 Bafolk Raiders; an Ogre or a War Troll at higher levels |
-| **Adventurers' Camp** | Tent, campfire, crafting table, supply chest | 3 Adventurers (can be hired) |
-| **Kingdom Army Camp** | Three tents, banners, training yard, supply chest | 4 Kingdom Soldiers, 2 Kingdom Archers |
-| **Empire Outpost** | Stone watchtower, low wall, banner, chest | 4–6 Imperial Knights |
-| **Nazarick Outpost** | Dais with pillars, lamps and an altar, crystal chest | Old Guarders and Skeleton Mages; Death Knights, Elder Liches and a Soul Eater at higher levels |
-| **Lizardman Village** | Three mud huts, campfire, fish chest | 5 Lizardman Warriors |
-| **Sunlight Scripture Camp** | Two white tents, field altar, yellow banners, chest | 3 Priests; Archangel Flames and Nigun at higher levels |
-| **Demon Gate** | Dead obsidian gate inside a ring of magma, soul fires, chest | Shadow Demons; Hellhounds from level 20; Evil Lord Wrath from level 50 |
-| **Katze Graveyard** | Rows of graves inside a low wall, soul lanterns, chest | Old Guarders and a Skeleton Mage; Elder Liches, Vampire Brides and Death Knights at higher levels |
-| **Dwarven Forge** | Deepslate smithy with furnaces and an anvil, ore chest | 1 Dwarf Runesmith (merchant) |
-| **Troll Den** | Ring of boulders, bones, campfire, loot chest | 1 War Troll; more trolls and Ogres at higher levels |
-| **Dragon's Hoard** | Ice spires around a pile of gold, rich treasure chest | Skeleton Mages below level 20; the Frost Dragon from level 20 |
+| **Goblin Camp** | Ring of stakes, three tents, a bone totem, a cage of stolen goods with the loot chest | 5 Goblins, plus Ogres at higher levels |
+| **Bandit Camp** | Log palisade with a gate, the boss's hut with a pitched roof, two tents, a share-out stall, barrels, two chests | 4–5 Bandits; from level 50 Zero of the Six Arms with 5 Bandits |
+| **Troll Den** | A hollowed stone mound, mossy boulders, bones, campfire, loot chest in the den | 1 War Troll; more trolls and Ogres at higher levels |
+| **Beastman Warcamp** | Acacia stake ring, the chieftain's pavilion, four hide tents, trophy racks, banner, chest | 4–6 Beastman Warriors; Gigant Basilisks at higher levels |
+| **Bafolk Raid Camp** | Stake ring, two hide tents, a pen of stolen livestock, bone posts, banner, chest | 4–6 Bafolk Raiders; an Ogre or a War Troll at higher levels |
+| **Frost Giant Hold** *(new)* | Round wall of packed ice crowned with blue-ice fangs, a white pavilion, woodpile, chest | 1–3 Frost Giants; a War Troll at level 50 |
+| **Den of the Wise King** *(new)* | A mossy burrow under four trees, hay bedding, a chest of seeds and carrots | Hamsuke |
+| **Adventurers' Camp** | Crossroads of paths, three tents, a quartermaster's stall with anvil, notice board, lamps, chest | 3–5 Adventurers (can be hired); can be travelled to |
+| **Kingdom Army Camp** | Log palisade, command pavilion, three tents, a watchtower by the gate, training yard with targets, banners, chest | Kingdom Soldiers and Archers; can be travelled to |
+| **Carne Village** | Fenced village with four roads, three cottages and a cobblestone smithy (furnace, anvil), a covered well, a bell, hay, two chests | Enri Emmot and Nfirea (merchants), 2–4 Kingdom Guards; can be travelled to |
+| **Roadside Inn** *(new)* | A long inn with bar, kitchen and tables, a covered stable, a merchant's stall, lamp-lit road, chest | 3 Adventurers and Kingdom Guards; can be travelled to |
+| **Empire Outpost** | Stone fort with battlements, four corner towers and a gate, a tall keep with a climbable inside, tents, chest | 4–6 Imperial Knights; can be travelled to |
+| **Imperial Arena** | Round arena wall with a tier of seats, red banners, the master's dais, chest | The Arena Master and 2–4 Imperial Knights; can be travelled to |
+| **Mage Tower** *(new)* | A 16-high tower with three floors, bookshelves, lectern, brewing stand, a Block of Data Crystal, scaffolding up to the battlements, amethyst-topped pillars, chest of scrolls | Skeleton Mages; Fluder Paradyne from level 20; Fluder and Elder Liches from level 50 |
+| **Holy Kingdom Fort** | Stone fort with corner towers, barracks, a quartz chapel with a gold altar, two tents, banners, chest | 4–6 Paladins and Neia Baraja; Remedios from level 20; can be travelled to |
+| **Elven Grove** | Six great trees with lantern-lit lookouts, a moss-carpeted pavilion, two tents, chest | 4–6 Elf Rangers; can be travelled to |
+| **Lizardman Village** | Four round mud huts under thatch, a mud plaza, fish-drying rack, totem, chest | 5–7 Lizardman Warriors; can be travelled to |
+| **Dwarven Forge** | Deepslate smithy with furnaces, blast furnace, anvil, smithing table and a smoking chimney, ore piles, chest | 1 Dwarf Runesmith (merchant); can be travelled to |
+| **Besieged Mine** *(new)* | A mine shaft with pit props driven into a stone hill, spoil heaps and ore, the miners' overrun tents, chest at the end of the shaft | 4–8 Quagoa |
+| **Nazarick Outpost** | Walled court of Nazarick brick, six lamp pillars, a gilded altar on two steps, soul fires, chest | Old Guarders and Skeleton Mages; Death Knights, Elder Liches and a Soul Eater at higher levels |
+| **Mausoleum of Nazarick** | Walled court, a mausoleum with a gilded roof and a pillared portico, a Block of Data Crystal, a rich chest | Old Guarders, Skeleton Mages and an Elder Lich; Lupusregina with Death Knights from level 20; Shalltear with her Vampire Brides from level 50 |
+| **Katze Graveyard** | Walled graveyard with rows of graves, a mausoleum, a dead tree, soul lanterns, chest | Old Guarders and a Skeleton Mage; Elder Liches, Vampire Brides and Death Knights at higher levels |
+| **Ruined Keep** *(new)* | Crumbling curtain walls, one standing tower, a roofless hall with cobwebs, rubble, two chests | Old Guarders; Vampire Brides from level 20; Death Knights and a Soul Eater from level 50 |
+| **Zurrernorn Shrine** | Ring of obsidian fangs round a ritual circle, a bone altar on blackstone, banners, soul fires, chest | Skeleton Mages and Old Guarders; Khajiit from level 20; Khajiit and the Skeletal Dragon from level 50 |
+| **Sunlight Scripture Camp** | The captain's pavilion, four white tents, a glowing field altar, yellow banners, chest | 3 Priests; Archangel Flames and Nigun at higher levels |
+| **Angel Sanctum** *(new)* | Quartz colonnades lit with glowstone, a high altar before a window of gold, a ring of light in the floor, chest | Archangel Flames; Theocracy Priests from level 20; a Dominion Authority from level 50 |
+| **Demon Gate** | An eight-high dead obsidian gate, nether-brick ritual rings, blackstone spires with soul lanterns, chest | Shadow Demons; Hellhounds from level 20; Evil Lord Wrath from level 50 |
+| **Dragon's Hoard** | Ten ice spires round a wide open floor, a heap of gold, emerald and lapis, rich treasure chest | Skeleton Mages below level 20; the Frost Dragon from level 20 |
+
+Hostile sites (every site except the ones you can travel to and the Wise King's Den) can
+be cleared for Gold Coins and XP.
 
 Sites are placed by script rather than by world generation, so they also appear in terrain you have already
 explored. They avoid water and the area within 64 blocks of the world spawn, and they are not matched to
-biomes. Each one lays a level pad on a dirt foundation and clears the blocks above it; if the planned spot is
+biomes. Each one lays a level pad on a dirt foundation and clears the space above it; if the planned spot is
 under water or too steep, the site moves up to 24 blocks to one side.
 
-> **Fixed in 5.1.0:** in earlier versions sites almost never appeared. The game only lets scripts touch blocks
-> in chunks that are loaded and ticking and raises an error for anything further away; the old code tried to
-> build from too far out, treated that error as a failure and then refused to build once the player was close.
-> Worlds played with an older version are surveyed again from scratch, so sites now appear there as well.
+> **Worlds from before 7.0:** every site an earlier version built is rebuilt on the same spot in its new form
+> the next time you come near it (anything left in its chests is replaced by fresh loot), and it stays
+> discovered. Regions the earlier version left empty stay empty, so nothing new is dropped onto ground you may
+> have built on; the new kinds of site appear in land you have not explored yet.
+
+`python3 tools/preview_sites.py` draws every site without the game (into `dist/sites/`) and reports anything
+that stands where the garrison is posted or reaches outside the site.
 
 ### Tier magic
 

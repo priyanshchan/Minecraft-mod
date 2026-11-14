@@ -305,6 +305,48 @@ for (const type of sites.SITES) {
   assert.equal(sites.garrison(land, camp, 0), type.garrison(0).reduce((n, [, c]) => n + c, 0));
   assert.equal(sites.garrison(land, camp, 0), 0, `${type.key} garrison is not doubled`);
   assert.ok(land.mobs.every((m) => m.tags.has("overlord_camp")));
+  // the garrison is posted on open ground, and nothing is built outside the site or above the space it cleared
+  const reach = type.muster ?? sites.MUSTER;
+  for (const mob of land.mobs) {
+    for (const dy of [0, 1]) {
+      const at = `${Math.floor(mob.location.x)},${64 + dy},${Math.floor(mob.location.z)}`; const block = land.placed.get(at);
+      assert.ok(!block || block === "minecraft:air" || block.endsWith("carpet"), `${type.key}: ${block} on a garrison post at ${at}`);
+    }
+    assert.ok(Math.abs(Math.hypot(mob.location.x - 1000.5, mob.location.z - 1000.5) - reach) < 0.01);
+  }
+  for (const [at, block] of land.placed) {
+    const [x, y, z] = at.split(",").map(Number);
+    if (block === "minecraft:air" || y < 63) continue;
+    assert.ok(Math.abs(x - 1000) <= type.radius && Math.abs(z - 1000) <= type.radius, `${type.key}: ${block} at ${at} is outside the site`);
+    assert.ok(y - 64 < (type.height ?? 12), `${type.key}: ${block} at ${at} is above the cleared space`);
+  }
+  // the same spot always gives the same layout
+  const again = makeLand(); sites.buildSite(again, { x: 1000, z: 1000, type });
+  assert.deepEqual([...again.placed.entries()], [...land.placed.entries()], `${type.key} is laid out the same each time`);
+}
+assert.ok(sites.SITES.length >= 28, "the overhaul brought new sites");
+for (const key of ["roadside_inn", "mage_tower", "ruined_keep", "frost_giant_hold", "besieged_mine", "angel_sanctum", "wise_kings_den"]) assert.ok(sites.SITES.some((t) => t.key === key), key);
+// worlds from before 7.0: a site an older version built is rebuilt on the same spot in its new form, and a region it left empty stays empty
+{
+  const old = mkPlayer("olga"); old.dimension = makeLand(); old.dimension.getPlayers = () => [old];
+  let rx = 60; while (sites.siteOf(rx, 60)) rx++; // a region where the new plan has no site...
+  world.props.set(`overlord:camp:${rx},60`, `troll_den|${rx * sites.REGION + 80}|64|${60 * sites.REGION + 80}|1`); // ...but the old one built a Troll Den
+  world.props.set(`overlord:camp:${rx + 1},60`, "-");
+  old.location = { x: rx * sites.REGION + 80 - 40, y: 64, z: 60 * sites.REGION + 80 }; sites.explore(old);
+  assert.equal(world.props.get(`overlord:site7:${rx},60`), `troll_den|${rx * sites.REGION + 80}|64|${60 * sites.REGION + 80}|1`, "the old site is kept, and stays discovered");
+  assert.ok([...old.dimension.placed.values()].includes("minecraft:chest"), "and rebuilt");
+  assert.equal(world.props.get(`overlord:site7:${rx + 1},60`), "-", "an empty region stays empty");
+  assert.ok(![...old.dimension.placed.keys()].some((at) => Number(at.split(",")[0]) >= (rx + 1) * sites.REGION), "nothing is built in it");
+}
+// a house is hollow, roofed and has a doorway; a tent opens towards the middle of the site
+{
+  const land = makeLand(); const b = new sites.Builder(land, { x: 0, y: 64, z: 0 });
+  b.house(-3, -3, 7, 5, { wall: "minecraft:oak_planks", roof: "minecraft:spruce_planks" });
+  assert.equal(land.placed.get("0,64,-1"), "minecraft:air", "hollow inside"); assert.equal(land.placed.get("0,64,1"), "minecraft:air", "doorway on the south wall");
+  assert.equal(land.placed.get("-3,64,-1"), "minecraft:oak_planks"); assert.equal(land.placed.get("0,63,0"), "minecraft:oak_planks", "a floor");
+  assert.ok([...land.placed.entries()].some(([at, block]) => block === "minecraft:spruce_planks" && Number(at.split(",")[1]) > 67), "a pitched roof");
+  b.tent(0, 6, "minecraft:white_wool"); assert.equal(land.placed.get("0,64,9"), "minecraft:white_wool", "closed at the far end"); assert.equal(land.placed.get("0,64,6"), undefined, "open towards the middle");
+  b.tent(0, -12, "minecraft:red_wool"); assert.equal(land.placed.get("0,64,-12"), "minecraft:red_wool"); assert.equal(land.placed.get("0,64,-9"), undefined);
 }
 // unsuitable or unloaded places
 const camp0 = sites.SITES[0];
@@ -340,7 +382,7 @@ const built = e.dimension.placed.size; sites.explore(e); assert.equal(e.dimensio
 e.location = { x: goal.x - 20, y: 64, z: goal.z }; const xpE = pe.xp; sites.explore(e);
 assert.ok(e.dimension.mobs.length >= 3 && e.bar.includes("Discovered"), e.bar); assert.ok(pe.level === 2 && pe.xp === xpE + 80 - rpg.xpForNext(1), "discovery XP (enough for level 2)");
 const manned = e.dimension.mobs.length; sites.explore(e); assert.equal(e.dimension.mobs.length, manned, "no refill before ten minutes");
-assert.ok([...world.props.keys()].some((key) => key.startsWith("overlord:camp:")), "sites are saved in the world");
+assert.ok([...world.props.keys()].some((key) => key.startsWith("overlord:site7:")), "sites are saved in the world");
 
 // ---- party: retainers and mercenaries ----
 const f = mkPlayer("finn"); const pf = rpg.profileOf(f); f.dimension = makeLand(); f.dimension.getPlayers = () => [f];
