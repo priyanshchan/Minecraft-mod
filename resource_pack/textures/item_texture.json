@@ -668,6 +668,9 @@
     "overlord_takemikazuchi": {
       "textures": "textures/items/overlord/takemikazuchi"
     },
+    "overlord_tomb_key": {
+      "textures": "textures/items/overlord/tomb_key"
+    },
     "overlord_tome_create_undead": {
       "textures": "textures/items/overlord/tome_create_undead"
     },

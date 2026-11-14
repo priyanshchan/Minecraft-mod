@@ -492,6 +492,13 @@ def main():
         check(f"{NS}:gem_{gem}" in items, f"gear.js: no item for gem {gem}")
     check(f"{NS}:refining_stone" in items, "gear.js: no Refining Stone item")
 
+    # ------------------------------------------------- the Great Tomb (dungeon.js)
+    tomb_src = (BP / "scripts/dungeon.js").read_text()
+    own_blocks = {f"{NS}:{f.stem}" for f in (BP / "blocks").glob("*.json")}
+    for name in set(re.findall(r'id\("([a-z_]+)"\)', tomb_src)):
+        check(f"{NS}:{name}" in known_entities or f"{NS}:{name}" in items or f"{NS}:{name}" in own_blocks,
+              f"dungeon.js: unknown id {name}")
+
     # ------------------------------------------------- particles and player poses
     own_particles = set()
     for f in sorted((RP / "particles").glob("*.json")):

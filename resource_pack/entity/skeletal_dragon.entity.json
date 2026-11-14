@@ -21,6 +21,7 @@
           "dragon_jaw",
           "dragon_tail",
           "dragon_lunge",
+          "dragon_soar",
           "breathe",
           "flinch"
         ]
@@ -33,6 +34,7 @@
         "dragon_jaw": "animation.overlord.dragon.jaw",
         "dragon_tail": "animation.overlord.dragon.tail",
         "dragon_lunge": "animation.overlord.dragon.lunge",
+        "dragon_soar": "animation.overlord.dragon.soar",
         "breathe": "animation.overlord.breathe",
         "flinch": "animation.overlord.flinch"
       },

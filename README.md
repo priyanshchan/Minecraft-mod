@@ -155,8 +155,16 @@ four-part tail and two-part wings.
 - **Death:** its element tears loose along its whole length — pillars at the head, wings, tail and chest in
   turn, then a dome of magic circles.
 
+- **Flight (v7.5.5):** once a dragon has lost a sixth of its health — and then every half minute or so, every
+  20 seconds once enraged — it **takes to the sky** with a gust that throws back anyone beside it. It climbs
+  about 15 blocks, **circles** high over its foe (following if you run) and **rains breath** down every 3
+  seconds (2 when enraged). Then it announces a **dive**, hangs over the spot it has chosen — a glowing circle
+  on the ground — and plunges onto it: everyone within 6.5 blocks of the landing takes a heavy blow and is
+  thrown back. Aloft its legs fold, its neck reaches forward and its wings beat hard; only arrows and spells
+  can reach it until it lands.
+
 Hit boxes are the dragons' trunks (about 4 to 5 blocks wide and 5 to 7 tall), so they can walk through open
-country; they also step over ledges two blocks high. They stay on the ground — they do not fly.
+country; they also step over ledges two blocks high.
 
 ### Items
 
@@ -317,6 +325,36 @@ Every weapon of the add-on now belongs to a **kind** and an **element**, and fig
 | Platinum | Resistance I | Resistance II and Regeneration I | Platinum Bulwark: Absorption III, Resistance III, and half of every blow thrown back for 8 seconds | 45 s |
 | Bone Dragon | 15% of magical harm turned aside | 35% of magical harm turned aside | Bone Prison: bones bind every foe within 6 blocks | 35 s |
 | Beast Hide | Haste I | Haste I and Saturation | Hunter's Howl: Speed II, Strength I and Jump Boost II for 12 seconds; foes nearby falter | 35 s |
+
+### The Great Tomb of Nazarick (v7.5.5)
+
+A dungeon of **five floors** deep underground, each a sealed 33-block hall of its own:
+
+| Floor | Hall | Garrison | Guardian | Traps |
+| --- | --- | --- | --- | --- |
+| 1 | **The Catacombs** — Nazarick brick, pillars, graves, soul fires | 5 Old Guarders, 2 Skeleton Mages, 2 Vampire Brides | Shalltear Bloodfallen | spikes |
+| 2 | **The Glacier** — walls of ice, snow, blue-ice spires | a Frost Giant, 4 Old Guarders | Cocytus | freezing vents |
+| 3 | **The Amphitheater** — grass, trees, tiers of seats | 3 Beastmen, a Gigant Basilisk | Aura and Mare together | thorns |
+| 4 | **The Lava Floor** — blackstone, magma pools, soul fires | 3 Hellhounds, 2 Shadow Demons | Demiurge | flame jets |
+| 5 | **The Throne Room** — gilded floor, a red aisle, pillars, banners, a golden throne | 2 Death Knights, 2 Elder Liches | **Albedo, then Ainz Ooal Gown** | — |
+
+- **Entering:** step onto the Block of Data Crystal inside any **Mausoleum of Nazarick**, or use a **Key of the
+  Great Tomb** anywhere in the overworld. The first entrance opens the Tomb far beneath that spot (its first
+  floor 16 blocks down, the others every 14 below); every later entrance, from any Mausoleum or with any key,
+  leads to the same Tomb. Players standing within 6 blocks come along.
+- **Each floor:** arriving wakes its garrison; when the garrison has fallen its guardian appears (with the
+  boss fight of v7.5 — phases and moves to dodge); when the guardian falls the barred gate at the far end opens
+  (Gold Coins and XP for everyone on the floor). Stand on the glowing gate to take everyone on the floor down
+  to the next. Marked tiles in the floor are **traps**: they click under you and strike a moment later. Each
+  hall has two treasure chests.
+- **Conquering the Tomb:** the Throne Room's gate leads back to the surface with **120 Gold Coins, 16 Data
+  Crystals, 6 Refining Stones and 2 gems**, and the first time also **two Codices of the Supreme Beings** and an
+  announcement to the whole server.
+- **Leaving:** use the Key inside the Tomb to climb back out to where you came in.
+- **Again:** a party that enters when nobody is inside finds the Tomb restored — its garrisons, guardians,
+  gates and treasure — for a fresh run.
+- **Key of the Great Tomb:** crafted from a Floor Guardian Crest in the centre, Data Crystals at the four sides
+  and Nazarick Bricks in the four corners; one also lies in every Mausoleum's chest.
 
 ### Boss fights (v7.5)
 
@@ -925,7 +963,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects) `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards) and `gear.js` (refining, gems and salvage) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects) `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage) and `dungeon.js` (the Great Tomb) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

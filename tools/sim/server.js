@@ -13,6 +13,7 @@ export const world = {
   beforeEvents: { playerInteractWithEntity: sig() },
   props: new Map(), getDynamicProperty(k) { return this.props.get(k); }, setDynamicProperty(k, v) { this.props.set(k, v); },
   getDefaultSpawnLocation: () => ({ x: 0, y: 64, z: 0 }),
+  getDimension: () => players[0]?.dimension ?? { id: "minecraft:overworld", getPlayers: () => [], getEntities: () => [], getBlock: () => undefined },
   clock: { time: 6000, day: 0 }, getTimeOfDay() { return this.clock.time; }, getDay() { return this.clock.day; },
   afterEvents: { playerDimensionChange: sig(), entitySpawn: sig(), entityDie: sig(), entityHurt: sig(), playerSpawn: sig(), playerLeave: sig(), worldLoad: sig(), itemUse: sig(), itemCompleteUse: sig(), projectileHitEntity: sig(), projectileHitBlock: sig() },
   getAllPlayers: () => players, said: [], sendMessage(m) { this.said.push(m); },

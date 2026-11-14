@@ -46,6 +46,15 @@
           "speed_multiplier": 1.3,
           "track_target": true
         }
+      },
+      "overlord:airborne": {
+        "minecraft:physics": {
+          "has_gravity": false,
+          "has_collision": true
+        },
+        "minecraft:movement": {
+          "value": 0.0
+        }
       }
     },
     "components": {
@@ -195,6 +204,20 @@
         "add": {
           "component_groups": [
             "overlord:ranged_mode"
+          ]
+        }
+      },
+      "overlord:take_off": {
+        "add": {
+          "component_groups": [
+            "overlord:airborne"
+          ]
+        }
+      },
+      "overlord:land": {
+        "remove": {
+          "component_groups": [
+            "overlord:airborne"
           ]
         }
       }

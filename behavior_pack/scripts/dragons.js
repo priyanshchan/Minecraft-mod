@@ -4,6 +4,10 @@
 // ground as it walks, beats its wings to throw back anyone who gets close, and looses a
 // breath attack that is announced a moment before it lands so it can be dodged. At half
 // health it becomes enraged and does all of this faster. Its death is a spectacle.
+//
+// Since 7.5.5 the dragons fly. Once wounded, a dragon takes to the air every half minute or so: it
+// climbs, circles high over its foe raining breath down on it, then marks a spot on the ground and
+// dives onto it, landing with a shockwave. While it is aloft only arrows and spells can reach it.
 import { world, system, EntityDamageCause, GameMode } from "@minecraft/server";
 import * as fx from "./vfx.js";
 
@@ -23,7 +27,13 @@ const BUFFET_WARNING = 12;
 /** @typedef {import("@minecraft/server").Vector3} Vector3 */
 /** @typedef {import("@minecraft/server").Dimension} Dimension */
 /** @typedef {{ name: string, element: string, size: number, breath: "frost" | "death" | "judgment", breathName: string }} Kind */
-/** @typedef {{ roared: boolean, enraged: boolean, breathAt: number, buffetAt: number, stompAt: number, beat: number }} State */
+/**
+ * @typedef {{ roared: boolean, enraged: boolean, breathAt: number, buffetAt: number, stompAt: number, beat: number, flyAt: number, flight: Flight | undefined }} State
+ * @typedef {{
+ *   dragon: Entity, kind: Kind, phase: "rise" | "circle" | "dive" | "plunge", t: number, ground: number, height: number,
+ *   center: { x: number, z: number }, angle: number, foe: string, breathAt: number, mark: Vector3 | undefined, from: Vector3 | undefined,
+ * }} Flight
+ */
 
 /** The dragons: their element, how large they stand (the same factor the entity is scaled by) and their breath. */
 /** @type {Record<string, Kind>} */
@@ -40,8 +50,14 @@ const states = new Map();
 export function stateOf(dragon) {
   let state = states.get(dragon.id);
   if (!state) {
-    state = { roared: false, enraged: false, breathAt: 0, buffetAt: 0, stompAt: 0, beat: 0 };
+    state = { roared: false, enraged: false, breathAt: 0, buffetAt: 0, stompAt: 0, beat: 0, flyAt: 0, flight: undefined };
     states.set(dragon.id, state);
+    // A dragon first seen (or seen again after its chunk was unloaded mid-flight) stands on the ground.
+    try {
+      dragon.triggerEvent(`${NS}:land`);
+    } catch {
+      // not yet ready for events
+    }
   }
   return state;
 }
@@ -307,6 +323,189 @@ export function breathe(dragon, kind, mark) {
   }, BREATH_WARNING);
 }
 
+// -------------------------------------------------------------------- flight
+
+const FIRST_FLIGHT = 20 * TICKS; // the earliest a dragon flies after it has roared
+const FLIGHT_EVERY = 30 * TICKS; // and how long it stays on the ground between flights (less when enraged)
+const WOUNDED = 0.85; // it only flies once it has lost this much of its health
+const RISE = 30; // ticks to climb
+const CIRCLE = 220; // ticks circling (less when enraged)
+const DIVE_WARNING = 30; // ticks between marking the landing spot and the dive
+const PLUNGE = 14; // ticks the dive itself takes
+const RADIUS = 14; // how wide it circles its foe
+
+/** Dragons in the air. */
+/** @type {Map<string, Flight>} */
+export const flights = new Map();
+
+/**
+ * The dragon climbs into the sky with a gust that throws back anyone beside it.
+ * @param {Entity} dragon @param {Kind} kind @param {State} state @param {Player} foe
+ */
+export function takeOff(dragon, kind, state, foe) {
+  try {
+    dragon.triggerEvent(`${NS}:take_off`);
+  } catch {
+    return; // it cannot leave the ground right now
+  }
+  const ground = Math.max(dragon.location.y, foe.location.y);
+  /** @type {Flight} */
+  const flight = {
+    dragon, kind, phase: "rise", t: 0, ground, height: 10 + kind.size * 2,
+    center: { x: foe.location.x, z: foe.location.z }, angle: Math.atan2(dragon.location.z - foe.location.z, dragon.location.x - foe.location.x),
+    foe: foe.id, breathAt: system.currentTick + 2 * TICKS, mark: undefined, from: { ...dragon.location },
+  };
+  state.flight = flight;
+  flights.set(dragon.id, flight);
+  const d = dragon.dimension;
+  sound(d, "mob.enderdragon.flap", dragon.location, 0.5);
+  fx.ring(d, dragon.location, kind.element, 4 * kind.size);
+  fx.puff(d, "dust", dragon.location, "none", kind.size);
+  fx.shake(d, dragon.location, 30, 0.5, 0.5);
+  for (const victim of victims(d, dragon.location, 3 * kind.size)) {
+    try {
+      const dx = victim.location.x - dragon.location.x;
+      const dz = victim.location.z - dragon.location.z;
+      const len = Math.hypot(dx, dz) || 1;
+      victim.applyKnockback({ x: (dx / len) * 1.8, z: (dz / len) * 1.8 }, 0.5);
+    } catch {
+      // immovable
+    }
+  }
+  announce(dragon, `§6[Boss] §fThe ${kind.name} takes to the sky!`);
+}
+
+/** Moves a flying dragon, facing where it goes. Returns whether it could. @param {Entity} dragon @param {Vector3} to @param {Vector3} [look] */
+function glide(dragon, to, look) {
+  try {
+    const options = { checkForBlocks: true, keepVelocity: false, facingLocation: look ?? to };
+    if (typeof dragon.tryTeleport === "function") return dragon.tryTeleport(to, options);
+    dragon.teleport(to, options);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * One tick of a flight.
+ * @param {Flight} flight @param {number} now
+ */
+export function fly(flight, now) {
+  const { dragon, kind } = flight;
+  const state = stateOf(dragon);
+  const d = dragon.dimension;
+  const foe = playersNear(d, dragon.location, 64).find((p) => p.id === flight.foe) ?? playersNear(d, dragon.location, 64)[0];
+  flight.t += 1;
+  if (flight.phase === "rise") {
+    const share = Math.min(1, flight.t / RISE);
+    const from = flight.from ?? dragon.location;
+    const to = { x: from.x, y: flight.ground + flight.height * share, z: from.z };
+    if (!glide(dragon, to, foe ? foe.location : undefined)) flight.height += 1;
+    if (flight.t % 6 === 0) sound(d, "mob.enderdragon.flap", dragon.location, 0.7);
+    if (flight.t >= RISE) {
+      flight.phase = "circle";
+      flight.t = 0;
+    }
+    return;
+  }
+  if (flight.phase === "circle") {
+    if (foe) {
+      // The circle drifts after its foe, so running away does not leave it behind.
+      flight.center.x += (foe.location.x - flight.center.x) * 0.04;
+      flight.center.z += (foe.location.z - flight.center.z) * 0.04;
+      flight.ground = foe.location.y;
+    }
+    flight.angle += state.enraged ? 0.05 : 0.035;
+    const point = (/** @type {number} */ a) => ({
+      x: flight.center.x + Math.cos(a) * RADIUS,
+      y: flight.ground + flight.height + Math.sin(flight.t * 0.1) * 1.2,
+      z: flight.center.z + Math.sin(a) * RADIUS,
+    });
+    if (!glide(dragon, point(flight.angle), point(flight.angle + 0.3))) flight.height = Math.min(flight.height + 1, 24);
+    if (flight.t % 10 === 0) sound(d, "mob.enderdragon.flap", dragon.location, 0.8);
+    if (foe && now >= flight.breathAt) {
+      flight.breathAt = now + (state.enraged ? 40 : 60);
+      breathe(dragon, kind, { ...foe.location });
+    }
+    if (flight.t >= (state.enraged ? CIRCLE * 0.7 : CIRCLE) || !foe) {
+      flight.phase = "dive";
+      flight.t = 0;
+      flight.mark = foe ? { ...foe.location } : { x: dragon.location.x, y: flight.ground, z: dragon.location.z };
+      announce(dragon, `§6[Boss] §cThe ${kind.name} dives!`);
+      sound(d, "mob.enderdragon.growl", dragon.location, 0.9);
+    }
+    return;
+  }
+  const mark = flight.mark ?? { x: dragon.location.x, y: flight.ground, z: dragon.location.z };
+  if (flight.phase === "dive") {
+    // It hangs in the air over the spot it has chosen, which glows on the ground.
+    if (flight.t % 8 === 1) {
+      fx.circle(d, mark, kind.element, 6.5);
+      fx.ring(d, mark, kind.element, 6.5);
+    }
+    glide(dragon, { x: dragon.location.x, y: dragon.location.y + Math.sin(flight.t * 0.3) * 0.05, z: dragon.location.z }, mark);
+    if (flight.t >= DIVE_WARNING) {
+      flight.phase = "plunge";
+      flight.t = 0;
+      flight.from = { ...dragon.location };
+    }
+    return;
+  }
+  // The plunge.
+  const from = flight.from ?? dragon.location;
+  const share = Math.min(1, flight.t / PLUNGE);
+  glide(dragon, { x: from.x + (mark.x - from.x) * share, y: from.y + (mark.y - from.y) * share * share, z: from.z + (mark.z - from.z) * share }, mark);
+  if (flight.t % 3 === 0) fx.puff(d, "streak", dragon.location, kind.element, kind.size);
+  if (flight.t >= PLUNGE) land(dragon, kind, state, mark);
+}
+
+/** The dragon comes down: everything near the landing is struck and thrown back. @param {Entity} dragon @param {Kind} kind @param {State} state @param {Vector3} at */
+export function land(dragon, kind, state, at) {
+  flights.delete(dragon.id);
+  state.flight = undefined;
+  state.flyAt = system.currentTick + Math.round(FLIGHT_EVERY * (state.enraged ? 0.65 : 1));
+  state.buffetAt = system.currentTick + 3 * TICKS;
+  try {
+    dragon.triggerEvent(`${NS}:land`);
+  } catch {
+    // it falls all the same
+  }
+  const d = dragon.dimension;
+  fx.nova(d, { x: at.x, y: at.y + 0.6, z: at.z }, kind.element, 6.5);
+  fx.ring(d, at, kind.element, 8);
+  fx.puff(d, "dust", at, "none", kind.size * 1.2);
+  fx.shake(d, at, 40, 1.1, 0.7);
+  sound(d, "random.explode", at, 0.6);
+  for (const victim of victims(d, at, 6.5)) {
+    strike(dragon, victim, 16 + kind.size * 2);
+    try {
+      const dx = victim.location.x - at.x;
+      const dz = victim.location.z - at.z;
+      const len = Math.hypot(dx, dz) || 1;
+      if (victim.isValid) victim.applyKnockback({ x: (dx / len) * 2.2, z: (dz / len) * 2.2 }, 0.6);
+    } catch {
+      // immovable
+    }
+  }
+}
+
+system.runInterval(() => {
+  const now = system.currentTick;
+  for (const [key, flight] of flights) {
+    if (!flight.dragon.isValid) {
+      flights.delete(key);
+      states.delete(key); // seen again, it will be stood back on its feet
+      continue;
+    }
+    try {
+      fly(flight, now);
+    } catch (error) {
+      console.warn(`[Overlord] dragon flight failed: ${error}`);
+    }
+  }
+}, 1);
+
 // ---------------------------------------------------------------------- loop
 
 /**
@@ -319,17 +518,23 @@ export function tend(dragon) {
   const state = stateOf(dragon);
   const now = system.currentTick;
   dress(dragon, kind, state);
+  if (state.flight) return; // aloft, the flight decides what it does
   const foe = playersNear(dragon.dimension, dragon.location, SIGHT)[0];
   if (!foe) return;
   if (!state.roared) {
     state.roared = true;
     state.breathAt = now + 4 * TICKS;
     state.buffetAt = now + 7 * TICKS;
+    state.flyAt = now + FIRST_FLIGHT;
     roar(dragon, kind);
     return;
   }
   const health = dragon.getComponent("minecraft:health");
   if (!state.enraged && health && health.currentValue > 0 && health.currentValue <= health.effectiveMax * 0.5) enrage(dragon, kind, state);
+  if (now >= state.flyAt && health && health.currentValue <= health.effectiveMax * WOUNDED) {
+    takeOff(dragon, kind, state, foe);
+    return;
+  }
   const haste = state.enraged ? 0.65 : 1;
   const gap = Math.hypot(foe.location.x - dragon.location.x, foe.location.z - dragon.location.z);
   if (now >= state.buffetAt && gap <= 3.2 * kind.size) {
@@ -389,6 +594,7 @@ world.afterEvents.entityDie.subscribe((event) => {
     const kind = DRAGONS[dragon.typeId];
     if (!kind) return;
     states.delete(dragon.id);
+    flights.delete(dragon.id);
     const d = dragon.dimension;
     const body = anatomy(dragon, kind);
     sound(d, "mob.enderdragon.death", dragon.location, 0.8);
