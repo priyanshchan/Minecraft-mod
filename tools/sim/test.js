@@ -1421,7 +1421,7 @@ players.splice(0, players.length, ...everyone, zoe);
   pq.mana = 0; q.health.currentValue = 3; await pick(5); assert.equal(pq.mana, rpg.maxMana(pq)); assert.equal(q.health.currentValue, 20);
   await pick(6); assert.equal(spells.countItem(q, "overlord:codex_of_skills"), 10); assert.equal(spells.countItem(q, "overlord:gem_onyx"), 4);
   await pick(7); assert.equal(pq.story.length, 10); assert.equal(spells.countItem(q, "overlord:royal_seal"), 1, "the campaign shortcut crowns and hands over the Seal");
-  pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(9); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
+  pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(10); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
   assert.ok(shown.some((f) => f.title === "Creative Tome of Ascension"));
   players.splice(players.indexOf(q), 1);
 }
@@ -1531,8 +1531,9 @@ players.splice(0, players.length, ...everyone, zoe);
   // the treasury fills each kingdom day, up to five days
   assert.deepEqual(king.income(realm), { coins: 12, crystals: 1 });
   king.accrue(w, realm, king.DAY_SECONDS - 1); assert.equal(realm.treasury, 0); king.accrue(w, realm, 1); assert.equal(realm.treasury, 12);
-  king.accrue(w, realm, king.DAY_SECONDS * 10); assert.equal(realm.treasury, 60); assert.equal(realm.vault, 5);
-  let held = coins(); assert.ok(king.collect(w).includes("60")); assert.equal(coins() - held, 60); assert.equal(realm.treasury, 0);
+  king.accrue(w, realm, king.DAY_SECONDS * 10); const full = king.income(realm).coins * king.treasuryDays(realm);
+  assert.equal(realm.treasury, full, "capped at five days of pay"); assert.equal(realm.vault, king.income(realm).crystals * 5);
+  let held = coins(); assert.ok(king.collect(w).includes(String(full))); assert.equal(coins() - held, full); assert.equal(realm.treasury, 0);
   // raising the capital: paid for, laid again larger, one layer at a time
   assert.ok(king.upgrade(w).includes("costs")); assert.equal(realm.tier, 1);
   rpg.giveItem(w, "overlord:yggdrasil_gold_coin", 2000); rpg.giveItem(w, "overlord:data_crystal", 400); rpg.giveItem(w, "overlord:guardian_crest", 6);
@@ -1550,9 +1551,10 @@ players.splice(0, players.length, ...everyone, zoe);
   w.location = { x: 20100.5, y: 64, z: 20000.5 }; assert.ok(king.claimHere(w).includes("Stand in a camp"));
   w.location = { x: cx + 2, y: 64, z: cz }; const defender = field.spawnEntity("overlord:goblin", { x: cx, y: 64, z: cz + 2 }); defender.addTag("overlord_camp");
   { const m = king.claimHere(w); assert.ok(m.includes("1 defender"), m); } defender.health.currentValue = 0;
+  const pay0 = king.income(realm);
   assert.ok(king.claimHere(w).includes("outpost")); assert.equal(sites.claimOf(region), "wren"); assert.equal(realm.outposts.length, 1);
   assert.ok(JSON.parse(world.getDynamicProperty("overlord:claims"))[region] === "wren"); assert.ok(king.claimHere(w).includes("already yours"));
-  assert.deepEqual(king.income(realm), { coins: 64 + 8, crystals: 4 + 1 });
+  assert.deepEqual(king.income(realm), { coins: pay0.coins + 8, crystals: pay0.crystals + 1 });
   const mobs = spawned.length; sites.explore(w); assert.equal(spawned.filter((m, i) => i >= mobs && m.tags.has("overlord_camp")).length, 0, "a claimed camp posts no garrison");
   // an invasion at the outpost: three waves, then spoils and renown
   king.pulse(w, now); assert.equal(spawned.filter((m) => m.isValid && m.tags.has("overlord_realm_wren") && Math.hypot(m.location.x - cx, m.location.z - cz) < 10).length, 2, "the outpost's guards");
@@ -1684,6 +1686,110 @@ players.splice(0, players.length, ...everyone, zoe);
   world.afterEvents.entityDie.fire({ deadEntity: wyrm, damageSource: {} }); wyrm.isValid = false;
   assert.ok(steeds.call(r, "overlord:wyrm_whistle", system.currentTick).includes("slain"));
   all.forEach((m) => { m.isValid = false; }); players.splice(players.indexOf(r), 1); races.forms.clear();
+}
+
+// v8.5: the Court of Nazarick, and a living kingdom
+{
+  const court = await import("./court.js");
+  const districts = await import("./districts.js");
+  const king = await import("./kingdom.js");
+  const all = []; let n = 0; const placed = new Map(); const k3 = (l) => `${Math.floor(l.x)},${Math.floor(l.y)},${Math.floor(l.z)}`;
+  const being = (typeId, at, families = ["monster"], hp = 200, event) => { const m = { id: `g${n++}`, typeId, location: { ...at }, isValid: true, tags: new Set(), props: new Map(), effects: new Map(),
+    families, event, burning: 0, get dimension() { return land; }, health: { currentValue: hp, effectiveMax: hp, setCurrentValue(v) { this.currentValue = v; } },
+    getComponent(c) { return c === "minecraft:health" ? m.health : undefined; }, addTag(t) { m.tags.add(t); }, hasTag: (t) => m.tags.has(t),
+    matches: (q) => (q.families ?? []).every((f) => m.families.includes(f)), remove() { m.isValid = false; }, teleport(to) { m.location = { ...to }; },
+    getDynamicProperty: (k) => m.props.get(k), setDynamicProperty: (k, v) => m.props.set(k, v), addEffect(e, d, o = {}) { m.effects.set(e, { duration: d, amplifier: o.amplifier ?? 0 }); },
+    setOnFire(t) { m.burning = t; }, applyKnockback() {}, applyDamage(x) { m.health.currentValue = Math.max(0, m.health.currentValue - x); } }; all.push(m); return m; };
+  const near = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+  const land = { id: "minecraft:overworld", spawnParticle() {}, playSound() {}, getTopmostBlock: ({ x, z }) => ({ location: { x, y: 63, z } }), getPlayers: () => [],
+    setBlockType: (l, t) => placed.set(k3(l), t),
+    fillBlocks(v, t) { for (let x = v.from.x; x <= v.to.x; x++) for (let y = v.from.y; y <= v.to.y; y++) for (let z = v.from.z; z <= v.to.z; z++) placed.set(`${x},${y},${z}`, t); },
+    getBlock: (l) => ({ isAir: true, typeId: placed.get(k3(l)) ?? "minecraft:air", getComponent: () => ({ container: { addItem() {} } }) }),
+    getEntities: (q) => all.filter((m) => m.isValid && (q.tags ?? []).every((t) => m.tags.has(t)) && (!q.type || m.typeId === q.type) &&
+      (q.families ?? []).every((f) => m.families.includes(f)) && (!q.maxDistance || near(m.location, q.location) <= q.maxDistance)),
+    spawnEntity: (type, at, opts) => being(type, at, type.includes("guardian_") || type.includes("villager") ? ["mob"] : ["monster"], 200, opts?.spawnEvent) };
+  const q = mkPlayer("queen"); q.dimension = land; q.location = { x: 30000.5, y: 64, z: 30000.5 }; q.getViewDirection = () => ({ x: 0, y: 0, z: 1 });
+  q.onScreenDisplay.setTitle = (t) => { q.title = t; }; q.isSneaking = false; q.isJumping = false;
+  world.afterEvents.playerSpawn.fire({ player: q, initialSpawn: true }); advance(60);
+  const pq = rpg.profileOf(q); rpg.setLevel(q, 60); pq.bosses = [];
+  pq.realm = { name: "Nazarick Reborn", x: 30000, y: 64, z: 30000, tier: 1, treasury: 0, vault: 0, clock: 0, days: 0, outposts: [], invasions: false, raidIn: 9999, renown: 0, defended: 0, lost: 0 };
+  const realm = king.realmOf(q); assert.ok(realm);
+  // the Guardians swear fealty once defeated
+  assert.ok(court.swear(q, "albedo").includes("Defeat")); pq.bosses.push("albedo", "demiurge", "cocytus", "shalltear", "pandoras_actor");
+  for (const g of ["albedo", "demiurge", "cocytus", "shalltear", "pandoras_actor"]) assert.ok(court.swear(q, g).includes("fealty"));
+  assert.ok(court.swear(q, "albedo").includes("already")); assert.ok(q.title.includes("Albedo") || q.title.includes("Pandora"));
+  // at court their posts shape the realm
+  assert.deepEqual(king.income(realm), { coins: 15, crystals: 1 }, "Albedo: taxes +25%"); assert.equal(king.treasuryDays(realm), 7);
+  // one walks at your side; her post stands empty meanwhile
+  let now = 1200000; assert.ok(court.summon(q, "albedo", now).includes("Albedo")); assert.equal(realm.companion, "albedo");
+  assert.deepEqual(king.income(realm), { coins: 12, crystals: 1 }); assert.equal(king.treasuryDays(realm), 5);
+  const albedo = court.companionOf(q); assert.ok(albedo && albedo.typeId === "overlord:guardian_albedo" && albedo.props.get("overlord:owner") === "queen");
+  court.tend(q, now, true); court.tend(q, now, true);
+  assert.equal(all.filter((m) => m.isValid && m.typeId === "overlord:guardian_albedo").length, 1, "only ever one at your side");
+  const courtiers = all.filter((m) => m.isValid && m.tags.has("overlord_court_queen"));
+  assert.equal(courtiers.length, 4, "the others stand in the throne hall"); assert.ok(courtiers.every((m) => m.event === "overlord:to_court"));
+  // her signature move, then a rest
+  const brute = being("minecraft:zombie", { x: albedo.location.x + 2, y: 64, z: albedo.location.z });
+  assert.ok(court.signature(q, albedo, "albedo", now) >= 1); assert.ok(brute.health.currentValue < 200 && q.effects.has("absorption"));
+  assert.equal(court.signature(q, albedo, "albedo", now + 20), -1);
+  const chill = being("minecraft:zombie", { x: albedo.location.x + 1, y: 64, z: albedo.location.z }); assert.ok(court.signature(q, albedo, "cocytus", now + 1000) >= 1); assert.ok(chill.effects.has("slowness"));
+  // Pandora's Actor borrows another Guardian's move
+  q.bar = ""; court.signature(q, albedo, "pandoras_actor", now + 2000, () => 0); assert.ok(q.bar.includes("as Albedo"), q.bar);
+  // loyalty: foes slain together, invasions repelled; it strengthens the moves
+  assert.equal(court.earnLoyalty(realm, "albedo", 30), 30); assert.equal(court.earnLoyalty(realm, "albedo", 500), 100);
+  // an invasion: Demiurge thins it, Shalltear takes the field
+  const siege = king.invade(q, realm, -1, now, 0); assert.ok(siege && siege.scale === 0.75);
+  assert.equal(all.filter((m) => m.isValid && m.tags.has("overlord_siege_queen")).length, 5, "a quarter fewer foes");
+  const vanguard = all.find((m) => m.isValid && m.typeId === "overlord:guardian_shalltear" && m.tags.has("overlord_siege_queen_ally")); assert.ok(vanguard && vanguard.event === "overlord:sortie");
+  for (let i = 0; i < 3; i++) { for (const m of all) if (m.tags.has("overlord_siege_queen")) m.health.currentValue = 0; king.stepSiege(siege, now += 20); }
+  assert.equal(realm.treasury, 45, "Demiurge: half again the spoils"); assert.equal(court.sworn(realm).cocytus.loyalty, 5);
+  // a fallen companion recovers in Nazarick
+  world.afterEvents.entityDie.fire({ deadEntity: albedo, damageSource: {} }); albedo.isValid = false;
+  assert.ok(court.summon(q, "albedo", system.currentTick).includes("recovering")); assert.ok(court.release(q).includes("court")); assert.equal(realm.companion, undefined);
+  script.push(99); court.openCourt(q); await new Promise((r) => setTimeout(r, 10)); assert.ok(shown.some((f) => f.title === "Court of Nazarick"));
+  assert.ok(court.summon(q, "pandoras_actor", now).includes("Pandora")); court.release(q);
+
+  // districts: built on their plots outside the walls, paid for, three levels
+  assert.ok(districts.build(q, "market").includes("costs")); rpg.giveItem(q, "overlord:yggdrasil_gold_coin", 5000); rpg.giveItem(q, "overlord:data_crystal", 500);
+  assert.ok(districts.build(q, "market").includes("level 1")); assert.equal(placed.get(`30000,64,${30000 + 34}`), "minecraft:cauldron", "the market's well");
+  assert.ok(districts.build(q, "market").includes("level 2")); assert.ok(districts.build(q, "market").includes("Guardian Crests"), "level 3 asks for crests");
+  rpg.giveItem(q, "overlord:guardian_crest", 10); assert.ok(districts.build(q, "market").includes("level 3")); assert.ok(districts.build(q, "market").includes("complete"));
+  assert.equal(placed.get(`30000,64,${30000 + 34 - 4}`), "minecraft:bell");
+  for (const b of ["smithy", "alchemist", "barracks", "academy", "temple", "farms", "houses"]) assert.ok(districts.build(q, b).includes("level 1"), b);
+  assert.equal(placed.get(`${30000 + 34 - 2},64,${30000 - 3}`), "minecraft:anvil", "the smithy's anvil");
+  q.location = { x: 30100.5, y: 64, z: 30000.5 }; assert.ok(districts.build(q, "smithy").includes("Stand in your capital")); q.location = { x: 30000.5, y: 64, z: 30000.5 };
+  // what they do
+  assert.deepEqual(king.income(realm), { coins: Math.round(15 * 1.45), crystals: 1 + 2 }, "market +45%, temple +2 crystals");
+  assert.ok(rpg.hooks.xpFactor.some((f) => Math.abs(f(pq) - 1.04) < 1e-9), "the academy");
+  assert.equal(king.realmHooks.guards.reduce((n, h) => n + h(realm, true), 0), 2 + 1, "Cocytus and the barracks");
+  assert.equal(districts.capacity(realm), 20 + 20 + 15 + 10);
+  // a kingdom day: citizens settle, workshops make wares, allies send gifts, envoys come
+  const first = districts.day(q, realm, () => 0.99); assert.equal(first.settled, districts.growth(realm)); assert.equal(realm.goods["overlord:refining_stone"], 2, "the smithy, and Pandora's extra");
+  assert.equal(realm.goods["overlord:blue_potion"], 2);
+  // trade routes run to outposts from the Market
+  realm.outposts.push({ key: "190,187", name: "Goblin Camp", x: 30300, y: 64, z: 30000 });
+  assert.equal(districts.routeValue(realm, "190,187"), Math.round(15 * 1.5)); assert.ok(districts.openRoute(q, "190,187").includes("Caravans"));
+  assert.ok(districts.openRoute(q, "190,187").includes("already")); assert.equal(districts.raidChance(realm), 0, "Demiurge keeps the roads");
+  const t0 = realm.treasury; districts.day(q, realm, () => 0.99); assert.equal(realm.treasury - t0, Math.round(15 * 1.5));
+  delete court.sworn(realm).demiurge; assert.ok(districts.raidChance(realm) > 0); const t1 = realm.treasury; const raided = districts.day(q, realm, () => 0.01);
+  assert.equal(raided.raided, 1); assert.equal(realm.treasury, t1, "the caravan was raided");
+  // envoys: alliance brings gifts; tribute pays now and breeds enmity; an enemy Theocracy marches more
+  assert.ok(districts.envoys(realm).length >= 1); realm.envoys = ["kingdom", "theocracy"];
+  assert.ok(districts.answer(q, "kingdom", "ally").includes("friendship")); realm.envoys.push("kingdom"); assert.ok(districts.answer(q, "kingdom", "ally").includes("now your ally"));
+  assert.equal(districts.standing(realm, "kingdom"), "allied"); realm.goods = {}; districts.day(q, realm, () => 0.99); assert.equal(realm.goods["overlord:yggdrasil_gold_coin"], 25);
+  const sun = spells.countItem(q, "overlord:gem_sunstone"); assert.ok(districts.answer(q, "theocracy", "tribute").includes("tribute")); assert.equal(spells.countItem(q, "overlord:gem_sunstone") - sun, 2);
+  realm.envoys.push("theocracy"); assert.ok(districts.answer(q, "theocracy", "tribute").includes("enemy")); assert.equal(districts.standing(realm, "theocracy"), "hostile");
+  const theocracy = king.INVADERS.findIndex((i) => i.name.includes("Theocracy"));
+  assert.equal(king.realmHooks.invader.map((h) => h(realm, 0.5)).find((v) => v !== undefined), theocracy);
+  relations: { realm.relations.theocracy = 80; assert.notEqual(king.realmHooks.invader.map((h) => h(realm, 0.1)).find((v) => v !== undefined), theocracy, "an ally never marches"); }
+  // citizens walk the streets while the ruler is home
+  realm.population = 100; assert.ok(guild.checkTitles(q).includes("Beloved Sovereign"));
+  assert.equal(districts.populate(q), districts.MAX_CITIZENS); assert.equal(districts.populate(q), 0);
+  assert.ok(all.filter((m) => m.isValid && m.typeId === "minecraft:villager_v2").length === districts.MAX_CITIZENS);
+  // the Kingdom page lists the new pages
+  script.push(99); king.openKingdom(q); await new Promise((r) => setTimeout(r, 10));
+  const page = shown.filter((f) => f.title === "Nazarick Reborn").at(-1); assert.ok(page.buttons.some((b) => b.startsWith("Districts")) && page.buttons.some((b) => b.startsWith("Court of Nazarick")) && page.body.includes("Citizens"));
+  all.forEach((m) => { m.isValid = false; }); players.splice(players.indexOf(q), 1); pq.realm = {};
 }
 
 // persistence: saved profile is restored after leaving

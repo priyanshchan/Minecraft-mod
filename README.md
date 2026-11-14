@@ -946,6 +946,62 @@ unchanged, and armour stands and mobs still wear the flat look.
 - **Glow:** eye slits, gems and runes glow in the dark.
 - **First person:** only the sleeves are drawn, so horns and capes never block your view.
 
+### The Court of Nazarick (v8.5)
+
+Every Floor Guardian you have **defeated** (in the Great Tomb, a raid or the wild) can be sworn to your
+kingdom from **Court of Nazarick** on the Kingdom page.
+- **At court:** each Guardian holds a post that shapes the realm. While you are in the capital they stand in
+  the throne hall.
+- **At your side:** one Guardian at a time can walk with you instead. They fight beside you and use a signature
+  move every 8 seconds, and their court post stands empty meanwhile.
+- **Loyalty:** it grows with every foe you slay together (+0.5) and every invasion repelled (+5). It makes the
+  Guardian's move stronger.
+- **Falling:** a Guardian who falls returns to Nazarick to recover for 5 minutes.
+
+| Guardian | Post at court | Move at your side |
+|----------|---------------|-------------------|
+| Albedo | Overseer: taxes +25%, the treasury holds 2 more days | Wall of Iron: Absorption and Resistance for you; foes beside her struck and thrown back |
+| Demiurge | Strategist: invasions bring 25% fewer foes and 50% more spoils, looting capped at 15%, caravans never raided | Hellfire Wall: every foe within 7 blocks burns |
+| Cocytus | General: 2 more guards at every holding, and all guards fight with Strength | Frozen Heaven: strikes and slows every foe within 6 blocks |
+| Shalltear | Vanguard: takes the field in every invasion of your holdings | Purification Lance: pierces the strongest foe in sight |
+| Aura | Beastmaster: each outpost pays 4 more coins and 1 more crystal | Breath of Fear: weakens and slows every foe within 10 blocks |
+| Mare | Druid: citizens settle twice as fast, and there is room for 20 more | Earth Surge: strikes and throws up foes within 6 blocks |
+| Pandora's Actor | Treasurer: trade routes pay 50% more, workshops make 1 more ware a day | Doppelganger: uses another Guardian's move |
+
+### A living kingdom (v8.5)
+
+- **Districts:** eight plots lie outside your capital's walls, one for each building. Build and improve them
+  (to level 3) from **Districts** on the Kingdom page while you stand in your capital.
+  - Each one is laid on its plot, and anything built there before is replaced.
+  - **Cost** of level L: 100·L² + 50 Gold Coins and 20·L Data Crystals, plus 2 Guardian Crests at level 3.
+
+| Building | Each level |
+|----------|-----------|
+| Market | taxes +15%, and 2 trade routes |
+| Dwarven Smithy | 1 Refining Stone a day |
+| Alchemist's Workshop | 1 mana potion a day |
+| Barracks | 1 more guard at the capital |
+| Magic Academy | +4% XP on everything |
+| Temple of the Supreme Beings | 2 more Data Crystals a day |
+| Farms | room for 10 more citizens; they settle 25% faster |
+| Houses | room for 15 more citizens |
+
+- **Citizens:** each kingdom day, citizens settle up to what the capital, houses and farms can hold.
+  - Every 4 citizens pay a Gold Coin a day.
+  - While you are home they walk the streets as villagers (up to 10).
+- **Wares:** smithy and alchemist goods, and allies' gifts, wait in the treasury with the coins.
+- **Trade routes:** from **Trade routes**, open caravans from your Market to your outposts (50 coins each).
+  - Each route pays every day, more for farther outposts.
+  - Bandits raid a caravan 12% of days, more with every enemy power. Demiurge at court stops them.
+- **Envoys:** the Re-Estize Kingdom, the Baharuth Empire, the Slane Theocracy, the Dwarven Kingdom, the
+  Lizardman Tribes and the Roble Holy Kingdom send envoys to your throne.
+  - **Offer an alliance:** friendship grows, and an ally sends gifts every day.
+  - **Demand tribute:** they pay now, and resent it.
+  - **Dismiss them:** they leave, slightly offended.
+  - An enemy Theocracy marches on you more often, and an allied one never does.
+- **Titles:** Master of the Guardians (all seven sworn), Beloved Sovereign (100 citizens), Merchant King (4 trade
+  routes).
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
@@ -958,6 +1014,7 @@ cannot be crafted) works only in creative mode. Using it opens a menu:
   the Great Tomb, 4 Floor Guardian Crests, 8 mana potions and 4 of each gem.
 - **Finish the campaign**: marks all ten chapters done (you are crowned) and gives the Seal of the Sorcerer Kingdom.
 - **Race to its top level**: your race jumps to level 15 (choose a race first), so its true form is ready.
+- **Count every Floor Guardian defeated**: so they can all be sworn to your court at once.
 - **Back to level 1**: refunds stat points and forgets learned skills.
 
 Sneak + use the tome for a quick +10 levels. In survival or adventure mode it does nothing.
@@ -1149,7 +1206,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding) and `devtools.js` (the Creative Tome of Ascension) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys) and `devtools.js` (the Creative Tome of Ascension) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

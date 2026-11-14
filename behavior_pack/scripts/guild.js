@@ -140,6 +140,11 @@ export const TITLES = [
   // v8.0: titles of the campaign and of the Sorcerer Kingdom
   ...STORY_TITLES.map((t) => ({ key: t.key, name: t.name, how: t.how, earned: (/** @type {Profile} */ p) => Array.isArray(p.story) && p.story.includes(t.chapter) })),
   { key: "lord_of_many_lands", name: "Lord of Many Lands", how: "Rule a kingdom with 5 outposts", earned: (p) => Array.isArray(p.realm?.outposts) && p.realm.outposts.length >= 5 },
+  // v8.5: the court and the living kingdom
+  { key: "master_of_guardians", name: "Master of the Guardians", how: "Swear all seven Floor Guardians to your court",
+    earned: (p) => Object.keys(p.realm?.guardians ?? {}).length >= 7 },
+  { key: "beloved_sovereign", name: "Beloved Sovereign", how: "Rule 100 citizens", earned: (p) => Number(p.realm?.population ?? 0) >= 100 },
+  { key: "merchant_king", name: "Merchant King", how: "Run 4 trade routes", earned: (p) => Array.isArray(p.realm?.routes) && p.realm.routes.length >= 4 },
   // v8.1: the third rank of each race
   ...Object.entries(RACES).map(([race, info]) => ({ key: `race_${race}`, name: info.ranks[2], how: `Reach race level 10 as a ${info.name}`,
     earned: (/** @type {Profile} */ p) => p.race === race && Number(p.raceLv) >= 10 })),

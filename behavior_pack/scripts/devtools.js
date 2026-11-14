@@ -98,6 +98,13 @@ export function openTome(player) {
       setRaceLevel(player, MAX_RACE_LEVEL);
       return `§dYou are ${RACES[race].ranks[2]}, race level ${MAX_RACE_LEVEL}`;
     }],
+    ["Count every Floor Guardian defeated\n(they may be sworn to your court)", () => {
+      const p = profileOf(player);
+      if (!Array.isArray(p.bosses)) p.bosses = [];
+      for (const key of ["albedo", "demiurge", "cocytus", "shalltear", "aura", "mare", "pandoras_actor"]) if (!p.bosses.includes(key)) p.bosses.push(key);
+      touch(player);
+      return "§dEvery Floor Guardian counts as defeated: swear them in from the Kingdom page";
+    }],
     ["Back to level 1\n(refunds stat points, forgets skills)", () => {
       profileOf(player).skills = {};
       return ascend(player, -MAX_LEVEL);

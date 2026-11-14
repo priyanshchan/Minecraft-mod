@@ -47,6 +47,8 @@ import "./campaign.js";
 import "./kingdom.js";
 import "./races.js";
 import "./steeds.js";
+import "./court.js";
+import "./districts.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;

@@ -81,4 +81,30 @@ kingdom.TIERS.forEach((tier, i) => {
   }
   out[`capital_${i + 1}`] = { name: `Capital ${i + 1}: ${tier.name}`, radius: tier.radius, height: tier.height, muster: 0, garrison: [], blocks, capital: true };
 });
+// A whole kingdom: the Sorcerous Capital with all eight districts at level 3 (districts.js).
+{
+  const districts = await import("./districts.js");
+  const placed = new Map();
+  const key = (l) => `${Math.floor(l.x)},${l.y},${Math.floor(l.z)}`;
+  const land = {
+    id: "minecraft:overworld",
+    getBlock: () => undefined,
+    setBlockType: (l, t) => placed.set(key(l), t),
+    fillBlocks(v, t) {
+      for (let x = Math.min(v.from.x, v.to.x); x <= Math.max(v.from.x, v.to.x); x++)
+        for (let y = Math.min(v.from.y, v.to.y); y <= Math.max(v.from.y, v.to.y); y++)
+          for (let z = Math.min(v.from.z, v.to.z); z <= Math.max(v.from.z, v.to.z); z++) placed.set(`${x},${y},${z}`, t);
+    },
+  };
+  kingdom.layCapital(land, { x: 0, y: 64, z: 0 }, 4);
+  const realm = { x: 0, y: 64, z: 0, tier: 4 };
+  for (const b of Object.keys(districts.BUILDINGS)) if (!districts.layBuilding(land, realm, b, 3)) throw new Error(`${b} was not laid`);
+  const blocks = [];
+  for (const [k, block] of placed) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (block === "minecraft:air" || y - 64 < -1) continue;
+    blocks.push([x, y - 64, z, block.replace("minecraft:", "")]);
+  }
+  out.kingdom_full = { name: "The Sorcerer Kingdom: capital and districts", radius: 40, height: 22, muster: 0, garrison: [], blocks, capital: true };
+}
 writeFileSync(process.argv[2], JSON.stringify(out));
