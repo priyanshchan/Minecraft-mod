@@ -2679,7 +2679,327 @@ def _retainer(n):
                             weapon_kind=weapon, mask=mask, orb=orb or "#c05bff")
 
 
-RETAINERS = [_retainer(n) for n in range(len(RETAINER_LOOKS))]
+# v8.7: the party drawn in full. Each of the twelve looks gets its vocation's outfit - plate, cloak and
+# hood, robe, vestments, leathers or finery - layered over the body, a face with eyes, brows and mouth,
+# and its own gear: sword and kite shield, recurve bow and quiver, crystal staff and spellbook, holy staff
+# with its halo, twin daggers, or a lute. Bones keep the player's names (body, head, arms, legs) so the
+# same casting and weapon poses play on them, plus "weapon" and "offhand" in the hands and "cape".
+HAIR_STYLES = ["short", "tied", "long", "short", "long", "beard", "long", "short", "hood", "short", "long", "braid"]
+
+
+def _hero_face(hd, skin, hair, eye, style, mask=None):
+    skin_d, skin_l = shade(skin, 0.84), shade(skin, 1.08)
+    hd.fill(skin, noise=2)
+    rows = [
+        "HHHHHHHH",
+        "HhHHHHhH" if style != "hood" else "HHHHHHHH",
+        "SbbSSbbS",
+        "SwEsSEwS",
+        "SSSllSSS",
+        "SSSddSSS",
+        "SSsmmsSS",
+        "SSSSSSSS",
+    ]
+    if style == "beard":
+        rows[5], rows[6], rows[7] = "SHSddSHS", "SHHmmHHS", "sHHHHHHs"
+    art(hd.front, rows, {"H": hair, "h": shade(hair, 1.35), "S": skin, "s": skin_d, "l": skin_l, "d": skin_d,
+                         "b": shade(hair, 0.7), "w": "#f4f1ea", "E": eye, "m": "#a0525a"})
+    for f in (hd.right, hd.left):
+        f.fill(hair, 0, 0, None, 3)
+    hd.right.fill(hair, 0, 3, 3, 6)
+    hd.left.fill(hair, 5, 3, 8, 6)
+    hd.back.fill(hair, 0, 0, None, 7 if style in ("long", "braid", "tied") else 5)
+    hd.top.fill(hair)
+    hd.top.noise(10, 4)
+    if mask:
+        for f in (hd.front, hd.right, hd.left, hd.back):
+            f.fill(mask, 0, 5, None, 8)
+
+
+def _hero(n):
+    def build():
+        look = RETAINER_LOOKS[n]
+        skin, hair, armor, light, dark, cloth, cloth_d, helmet, _weapon, orb = look[:10]
+        mask = look[10] if len(look) > 10 else None
+        voc = n // 2
+        style = HAIR_STYLES[n]
+        orb = orb or "#c05bff"
+        leather, leather_d, steel, steel_l = "#6b4a36", "#45301f", "#c9ced6", "#eef2f6"
+        m = Model(f"retainer_{n}", bounds=(3, 3.5, 1.25))
+        body = m.bone("body", (0, 24, 0))
+        torso = body.cube((-4, 12, -2), (8, 12, 4))
+        torso.fill(cloth, noise=3)
+        head = m.bone("head", (0, 24, 0), parent="body")
+        hd = head.cube((-4, 24, -4), (8, 8, 8))
+        eye = ["#3a6ab0", "#4a8a3a", "#6a3a2a", "#2a2a2a", "#7a3ab0", "#3a8ab0"][n % 6]
+        _hero_face(hd, skin, hair, eye, style, mask)
+        arms = {}
+        for bname, x, px in (("rightArm", -8, -5), ("leftArm", 4, 5)):
+            bone = m.bone(bname, (px, 22, 0), parent="body")
+            arm = bone.cube((x, 12, -2), (4, 12, 4))
+            arm.fill(cloth, noise=3)
+            arm.band(10, 12, skin)
+            arms[bname] = (bone, x)
+        legs = {}
+        for bname, x, px in (("rightLeg", -4, -2), ("leftLeg", 0, 2)):
+            bone = m.bone(bname, (px, 12, 0))
+            leg = bone.cube((x, 0, -2), (4, 12, 4))
+            leg.fill(shade(cloth_d, 0.8), noise=3)
+            boot = bone.cube((x, 0, -2), (4, 4, 4), inflate=0.25)
+            boot.fill(leather_d, noise=4)
+            boot.band(0, 1, leather)
+            legs[bname] = (bone, x)
+        belt = body.cube((-4, 12, -2), (8, 2, 4), inflate=0.3)
+        belt.fill(leather, noise=3)
+        belt.front.fill(GOLD, 3, 0, 5, 2)
+        pouch = body.cube((2, 11, -3), (2, 2, 1))
+        pouch.fill(leather_d)
+        weapon = m.bone("weapon", (-6, 13, -2), parent="rightArm")
+        offhand = m.bone("offhand", (6, 13, -2), parent="leftArm")
+
+        if voc == 0:  # fighters: plate over cloth, pauldrons, a cape, sword and kite shield
+            plate = body.cube((-4, 15, -2), (8, 9, 4), inflate=0.5)
+            plate.fill(armor, noise=4)
+            plate.front.border(light)
+            plate.front.vline(3, dark, 1, 8).vline(4, light, 1, 8)
+            plate.front.fill(cloth, 2, 2, 6, 6)
+            plate.front.vline(3, GOLD, 2, 6)
+            for bname in ("rightArm", "leftArm"):
+                bone, x = arms[bname]
+                pauldron = bone.cube((x - 0.5, 20, -2.5), (5, 4, 5), inflate=0.2)
+                pauldron.fill(armor, noise=4)
+                pauldron.band(0, 1, light)
+                pauldron.top.border(dark)
+                bracer = bone.cube((x, 13, -2), (4, 3, 4), inflate=0.3)
+                bracer.fill(armor)
+            for bname in ("rightLeg", "leftLeg"):
+                bone, x = legs[bname]
+                greave = bone.cube((x, 4, -2), (4, 5, 4), inflate=0.3)
+                greave.fill(armor, noise=3)
+                greave.front.vline(2, light)
+            cape = m.bone("cape", (0, 24, 2), parent="body").cube((-4, 7, 2.2), (8, 17, 1))
+            cape.fill(cloth, noise=4)
+            cape.back.border(cloth_d)
+            cape.back.fill(GOLD, 3, 3, 5, 5)
+            if helmet:
+                helm = head.cube((-4, 24, -4), (8, 8, 8), inflate=0.6)
+                helm.fill(armor, noise=3)
+                helm.front.fill(None, 1, 3, 7, 7)
+                helm.front.hline(3, dark, 1, 7)
+                helm.front.vline(3, light, 0, 3).vline(4, light, 0, 3)
+                helm.bottom.fill(None)
+                plume = head.cube((-0.5, 32, -3), (1, 3, 7))
+                plume.fill(cloth, noise=6)
+            else:
+                band = head.cube((-4, 30, -4), (8, 1, 8), inflate=0.55)
+                band.fill(cloth_d)
+                band.top.fill(None)
+                band.bottom.fill(None)
+            grip = weapon.cube((-6.5, 12.5, -6), (1, 1, 4))
+            grip.fill(leather_d)
+            pommel = weapon.cube((-7, 12, -2.5), (2, 2, 1))
+            pommel.fill(GOLD)
+            guard = weapon.cube((-8.5, 11.5, -7), (5, 3, 1))
+            guard.fill(GOLD_D)
+            guard.front.hline(1, GOLD)
+            blade = weapon.cube((-6.5, 12, -21), (1, 2, 14))
+            blade.fill(steel, noise=3)
+            for f in (blade.right, blade.left):
+                f.hline(0, steel_l)
+                f.hline(1, "#9aa0aa", 2, 12)
+            shield = offhand.cube((3.5, 7, -4.5), (7, 10, 1))
+            shield.fill(armor, noise=4)
+            shield.front.border(GOLD)
+            shield.front.fill(cloth, 2, 2, 5, 8)
+            shield.front.vline(3, GOLD, 2, 8)
+            shield.front.hline(4, GOLD, 2, 5)
+            boss = offhand.cube((6.5, 11, -5.2), (1, 2, 1))
+            boss.fill(GOLD_L)
+        elif voc == 1:  # archers: hooded cloak, bracers, a recurve bow and a full quiver
+            vest = body.cube((-4, 14, -2), (8, 10, 4), inflate=0.35)
+            vest.fill(armor, noise=5)
+            vest.front.vline(3, leather_d).vline(4, leather_d)
+            strap = body.cube((-4, 14, -2.6), (8, 1, 1), rotation=(0, 0, 35), pivot=(0, 18, -2))
+            strap.fill(leather_d)
+            cloak = m.bone("cape", (0, 24, 2), parent="body").cube((-4.5, 9, 2.2), (9, 15, 1))
+            cloak.fill(cloth, noise=6)
+            cloak.back.ragged_bottom(3, n)
+            hood = head.cube((-4, 24, -4), (8, 8, 8), inflate=0.55)
+            hood.fill(cloth, noise=5)
+            hood.front.fill(None, 1, 2, 7, 8)
+            hood.bottom.fill(None)
+            for bname in ("rightArm", "leftArm"):
+                bone, x = arms[bname]
+                bracer = bone.cube((x, 13, -2), (4, 4, 4), inflate=0.3)
+                bracer.fill(leather, noise=4)
+                bracer.band(1, 2, leather_d)
+            quiver = body.cube((-3, 13, 2.5), (3, 10, 3), rotation=(0, 0, -20), pivot=(-1.5, 18, 3))
+            quiver.fill(leather, noise=5)
+            quiver.band(1, 2, leather_d)
+            for i, x in enumerate((-3, -2, -1)):
+                fletch = body.cube((x - 1.5, 23, 3), (1, 3, 1), rotation=(0, 0, -20), pivot=(-1.5, 18, 3))
+                fletch.fill(["#e9e6dc", "#c9302c", "#e9e6dc"][i])
+            grip = weapon.cube((-6.5, 10, -4.5), (1, 6, 1))
+            grip.fill(leather_d)
+            for y0, dz in ((4, -3.5), (16, -3.5)):
+                limb = weapon.cube((-6.5, y0, dz), (1, 6, 1))
+                limb.fill(armor if voc else "#8a6238", noise=4)
+            for y0 in (2, 22):
+                tip = weapon.cube((-6.5, y0, -2.5), (1, 2, 1))
+                tip.fill(shade(armor, 0.7))
+            string = weapon.cube((-6.5, 3, -1.5), (1, 20, 1), inflate=-0.4)
+            string.fill("#f4f1ea", noise=0)
+        elif voc == 2:  # mages: a long robe, a hat or hooded circlet, a spellbook, a crystal staff
+            robe = body.cube((-4, 0, -2), (8, 12, 4), inflate=0.6)
+            robe.fill(cloth, noise=4)
+            robe.front.vline(3, GOLD, 0, 12).vline(4, GOLD, 0, 12)
+            robe.top.fill(None)
+            robe.bottom.fill(shade(cloth, 0.6))
+            for f in robe.sides:
+                f.hline(11, GOLD)
+            stole = body.cube((-2, 12, -2.5), (4, 12, 1))
+            stole.fill(cloth_d)
+            stole.front.vline(0, GOLD).vline(3, GOLD)
+            for bname in ("rightArm", "leftArm"):
+                bone, x = arms[bname]
+                sleeve = bone.cube((x, 12, -2), (4, 5, 4), inflate=0.45)
+                sleeve.fill(cloth, noise=4)
+                sleeve.band(0, 1, GOLD)
+            if n == 5:  # the wizard's pointed hat
+                brim = head.cube((-6, 31, -6), (12, 1, 12))
+                brim.fill(cloth_d, noise=4)
+                for i, size in enumerate((8, 6, 4, 2)):
+                    tier = head.cube((-size / 2, 32 + i * 2.5, -size / 2 + i * 0.4), (size, 3, size))
+                    tier.fill(cloth, noise=4)
+                head.cube((-4, 32, -4), (8, 1, 8), inflate=0.1).fill(GOLD)
+            else:  # the sorcerer's hood and circlet
+                hood = head.cube((-4, 24, -4), (8, 8, 8), inflate=0.55)
+                hood.fill(cloth_d, noise=5)
+                hood.front.fill(None, 1, 1, 7, 8)
+                hood.bottom.fill(None)
+                circlet = head.cube((-0.5, 29.5, -4.8), (1, 1, 1))
+                circlet.fill(orb, noise=0)
+            book = body.cube((2.5, 9.5, -3), (3, 4, 2))
+            book.fill("#5a2a1a", noise=3)
+            book.front.border(GOLD)
+            shaft = weapon.cube((-6.5, 0, -3.5), (1, 31, 1))
+            shaft.fill("#4a321b", noise=4)
+            stripes(shaft, GOLD_D, every=7, start=3)
+            for dx, dz in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                prong = weapon.cube((-6.5 + dx, 31, -3.5 + dz), (1, 3, 1))
+                prong.fill(GOLD)
+            crystal = weapon.cube((-7, 32, -4), (2, 3, 2))
+            crystal.fill(orb, noise=6)
+        elif voc == 3:  # healers: white vestments, a tabard with a holy sign, a mitre or circlet, a haloed staff
+            robe = body.cube((-4, 0, -2), (8, 12, 4), inflate=0.6)
+            robe.fill(armor, noise=3)
+            robe.top.fill(None)
+            for f in robe.sides:
+                f.hline(11, GOLD).hline(10, cloth_d)
+            tabard = body.cube((-2, 2, -2.8), (4, 20, 1))
+            tabard.fill(cloth, noise=2)
+            tabard.front.border(GOLD)
+            tabard.front.vline(1, orb, 12, 18).vline(2, orb, 12, 18)
+            tabard.front.hline(14, orb, 0, 4)
+            for bname in ("rightArm", "leftArm"):
+                bone, x = arms[bname]
+                sleeve = bone.cube((x, 12, -2), (4, 6, 4), inflate=0.45)
+                sleeve.fill(armor, noise=3)
+                sleeve.band(0, 1, GOLD)
+            if n == 6:  # the priest's mitre
+                mitre = head.cube((-3, 32, -3), (6, 5, 6))
+                mitre.fill(armor, noise=2)
+                mitre.front.vline(2, GOLD).vline(3, GOLD)
+                mitre.front.hline(2, GOLD)
+            else:
+                circlet = head.cube((-4, 29, -4), (8, 1, 8), inflate=0.55)
+                circlet.fill(GOLD)
+                circlet.top.fill(None)
+                circlet.bottom.fill(None)
+            shaft = weapon.cube((-6.5, 0, -3.5), (1, 30, 1))
+            shaft.fill("#f4f1ea", noise=2)
+            stripes(shaft, GOLD, every=6, start=2)
+            for dy, dz, w, h in ((30, -5.5, 5, 1), (34, -5.5, 5, 1), (31, -5.5, 1, 3), (31, -1.5, 1, 3)):
+                ring = weapon.cube((-6.5, dy, dz), (1, h, w))
+                ring.fill(GOLD)
+            glow = weapon.cube((-7, 31, -4), (2, 3, 2))
+            glow.fill(orb, noise=0)
+        elif voc == 4:  # rogues: leathers, hood and mask, a short cloak, twin daggers, a belt of knives
+            vest = body.cube((-4, 13, -2), (8, 11, 4), inflate=0.35)
+            vest.fill(armor, noise=4)
+            vest.front.vline(2, dark).vline(5, dark)
+            for x in (-3, -1, 1):
+                knife = body.cube((x, 11.5, -2.8), (1, 3, 1))
+                knife.fill(steel)
+            cloak = m.bone("cape", (0, 24, 2), parent="body").cube((-4, 14, 2.2), (8, 10, 1))
+            cloak.fill(cloth, noise=5)
+            cloak.back.ragged_bottom(3, n)
+            hood = head.cube((-4, 24, -4), (8, 8, 8), inflate=0.55)
+            hood.fill(cloth_d if n == 8 else cloth, noise=4)
+            hood.front.fill(None, 1, 2, 7, 6 if n == 8 else 8)
+            hood.bottom.fill(None)
+            for bname, wbone in (("rightArm", weapon), ("leftArm", offhand)):
+                bone, x = arms[bname]
+                wrap = bone.cube((x, 12, -2), (4, 5, 4), inflate=0.3)
+                wrap.fill(dark, noise=3)
+                gx = -6.5 if wbone is weapon else 5.5
+                hilt = wbone.cube((gx, 12.5, -5), (1, 1, 3))
+                hilt.fill(leather_d)
+                cross = wbone.cube((gx - 1, 12, -6), (3, 2, 1))
+                cross.fill(dark)
+                edge = wbone.cube((gx, 12, -13), (1, 2, 7))
+                edge.fill(steel, noise=3)
+                for f in (edge.right, edge.left):
+                    f.hline(0, steel_l)
+        else:  # bards: finery and a feathered hat or fur cloak, a lute in hand
+            doublet = body.cube((-4, 13, -2), (8, 11, 4), inflate=0.35)
+            doublet.fill(armor, noise=3)
+            doublet.front.fill(cloth, 3, 0, 5, 11)
+            for y in (2, 5, 8):
+                doublet.front.px(3, y, GOLD_L)
+                doublet.front.px(4, y, GOLD_L)
+            for bname in ("rightArm", "leftArm"):
+                bone, x = arms[bname]
+                puff = bone.cube((x, 19, -2), (4, 4, 4), inflate=0.5)
+                puff.fill(cloth, noise=4)
+                puff.band(1, 2, armor)
+            if n == 10:  # the minstrel's feathered hat
+                hat = head.cube((-5, 31, -5), (10, 1, 10))
+                hat.fill(armor, noise=3)
+                crown = head.cube((-3.5, 32, -3.5), (7, 2, 7))
+                crown.fill(armor, noise=3)
+                crown.band(0, 1, GOLD)
+                feather = head.cube((2, 33, 0), (1, 6, 3), rotation=(-25, 0, 15), pivot=(2.5, 33, 1))
+                feather.fill(cloth, noise=6)
+            else:  # the skald's fur mantle
+                fur = m.bone("cape", (0, 24, 2), parent="body").cube((-5, 13, 1.5), (10, 11, 2))
+                fur.fill("#8a7558", noise=14)
+                collar = body.cube((-5, 22, -3), (10, 3, 6), inflate=0.2)
+                collar.fill("#a8946a", noise=16)
+                collar.front.fill(None, 3, 0, 7, 3)
+                if helmet:
+                    cap = head.cube((-4, 29, -4), (8, 3, 8), inflate=0.6)
+                    cap.fill(armor, noise=4)
+                    cap.bottom.fill(None)
+                    for x in (-5.5, 4.5):
+                        horn = head.cube((x, 30, -1), (1, 3, 1))
+                        horn.fill(BONE)
+            lute = weapon.cube((-8, 8, -7), (3, 5, 4))
+            lute.fill("#8a5a2a", noise=5)
+            lute.front.px(1, 2, "#2a1a10")
+            neck = weapon.cube((-7, 12.5, -15), (1, 1, 8))
+            neck.fill("#5a3a1a")
+            pegs = weapon.cube((-7.5, 12, -16.5), (2, 2, 2))
+            pegs.fill("#3a2410")
+            glow = weapon.cube((-7.5, 13.5, -6.5), (2, 1, 1))
+            glow.fill(orb, noise=0)
+        if not any(b.name == "cape" for b in m.bones):
+            m.bone("cape", (0, 24, 2), parent="body")  # every look shares the bones the party's animations move
+        return m
+    return build
+
+
+RETAINERS = [_hero(n) for n in range(len(RETAINER_LOOKS))]
 
 
 def _wings(m, color, light, span=10):

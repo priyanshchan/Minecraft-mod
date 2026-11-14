@@ -633,6 +633,42 @@ stats and classes, which work as before.
 
 ### Party: retainers and mercenaries
 
+**The party overhaul (v8.7)**
+- **Looks:** every one of the twelve looks is drawn in full, with a face (eyes, brows, mouth; a beard on the
+  Wizard) and its vocation's gear:
+  - Knight and Swordsman: plate, pauldrons, a cape, a longsword and a kite shield.
+  - Ranger and Hunter: a hooded cloak, bracers, a recurve bow and a quiver of arrows.
+  - Sorcerer and Wizard: a long robe, a hood or pointed hat, a spellbook and a crystal staff.
+  - Priest and Acolyte: vestments with a holy tabard, a mitre or circlet, and a haloed staff.
+  - Assassin and Thief: leathers, hood and mask, and twin daggers.
+  - Minstrel and Skald: finery and a feathered hat or fur mantle, and a lute.
+- **Six attacks per vocation:** each vocation gains a level-14 technique and a level-45 ultimate.
+
+| Vocation | Level 14 | Level 45 |
+|----------|----------|----------|
+| Fighter | Taunt: draws foes off you and the back line, weakened | Blade Tempest: three whirling turns |
+| Archer | Pinning Shot: pins and staggers the foe | Starfall Arrow: a rain of light over the foe |
+| Mage | - | Arcane Rift: drags foes into one point, then bursts |
+| Healer | Purify: washes poison, wither, weakness and slowness from everyone | Divine Aegis: a shield of light over you and the party |
+| Rogue | Shadowstep: slips behind the foe and strikes its back | Death Lotus: four cuts at every foe around |
+| Bard | Song of Swiftness: Speed and Haste for everyone | Requiem: four waves of sorrow that hurt and slow |
+
+- **Animations and effects:** every attack plays its own pose, such as a shield bash, bow draw, sky shot,
+  prayer, overarm throw, lute strum, spin, slam or casting gesture. A flash marks the hand that strikes.
+- **Battle sense:**
+  - **Dodging:** members read a boss's warnings and step out of slams, aside from lines, into the safe middle
+    of rings, and off burning ground.
+  - **Positions by role:** the back line (archers, mages, bards) steps away from foes that close in. The
+    vanguard (fighters) throws itself between you or the back line and what threatens them. The healer
+    regroups at your side.
+  - **Openings:** Pinning Shot, Shadowstep and Arcane Rift stagger foes. Every blow on a staggered foe lands 40%
+    harder, and members call it out.
+  - **Free hand:** a member set to Free hand chooses foes by priority: whatever is hurting you, then elites,
+    then staggered foes, then the wounded it can finish.
+- **Tempers:** each member is Brave, Cautious, Cheerful or Stoic. Their battle cries, elite kills and calls when
+  wounded fit their temper. The member page shows their role and temper.
+
+
 Open **Party** in the Adventurer's Plate menu, or use a **Command Banner** (recipe: three red wool and two
 sticks in a flag shape).
 
