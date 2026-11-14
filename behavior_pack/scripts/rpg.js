@@ -31,6 +31,7 @@ const PARTY_SHARE = 0.5;
  *   party: any[], stance: string, kills: Record<string, number>, rep: Record<string, number>,
  *   daily: object, title: string, titles: string[], sites: string[], supply: boolean, bank: number,
  *   skills: Record<string, number>, codex: number, bosses: string[], story: string[], realm: Record<string, any>,
+ *   race: string, raceLv: number, raceXp: number, reborn: number,
  * }} Profile
  */
 
@@ -291,6 +292,17 @@ export function addRep(player, faction, amount) {
 const extraMenus = [];
 
 /**
+ * Hooks other modules use to add to the character without this module importing them (races.js):
+ * `melee` adds to the melee damage factor, `xpFactor` multiplies XP earned and `xp` hears about it.
+ * @type {{
+ *   melee: ((player: import("@minecraft/server").Player, p: Profile, victim: import("@minecraft/server").Entity) => number)[],
+ *   xpFactor: ((p: Profile) => number)[],
+ *   xp: ((player: import("@minecraft/server").Player, amount: number) => void)[],
+ * }}
+ */
+export const hooks = { melee: [], xpFactor: [], xp: [] };
+
+/**
  * Adds a button to the Adventurer's Plate menu, at the end or (with `first`) ahead of the others.
  * @param {(player: import("@minecraft/server").Player) => string} label
  * @param {(player: import("@minecraft/server").Player) => void} open
@@ -327,7 +339,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [], story: [], realm: {} };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [], story: [], realm: {}, race: "none", raceLv: 1, raceXp: 0, reborn: 0 };
 }
 
 /**
@@ -531,6 +543,14 @@ export function grantXp(player, amount, reason) {
   const p = profileOf(player);
   if (amount <= 0) return;
   amount *= skills.xpFactor(p); // Quick Study
+  for (const factor of hooks.xpFactor) amount *= factor(p);
+  for (const hear of hooks.xp) {
+    try {
+      hear(player, amount);
+    } catch {
+      // a listener's fault never stops the XP
+    }
+  }
   if (p.level >= MAX_LEVEL) {
     p.xp = 0;
     return;
@@ -983,6 +1003,7 @@ world.afterEvents.entityHurt.subscribe((event) => {
       behind: lookingAway(victim, player),
       allies: skills.rank(p, "presence") > 0 && hasAllies(player),
     });
+    for (const add of hooks.melee) factor += add(player, p, victim);
     let crit = false;
     // Agility gives everyone a small critical chance; assassins add 25% on top, and the Path of Shadow more.
     if (Math.random() < p.agi * 0.004 + (p.cls === "assassin" ? (master ? 0.35 : 0.25) : 0) + skills.critChance(p)) {

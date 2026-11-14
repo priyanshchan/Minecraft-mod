@@ -1,0 +1,46 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:wyrm_steed",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/wyrm_steed"
+      },
+      "geometry": {
+        "default": "geometry.overlord.wyrm_steed"
+      },
+      "scripts": {
+        "animate": [
+          "look_at_target",
+          "hamsuke_walk",
+          "dragon_wings",
+          "dragon_neck",
+          "dragon_jaw",
+          "dragon_tail",
+          "dragon_lunge",
+          "dragon_soar",
+          "breathe",
+          "flinch"
+        ]
+      },
+      "animations": {
+        "look_at_target": "animation.overlord.look_at_target",
+        "hamsuke_walk": "animation.overlord.hamsuke.walk",
+        "dragon_wings": "animation.overlord.dragon.wings",
+        "dragon_neck": "animation.overlord.dragon.neck",
+        "dragon_jaw": "animation.overlord.dragon.jaw",
+        "dragon_tail": "animation.overlord.dragon.tail",
+        "dragon_lunge": "animation.overlord.dragon.lunge",
+        "dragon_soar": "animation.overlord.dragon.soar",
+        "breathe": "animation.overlord.breathe",
+        "flinch": "animation.overlord.flinch"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ]
+    }
+  }
+}

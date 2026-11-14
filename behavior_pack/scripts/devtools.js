@@ -9,6 +9,7 @@ import { ActionFormData } from "@minecraft/server-ui";
 import { MAX_LEVEL, giveItem, notify, profileOf, restoreMana, setLevel, touch } from "./rpg.js";
 import { learnAll, resetCooldowns } from "./spells.js";
 import { CHAPTERS, completeStory } from "./campaign.js";
+import { MAX_RACE_LEVEL, RACES, raceOf, setRaceLevel } from "./races.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -90,6 +91,12 @@ export function openTome(player) {
       const added = completeStory(player);
       giveItem(player, id("royal_seal"), 1);
       return added > 0 ? `§6${added} chapter(s) marked done: you are crowned. Seal given.` : `§7All ${CHAPTERS.length} chapters were already done. Seal given.`;
+    }],
+    ["Race to its top level\n(choose a race first; unlocks the true form)", () => {
+      const race = raceOf(profileOf(player));
+      if (race === "none") return "§7Choose a race on your Adventurer's Plate first";
+      setRaceLevel(player, MAX_RACE_LEVEL);
+      return `§dYou are ${RACES[race].ranks[2]}, race level ${MAX_RACE_LEVEL}`;
     }],
     ["Back to level 1\n(refunds stat points, forgets skills)", () => {
       profileOf(player).skills = {};

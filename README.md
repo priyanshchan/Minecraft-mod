@@ -888,6 +888,64 @@ ground away from camps: everything inside the capital's square is replaced.
 - **Travel:** go to any of your holdings for free.
 - **Titles:** Lord of Many Lands (5 outposts) and Sorcerous Majesty (a tier 4 capital).
 
+### Races of Yggdrasil (v8.1)
+
+Open the **Race** page of the Adventurer's Plate and take a race beside your class. Your first race is free.
+
+- **Leveling:** a race levels on its own from 1 to 15, fed by a quarter of all the XP you earn.
+- **Ranks:** it grows through three ranks, at race levels 1, 5 and 10. Reaching the third rank earns that
+  rank's name as a title.
+- **True form:** from the second rank, **hold sneak and jump** to take your true form. It costs 30 mana, lasts
+  30 seconds plus 1 per race level, and is then ready again after 3 minutes. Each form has its own aura.
+- **Reincarnation:** changing race later costs 100 Gold Coins, and the new race starts at level 1.
+
+| Race | Ranks | Gifts | Weakness | True form |
+|------|-------|-------|----------|-----------|
+| Human | Human > Hero > Godkin | XP +10% (+1% a level), melee +1% a level, Regeneration below half health | none | Heroic Spirit: Strength II, Speed, Resistance, Regeneration |
+| Undead | Skeleton > Elder Lich > Overlord | immune to poison and wither, never hungry, Night Vision, Water Breathing, +20% melee against the living | fire burns 30% harder | Overlord Form: Resistance II, an Aura of Despair that weakens and slows monsters, mana back |
+| Vampire | Lesser Vampire > Vampire > True Vampire | blows drink 5% of their harm (+0.5% a level), Strength and Speed at night | weakened and slowed under the open sky by day | Bloodfallen: Strength II, Speed II, blows drink 35% |
+| Demon | Imp > Demon > Arch-Devil | Fire Resistance, blows may set foes alight, melee +1% a level | weakened and slowed in water | Demonic Form: Strength II, Jump Boost II, a ring of hellfire |
+| Angel | Angel > Archangel > Seraph | glide (sneak in the air), Regeneration in daylight, +25% against undead and demons | weakened and slowed in the Nether | Seraph: Regeneration II, Slow Falling, heals everyone near |
+| Dragonkin | Dragonkin > Drake-blood > Heir of the Dragon Lords | Health Boost growing with level, Resistance from rank 2, melee +1% a level | slowed in water | Dragon Form: Strength II, Resistance II, Fire Resistance, fire breath every 3 seconds |
+
+### Steeds and barding (v8.1)
+
+- **Nazarick Wyrm** (Whistle of the Nazarick Wyrm: 4 dragon bones, 4 Frost Dragon scales and a Guardian Crest).
+  A young purple and gold dragon you can ride and fly.
+  - **Call it:** use the whistle, and sneak + use to send it away. You only ever have one.
+  - **Flying:** on the ground it walks where you look. **Jump to take off.** In the air it flies where you look
+    while you press forward, climbs while you hold jump and hovers when you let go. Sprint to fly faster.
+    It lands when it touches the ground.
+  - **Breath:** use the whistle while riding to breathe a cone of fire 10 blocks ahead, every 4 seconds.
+- **Soul Eater Steed** (Reins of the Soul Eater: leather, soul fragments and a Data Crystal). A fast undead
+  warhorse, steered like a horse.
+  - **Trample:** monsters it runs into are trampled.
+  - **Charge:** use the reins while riding to charge, a burst forward that bowls over everything in its path.
+- **Barding** is armour for your wyrm, your Soul Eater or a tamed Hamsuke. Use it on the mount.
+  - **Adamantite Barding** (7 adamantite ingots): Resistance I.
+  - **Barding of Nazarick:** Resistance II, Fire Resistance and Regeneration.
+  - Putting on a new barding gives you back the old one.
+- **If a steed is slain,** it can be called again after a minute.
+
+### Armour in 3D (v8.1)
+
+All eleven armour sets are now **worn as 3D models** on players instead of flat skins. The inventory icons are
+unchanged, and armour stands and mobs still wear the flat look.
+- **Dark Warrior:** Momon's great swept horns, a red eye slit and a long red cape.
+- **World Champion:** a plumed helm with a glowing visor, grand pauldrons, a blue cape and tabard.
+- **Overlord's Regalia:** a gold crown with gems, a high spiked collar, a red orb and a long purple robe.
+- **Other sets:**
+  - Dragonscale: ridged scales and gold horns.
+  - Infernal: ram horns, glowing cracks and a tattered cape.
+  - Scripture Vestment: a hood with a holy sign.
+  - Ranger: a cowl, a quiver and a strap.
+  - Crimson Valkyrie: a winged helm.
+  - Platinum: a great helm with a gold cross.
+  - Bone Dragon: a dragon skull with glowing sockets, ribs and a spine.
+  - Beast Hide: a beast's head hood, a fur collar and a pelt.
+- **Glow:** eye slits, gems and runes glow in the dark.
+- **First person:** only the sleeves are drawn, so horns and capes never block your view.
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
@@ -899,6 +957,7 @@ cannot be crafted) works only in creative mode. Using it opens a menu:
 - **Test kit**: 64 Data Crystals, 64 Gold Coins, 32 Refining Stones, 16 Adamantite Ingots, 10 Codices, a Key of
   the Great Tomb, 4 Floor Guardian Crests, 8 mana potions and 4 of each gem.
 - **Finish the campaign**: marks all ten chapters done (you are crowned) and gives the Seal of the Sorcerer Kingdom.
+- **Race to its top level**: your race jumps to level 15 (choose a race first), so its true form is ready.
 - **Back to level 1**: refunds stat points and forgets learned skills.
 
 Sneak + use the tome for a quick +10 levels. In survival or adventure mode it does nothing.
@@ -1084,12 +1143,13 @@ tools/gen/       generator for models, textures and JSON (Python + Pillow + NumP
 tools/validate.py  cross-reference checker
 tools/build.py     validates, then packages dist/*.mcaddon
 tools/test_rpg.py  runs the script logic against a mock of the game API (needs Node.js)
+tools/armour_view.py  draws every 3D armour set on a mannequin, front and back
 docs/releases/     release notes, one file per version
 .github/workflows/release.yml  publishes a GitHub release with the .mcaddon attached (run it from the Actions tab)
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom) and `devtools.js` (the Creative Tome of Ascension) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding) and `devtools.js` (the Creative Tome of Ascension) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

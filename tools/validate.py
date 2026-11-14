@@ -361,13 +361,28 @@ def main():
         for mat in d["materials"].values():
             check(mat in VANILLA["material"], f"{rel(f)}: unknown material {mat}")
         held = f.stem.startswith("weapon_")  # a 3D weapon (v7.7) rather than a piece of armour
+        modeled = any("/armor3d/" in t for t in d["textures"].values())  # 3D armour on players (v8.1)
         for tex in d["textures"].values():
             used_textures.add(tex)
             check(tex in VANILLA["texture"] or png(tex).is_file(), f"{rel(f)}: missing texture {tex}.png")
-            if png(tex).is_file() and not held:
+            if png(tex).is_file() and not held and not modeled:
                 check(Image.open(png(tex)).size in ((64, 32), (128, 64)), f"{rel(f)}: armour texture must be 64x32 or 128x64")
         for gid in d["geometry"].values():
             check(gid in VANILLA["geometry"] or gid in geometries, f"{rel(f)}: unknown geometry {gid}")
+            if modeled and gid in geometries:
+                g = geometries[gid]
+                bones = {b["name"]: b.get("parent") for b in g["bones"]}
+                worn = [n for n in bones if n.startswith("armor_")]
+                check(len(worn) > 0, f"{rel(f)}: the 3D armour has no parts")
+                for n in worn:
+                    check(bones[n] in {"head", "body", "rightArm", "leftArm", "rightLeg", "leftLeg"}, f"{rel(f)}: {n} must hang from one of the player's bones")
+                for n, parent in bones.items():
+                    check(parent is None or parent in bones, f"{rel(f)}: bone {n} has an unknown parent {parent}")
+                tex = d["textures"]["default"]
+                if png(tex).is_file():
+                    size = Image.open(png(tex)).size
+                    want = (g["description"]["texture_width"], g["description"]["texture_height"])
+                    check(size[0] % want[0] == 0 and size[0] // want[0] == size[1] / want[1], f"{rel(f)}: texture {size} does not fit {want}")
             if held and gid in geometries:
                 g = geometries[gid]
                 names = {b["name"] for b in g["bones"]}

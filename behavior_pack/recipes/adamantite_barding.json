@@ -1,0 +1,30 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:adamantite_barding"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "A A",
+      "AAA",
+      "A A"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:adamantite_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:adamantite_ingot"
+      }
+    ],
+    "result": {
+      "item": "overlord:adamantite_barding",
+      "count": 1
+    }
+  }
+}

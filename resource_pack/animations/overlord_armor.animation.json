@@ -1,0 +1,22 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.overlord.armor.first_person": {
+      "loop": true,
+      "bones": {
+        "armor_head": {
+          "scale": 0
+        },
+        "armor_body": {
+          "scale": 0
+        },
+        "armor_rightLeg": {
+          "scale": 0
+        },
+        "armor_leftLeg": {
+          "scale": 0
+        }
+      }
+    }
+  }
+}

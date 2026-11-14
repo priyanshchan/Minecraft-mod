@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:nazarick_barding"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "SCS",
+      "CBC",
+      "SCS"
+    ],
+    "key": {
+      "S": {
+        "item": "overlord:soul_fragment"
+      },
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "B": {
+        "item": "overlord:adamantite_barding"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:adamantite_barding"
+      }
+    ],
+    "result": {
+      "item": "overlord:nazarick_barding",
+      "count": 1
+    }
+  }
+}

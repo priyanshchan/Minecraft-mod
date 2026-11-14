@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:soul_reins"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "LSL",
+      "SCS",
+      "LSL"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:leather"
+      },
+      "S": {
+        "item": "overlord:soul_fragment"
+      },
+      "C": {
+        "item": "overlord:data_crystal"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:soul_fragment"
+      }
+    ],
+    "result": {
+      "item": "overlord:soul_reins",
+      "count": 1
+    }
+  }
+}

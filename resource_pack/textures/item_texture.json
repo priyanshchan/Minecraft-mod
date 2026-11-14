@@ -2,6 +2,9 @@
   "resource_pack_name": "overlord",
   "texture_name": "atlas.items",
   "texture_data": {
+    "overlord_adamantite_barding": {
+      "textures": "textures/items/overlord/adamantite_barding"
+    },
     "overlord_adamantite_ingot": {
       "textures": "textures/items/overlord/adamantite_ingot"
     },
@@ -461,6 +464,9 @@
     "overlord_mask_of_envy": {
       "textures": "textures/items/overlord/mask_of_envy"
     },
+    "overlord_nazarick_barding": {
+      "textures": "textures/items/overlord/nazarick_barding"
+    },
     "overlord_orb_of_death": {
       "textures": "textures/items/overlord/orb_of_death"
     },
@@ -662,6 +668,9 @@
     "overlord_soul_fragment": {
       "textures": "textures/items/overlord/soul_fragment"
     },
+    "overlord_soul_reins": {
+      "textures": "textures/items/overlord/soul_reins"
+    },
     "overlord_spuit_lance": {
       "textures": "textures/items/overlord/spuit_lance"
     },
@@ -721,6 +730,9 @@
     },
     "overlord_world_champion_leggings": {
       "textures": "textures/items/overlord/world_champion_leggings"
+    },
+    "overlord_wyrm_whistle": {
+      "textures": "textures/items/overlord/wyrm_whistle"
     },
     "overlord_yggdrasil_gold_coin": {
       "textures": "textures/items/overlord/yggdrasil_gold_coin"

@@ -1,0 +1,277 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.overlord.armor_beasthide_helmet",
+        "texture_width": 64,
+        "texture_height": 32,
+        "visible_bounds_width": 3.0,
+        "visible_bounds_height": 3.0,
+        "visible_bounds_offset": [
+          0,
+          1.0,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "waist",
+          "parent": "root",
+          "pivot": [
+            0,
+            12,
+            0
+          ]
+        },
+        {
+          "name": "body",
+          "parent": "waist",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "head",
+          "parent": "body",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "leftArm",
+          "parent": "body",
+          "pivot": [
+            5,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "leftItem",
+          "parent": "leftArm",
+          "pivot": [
+            6,
+            15,
+            1
+          ]
+        },
+        {
+          "name": "rightArm",
+          "parent": "body",
+          "pivot": [
+            -5,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "rightItem",
+          "parent": "rightArm",
+          "pivot": [
+            -6,
+            15,
+            1
+          ]
+        },
+        {
+          "name": "leftLeg",
+          "parent": "root",
+          "pivot": [
+            1.9,
+            12,
+            0
+          ]
+        },
+        {
+          "name": "rightLeg",
+          "parent": "root",
+          "pivot": [
+            -1.9,
+            12,
+            0
+          ]
+        },
+        {
+          "name": "armor_head",
+          "parent": "head",
+          "pivot": [
+            0,
+            24,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4,
+                24,
+                -4
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": 1
+            },
+            {
+              "origin": [
+                -3,
+                32.5,
+                -5.8
+              ],
+              "size": [
+                6,
+                2,
+                3
+              ],
+              "uv": [
+                0,
+                16
+              ],
+              "inflate": 0.3
+            },
+            {
+              "origin": [
+                -1,
+                31.4,
+                -6.9
+              ],
+              "size": [
+                2,
+                1,
+                2
+              ],
+              "uv": [
+                34,
+                16
+              ],
+              "inflate": 0.1
+            },
+            {
+              "origin": [
+                -3,
+                30.2,
+                -6
+              ],
+              "size": [
+                1,
+                2,
+                1
+              ],
+              "uv": [
+                42,
+                16
+              ],
+              "inflate": -0.1
+            },
+            {
+              "origin": [
+                2,
+                30.2,
+                -6
+              ],
+              "size": [
+                1,
+                2,
+                1
+              ],
+              "uv": [
+                46,
+                16
+              ],
+              "inflate": -0.1
+            },
+            {
+              "origin": [
+                -5,
+                33,
+                -1
+              ],
+              "size": [
+                2,
+                3,
+                2
+              ],
+              "uv": [
+                18,
+                16
+              ],
+              "inflate": 0.1,
+              "pivot": [
+                -4,
+                33,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                15
+              ]
+            },
+            {
+              "origin": [
+                3,
+                33,
+                -1
+              ],
+              "size": [
+                2,
+                3,
+                2
+              ],
+              "uv": [
+                26,
+                16
+              ],
+              "inflate": 0.1,
+              "pivot": [
+                4,
+                33,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                -15
+              ]
+            },
+            {
+              "origin": [
+                -4,
+                18,
+                2.5
+              ],
+              "size": [
+                8,
+                7,
+                2
+              ],
+              "uv": [
+                32,
+                0
+              ],
+              "inflate": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

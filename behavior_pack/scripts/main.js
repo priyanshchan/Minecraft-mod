@@ -45,6 +45,8 @@ import "./dungeon.js";
 import "./devtools.js";
 import "./campaign.js";
 import "./kingdom.js";
+import "./races.js";
+import "./steeds.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;

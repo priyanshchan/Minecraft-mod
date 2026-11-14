@@ -108,6 +108,10 @@ item.overlord.refining_stone.name=Refining Stone
 item.overlord.ascension_tome.name=Creative Tome of Ascension
 item.overlord.tomb_key.name=Key of the Great Tomb
 item.overlord.royal_seal.name=Seal of the Sorcerer Kingdom
+item.overlord.wyrm_whistle.name=Whistle of the Nazarick Wyrm
+item.overlord.soul_reins.name=Reins of the Soul Eater
+item.overlord.adamantite_barding.name=Adamantite Barding
+item.overlord.nazarick_barding.name=Barding of Nazarick
 item.overlord.gem_ruby.name=Ruby of Embers
 item.overlord.gem_sapphire.name=Sapphire of Frost
 item.overlord.gem_topaz.name=Topaz of Storms
@@ -176,6 +180,8 @@ tile.overlord:cracked_nazarick_bricks.name=Cracked Nazarick Bricks
 tile.overlord:glacier_bricks.name=Glacier Bricks
 tile.overlord:nazarick_pillar.name=Nazarick Pillar
 
+entity.overlord:wyrm_steed.name=Nazarick Wyrm
+entity.overlord:soul_steed.name=Soul Eater Steed
 entity.overlord:ainz.name=Ainz Ooal Gown
 entity.overlord:albedo.name=Albedo
 entity.overlord:shalltear.name=Shalltear Bloodfallen
@@ -338,4 +344,4 @@ item.spawn_egg.entity.overlord:platinum_dragon_lord.name=Platinum Dragon Lord Sp
 item.spawn_egg.entity.overlord:rubedo.name=Rubedo Spawn Egg
 
 pack.name=Overlord: Tomb of Nazarick
-pack.description=Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.0.0
+pack.description=Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.1.0
