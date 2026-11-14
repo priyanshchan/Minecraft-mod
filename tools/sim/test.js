@@ -932,6 +932,149 @@ players.splice(0, players.length, ...everyone, zoe);
   players.splice(0, players.length, ...rest, lux, max, tot);
 }
 
+// ---- the skill tree ----
+{
+  const skills = await import("./skills.js");
+  const tree = await import("./skilltree.js");
+  // the data: six paths of eleven nodes, five tiers each, a single capstone at the top, and every prerequisite in its own path
+  assert.equal(skills.TREES.length, 6); assert.equal(skills.NODES.length, 66);
+  for (const t of skills.TREES) {
+    const nodes = skills.NODES.filter((n) => n.tree === t.key);
+    assert.equal(nodes.length, 11, t.key); assert.equal(nodes.filter((n) => n.tier === 4).length, 1, `${t.key} capstone`);
+    for (let tier = 0; tier < 4; tier++) assert.ok(nodes.some((n) => n.tier === tier), `${t.key} tier ${tier}`);
+    const below = nodes.filter((n) => n.tier < 4).reduce((sum, n) => sum + n.max, 0); assert.ok(below >= skills.TIER_POINTS[4], `${t.key}: the capstone can be reached`);
+    for (const n of nodes) if (n.needs) { const need = skills.BY_KEY.get(n.needs); assert.ok(need && need.tree === n.tree && need.tier < n.tier, n.key); }
+    for (const n of nodes) for (let r = 1; r <= n.max; r++) assert.ok(!/[{}]/.test(skills.describe(n, r)), `${n.key} ${r}: ${skills.describe(n, r)}`);
+  }
+  assert.equal(new Set(skills.NODES.map((n) => n.key)).size, 66, "keys are unique");
+  // points: one a level from 2, one more every tenth level, plus codices up to ten
+  assert.equal(skills.pointsForLevel(1), 0); assert.equal(skills.pointsForLevel(10), 10); assert.equal(skills.pointsForLevel(100), 109);
+  const total = skills.NODES.reduce((sum, n) => sum + n.max, 0); assert.ok(total > 109 + skills.MAX_CODEX, `not everything can be learned (${total})`);
+  // the rules: tier gates by points in the path and by level, prerequisites, no points
+  const q = { level: 1, skills: {}, codex: 0 };
+  assert.equal(skills.check(q, "weapon_mastery").reason, "No skill points left");
+  q.level = 6; assert.equal(skills.learn(q, "weapon_mastery"), ""); assert.equal(skills.rank(q, "weapon_mastery"), 1);
+  assert.ok(skills.check(q, "cleave").reason.includes("level 10"));
+  q.level = 12; assert.ok(skills.check(q, "cleave").reason.includes("3 points"));
+  skills.learn(q, "weapon_mastery"); skills.learn(q, "weapon_mastery"); assert.ok(skills.check(q, "cleave").ok, "tier II opens at 3 points and level 10");
+  assert.ok(skills.check(q, "cleave").ok && skills.openTier(q, "blade") === 1 && skills.openTier(q, "arcane") === 0);
+  q.level = 40; q.skills = { weapon_mastery: 5, iron_body: 2, tough_skin: 5 }; assert.ok(skills.check(q, "six_light_strikes").reason.includes("level 50"));
+  q.level = 60; q.skills = { weapon_mastery: 5, iron_body: 2, tough_skin: 5, executioner: 3, battle_fury: 3, crushing_blow: 2 };
+  assert.equal(skills.check(q, "six_light_strikes").reason, "Needs Cleave", "a capstone needs its prerequisite");
+  q.skills.crushing_blow = 1; q.skills.cleave = 1; assert.ok(skills.check(q, "six_light_strikes").ok);
+  assert.equal(skills.available(q), skills.pointsForLevel(60) - 20); q.codex = 99; assert.equal(skills.earned(q), skills.pointsForLevel(60) + 10, "codices count up to ten");
+  q.skills.weapon_mastery = 99; assert.equal(skills.rank(q, "weapon_mastery"), 5, "a rank never exceeds the node's maximum");
+  q.level = 1; assert.equal(skills.available(q), 0, "levels lost do not make points negative");
+  assert.equal(skills.describe(skills.BY_KEY.get("unyielding"), 2), "Resistance I while you are below 70% health");
+  assert.equal(skills.unlearnCost({ level: 1, skills: { weapon_mastery: 3 }, codex: 0 }), 16);
+
+  // in play: a level 60 warrior-to-be
+  const s = mkPlayer("sora"); const ps = rpg.profileOf(s); s.dimension.mobs = [];
+  world.afterEvents.playerSpawn.fire({ player: s, initialSpawn: true }); advance(80);
+  ps.level = 60; ps.mana = rpg.maxMana(ps);
+  // the menu: the skill tree is the first extra entry of the plate, then a path, then a node, then learn
+  script.push(6, 0, 0, 0); rpg.openMenu(s); await new Promise((r) => setTimeout(r, 0)); await new Promise((r) => setTimeout(r, 0)); await new Promise((r) => setTimeout(r, 0)); await new Promise((r) => setTimeout(r, 0));
+  assert.equal(skills.rank(ps, "weapon_mastery"), 1, "learned through the menu");
+  const page = shown.findLast((f) => f.title === "Weapon Mastery"); assert.ok(page && page.body.includes("+3% melee damage"), page?.body);
+  assert.ok(shown.some((f) => f.title === "Skill Tree" && f.body.includes("Path of the Blade")));
+  script.length = 0;
+  // melee: Weapon Mastery 5 adds 15% to a blow
+  ps.skills = { weapon_mastery: 5 }; ps.str = 0; ps.agi = 0; ps.cls = "none";
+  const target = (hp = 100, fam = ["monster"]) => { const m = mob("minecraft:zombie", hp, fam); m.id = `t${Math.random()}`; m.tags = new Set(); m.hasTag = (t) => m.tags.has(t); m.addEffect = () => {}; m.setOnFire = () => {}; m.getViewDirection = () => ({ x: 0, y: 0, z: 1 }); return m; };
+  const hit = (victim, damage = 10) => world.afterEvents.entityHurt.fire({ hurtEntity: victim, damage, damageSource: { damagingEntity: s, cause: "entityAttack" } });
+  let t1 = target(); hit(t1); assert.equal(t1.health.currentValue, 100 - 1.5, "+15%");
+  // Backstab: a foe looking away (its view points away from the attacker at x=0)
+  ps.skills = { weapon_mastery: 5, iron_body: 2, cleave: 3, tough_skin: 5, backstab: 3 }; t1 = target(); t1.location = { x: 0, y: 64, z: 2 }; hit(t1);
+  assert.equal(t1.health.currentValue, 100 - 6, "+15% and +45% from behind");
+  // Cleave strikes the monsters beside the target, never the target twice or a friend
+  const side = target(), pal = target(); pal.tags.add("overlord_ally_sora"); s.dimension.mobs = [side, pal]; t1 = target(); hit(t1);
+  assert.ok(side.health.currentValue < 100, "cleaved"); assert.equal(pal.health.currentValue, 100, "allies are spared"); s.dimension.mobs = [];
+  // Bloodthirst heals for a share of the blow
+  ps.skills = { bloodthirst: 3 }; s.health.currentValue = 10; hit(target()); assert.ok(Math.abs(s.health.currentValue - 10.9) < 1e-9, `${s.health.currentValue}`);
+  // Six Light Strikes: the sixth blow sends six slashes into everything around
+  ps.skills = { cleave: 1, six_light_strikes: 1 }; const crowd = [target(200), target(200)]; s.dimension.mobs = crowd; s.msgs.length = 0;
+  const victim = target(1000); for (let i = 0; i < 5; i++) hit(victim, 10); const before6 = crowd.map((m) => m.health.currentValue);
+  s.bar = ""; hit(victim, 10); advance(14);
+  assert.ok(crowd.every((m, i) => before6[i] - m.health.currentValue >= 6 * 4 - 1e-9), `${crowd.map((m) => m.health.currentValue)}`); s.dimension.mobs = [];
+  // Assassinate: a wounded foe may die outright, never a boss
+  ps.skills = { assassinate: 1 }; const realRandom = Math.random; Math.random = () => 0;
+  const weak = target(100); weak.health.currentValue = 20; hit(weak, 1); assert.equal(weak.health.currentValue, 0, "assassinated");
+  const boss = target(900); boss.health.currentValue = 100; hit(boss, 1); assert.ok(boss.health.currentValue > 0, "bosses are not");
+  // defences: Evasion refunds the whole blow, Tough Skin a share of it
+  ps.skills = { evasion: 3 }; s.health.currentValue = 12; world.afterEvents.entityHurt.fire({ hurtEntity: s, damage: 8, damageSource: { cause: "entityAttack" } }); assert.equal(s.health.currentValue, 20, "dodged");
+  Math.random = () => 0.99; ps.skills = { tough_skin: 5, evasion: 3 }; s.health.currentValue = 12;
+  world.afterEvents.entityHurt.fire({ hurtEntity: s, damage: 10, damageSource: { cause: "entityAttack" } }); assert.ok(Math.abs(s.health.currentValue - 13.5) < 1e-9, `${s.health.currentValue}`);
+  s.health.currentValue = 12; world.afterEvents.entityHurt.fire({ hurtEntity: s, damage: 10, damageSource: { cause: "void" } }); assert.equal(s.health.currentValue, 12, "the void is never softened");
+  // Mana Shield pays for part of a blow in mana
+  ps.skills = { mana_shield: 2 }; ps.mana = 100; s.health.currentValue = 10; world.afterEvents.entityHurt.fire({ hurtEntity: s, damage: 10, damageSource: { cause: "entityAttack" } });
+  assert.ok(Math.abs(s.health.currentValue - 13) < 1e-9 && Math.abs(ps.mana - 95.5) < 1e-9, `${s.health.currentValue} ${ps.mana}`);
+  // Divine Grace saves a falling player once, then waits five minutes
+  ps.skills = { divine_grace: 1 }; s.health.currentValue = 3; world.afterEvents.entityHurt.fire({ hurtEntity: s, damage: 1, damageSource: { cause: "entityAttack" } });
+  assert.equal(s.health.currentValue, 10); assert.ok(s.effects.has("absorption")); s.health.currentValue = 3;
+  world.afterEvents.entityHurt.fire({ hurtEntity: s, damage: 1, damageSource: { cause: "entityAttack" } }); assert.equal(s.health.currentValue, 3, "not twice in five minutes");
+  // kills: Soul Harvest restores mana, Gold Sense and Crystal Hunter drop loot where the foe fell, Windfall triples XP
+  Math.random = () => 0; const drops = []; s.dimension.spawnItem = (stack) => drops.push(stack.typeId);
+  ps.skills = { soul_harvest: 5, gold_sense: 5, crystal_hunter: 3, windfall: 3 }; ps.mana = 0; ps.level = 30; ps.xp = 0;
+  const prey = target(); prey.location = { x: 3, y: 64, z: 3 }; prey.dimension = s.dimension; kill(s, prey);
+  assert.equal(ps.mana, 5); assert.ok(drops.includes("overlord:yggdrasil_gold_coin") && drops.includes("overlord:data_crystal"), `${drops}`);
+  const single = rpg.killXp(prey); assert.ok(ps.xp >= single * 3 - 1, `triple XP: ${ps.xp} vs ${single}`);
+  Math.random = realRandom; s.dimension.spawnItem = () => {};
+  // passives: hearts, speed, night vision and jump boost come and go with the skills
+  ps.skills = { iron_body: 2, sacred_vow: 2, fleet_foot: 2, night_eyes: 1 }; rpg.applyPassives(s);
+  assert.equal(s.effects.get("health_boost").amplifier, 3, "four tiers of hearts"); assert.equal(s.effects.get("speed").amplifier, 0); assert.ok(s.effects.has("night_vision") && s.effects.has("jump_boost"));
+  ps.skills = {}; rpg.applyPassives(s); assert.ok(!s.effects.has("night_vision") && !s.effects.has("health_boost"));
+  // mana and spell power
+  const baseMana = rpg.maxMana(ps), basePower = rpg.spellPower(s); ps.skills = { deep_reserves: 5, arcane_study: 5 };
+  assert.equal(rpg.maxMana(ps), baseMana + 60); assert.ok(Math.abs(rpg.spellPower(s) - basePower - 0.15) < 1e-9);
+  // spells: Efficient Casting makes them cheaper, and Maximize Magic makes every fourth one free and far stronger
+  {
+    const dummy2 = target(10000, ["monster"]); const dealt = []; dummy2.applyDamage = (n) => dealt.push(n); s.aimed = [dummy2];
+    ps.skills = { efficient_casting: 3 }; ps.mana = 50; ps.casts = {}; assert.equal(spells.castSelected(s), true); assert.equal(ps.mana, 47, "Magic Arrow costs 3 instead of 4");
+    ps.skills = { maximize_magic: 1, arcane_study: 1 }; dealt.length = 0; const realRandom2 = Math.random; Math.random = () => 0.99;
+    const free = [];
+    for (let i = 0; i < 8; i++) { advance(20); ps.mana = 50; spells.castSelected(s); free.push(ps.mana === 50); }
+    Math.random = realRandom2;
+    assert.equal(free.filter(Boolean).length, 2, `one spell in four is free: ${free}`); assert.equal(dealt.length, 8);
+    const at = free.indexOf(true); assert.equal(free.indexOf(true, at + 1), at + 4);
+    assert.ok(dealt[at] > dealt[(at + 1) % 8] * 1.5, `maximized: ${dealt}`);
+    s.aimed = [];
+  }
+  // XP: Quick Study adds 20%, and a Shooting Star still gives exactly one level
+  ps.skills = { quick_study: 5 }; ps.level = 30; ps.xp = 0; rpg.grantXp(s, 100); assert.equal(ps.xp, 120);
+  rpg.grantLevel(s); assert.equal(ps.level, 31);
+  // the standing skills: Blessed Body heals, Purity cleanses, Shadow Veil hides a sneaking player, Unyielding braces a hurt one
+  ps.skills = { blessed_body: 5, purity: 1, shadow_veil: 1, fleet_foot: 1, unyielding: 2 }; s.health.currentValue = 10; s.effects.set("poison", { duration: 100, amplifier: 0 }); s.isSneaking = true;
+  tree.tick(s, 4); assert.equal(s.health.currentValue, 12.5); assert.ok(!s.effects.has("poison") && s.effects.has("invisibility") && s.effects.has("resistance"));
+  s.isSneaking = false;
+  // companions: Commander and War Drums
+  // (the party module asks skills.js for these; their arithmetic is checked here)
+  assert.ok(Math.abs(skills.companionPower({ level: 60, skills: { commander: 5, supreme_authority: 1 }, codex: 0 }) - 1.2 * 1.25) < 1e-9);
+  assert.ok(skills.companionHaste({ level: 60, skills: { war_drums: 3 }, codex: 0 }) < 1);
+  // Legion raises the number of summons
+  ps.skills = { legion: 2 }; assert.equal(spells.allyLimit(s), spells.MAX_ALLIES + 2);
+  // Haggler: cheaper travel and reinforcement
+  ps.skills = { haggler: 3 }; assert.equal(forge.reinforceCost(4, s).coins, 53); assert.equal(forge.reinforceCost(4).coins, 75);
+  // the Codex: one more point each, at most ten, and it is used up
+  ps.skills = {}; ps.codex = 0; const earnedBefore = skills.earned(ps); s.inv.push(new ItemStack("overlord:codex_of_skills", 2));
+  world.afterEvents.itemUse.fire({ source: s, itemStack: { typeId: "overlord:codex_of_skills" } });
+  assert.equal(ps.codex, 1); assert.equal(skills.earned(ps), earnedBefore + 1); assert.equal(spells.countItem(s, "overlord:codex_of_skills"), 1);
+  ps.codex = 10; assert.ok(tree.readCodex(s).includes("already")); assert.equal(spells.countItem(s, "overlord:codex_of_skills"), 1, "not wasted");
+  // unlearning: costs Gold Coins and gives every point back
+  ps.codex = 0; ps.level = 60; ps.skills = { weapon_mastery: 5, iron_body: 2 }; assert.ok(tree.unlearn(s).includes("costs 24"));
+  s.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 30)); assert.ok(tree.unlearn(s).includes("7 skill points")); assert.equal(skills.spent(ps), 0);
+  assert.equal(spells.countItem(s, "overlord:yggdrasil_gold_coin"), 6);
+  // learning flourishes, and a capstone is announced to everyone
+  ps.skills = { weapon_mastery: 5, iron_body: 2, tough_skin: 5, executioner: 3, battle_fury: 3, crushing_blow: 1, cleave: 1 }; const said = [];
+  const realSend = world.sendMessage; world.sendMessage = (m) => said.push(m);
+  assert.ok(tree.learnSkill(s, "six_light_strikes").includes("Learned")); assert.ok(said.some((m) => m.includes("Six Light Strikes")));
+  world.sendMessage = realSend;
+  // the HUD shows free skill points, and the save keeps the skills
+  ps.skills = {}; ps.hud = true; advance(120); assert.ok(s.bar.includes("SP"), s.bar);
+  ps.skills = { weapon_mastery: 2 }; ps.codex = 3; rpg.touch(s); advance(200);
+  world.afterEvents.playerLeave.fire({ playerId: "sora" }); const back = rpg.profileOf(s); assert.equal(back.skills.weapon_mastery, 2); assert.equal(back.codex, 3);
+  players.splice(players.indexOf(s), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);

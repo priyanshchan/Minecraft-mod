@@ -235,6 +235,7 @@ country; they also step over ledges two blocks high. They stay on the ground —
 | **Longinus** (World Item) | Single use: erases the foe you are looking at, whatever it is, and costs you three levels. Dropped by Rubedo |
 | Angel Feather, Demon Heart, Blessed Cloth | Crafting materials from angels, Evil Lord Wrath and Scripture priests |
 | **Tome: Create Undead** | Summons a Death Knight that follows and defends you for 5 minutes (max. 3) |
+| **Codex of the Supreme Beings** | Use to gain one skill point (up to ten in all). From world bosses, the three dragons and deep Tomb Raids |
 | **Minor Healing Potion** | Drink for instant health and regeneration |
 | **Dark Warrior armour** | Helmet, chestplate, leggings, boots (netherite-level protection). Full set grants Strength and Resistance |
 | **Guardian sigils** | Use to summon the matching Floor Guardian or Ainz himself |
@@ -261,7 +262,8 @@ to her stock, and the Dwarf Runesmith buys Dragon Bones and Frost Dragon Scales.
 Every player gets an **Adventurer's Plate** on first join (recipe: paper + copper ingot). Use it to open the
 character menu.
 
-- **Levels (1–100):** defeating any mob gives XP; bosses give far more. Each level grants 3 stat points.
+- **Levels (1–100):** defeating any mob gives XP; bosses give far more. Each level grants 3 stat points and a
+  skill point (see *Skill tree* below).
   Your level is shown under your name for other players.
 - **Stats (up to 50 each):** Strength (+2% melee damage per point), Vitality (+2 hearts per 5 points),
   Intelligence (+2% spell power and +5 mana per point), Agility (Speed I/II/III at 10/25/45 points).
@@ -287,6 +289,126 @@ character menu.
 - **Status bar:** level, class, mana, XP and quest progress above the hotbar (can be hidden from the menu).
 
 Progress is saved per player in the world.
+
+### Skill tree
+
+Open **Skill Tree** from the Adventurer's Plate (the first entry after the built-in ones). It sits on top of
+stats and classes, which work as before.
+
+- **Skill points:** one at every level from level 2 and one more at every tenth level (109 at level 100),
+  plus one for each **Codex of the Supreme Beings** you read, up to ten. A Codex drops from world bosses, the
+  Frost Dragon, the Skeletal Dragon, the Platinum Dragon Lord (two) and Tomb Raids of tier 3 (one) and tier 4
+  (two). The status bar shows unspent points as `+N SP`.
+- **Six paths, 66 skills, about 190 ranks:** far more than any one character can learn, so you have to
+  choose. Each path has five tiers; a tier opens once you have spent enough points in that path *and*
+  reached its level — tier I: any time, II: 3 points and level 10, III: 8 points and level 20, IV: 14 points
+  and level 35, V: 20 points and level 50. Some skills also need an earlier skill of their path.
+- **Capstones:** the fifth tier of every path holds one great skill — Six Light Strikes, Maximize Magic,
+  Assassinate, Halo of the Six Gods, Authority of the Supreme Being and Midas Touch. Mastering one is
+  announced to the whole server.
+- **The menu** shows every path with a progress bar, every skill with its rank and why it is locked, and for
+  each skill what it does now, at its next rank and at full rank. *Your bonuses* lists everything you have
+  learned on one page.
+- **Unlearning:** forget everything and spend your points again for 10 Gold Coins plus 2 per point spent.
+- Skills feed the systems they belong to: melee damage and critical hits, spell power, mana, cooldowns and
+  cost, companions' damage, health and attack rate, how many creatures you can summon, travel and forge
+  prices, camp and bounty rewards, XP, and the death penalty.
+
+**Path of the Blade** — The martial arts of Gazef Stronoff and the warrior-captains of the Kingdom: harder blows, a tougher body and the Six Light Strikes.
+
+| Tier | Skill | Ranks | At full rank |
+| --- | --- | --- | --- |
+| I | Weapon Mastery | 5 | +15% melee damage |
+| I | Iron Body | 2 | +4 hearts |
+| II | Cleave | 3 | Melee hits also strike other foes within 2.5 blocks for 45% of the damage |
+| II | Tough Skin | 5 | Shrug off 15% of the damage you take |
+| III | Executioner (needs Weapon Mastery) | 3 | +30% melee damage against foes below 30% health |
+| III | Battle Fury | 3 | +24% melee damage while you are below half health |
+| III | Bloodthirst | 3 | Heal for 9% of the melee damage you deal |
+| IV | Second Wind (needs Tough Skin) | 1 | Falling below 30% health gives Regeneration III for 5 seconds (once a minute) |
+| IV | Unyielding | 2 | Resistance I while you are below 70% health |
+| IV | Crushing Blow | 3 | 18% chance a melee hit deals +50% damage and staggers the foe |
+| V | **Six Light Strikes** (capstone) (needs Cleave) | 1 | Every sixth melee hit unleashes six slashes on every foe within 4 blocks, each for 40% of the blow |
+
+**Path of Tier Magic** — Fluder Paradyne's lifelong study of the tiers: more mana, cheaper and faster spells, and Maximize Magic.
+
+| Tier | Skill | Ranks | At full rank |
+| --- | --- | --- | --- |
+| I | Arcane Study | 5 | +15% spell power |
+| I | Deep Reserves | 5 | +60 maximum mana |
+| II | Mana Flow | 5 | +50% mana recovery |
+| II | Efficient Casting | 3 | Spells cost 18% less mana |
+| III | Quick Chant | 3 | Spell cooldowns are 18% shorter |
+| III | Flame and Thunder | 3 | +24% power for fire and lightning spells |
+| III | Frost and Venom | 3 | +24% power for ice and acid spells |
+| IV | Overcast (needs Efficient Casting) | 3 | 15% chance a spell costs no mana |
+| IV | Spell Surge | 3 | 18% chance a spell is cast at +60% power |
+| IV | Mana Shield | 2 | 30% of the damage you take is paid in mana instead (3 mana a heart) |
+| V | **Maximize Magic** (capstone) (needs Arcane Study) | 1 | Every fourth spell you cast is maximized: +80% power and no mana |
+
+**Path of Shadow** — The killing arts of the Eight Fingers and Clementine: critical hits, evasion, poison and the killing blow.
+
+| Tier | Skill | Ranks | At full rank |
+| --- | --- | --- | --- |
+| I | Keen Edge | 5 | +10% critical hit chance |
+| I | Fleet of Foot | 2 | One more tier of Speed, and Jump Boost I |
+| II | Lethal Strikes | 5 | Critical hits deal +50% more damage |
+| II | Evasion | 3 | 12% chance to dodge an attack completely |
+| III | Backstab | 3 | +45% melee damage against a foe that is looking away from you |
+| III | Venom Blade | 3 | 24% chance a melee hit poisons the foe |
+| III | Eyes of the Night | 1 | Permanent Night Vision |
+| IV | Shadow Veil (needs Fleet of Foot) | 1 | You turn invisible while you sneak |
+| IV | Flurry | 3 | 15% chance a hit strikes again at once for 60% of its damage |
+| IV | Cutthroat | 2 | Critical hits heal you for 2 heart(s) |
+| V | **Assassinate** (capstone) (needs Backstab) | 1 | Hits on foes below 25% health have a 30% chance to slay them outright (not bosses) |
+
+**Path of Faith** — The miracles of the priests of the Six Great Gods: a body that mends itself, holy light, and protection for your allies.
+
+| Tier | Skill | Ranks | At full rank |
+| --- | --- | --- | --- |
+| I | Blessed Body | 5 | Regain 2.5 health every 4 seconds |
+| I | Holy Light | 5 | +25% power for holy spells (healing and Holy Ray) |
+| II | Smite the Undead | 5 | +30% melee damage against the undead |
+| II | Purity | 1 | Poison, Wither, Nausea and Blindness are cleansed within seconds |
+| III | Guardian Aura | 3 | Every 4 seconds, other players and your companions within 8 blocks regain 3 health |
+| III | Sacred Vow | 2 | +4 hearts |
+| III | Sanctified Weapon | 3 | Your melee hits set the undead and demons alight for 6 seconds |
+| IV | Divine Grace (needs Blessed Body) | 1 | Falling below 20% health heals you to half and gives Absorption II (once every 5 minutes) |
+| IV | Radiance | 2 | Each holy spell you cast also heals allies within 6 blocks for 4 hearts |
+| IV | Turn Undead | 1 | Every 8 seconds the undead within 6 blocks are weakened and slowed |
+| V | **Halo of the Six Gods** (capstone) (needs Guardian Aura) | 1 | You and your allies within 10 blocks keep Regeneration I, and holy spells gain +30% power |
+
+**Path of Dominion** — The authority of a Supreme Being over servants and the undead: stronger companions, more summons and an aura of despair.
+
+| Tier | Skill | Ranks | At full rank |
+| --- | --- | --- | --- |
+| I | Commander | 5 | Your companions' attacks are 20% stronger |
+| I | Dark Arts | 5 | +20% power for dark spells |
+| II | Veteran Retainers | 3 | Your companions have +6 hearts |
+| II | Soul Harvest | 5 | Every kill restores 5 mana |
+| III | Legion (needs Dark Arts) | 2 | Command 2 more summoned creature(s) |
+| III | War Drums | 3 | Your companions attack 15% more often |
+| III | Despair Aura | 3 | Monsters within 9 blocks of you are weakened |
+| IV | Bonds of Loyalty | 2 | Your bond with companions grows 100% faster |
+| IV | Undying Legion | 2 | Your summoned creatures gain Strength I and Resistance I |
+| IV | Overlord's Presence | 3 | +12% melee and spell damage while a companion or summon is within 12 blocks |
+| V | **Authority of the Supreme Being** (capstone) (needs Commander) | 1 | Companions and summons within 16 blocks keep Strength I and Speed I, and companions' attacks are 25% stronger |
+
+**Path of Fortune** — An adventurer's craft: faster growth, gold and crystals from your foes, and cheaper roads.
+
+| Tier | Skill | Ranks | At full rank |
+| --- | --- | --- | --- |
+| I | Quick Study | 5 | +20% XP |
+| I | Gold Sense | 5 | 25% chance a kill drops a Gold Coin |
+| II | Haggler | 3 | Travel and weapon reinforcement cost 30% less |
+| II | Crystal Hunter | 3 | 6% chance a kill yields a Data Crystal |
+| III | Bounty Hunter | 3 | Cleared camps and daily bounties pay 45% more gold |
+| III | Well Provisioned | 2 | Every minute you are fed a little (2 hunger) |
+| III | Scholar | 3 | 75% chance a cast counts twice towards spell mastery |
+| IV | Treasure Hunter | 2 | Discovering a site gives 10 Gold Coins |
+| IV | Death's Bargain | 1 | You lose no XP when you die |
+| IV | Windfall | 3 | 6% chance a kill gives triple XP |
+| V | **Midas Touch** (capstone) (needs Gold Sense) | 1 | Every kill has a 15% chance to drop 1-3 Gold Coins, and elites drop twice the gold |
 
 ### Party: retainers and mercenaries
 
@@ -652,7 +774,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement) `mount.js` (Hamsuke) and `arena.js` (Imperial Arena) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules) and `skilltree.js` (skill tree menus and effects) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

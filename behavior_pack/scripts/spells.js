@@ -5,7 +5,8 @@
 // some creatures are weak or resistant to.
 import { world, system, EntityDamageCause, Direction } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { giveItem, notify, profileOf, setHudExtra, spellPower, spendMana, restoreMana, touch } from "./rpg.js";
+import { giveItem, notify, profileOf, setHudExtra, spellPower, spendMana, restoreMana, touch, hasAllies } from "./rpg.js";
+import * as skills from "./skills.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -391,6 +392,11 @@ function drain(damage, healShare, mana) {
 /** Most creatures a player may command through summoning spells and Sealing Crystals at one time. */
 export const MAX_ALLIES = 4;
 
+/** How many summoned creatures a player may command: four, and more with Legion. @param {Player} player */
+export function allyLimit(player) {
+  return MAX_ALLIES + skills.extraAllies(profileOf(player));
+}
+
 /**
  * Summons allied creatures that follow and fight for the player until their time runs out.
  * Returns how many appeared (0 when the player already commands as many as allowed).
@@ -404,7 +410,7 @@ export function summonAlly(player, type, count) {
   } catch {
     // dimension unloading
   }
-  const room = Math.min(count, MAX_ALLIES - present);
+  const room = Math.min(count, allyLimit(player) - present);
   /** @type {Entity[]} */
   const allies = [];
   for (let i = 0; i < room; i++) {
@@ -436,7 +442,7 @@ export function summonAlly(player, type, count) {
 function summoning(type, count, sound) {
   return (/** @type {Player} */ player) => {
     if (summonAlly(player, type, count) === 0) {
-      notify(player, `§7You already command ${MAX_ALLIES} summoned creatures`);
+      notify(player, `§7You already command ${allyLimit(player)} summoned creatures`);
       return false;
     }
     playSound(player.dimension, sound, player.location, 1.2);
@@ -682,8 +688,20 @@ export function castSelected(player) {
     notify(player, `§7${spell.name} ready in §f${wait}s`);
     return false;
   }
-  if (!spendMana(player, spell.mana)) return false;
-  const power = spellPower(player) * (1 + (masteryOf(player, spell.key) - 1) * 0.08);
+  const prof = profileOf(player);
+  // Path of Tier Magic: cheaper spells, now and then a free one, and every fourth spell maximized.
+  const count = (castCount.get(player.id) ?? 0) + 1;
+  const maximized = skills.rank(prof, "maximize_magic") > 0 && count % 4 === 0;
+  const free = maximized || Math.random() < skills.value(prof, "overcast") / 100;
+  const cost = free ? 0 : Math.max(1, Math.round(spell.mana * skills.manaCostFactor(prof)));
+  if (!spendMana(player, cost)) return false;
+  const surge = !maximized && Math.random() < skills.value(prof, "spell_surge") / 100;
+  const presence = skills.rank(prof, "presence") > 0 && hasAllies(player) ? skills.value(prof, "presence") / 100 : 0;
+  const power =
+    spellPower(player) *
+    (1 + (masteryOf(player, spell.key) - 1) * 0.08) *
+    (1 + skills.elementBonus(prof, spell.element) + presence) *
+    (maximized ? 1.8 : surge ? 1.6 : 1);
   let done = false;
   try {
     done = spell.cast(player, power);
@@ -691,20 +709,57 @@ export function castSelected(player) {
     console.warn(`[Overlord] ${spell.key} failed: ${error}`);
   }
   if (!done) {
-    restoreMana(player, spell.mana);
+    restoreMana(player, cost);
     notify(player, `§7${spell.name}: no target`);
     return false;
   }
+  castCount.set(player.id, count);
   fx.castFx(player, spell.element, spell.tier, POSE[spell.key] ?? "point");
-  ready.set(key, system.currentTick + Math.round(spell.cooldown * TICKS));
+  if (maximized || surge) {
+    // The spell visibly swells: a second, larger burst of its element at the caster's hand.
+    fx.nova(player.dimension, fx.handOf(player), spell.element, maximized ? 2.2 : 1.4);
+  }
+  if (spell.element === "holy") radiate(player, skills.value(prof, "radiance") * 2);
+  ready.set(key, system.currentTick + Math.round(spell.cooldown * skills.cooldownFactor(prof) * TICKS));
   const before = masteryOf(player, spell.key);
-  p.casts[spell.key] = (p.casts[spell.key] ?? 0) + 1;
+  // Scholar: now and then a cast counts twice towards mastery.
+  const study = Math.random() < skills.value(prof, "scholar") / 100 ? 2 : 1;
+  p.casts[spell.key] = (p.casts[spell.key] ?? 0) + study;
   touch(player);
   const after = masteryOf(player, spell.key);
   if (after > before) {
     player.sendMessage(`§6[Overlord] §d${spell.name}§f reached mastery §e${after}§f (+${(after - 1) * 8}% power).`);
-  } else notify(player, `§d${spell.name}!`);
+  } else notify(player, maximized ? `§d§lMaximize Magic: §r§d${spell.name}!` : surge ? `§dSpell Surge: ${spell.name}!` : `§d${spell.name}!${free ? " §7(Overcast: no mana)" : ""}`);
   return true;
+}
+
+/** Spells each player has cast, for Maximize Magic. */
+/** @type {Map<string, number>} */
+const castCount = new Map();
+
+/**
+ * Radiance: a holy spell heals other players and the caster's companions and summons nearby.
+ * @param {Player} player @param {number} amount health restored
+ */
+function radiate(player, amount) {
+  if (amount <= 0) return;
+  try {
+    const near = player.dimension.getEntities({ location: player.location, maxDistance: 6 });
+    for (const ally of near) {
+      if (ally.id === player.id) continue;
+      const ours =
+        ally.typeId === "minecraft:player" ||
+        ally.hasTag(`overlord_ally_${player.id}`) ||
+        (ally.typeId === id("retainer") && ally.getDynamicProperty("overlord:owner") === player.id);
+      if (!ours) continue;
+      const health = ally.getComponent("minecraft:health");
+      if (!health || health.currentValue <= 0) continue;
+      health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + amount));
+      fx.rise(player.dimension, ally.location, "holy", 0.6);
+    }
+  } catch {
+    // an ally is unloading
+  }
 }
 
 /**

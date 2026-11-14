@@ -4,6 +4,7 @@
 // one of which can be worn in front of the player's name.
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
+import * as skills from "./skills.js";
 import { ADVANCE_LEVEL, creditedPlayer, giveItem, grantXp, notify, profileOf, questEvent, registerMenu, touch } from "./rpg.js";
 import { partyOf } from "./party.js";
 
@@ -86,7 +87,7 @@ function advanceBounty(player, typeId) {
   record.last = today;
   record.total += 1;
   const bonus = 1 + record.streak * 0.1;
-  const coins = Math.round(bounty.coins * bonus);
+  const coins = skills.bounty(profileOf(player), Math.round(bounty.coins * bonus)); // Bounty Hunter
   const xp = Math.round(bounty.xp * bonus * (1 + profileOf(player).level / 20));
   giveItem(player, COIN, coins);
   player.sendMessage(`§6[Bounty] §fDaily bounty complete! §6${coins} Gold Coins§f, §a${xp} XP§f. Streak: §e${record.streak} day${record.streak === 1 ? "" : "s"}§f (+${record.streak * 10}%).`);

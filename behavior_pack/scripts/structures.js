@@ -13,6 +13,7 @@ import { world, system, BlockVolume, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { addRep, creditedPlayer, giveItem, grantXp, notify, profileOf, questEvent, registerMenu, touch } from "./rpg.js";
 import { countItem, takeItem } from "./spells.js";
+import * as skills from "./skills.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -1287,6 +1288,8 @@ function visit(player, rx, rz) {
     remember(rx, rz, camp);
     notify(player, `§6Discovered: §f${camp.type.name}`);
     grantXp(player, 80, "discovery");
+    const finder = skills.value(profileOf(player), "treasure_hunter"); // Treasure Hunter
+    if (finder > 0) giveItem(player, id("yggdrasil_gold_coin"), finder);
     questEvent(player, "site");
   }
   // Everyone who visits a friendly camp can travel back to it later.
@@ -1327,9 +1330,9 @@ world.afterEvents.entityDie.subscribe((event) => {
         if (siege.slain < siege.size) return;
         sieges.delete(key);
         manned.set(key, system.currentTick + REFILL_TICKS); // a cleared camp stays quiet twice as long
-        const coins = 8 * (siege.tier + 1);
         const xp = 150 * (siege.tier + 1);
         for (const hero of dead.dimension.getPlayers({ location: { x: camp.x, y: camp.y, z: camp.z }, maxDistance: 48 })) {
+          const coins = skills.bounty(profileOf(hero), 8 * (siege.tier + 1)); // Bounty Hunter
           giveItem(hero, id("yggdrasil_gold_coin"), coins);
           addRep(hero, "kingdom", 5);
           addRep(hero, "adventurers", 5);
@@ -1407,8 +1410,9 @@ export function waypoints(player) {
  */
 export function travel(player, to) {
   if (player.dimension.id !== "minecraft:overworld") return "§7You can only travel within the overworld";
-  if (countItem(player, id("yggdrasil_gold_coin")) < TRAVEL_COST) return `§7Travel costs ${TRAVEL_COST} Gold Coins`;
-  takeItem(player, id("yggdrasil_gold_coin"), TRAVEL_COST);
+  const fare = skills.haggle(profileOf(player), TRAVEL_COST); // Haggler
+  if (countItem(player, id("yggdrasil_gold_coin")) < fare) return `§7Travel costs ${fare} Gold Coins`;
+  takeItem(player, id("yggdrasil_gold_coin"), fare);
   player.teleport({ x: to.x + 0.5, y: to.y, z: to.z - 0.5 });
   return `§dYou arrive at the ${to.name}`;
 }
@@ -1423,7 +1427,7 @@ registerMenu(
       .body(
         (lead ? `${lead.replace("Word is there's", "Nearest site nobody has found yet:")}\n\n` : "") +
           (places.length > 0
-          ? `Return to a friendly camp you have discovered for ${TRAVEL_COST} Gold Coins. Your party follows.`
+          ? `Return to a friendly camp you have discovered for ${skills.haggle(profileOf(player), TRAVEL_COST)} Gold Coins. Your party follows.`
           : "You have not discovered any friendly camps yet. Adventurers' camps, Kingdom and Empire army posts, Dwarven Forges, Lizardman villages, Carne Village, Roadside Inns, Imperial Arenas, Holy Kingdom Forts and Elven Groves can be travelled to once found.")
       );
     for (const place of places) {

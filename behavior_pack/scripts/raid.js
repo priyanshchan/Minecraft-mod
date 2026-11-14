@@ -56,8 +56,8 @@ const WAVES = [
 const REWARDS = [
   { coins: 24, crystals: 6, xp: 600, bonus: [] },
   { coins: 48, crystals: 12, xp: 2000, bonus: [[id("guardian_crest"), 1]] },
-  { coins: 96, crystals: 24, xp: 6000, bonus: [[id("guardian_crest"), 2], [id("soul_fragment"), 8]] },
-  { coins: 160, crystals: 40, xp: 12000, bonus: [[id("guardian_crest"), 4], [id("soul_fragment"), 12]] },
+  { coins: 96, crystals: 24, xp: 6000, bonus: [[id("guardian_crest"), 2], [id("soul_fragment"), 8], [id("codex_of_skills"), 1]] },
+  { coins: 160, crystals: 40, xp: 12000, bonus: [[id("guardian_crest"), 4], [id("soul_fragment"), 12], [id("codex_of_skills"), 2]] },
 ];
 
 /**

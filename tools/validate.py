@@ -102,7 +102,7 @@ VANILLA = {
     },
     "effect": {"slowness", "slow_falling", "instant_health", "regeneration", "strength", "resistance",
                "wither", "night_vision", "saturation", "levitation", "invisibility", "speed", "jump_boost",
-               "fire_resistance", "poison", "weakness", "health_boost", "haste"},
+               "fire_resistance", "poison", "weakness", "health_boost", "haste", "absorption"},
 }
 
 errors: list[str] = []

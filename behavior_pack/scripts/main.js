@@ -26,7 +26,7 @@ import {
   useClassSkill,
 } from "./rpg.js";
 import { startRaid } from "./raid.js";
-import { MAX_ALLIES, castSelected, countItem, creditCast, cycleSpell, openGrimoire, studyTome, summonAlly } from "./spells.js";
+import { allyLimit, castSelected, countItem, creditCast, cycleSpell, openGrimoire, studyTome, summonAlly } from "./spells.js";
 import * as fx from "./vfx.js";
 import "./director.js";
 import "./structures.js";
@@ -37,6 +37,7 @@ import "./arena.js";
 import "./ambience.js";
 import "./dragons.js";
 import "./mount.js";
+import "./skilltree.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -1002,7 +1003,7 @@ function raiseDead(player) {
   } catch {
     // dimension unloading
   }
-  if (present >= MAX_ALLIES) {
+  if (present >= allyLimit(player)) {
     actionBar(player, "§7You already command as many summoned creatures as you can");
     return;
   }
@@ -1108,7 +1109,7 @@ function callElemental(player) {
   } catch {
     // dimension unloading
   }
-  if (present >= MAX_ALLIES) {
+  if (present >= allyLimit(player)) {
     actionBar(player, "§7You already command as many summoned creatures as you can");
     return;
   }

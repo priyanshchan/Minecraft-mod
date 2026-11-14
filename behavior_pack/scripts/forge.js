@@ -2,7 +2,8 @@
 // Near a Dwarf Runesmith a player can have the weapon in their hand reinforced, up to
 // +5. Each level adds 6% melee damage (applied in rpg.js) and is written on the item.
 import { ActionFormData } from "@minecraft/server-ui";
-import { notify, registerMenu } from "./rpg.js";
+import { notify, profileOf, registerMenu } from "./rpg.js";
+import * as skills from "./skills.js";
 import { countItem, takeItem } from "./spells.js";
 
 const NS = "overlord";
@@ -55,9 +56,13 @@ function loreFor(plus, rune) {
   return lines;
 }
 
-/** Gold Coins and adamantite ingots needed for the next level. @param {number} plus current level */
-export function reinforceCost(plus) {
-  return { coins: 15 * (plus + 1), ingots: plus + 1 };
+/**
+ * Gold Coins and adamantite ingots needed for the next level; a Haggler pays fewer coins.
+ * @param {number} plus current level @param {Player} [player]
+ */
+export function reinforceCost(plus, player) {
+  const coins = 15 * (plus + 1);
+  return { coins: player ? skills.haggle(profileOf(player), coins) : coins, ingots: plus + 1 };
 }
 
 /**
@@ -73,7 +78,7 @@ export function reinforce(player) {
   const current = held.getDynamicProperty(PLUS_KEY);
   const plus = typeof current === "number" ? current : 0;
   if (plus >= MAX_PLUS) return `§7This weapon is already +${MAX_PLUS}`;
-  const cost = reinforceCost(plus);
+  const cost = reinforceCost(plus, player);
   if (countItem(player, COIN) < cost.coins || countItem(player, INGOT) < cost.ingots) {
     return `§7+${plus + 1} costs ${cost.coins} Gold Coins and ${cost.ingots} Adamantite Ingot${cost.ingots === 1 ? "" : "s"}`;
   }
@@ -133,7 +138,7 @@ registerMenu(
     const workable = held !== undefined && WEAPONS.has(held.typeId);
     const current = workable ? held.getDynamicProperty(PLUS_KEY) : undefined;
     const plus = typeof current === "number" ? current : 0;
-    const cost = reinforceCost(plus);
+    const cost = reinforceCost(plus, player);
     const rune = workable ? runeOf(held) : undefined;
     const owned = Object.keys(RUNES).filter((key) => countItem(player, RUNES[key].item) > 0);
     const form = new ActionFormData()

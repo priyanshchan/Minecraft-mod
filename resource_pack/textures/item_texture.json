@@ -68,6 +68,9 @@
     "overlord_charons_guidance": {
       "textures": "textures/items/overlord/charons_guidance"
     },
+    "overlord_codex_of_skills": {
+      "textures": "textures/items/overlord/codex_of_skills"
+    },
     "overlord_command_banner": {
       "textures": "textures/items/overlord/command_banner"
     },

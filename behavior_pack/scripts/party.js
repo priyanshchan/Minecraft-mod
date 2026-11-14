@@ -12,6 +12,7 @@ import { MAX_LEVEL, TIPS, creditedPlayer, giveItem, isElite, killXp, notify, pro
 import { countItem, takeItem } from "./spells.js";
 import { rumour } from "./structures.js";
 import * as fx from "./vfx.js";
+import * as skills from "./skills.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -408,12 +409,12 @@ function retag(player) {
   for (let i = 0; i < MAX_PARTY; i++) removeEntities(player, i);
 }
 
-/** @param {Entity} entity @param {number} level @param {number} gear @param {boolean} [sturdy] */
-function applyStats(entity, level, gear, sturdy = false) {
-  const signature = `${level}|${gear}|${sturdy ? 1 : 0}`;
+/** @param {Entity} entity @param {number} level @param {number} gear @param {boolean} [sturdy] @param {number} [veteran] extra Health Boost tiers from the skill tree */
+function applyStats(entity, level, gear, sturdy = false, veteran = 0) {
+  const signature = `${level}|${gear}|${sturdy ? 1 : 0}|${veteran}`;
   if (entity.getDynamicProperty("overlord:sig") === signature) return;
   entity.setDynamicProperty("overlord:sig", signature);
-  const hearts = Math.floor(level / 5) + gear * 2 + (sturdy ? 2 : 0); // each tier is two hearts
+  const hearts = Math.floor(level / 5) + gear * 2 + (sturdy ? 2 : 0) + veteran; // each tier is two hearts
   const might = Math.floor(level / 20) + Math.floor(gear / 2);
   for (const effect of ["health_boost", "strength"]) {
     try {
@@ -455,7 +456,7 @@ function spawn(player, index) {
       entity.triggerEvent(`${NS}:look_${member.look}`);
       entity.triggerEvent(`${NS}:stance_${stance}`);
       entity.getComponent("minecraft:tameable")?.tame(player);
-      applyStats(entity, levelOf(player, member), member.gear, hasTrait(player, member, "sturdy"));
+      applyStats(entity, levelOf(player, member), member.gear, hasTrait(player, member, "sturdy"), skills.companionHearts(profileOf(player)));
     } catch (error) {
       console.warn(`[Overlord] could not ready a retainer: ${error}`);
     }
@@ -998,8 +999,9 @@ export function useSkill(player, entity, member) {
     (1 + BOND_POWER * bondRank(member)) *
     (formation.doubled.has(vocation) ? 1.15 : 1) *
     (hasTrait(player, member, "keen") ? 1.15 : 1) *
-    (unison ? UNISON_POWER : 1);
-  const haste = (formation.balanced ? 0.8 : 1) * (hasTrait(player, member, "swift") ? 0.85 : 1);
+    (unison ? UNISON_POWER : 1) *
+    skills.companionPower(profileOf(player)); // Commander, Authority of the Supreme Being
+  const haste = (formation.balanced ? 0.8 : 1) * (hasTrait(player, member, "swift") ? 0.85 : 1) * skills.companionHaste(profileOf(player));
   const masterHealth = player.getComponent("minecraft:health");
   let foe = pickFoe(player, entity, member);
   const reach = (/** @type {Entity} */ other) => Math.hypot(other.location.x - entity.location.x, other.location.z - entity.location.z);
@@ -1059,7 +1061,8 @@ export function shareKill(player, dead, random = Math.random) {
   party.forEach((member, index) => {
     if (!member.out || recovering(player, index) > 0) return;
     changed = true;
-    addBond(player, member, bond * (hasTrait(player, member, "devoted") ? 2 : 1));
+    const growth = bond * (hasTrait(player, member, "devoted") ? 2 : 1) * skills.bondFactor(profileOf(player)); // Bonds of Loyalty
+    addBond(player, member, Math.floor(growth) + (random() < growth % 1 ? 1 : 0));
     if (hasTrait(player, member, "scavenger") && random() < 0.1) coins += 1;
     if (Math.floor(member.look / 2) === 4 && levelOf(player, member) >= CUTPURSE_LEVEL && random() < 0.2) coins += 1; // Cutpurse
     if (member.hired && member.level < MAX_LEVEL) {
@@ -1175,7 +1178,7 @@ export function tend(player) {
     const entity = found[0] ?? spawn(player, index);
     if (found[0]) {
       try {
-        applyStats(entity, levelOf(player, member), member.gear, hasTrait(player, member, "sturdy"));
+        applyStats(entity, levelOf(player, member), member.gear, hasTrait(player, member, "sturdy"), skills.companionHearts(profileOf(player)));
         const name = label(player, member);
         if (entity.nameTag !== name) entity.nameTag = name;
         lookAfter(player, entity, member);
