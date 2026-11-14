@@ -1178,6 +1178,38 @@ them.
 
 **New titles:** Necromancer (raise 50 undead), Lord of the Dead (an army of 10), and one for winning each event.
 
+### Sagas of the New World (v9.5)
+
+Six named characters talk with you and each has a three-task **saga**: **Gazef Stronoff** (The Warrior-Captain),
+**Enri Emmot** (The Village of Carne), **Nfirea Bareare** (The Bareare Apothecary), **Lakyus** (The Blue Rose),
+**Zaryusu Shasha** (The Four Tribes) and **Pinison** (The Dryad's Promise). Use Gazef, Lakyus or Zaryusu to talk;
+Enri, Nfirea and Pinison trade when used, so **sneak** as you use them to talk instead.
+
+- **Conversations:** ask about their lives, offer a gift they like, and take up or report on their task.
+- **Tasks:** slay foes, bring something, find a place or defeat a great enemy. Each pays gold, XP and items.
+- **Affinity:** Stranger, Acquaintance, Friend, Sworn Ally. A Friend gives you something each day; a Sworn Ally
+  also blesses you each day.
+- **Keepsakes:** the last task of each saga gives a keepsake worn in the off hand: the Warrior-Captain's Sigil
+  (Strength), the Charm of Carne Village (+2 hearts), the Ring of the Bareare Apothecary (mana), the Blue Rose
+  Brooch (Resistance), the Ring of the Four Tribes (water breathing, Speed in water) and the Dryad's Blossom
+  (healing on grass or moss).
+- **Sagas** on the Adventurer's Plate lists every saga. Titles: Friend of the Kingdom, Honorary General of
+  Carne, The Sixth Rose, Hero of the New World, Beloved of Many.
+
+### The Dwarven Royal Capital (v9.5)
+
+A second dungeon of three floors under the mountains. Step onto the **rune stone** at the back of a
+**Besieged Mine**, or use a **Rune Key of the Royal Capital** (Besieged Mine chests, dwarf traders, or crafted
+from Royal Runes, gold ingots and an iron block); use the key inside to leave.
+
+- **The Abandoned Mines:** quagoa, then the **Quagoa Warlord**. Cave-in traps.
+- **The Rune Forge:** quagoa and a frost giant, then the **Rune Golem of the Royal Forge**. Rune-glyph traps.
+- **The Frozen Throne:** a 20-block-high hall; frost giants and quagoa, then the **Frost Dragon**. Frost traps.
+- Each floor has treasure chests and pays gold and **Royal Runes** when cleared. Freeing the Capital pays 150 gold,
+  runes, Data Crystals, Frost Dragon Scales and a sapphire, and the first time the **Runeblade of the Dwarf
+  King**: a 3D greatsword whose art, **Rune Sovereign's Decree**, blazes frost, storm and fire runes along the
+  ground and wards you. Title: Liberator of the Royal Capital.
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
@@ -1383,7 +1415,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink), `comforts.js` (meals and off-hand rings), `necromancy.js` (the Undead Army), `events.js` (world events) and `devtools.js` (the Creative Tome of Ascension) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink), `comforts.js` (meals and off-hand rings), `necromancy.js` (the Undead Army), `events.js` (world events), `sagas.js` (the sagas), `deeps.js` (the Dwarven Royal Capital) and `devtools.js` (the Creative Tome of Ascension) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

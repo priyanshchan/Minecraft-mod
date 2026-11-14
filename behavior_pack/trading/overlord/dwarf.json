@@ -4,7 +4,7 @@
       "total_exp_required": 0,
       "groups": [
         {
-          "num_to_select": 16,
+          "num_to_select": 18,
           "trades": [
             {
               "wants": [
@@ -245,6 +245,36 @@
                 }
               ],
               "max_uses": 8
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 45
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:rune_key",
+                  "quantity": 1
+                }
+              ],
+              "max_uses": 2
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:royal_rune",
+                  "quantity": 1
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 9
+                }
+              ],
+              "max_uses": 16
             }
           ]
         }

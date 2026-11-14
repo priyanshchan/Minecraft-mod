@@ -118,6 +118,7 @@ export const AFFINITY = {
   [id("death_cavalier")]: { holy: 1.5, dark: 0.5 },
   [id("treant_sapling")]: { fire: 1.75, acid: 0.25 },
   [id("zytl_qae")]: { fire: 1.5, acid: 0.1, ice: 0.75 },
+  [id("rune_golem")]: { lightning: 0.25, fire: 0.5, acid: 1.5 },
   [id("dark_young")]: { dark: 0.25, fire: 1.5, holy: 1.25 },
   [id("jaldabaoth")]: { fire: 0.1, ice: 1.5, holy: 1.25 },
   [id("go_gin")]: { fire: 1.5 },

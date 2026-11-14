@@ -758,7 +758,7 @@ export const SITES = [
       b.path(-1, -4, 1, 9, mc("stone_bricks"));
       b.lamp(-3, 5, mc("cobblestone_wall"));
       b.lamp(3, 5, mc("cobblestone_wall"));
-      b.chest(-4, 0, -7, [[mc("iron_ingot"), 3, 8], [mc("coal"), 4, 10], [id("adamantite_ingot"), 0, 2], [mc("diamond"), 0, 1], [COIN, 3, 8]]);
+      b.chest(-4, 0, -7, [[mc("iron_ingot"), 3, 8], [mc("coal"), 4, 10], [id("adamantite_ingot"), 0, 2], [mc("diamond"), 0, 1], [COIN, 3, 8], [id("royal_rune"), 0, 1]]);
     },
     garrison: () => [[id("dwarf"), 1]],
   },
@@ -779,7 +779,8 @@ export const SITES = [
       b.tent(-6, 6, mc("brown_wool")); // the miners' camp, overrun
       b.tent(6, 6, mc("brown_wool"));
       b.campfire(0, 0);
-      b.chest(0, 0, -10, [[mc("raw_iron"), 3, 8], [mc("coal"), 4, 10], [mc("diamond"), 0, 2], [id("adamantite_ingot"), 0, 1], [COIN, 3, 8]]);
+      b.set(0, -1, -6, mc("chiseled_deepslate")); // the dwarven rune stone that leads down to the Royal Capital (deeps.js)
+      b.chest(0, 0, -10, [[mc("raw_iron"), 3, 8], [mc("coal"), 4, 10], [mc("diamond"), 0, 2], [id("adamantite_ingot"), 0, 1], [COIN, 3, 8], [id("rune_key"), 0, 1]]);
     },
     garrison: (tier) => [[id("quagoa"), 4 + tier * 2]],
   },

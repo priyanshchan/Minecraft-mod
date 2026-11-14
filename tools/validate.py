@@ -53,6 +53,9 @@ VANILLA = {
         "pumpkin", "melon_block", "enchanting_table", "purple_stained_glass",
         # the new sites (v8.6), verified against @minecraft/vanilla-data
         "water", "flowering_azalea", "fern",
+        # the Dwarven Royal Capital (v9.5), verified against @minecraft/vanilla-data
+        "cobbled_deepslate", "polished_deepslate", "chiseled_deepslate", "deepslate_tiles", "rail", "deepslate_diamond_ore",
+        "deepslate_gold_ore", "shroomlight", "smooth_basalt", "tuff", "calcite",
         # structure overhaul (v7.0), verified against @minecraft/vanilla-data
         "basalt", "blackstone", "blast_furnace", "brewing_stand", "brown_carpet", "cauldron", "chiseled_quartz_block", "coal_block",
         "dark_oak_log", "dark_oak_planks", "deepslate", "emerald_block", "glass_pane", "gray_wool", "grindstone", "lapis_block",
@@ -83,6 +86,7 @@ VANILLA = {
         "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
         "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
         "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool", "minecraft:blue_ice",
+        "minecraft:raw_gold",  # the Dwarven Royal Capital (v9.5), verified against @minecraft/vanilla-data
         "minecraft:coal", "minecraft:netherrack", "minecraft:quartz_block", "minecraft:blaze_powder",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
@@ -113,7 +117,7 @@ VANILLA = {
     "effect": {"slowness", "slow_falling", "instant_health", "regeneration", "strength", "resistance",
                "wither", "night_vision", "saturation", "levitation", "invisibility", "speed", "jump_boost",
                "fire_resistance", "poison", "weakness", "health_boost", "haste", "absorption",
-               "mining_fatigue"},  # v8.9, verified against @minecraft/vanilla-data
+               "mining_fatigue", "water_breathing"},  # v8.9, verified against @minecraft/vanilla-data
 }
 
 errors: list[str] = []

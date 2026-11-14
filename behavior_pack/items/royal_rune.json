@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:royal_rune",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_royal_rune"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.royal_rune.name"
+      },
+      "minecraft:max_stack_size": 64,
+      "minecraft:rarity": "rare"
+    }
+  }
+}

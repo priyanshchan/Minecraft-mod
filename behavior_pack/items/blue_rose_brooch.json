@@ -1,0 +1,25 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:blue_rose_brooch",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_blue_rose_brooch"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.blue_rose_brooch.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "epic",
+      "minecraft:allow_off_hand": true,
+      "minecraft:glint": true
+    }
+  }
+}

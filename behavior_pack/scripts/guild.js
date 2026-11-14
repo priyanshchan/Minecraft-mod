@@ -155,7 +155,21 @@ export const TITLES = [
   ...Object.entries(RACES).map(([race, info]) => ({ key: `race_${race}`, name: info.ranks[2], how: `Reach race level 10 as a ${info.name}`,
     earned: (/** @type {Profile} */ p) => p.race === race && Number(p.raceLv) >= 10 })),
   { key: "sorcerous_majesty", name: "Sorcerous Majesty", how: "Raise your capital to its fourth tier", earned: (p) => Number(p.realm?.tier ?? 0) >= 4 },
+  // v9.5: the sagas and the Dwarven Royal Capital
+  { key: "friend_of_the_kingdom", name: "Friend of the Kingdom", how: "Complete Gazef Stronoff's saga", earned: (p) => sagaSteps(p, "gazef") >= 3 },
+  { key: "general_of_carne", name: "Honorary General of Carne", how: "Complete Enri Emmot's saga", earned: (p) => sagaSteps(p, "enri") >= 3 },
+  { key: "sixth_rose", name: "The Sixth Rose", how: "Complete Lakyus's saga", earned: (p) => sagaSteps(p, "lakyus") >= 3 },
+  { key: "hero_of_the_new_world", name: "Hero of the New World", how: "Complete all six sagas",
+    earned: (p) => ["gazef", "enri", "nfirea", "lakyus", "zaryusu", "pinison"].every((k) => sagaSteps(p, k) >= 3) },
+  { key: "beloved_of_many", name: "Beloved of Many", how: "Become a Sworn Ally of three people", earned: (p) => Object.values(p.sagas ?? {}).filter((r) => Number(r?.affinity ?? 0) >= 75).length >= 3 },
+  { key: "liberator_of_the_capital", name: "Liberator of the Royal Capital", how: "Free the Dwarven Royal Capital",
+    earned: (p) => Array.isArray(p.bosses) && p.bosses.includes("royal_capital") },
 ];
+
+/** How many steps of a saga a profile has finished. @param {Profile} p @param {string} key */
+function sagaSteps(p, key) {
+  return Number(p.sagas?.[key]?.step ?? 0);
+}
 const TITLE_REWARD = 10;
 
 /**

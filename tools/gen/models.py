@@ -2341,10 +2341,8 @@ def fluder():
     return m
 
 
-def gargantua():
-    m = Model("gargantua", bounds=(6, 7, 2.5))
-    st, st_l, st_d = "#6f7480", "#8f95a3", "#454954"
-    rune = "#ff5a3d"
+def gargantua(name="gargantua", st="#6f7480", st_l="#8f95a3", st_d="#454954", rune="#ff5a3d"):
+    m = Model(name, bounds=(6, 7, 2.5))
     pal = {"S": st, "s": st_l, "D": st_d, "R": rune, "K": "#16171c"}
     body = m.bone("body", (0, 24, 0))
     torso = body.cube((-7, 10, -4), (14, 14, 8))
@@ -2429,9 +2427,8 @@ def _beast(name="soul_eater", dark="#1c2026", dark_l="#343b45", glow="#59e0c8", 
     return m
 
 
-def quagoa():
-    m = Model("quagoa", bounds=(3, 3.5, 1.25))
-    fur, fur_l, fur_d = "#6b4d34", "#8a684a", "#45301f"
+def quagoa(name="quagoa", fur="#6b4d34", fur_l="#8a684a", fur_d="#45301f"):
+    m = Model(name, bounds=(3, 3.5, 1.25))
     pal = {"F": fur, "f": fur_l, "D": fur_d, "e": "#e0202c", "K": "#15130f", "N": "#e89aa8", "T": "#f1eee0",
            "C": "#e9e3cf"}
     body = m.bone("body", (0, 24, 0))
@@ -3817,6 +3814,71 @@ def skeleton_archer():
     return m
 
 
+def quagoa_warlord():
+    """The warlord of the quagoa clans: black-furred and scarred, armoured in plates of blue ore, crowned with
+    crystal and swinging a crystal-headed war pick (v9.5)."""
+    m = quagoa("quagoa_warlord", "#3a2a1e", "#5a4430", "#22180f")
+    head, body = _bone(m, "head"), _bone(m, "body")
+    ore, ore_l, ore_d, glow = "#3a6a8a", "#5a9ac0", "#1e3a4e", "#4ac8ff"
+    for x in (-6, 3):  # pauldrons of raw ore
+        p = body.cube((x, 21, -3), (3, 3, 6), inflate=0.2)
+        p.fill(ore, noise=10)
+        p.top.fill(ore_l)
+        p.front.hline(0, ore_d)
+    plate = body.cube((-3, 15, -3.6), (6, 6, 1))  # a breastplate
+    plate.fill(ore, noise=8)
+    plate.front.fill(glow, 2, 2, 4, 4)
+    belt = body.cube((-4, 12, -3.2), (8, 1, 6.4))
+    belt.fill("#2a1e14")
+    for x in (-3, -1, 1, 3):  # the crown: shards of crystal
+        h = 3 if x in (-1, 1) else 2
+        c = head.cube((x - 0.5, 32, -3), (1, h, 1))
+        c.fill(glow, noise=4)
+    band = head.cube((-4, 31, -4), (8, 1, 8), inflate=0.15)
+    band.fill(ore_d)
+    scar = head.cube((1, 27, -4.1), (1, 4, 0))
+    scar.fill("#c8a8a0")
+    arm = _bone(m, "rightArm")
+    haft = arm.cube((-6.5, 11, -9), (1, 1, 11))  # the war pick, held forward
+    haft.fill("#4a3323", noise=5)
+    head_ = arm.cube((-7, 8, -10), (2, 7, 2))
+    head_.fill(ore, noise=8)
+    tip = arm.cube((-6.5, 6, -9.5), (1, 2, 1))
+    tip.fill(glow)
+    tip2 = arm.cube((-6.5, 15, -9.5), (1, 2, 1))
+    tip2.fill(glow)
+    return m
+
+
+def rune_golem():
+    """A guardian of the dwarven royal forge: bronze-bound stone carved all over with glowing blue runes, an
+    anvil for a crown and runic plates on its fists (v9.5)."""
+    m = gargantua("rune_golem", "#7a6a52", "#9a8a6e", "#4e4232", "#4ac8ff")
+    head, body = _bone(m, "head"), _bone(m, "body")
+    bronze, bronze_d = "#b07a3a", "#7a5226"
+    for x in (-9, 5):  # bronze shoulder plates
+        p = body.cube((x, 22, -4.5), (4, 3, 9), inflate=0.2)
+        p.fill(bronze, noise=6)
+        p.front.hline(1, "#4ac8ff")
+        p.bottom.fill(bronze_d)
+    anvil = head.cube((-5, 30, -3), (10, 2, 6))  # the anvil crown
+    anvil.fill("#3a3e46", noise=5)
+    anvil.top.fill("#5a5e66")
+    neck = head.cube((-2, 29.5, -2), (4, 1, 4))
+    neck.fill("#2a2e36")
+    for name in ("rightArm", "leftArm"):
+        arm = _bone(m, name)
+        x = -13.5 if name == "rightArm" else 6.5
+        fist = arm.cube((x, 4, -3.5), (7, 5, 7))  # runic knuckle-plates
+        fist.fill(bronze, noise=6)
+        for f in fist.sides:
+            f.hline(2, "#4ac8ff")
+    core = body.cube((-2, 17, -4.4), (4, 4, 1))  # a rune-core glowing in its chest
+    core.fill("#4ac8ff")
+    core.front.fill("#d0f4ff", 1, 1, 3, 3)
+    return m
+
+
 def wyrm_steed():
     """A young dragon of Nazarick, bred to be ridden (steeds.js): scaled in purple and black, horned in gold."""
     return _great_dragon("wyrm_steed", "plated", "#3a2452", "#6b4a8f", "#1d1029", "#c9a227", "#d9a92b", "#5a2a7a",
@@ -3845,5 +3907,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        skeletal_dragon, khajiit, gigant_basilisk, frost_giant, beastman, lakyus, enri, zero, dark_young, jaldabaoth,
        go_gin, elf_ranger, decem, behemoth, neia, remedios, paladin, bafolk, eight_edge_assassin, arena_master,
        platinum_dragon_lord, rubedo, wyrm_steed, ghoul, wraith, death_cavalier, treant_sapling, zytl_qae, pinison,
-       skeleton_archer,
+       skeleton_archer, quagoa_warlord, rune_golem,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

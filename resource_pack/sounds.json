@@ -1120,6 +1120,32 @@
           "step": "mob.skeleton.step"
         }
       },
+      "overlord:quagoa_warlord": {
+        "volume": 1.0,
+        "pitch": [
+          0.9,
+          1.1
+        ],
+        "events": {
+          "ambient": "mob.rabbit.idle",
+          "hurt": "mob.rabbit.hurt",
+          "death": "mob.rabbit.death",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:rune_golem": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.6
+        ],
+        "events": {
+          "ambient": "mob.ravager.ambient",
+          "hurt": "mob.irongolem.hit",
+          "death": "mob.irongolem.death",
+          "step": "mob.irongolem.walk"
+        }
+      },
       "overlord:guardian_albedo": {
         "volume": 1.0,
         "pitch": [

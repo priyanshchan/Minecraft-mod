@@ -23,7 +23,7 @@ const WEAPONS = new Set(
     id("fluder_staff"), id("golem_fist"), id("runic_hammer"), id("fang_dagger"), id("kilineyram"), id("safarlisia"),
     id("takemikazuchi"), id("fell_iron"), id("charons_guidance"), id("angel_mace"), id("hellfire_blade"),
     id("giants_maul"), id("dragonbone_blade"), id("six_arms_knuckles"), id("martial_lord_club"),
-    id("elf_kings_staff"), id("cavalier_lance"), id("ghoulfang_sickle"), id("heartwood_staff")]
+    id("elf_kings_staff"), id("cavalier_lance"), id("ghoulfang_sickle"), id("heartwood_staff"), id("runeblade")]
 );
 
 /** Runes a runesmith can inscribe on a weapon; a weapon holds one at a time. */

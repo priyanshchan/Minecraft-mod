@@ -2011,6 +2011,134 @@ players.splice(0, players.length, ...everyone, zoe);
   all.forEach((m) => { m.isValid = false; }); here.length = 0; players.splice(players.indexOf(lord), 1);
 }
 
+// ---- v9.5: the Dwarven Royal Capital ----
+{
+  const deeps = await import("./deeps.js");
+  const tombs = await import("./dungeon.js");
+  assert.equal(deeps.FLOORS.length, 3); assert.deepEqual(deeps.FLOORS.map((f) => f.stages[0][0]), ["overlord:quagoa_warlord", "overlord:rune_golem", "overlord:frost_dragon"]);
+  const placed = new Map(); const k = (l) => `${Math.floor(l.x)},${Math.floor(l.y)},${Math.floor(l.z)}`; const party = []; const spawned = []; let biggest = 0;
+  const deep = { id: "minecraft:overworld", spawnParticle() {}, playSound() {},
+    setBlockType: (l, t) => placed.set(k(l), t),
+    fillBlocks(v, t) { biggest = Math.max(biggest, (v.to.x - v.from.x + 1) * (v.to.y - v.from.y + 1) * (v.to.z - v.from.z + 1));
+      for (let x = v.from.x; x <= v.to.x; x++) for (let y = v.from.y; y <= v.to.y; y++) for (let z = v.from.z; z <= v.to.z; z++) placed.set(`${x},${y},${z}`, t); },
+    getBlock: (l) => ({ typeId: placed.get(k(l)) ?? "minecraft:stone", getComponent: () => ({ container: { addItem() {} } }) }),
+    getPlayers: (q) => party.filter((p) => !q || !q.maxDistance || Math.hypot(p.location.x - q.location.x, p.location.y - q.location.y, p.location.z - q.location.z) <= q.maxDistance),
+    getEntities: (q) => spawned.filter((m) => m.isValid && (q.tags ?? []).every((t) => m.tags.has(t))),
+    spawnEntity(type, at) { const m = { id: `d${spawned.length}`, typeId: type, location: at, isValid: true, tags: new Set(), addTag(t) { m.tags.add(t); }, remove() { m.isValid = false; },
+      health: { currentValue: 100, effectiveMax: 100 }, getComponent(c) { return c === "minecraft:health" ? m.health : undefined; } }; spawned.push(m); return m; } };
+  const realDimension = world.getDimension; world.getDimension = () => deep;
+  const delver = (name) => { const p = mkPlayer(name); p.dimension = deep; p.location = { x: 800.5, y: 64, z: 800.5 }; p.teleport = (to) => { p.location = { ...to }; }; p.taken = 0;
+    p.applyDamage = (n) => { p.taken += n; }; p.setOnFire = () => {}; party.push(p); return p; };
+  const kili = delver("kili"), fili = delver("fili"); fili.location = { x: 802, y: 64, z: 801 };
+  // a Capital never cuts into the Great Tomb
+  const t = tombs.tombOf(); assert.ok(t); kili.location = { x: t.x + 10.5, y: 64, z: t.z + 0.5 }; assert.equal(deeps.siteFor(kili).x, t.x + 64);
+  kili.location = { ...tombs.arrival(t, 0) }; assert.ok(deeps.enter(kili).includes("Leave the Great Tomb"));
+  kili.location = { x: 800.5, y: 64, z: 800.5 };
+  world.props.delete("overlord:deeps");
+  // the first entrance opens the Capital beneath it and takes the party down
+  assert.ok(deeps.enter(kili).includes("descend")); const c = deeps.capitalOf(); assert.ok(c && c.x === 800 && c.top === 46);
+  assert.ok(biggest <= 32768, `no fill larger than the game allows (${biggest})`);
+  assert.equal(placed.get(`800,${deeps.floorY(c, 0)},${800 - 11}`), "minecraft:iron_bars", "the gate starts barred");
+  assert.equal(placed.get(`805,${deeps.floorY(c, 2) - 1},800`), "minecraft:polished_deepslate", "three floors down: the Frozen Throne");
+  assert.equal(placed.get(`805,${deeps.floorY(c, 2) + 19},801`), "minecraft:air", "a hall tall enough for a dragon");
+  assert.equal(placed.get(`800,${deeps.floorY(c, 2)},${800 - 15}`), "minecraft:iron_bars", "the throne's gate sits further back");
+  assert.deepEqual(kili.location, deeps.arrival(c, 0)); assert.deepEqual(fili.location, deeps.arrival(c, 0), "whoever stands beside goes too");
+  // the mines: the clan, then its Warlord, then the gate opens
+  let now = 200000; deeps.tick(now); assert.equal(deeps.floors[0].status, "wave"); assert.equal(spawned.filter((m) => m.tags.has("overlord_deeps_0")).length, 7);
+  for (const m of spawned) m.health.currentValue = 0; deeps.tick(now += 10); assert.equal(deeps.floors[0].status, "boss");
+  const warlord = spawned[spawned.length - 1]; assert.equal(warlord.typeId, "overlord:quagoa_warlord");
+  const coins = () => spells.countItem(kili, "overlord:yggdrasil_gold_coin"); const purse = coins(); const runes = spells.countItem(kili, deeps.RUNE);
+  warlord.health.currentValue = 0; deeps.tick(now += 10); assert.equal(deeps.floors[0].status, "cleared"); assert.equal(placed.get(`800,${deeps.floorY(c, 0)},${800 - 11}`), "minecraft:air", "the gate opens");
+  assert.equal(coins() - purse, 18); assert.equal(spells.countItem(kili, deeps.RUNE) - runes, 1);
+  // a rune glyph in the forge flares under whoever steps on it
+  kili.location = { ...deeps.exitPad(c, 0) }; deeps.tick(now += 10); assert.equal(deeps.floorAt(c, kili.location), 1, "the gate takes the party down");
+  const [rx, rz] = deeps.FLOORS[1].traps[0]; kili.location = { x: c.x + rx + 0.5, y: deeps.floorY(c, 1), z: c.z + rz + 0.5 }; deeps.springTraps(deep, c, 1, [kili], now); advance(9);
+  assert.ok(kili.taken >= 5 && kili.effects.has("levitation"), "the rune throws you up");
+  const [mx, mz] = deeps.FLOORS[0].traps[0]; fili.location = { x: c.x + mx + 0.5, y: deeps.floorY(c, 0), z: c.z + mz + 0.5 }; deeps.springTraps(deep, c, 0, [fili], now); advance(9);
+  assert.ok(fili.taken >= 6 && fili.effects.has("mining_fatigue"), "the roof of the mines comes down");
+  // the golem of the forge, then the dragon of the throne
+  kili.location = { ...deeps.arrival(c, 1) }; fili.location = { x: 0, y: 64, z: 0 }; deeps.floors[1].status = "idle"; deeps.tick(now += 10);
+  for (const m of spawned) m.health.currentValue = 0; deeps.tick(now += 10); assert.equal(spawned[spawned.length - 1].typeId, "overlord:rune_golem");
+  spawned[spawned.length - 1].health.currentValue = 0; deeps.tick(now += 10); assert.equal(deeps.floors[1].status, "cleared");
+  kili.location = { ...deeps.exitPad(c, 1) }; deeps.tick(now += 10); assert.equal(deeps.floorAt(c, kili.location), 2);
+  deeps.tick(now += 10); assert.equal(deeps.floors[2].status, "wave"); assert.equal(spawned.filter((m) => m.isValid && m.tags.has("overlord_deeps_2")).length, 6);
+  for (const m of spawned) m.health.currentValue = 0; deeps.tick(now += 10); assert.equal(spawned[spawned.length - 1].typeId, "overlord:frost_dragon", "the dragon wakes on the hoard");
+  spawned[spawned.length - 1].health.currentValue = 0; deeps.tick(now += 10); assert.equal(deeps.floors[2].status, "cleared");
+  // freeing the Capital: the Runeblade the first time, and the way out
+  const pk = rpg.profileOf(kili); pk.bosses = []; kili.location = { ...deeps.exitPad(c, 2) }; deeps.tick(now += 10);
+  assert.ok(pk.bosses.includes("royal_capital")); assert.equal(spells.countItem(kili, deeps.BLADE), 1, "the Runeblade of the Dwarf King");
+  assert.equal(deeps.floorAt(c, kili.location), undefined, "back on the surface"); assert.ok(guild.checkTitles(kili).includes("Liberator of the Royal Capital"));
+  // the Rune Key leads down and back up; the Capital is restored for a new party
+  world.afterEvents.itemUse.fire({ source: kili, itemStack: { typeId: deeps.KEY } }); assert.equal(deeps.floorAt(c, kili.location), 0);
+  assert.deepEqual(deeps.capitalOf(), c, "the same Capital"); assert.equal(deeps.floors[0].status, "idle", "a fresh run");
+  world.afterEvents.itemUse.fire({ source: kili, itemStack: { typeId: deeps.KEY } }); assert.equal(deeps.floorAt(c, kili.location), undefined);
+  // the rune stone at the back of a Besieged Mine
+  world.props.set(`overlord:site7:${Math.floor(9700 / sites.REGION)},${Math.floor(9700 / sites.REGION)}`, "besieged_mine|9700|64|9700|1");
+fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.currentTick + 1000); assert.equal(deeps.floorAt(c, fili.location), 0, "stepping on the rune stone descends");
+  deeps.leave(fili);
+  world.getDimension = realDimension; party.length = 0; spawned.forEach((m) => { m.isValid = false; });
+  players.splice(players.indexOf(kili), 1); players.splice(players.indexOf(fili), 1);
+}
+
+// ---- v9.5: sagas ----
+{
+  const sagas = await import("./sagas.js");
+  const comforts = await import("./comforts.js");
+  const { EquipmentSlot } = await import("@minecraft/server");
+  assert.equal(sagas.SAGAS.length, 6); assert.ok(sagas.SAGAS.every((s) => s.steps.length === 3 && s.topics.length >= 3));
+  assert.deepEqual(sagas.SAGAS.map((s) => s.keepsake).sort(), [...comforts.KEEPSAKES].sort(), "every keepsake can be worn");
+  const flush = async () => { for (let i = 0; i < 6; i++) await new Promise((r) => setTimeout(r, 0)); };
+  const sam = mkPlayer("sam"); const ps = rpg.profileOf(sam);
+  // speaking to Gazef opens a conversation, and takes up his first task
+  let mark = shown.length; script.length = 0; script.push(0, 0);
+  const talk = (typeId, sneaking = false) => { sam.isSneaking = sneaking; const ev = { player: sam, target: { typeId, isValid: true }, cancel: false }; world.beforeEvents.playerInteractWithEntity.fire(ev); return ev; };
+  assert.equal(talk("overlord:gazef").cancel, true); advance(1); await flush();
+  assert.equal(shown[mark].title, "Gazef Stronoff"); assert.ok(shown[mark].buttons[0].includes("Bandits on the King's Road")); assert.ok(shown[mark].body.includes("Stranger"));
+  const gazef = sagas.BY_KEY.gazef; const r = sagas.recordOf(sam, "gazef"); assert.equal(r.active, true);
+  // kills count; the report rewards and opens the next step
+  for (let i = 0; i < 8; i++) kill(sam, mob("overlord:bandit", 10)); assert.equal(r.progress, 8); assert.ok(sagas.ready(sam, gazef));
+  kill(sam, mob("overlord:bandit", 10)); assert.equal(r.progress, 8, "no more than asked");
+  const purse = spells.countItem(sam, "overlord:yggdrasil_gold_coin"); assert.ok(sagas.report(sam, gazef).includes("done"));
+  assert.equal(spells.countItem(sam, "overlord:yggdrasil_gold_coin") - purse, 20); assert.equal(r.step, 1); assert.equal(r.affinity, 15); assert.equal(r.active, false);
+  assert.ok(sagas.report(sam, gazef).includes("nothing to report"));
+  // a visit step: standing in the Sunlight Scripture's camp
+  sagas.accept(sam, gazef); assert.deepEqual(sagas.visit(sam, "bandit_camp"), []); assert.deepEqual(sagas.visit(sam, "theocracy_camp"), ["gazef"]);
+  sagas.report(sam, gazef); assert.equal(r.step, 2);
+  sagas.accept(sam, gazef); kill(sam, mob("overlord:nigun", 10)); sagas.report(sam, gazef);
+  assert.equal(r.step, 3); assert.equal(spells.countItem(sam, gazef.keepsake), 1, "the keepsake"); assert.equal(sagas.stepOf(gazef, r), undefined);
+  assert.ok(guild.checkTitles(sam).includes("Friend of the Kingdom"));
+  // topics and gifts raise affinity, once each; a Friend gives something each day, a Sworn Ally blesses too
+  assert.ok(sagas.ask(sam, gazef, 0).includes("His Majesty")); sagas.ask(sam, gazef, 0); assert.equal(r.affinity, 48);
+  assert.ok(sagas.gift(sam, gazef).includes("would love")); rpg.giveItem(sam, "minecraft:iron_ingot", 8);
+  assert.ok(sagas.gift(sam, gazef).includes("delighted")); assert.ok(sagas.gift(sam, gazef).includes("today")); assert.equal(r.affinity, 53);
+  const iron = spells.countItem(sam, "minecraft:iron_ingot"); assert.ok(sagas.greet(sam, gazef).includes("Iron")); assert.equal(spells.countItem(sam, "minecraft:iron_ingot") - iron, 3);
+  assert.equal(sagas.greet(sam, gazef), "", "once a day");
+  r.affinity = 80; r.daily = -1; assert.ok(sagas.greet(sam, gazef).includes("Strength")); assert.ok(sam.effects.has("strength"));
+  assert.equal(sagas.tierOf(80), "Sworn Ally"); assert.ok(sagas.greeting(sam, gazef).includes("my sword"));
+  // a bring step takes what it asks for; traders are only talked to while sneaking
+  mark = shown.length; const enri = sagas.BY_KEY.enri; const re = sagas.recordOf(sam, "enri");
+  assert.equal(talk("overlord:enri").cancel, false, "plain use still trades"); advance(1); await flush(); assert.equal(shown.length, mark);
+  script.push(99); assert.equal(talk("overlord:enri", true).cancel, true); advance(1); await flush(); assert.equal(shown[mark].title, "Enri Emmot");
+  re.step = 1; sagas.accept(sam, enri); assert.ok(!sagas.ready(sam, enri)); rpg.giveItem(sam, "minecraft:wheat", 20); assert.ok(sagas.ready(sam, enri));
+  sagas.report(sam, enri); assert.equal(spells.countItem(sam, "minecraft:wheat"), 4); assert.equal(spells.countItem(sam, "overlord:goblin_horn"), 1);
+  // the journal, and the keepsakes worn in the off hand
+  script.push(0); sagas.openSagas(sam); await flush(); assert.ok(shown.some((f) => f.title === "Sagas of the New World" && f.body.includes("The Warrior-Captain")));
+  let offhand = gazef.keepsake;
+  sam.getComponent = ((orig) => (c) => c === "minecraft:equippable" ? { getEquipment: (slot) => (slot === EquipmentSlot.Offhand ? { typeId: offhand } : undefined) } : orig(c))(sam.getComponent);
+  assert.equal(comforts.ringOf(sam), gazef.keepsake); sam.effects.clear(); assert.equal(comforts.wear(sam), "strength"); assert.ok(sam.effects.has("strength"));
+  offhand = "overlord:bareare_ring"; ps.mana = 0; assert.equal(comforts.wear(sam), "mana"); assert.ok(ps.mana > 0);
+  offhand = "overlord:four_tribes_ring"; sam.isInWater = true; comforts.wear(sam); assert.ok(sam.effects.has("water_breathing") && sam.effects.has("speed"));
+  offhand = "overlord:dryad_blossom"; sam.effects.clear(); sam.dimension.getBlock = () => ({ typeId: "minecraft:grass_block" }); assert.equal(comforts.wear(sam), "bloom");
+  // finishing all six sagas
+  for (const s of sagas.SAGAS) { const rec = sagas.recordOf(sam, s.key); rec.step = 3; rec.affinity = 80; }
+  const titles = guild.checkTitles(sam); assert.ok(titles.includes("Hero of the New World") && titles.includes("Beloved of Many"));
+  assert.equal(sagas.finished(sam), 6); assert.equal(sagas.sworn(sam), 6);
+  // the Runeblade's art: three runes along the ground, and a ward on the wielder
+  const arms = await import("./arms.js"); sam.effects.clear(); sam.dimension.mobs = [];
+  assert.equal(arms.useWeaponArt(sam, "overlord:runeblade"), true); assert.ok(sam.effects.has("resistance")); advance(30);
+  script.length = 0; players.splice(players.indexOf(sam), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);

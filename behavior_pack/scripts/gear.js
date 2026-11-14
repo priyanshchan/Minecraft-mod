@@ -87,7 +87,7 @@ const WEAPON_IDS = new Set(
     "razor_edge", "stiletto", "shadow_of_yggdrasil", "aura_whip", "frost_pain", "brain_katana", "iron_gauntlets", "magic_rifle",
     "runic_hammer", "fang_dagger", "charons_guidance", "angel_mace", "hellfire_blade", "kilineyram", "safarlisia", "takemikazuchi",
     "fell_iron", "fluder_staff", "golem_fist", "holy_staff", "blade_bug", "martial_lord_club", "elf_kings_staff", "giants_maul",
-    "dragonbone_blade", "six_arms_knuckles", "cavalier_lance", "ghoulfang_sickle", "heartwood_staff"].map(id)
+    "dragonbone_blade", "six_arms_knuckles", "cavalier_lance", "ghoulfang_sickle", "heartwood_staff", "runeblade"].map(id)
 );
 
 /** How many sockets an item has at a quality. @param {string} typeId @param {number} quality */
