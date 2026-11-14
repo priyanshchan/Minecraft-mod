@@ -857,10 +857,16 @@ export function openGrimoire(player) {
   }
   form.button("Learn spells");
   form.button("Preview the eight elements\nShows each element's effects around you");
+  form.button(`Spell lighting: ${fx.lightsEnabled() ? "on" : "off"}\nSpells light up their surroundings`);
   show(form, player, (choice) => {
     if (choice < SLOTS) openSlot(player, choice);
     else if (choice === SLOTS) openLearn(player);
-    else fx.showcase(player);
+    else if (choice === SLOTS + 1) fx.showcase(player);
+    else {
+      fx.setLights(!fx.lightsEnabled());
+      if (!fx.lightsEnabled()) fx.dim(true);
+      notify(player, fx.lightsEnabled() ? "§eSpells now light their surroundings" : "§7Spell lighting is off for this world");
+    }
   });
 }
 

@@ -29,7 +29,8 @@ export const MAX_BOND = 100;
 export const BOND_RANKS = ["Stranger", "Companion", "Trusted", "Loyal", "Sworn"];
 const BOND_POWER = 0.08; // skill power per bond rank
 const MERC_SHARE = 0.5; // share of the master's kill XP a mercenary earns
-const SECOND_SKILL_LEVEL = 20;
+const CUTPURSE_LEVEL = 20; // from this level a Rogue's kills now and then turn up a coin
+const ATTACK_GAP = 18; // ticks a member waits between two attacks
 const POTION = id("red_potion");
 const POTION_HEAL = 20;
 const SCOUT_FIRST = 120; // seconds before an archer first reports what lies ahead
@@ -63,16 +64,6 @@ const GIFT_BOND = 5;
 export const UNISON_COOLDOWN = 45; // seconds between Unison orders
 const UNISON_POWER = 1.25;
 const NAMES = ["Aria", "Borin", "Celia", "Dain", "Elsa", "Fenn", "Gwen", "Hale", "Iris", "Joss", "Kara", "Lund", "Mira", "Nils", "Orla", "Penn"];
-
-/** The two skills of each vocation; the second is learned at level 20. */
-const SKILLS = [
-  ["Shield Bash (staggers the foe)", "Rallying Cry (Resistance for you below half health)"],
-  ["Aimed Shot", "Volley (three foes at once)"],
-  ["Elemental Bolt (the foe's weakness)", "Burst (everything around the foe)"],
-  ["Mend (the most wounded ally)", "Sanctuary (a great heal when you are near death)"],
-  ["Backstab (a poisoned strike)", "Cutpurse (one kill in five turns up a Gold Coin)"],
-  ["Ballad of Valour (Strength and Speed for you in battle)", "Dirge (slows and weakens foes around the target)"],
-];
 
 /** Element a mage retainer reaches for against particular foes. */
 const WEAK_TO = {
@@ -422,8 +413,8 @@ function applyStats(entity, level, gear, sturdy = false) {
   const signature = `${level}|${gear}|${sturdy ? 1 : 0}`;
   if (entity.getDynamicProperty("overlord:sig") === signature) return;
   entity.setDynamicProperty("overlord:sig", signature);
-  const hearts = Math.floor(level / 8) + gear * 2 + (sturdy ? 2 : 0); // each tier is two hearts
-  const might = Math.floor(level / 30) + Math.floor(gear / 2);
+  const hearts = Math.floor(level / 5) + gear * 2 + (sturdy ? 2 : 0); // each tier is two hearts
+  const might = Math.floor(level / 20) + Math.floor(gear / 2);
   for (const effect of ["health_boost", "strength"]) {
     try {
       entity.removeEffect(effect);
@@ -616,10 +607,13 @@ world.afterEvents.entityHurt.subscribe((event) => {
 
 // ------------------------------------------------------------------- skills
 
-/** Entity id -> tick at which its vocation skill is ready again. */
-const skillReady = new Map();
-/** Entity id -> tick at which its second skill (from level 20) is ready again. */
-const secondReady = new Map();
+/** Entity id -> attack key -> tick at which that attack is ready again. */
+/** @type {Map<string, Map<string, number>>} */
+const ready = new Map();
+/** Entity id -> tick before which it will not attack again. */
+const busy = new Map();
+/** Entity id -> which of its attacks it used last, so the next one is a different one. */
+const lastUsed = new Map();
 
 /** @param {Entity} entity @param {number} y */
 function above(entity, y) {
@@ -653,158 +647,399 @@ function mostWounded(player, healer) {
 }
 
 /**
- * Vocation skills of one retainer.
+ * @typedef {{
+ *   player: Player, entity: Entity, member: Member, level: number, power: number, d: import("@minecraft/server").Dimension,
+ *   hand: import("@minecraft/server").Vector3, foe: Entity | undefined, gap: number, masterShare: number,
+ *   masterHealth: import("@minecraft/server").EntityHealthComponent | undefined, near: boolean,
+ * }} Turn everything an attack needs to know: who is acting, on whom, how hard
+ */
+/**
+ * @typedef {{ key: string, name: string, level: number, cooldown: number, help: string, urgent?: boolean,
+ *   use: (t: Turn) => boolean }} Attack an urgent attack answers need (a hurt master, a wounded ally) and is tried before the rest
+ */
+
+/**
+ * @param {Turn} t @param {Entity} target @param {number} amount @param {"entityAttack" | "magic" | "fire"} [cause]
+ */
+function hit(t, target, amount, cause = "entityAttack") {
+  try {
+    target.applyDamage(amount * t.power, { cause: EntityDamageCause[cause], damagingEntity: t.entity });
+    return true;
+  } catch {
+    return false; // already dead
+  }
+}
+
+/** @param {Entity} target @param {string} effect @param {number} seconds @param {number} amplifier */
+function afflict(target, effect, seconds, amplifier) {
+  try {
+    if (target.isValid) target.addEffect(effect, Math.round(seconds * TICKS), { amplifier });
+  } catch {
+    // immune, or gone
+  }
+}
+
+/** The foe and every monster within a radius of it. @param {Turn} t @param {number} radius @param {number} [most] */
+function around(t, radius, most = 12) {
+  const foe = /** @type {Entity} */ (t.foe);
+  return [foe, ...monstersNear(t.player, foe.location, radius).filter((m) => m.id !== foe.id)].slice(0, most);
+}
+
+/**
+ * The attacks of each vocation, in the order they are learned. A member cycles through the
+ * ones it knows, so two attacks in a row are never the same while another is ready.
+ * @type {Attack[][]}
+ */
+export const ATTACKS = [
+  // ------------------------------------------------------------------ Fighter
+  [
+    { key: "bash", name: "Shield Bash", level: 1, cooldown: 6, help: "a heavy blow that staggers the foe", use: (t) => {
+      if (!t.foe || t.gap > 4) return false;
+      hit(t, t.foe, 5 + t.level * 0.3);
+      afflict(t.foe, "slowness", 2, 3);
+      try {
+        const len = t.gap || 1;
+        if (t.foe.isValid) t.foe.applyKnockback({ x: ((t.foe.location.x - t.entity.location.x) / len) * 1.2, z: ((t.foe.location.z - t.entity.location.z) / len) * 1.2 }, 0.3);
+      } catch {
+        // immovable
+      }
+      fx.ring(t.d, t.foe.location, "none", 1.5);
+      return true;
+    } },
+    { key: "cleave", name: "Cleave", level: 8, cooldown: 9, help: "a sweep through every foe within reach", use: (t) => {
+      const foes = monstersNear(t.player, t.entity.location, 3.5);
+      if (foes.length === 0) return false;
+      for (const foe of foes) hit(t, foe, 4 + t.level * 0.25);
+      fx.slash(t.d, above(t.entity, 1.1), "none", 2);
+      return true;
+    } },
+    { key: "cry", name: "Rallying Cry", level: 20, cooldown: 30, urgent: true, help: "Resistance for you below half health", use: (t) => {
+      if (t.masterShare >= 0.5 || !t.near) return false;
+      t.player.addEffect("resistance", 6 * TICKS, { amplifier: 0 });
+      fx.ring(t.d, t.entity.location, "holy", 3);
+      say(t.player, t.member, "Behind me, Master!", 30);
+      return true;
+    } },
+    { key: "quake", name: "Earthshatter", level: 35, cooldown: 18, help: "the ground bursts under every foe near", use: (t) => {
+      const foes = monstersNear(t.player, t.entity.location, 5);
+      if (foes.length === 0) return false;
+      for (const foe of foes) {
+        hit(t, foe, 6 + t.level * 0.3);
+        afflict(foe, "slowness", 3, 2);
+        try {
+          if (foe.isValid) foe.applyKnockback({ x: 0, z: 0 }, 0.55);
+        } catch {
+          // immovable
+        }
+      }
+      fx.ring(t.d, t.entity.location, "none", 5);
+      fx.shake(t.d, t.entity.location, 8, 0.3, 0.3);
+      return true;
+    } },
+  ],
+  // ------------------------------------------------------------------- Archer
+  [
+    { key: "shot", name: "Aimed Shot", level: 1, cooldown: 5, help: "one arrow, placed", use: (t) => {
+      if (!t.foe || t.gap > 24) return false;
+      hit(t, t.foe, 6 + t.level * 0.35);
+      fx.beam(t.d, t.hand, above(t.foe, 1), "none", 0.7);
+      fx.spark(t.d, above(t.foe, 1), "none", 0.8);
+      return true;
+    } },
+    { key: "volley", name: "Volley", level: 8, cooldown: 12, help: "three foes at once", use: (t) => {
+      if (!t.foe || t.gap > 24) return false;
+      for (const foe of around(t, 5, 3)) {
+        hit(t, foe, 4 + t.level * 0.25);
+        fx.beam(t.d, t.hand, above(foe, 1), "none", 0.7);
+      }
+      return true;
+    } },
+    { key: "fire_arrow", name: "Fire Arrow", level: 20, cooldown: 14, help: "an arrow that bursts into flame", use: (t) => {
+      if (!t.foe || t.gap > 24) return false;
+      fx.beam(t.d, t.hand, above(t.foe, 1), "fire", 0.9);
+      fx.nova(t.d, above(t.foe, 0.8), "fire", 3);
+      for (const foe of around(t, 3)) {
+        hit(t, foe, 6 + t.level * 0.3, "fire");
+        try {
+          if (foe.isValid) foe.setOnFire(4, true);
+        } catch {
+          // gone
+        }
+      }
+      return true;
+    } },
+    { key: "rain", name: "Rain of Arrows", level: 35, cooldown: 22, help: "three flights of arrows over an area", use: (t) => {
+      if (!t.foe || t.gap > 24) return false;
+      const centre = { ...t.foe.location };
+      for (let wave = 0; wave < 3; wave++) {
+        system.runTimeout(() => {
+          if (!t.entity.isValid || !t.player.isValid) return;
+          fx.fall(t.d, centre, "none", 4, 2 - wave * 2);
+          for (const foe of monstersNear(t.player, centre, 4)) hit(t, foe, 3 + t.level * 0.15);
+        }, wave * 10);
+      }
+      fx.circle(t.d, centre, "none", 4);
+      return true;
+    } },
+  ],
+  // --------------------------------------------------------------------- Mage
+  [
+    { key: "bolt", name: "Elemental Bolt", level: 1, cooldown: 6, help: "a bolt in the element the foe likes least", use: (t) => {
+      if (!t.foe || t.gap > 18) return false;
+      const element = WEAK_TO[t.foe.typeId] ?? "arcane";
+      hit(t, t.foe, (8 + t.level * 0.45) * (WEAK_TO[t.foe.typeId] ? 1.5 : 1), "magic");
+      fx.circle(t.d, t.entity.location, element, 1.0);
+      fx.beam(t.d, t.hand, above(t.foe, 1), element);
+      fx.spark(t.d, above(t.foe, 1), element, 1.1);
+      return true;
+    } },
+    { key: "burst", name: "Flame Burst", level: 8, cooldown: 14, help: "fire over everything around the foe", use: (t) => {
+      if (!t.foe || t.gap > 18) return false;
+      for (const foe of around(t, 3.5)) {
+        hit(t, foe, 6 + t.level * 0.35, "fire");
+        try {
+          if (foe.isValid) foe.setOnFire(3, true);
+        } catch {
+          // gone
+        }
+      }
+      fx.circle(t.d, t.entity.location, "fire", 1.2);
+      fx.nova(t.d, above(t.foe, 0.8), "fire", 3.5);
+      return true;
+    } },
+    { key: "chain", name: "Chain Lightning", level: 20, cooldown: 12, help: "lightning that leaps to four foes", use: (t) => {
+      if (!t.foe || t.gap > 18) return false;
+      let from = t.hand;
+      for (const foe of around(t, 6, 4)) {
+        hit(t, foe, 6 + t.level * 0.35, "magic");
+        afflict(foe, "slowness", 1, 5);
+        fx.beam(t.d, from, above(foe, 1), "lightning");
+        fx.spark(t.d, above(foe, 1), "lightning", 1);
+        from = above(foe, 1);
+      }
+      return true;
+    } },
+    { key: "frost", name: "Frost Nova", level: 28, cooldown: 16, help: "a ring of cold that slows every foe near the caster", use: (t) => {
+      const foes = monstersNear(t.player, t.entity.location, 5);
+      if (foes.length === 0) return false;
+      for (const foe of foes) {
+        hit(t, foe, 5 + t.level * 0.3, "magic");
+        afflict(foe, "slowness", 4, 2);
+      }
+      fx.nova(t.d, above(t.entity, 0.8), "ice", 5);
+      return true;
+    } },
+    { key: "meteor", name: "Meteor", level: 35, cooldown: 26, help: "a burning stone from the sky", use: (t) => {
+      if (!t.foe || t.gap > 20) return false;
+      const centre = { ...t.foe.location };
+      fx.circle(t.d, centre, "fire", 5);
+      fx.fall(t.d, centre, "fire", 16);
+      system.runTimeout(() => {
+        if (!t.entity.isValid || !t.player.isValid) return;
+        fx.pillar(t.d, centre, "fire", 6, 1.6);
+        fx.nova(t.d, { x: centre.x, y: centre.y + 0.8, z: centre.z }, "fire", 5);
+        fx.shake(t.d, centre, 14, 0.5, 0.4);
+        for (const foe of monstersNear(t.player, centre, 5)) hit(t, foe, 12 + t.level * 0.5, "fire");
+      }, 16);
+      return true;
+    } },
+  ],
+  // ------------------------------------------------------------------- Healer
+  [
+    { key: "mend", name: "Mend", level: 1, cooldown: 5, urgent: true, help: "heals the most wounded of you and the party", use: (t) => {
+      const patient = mostWounded(t.player, t.entity);
+      if (!patient) return false;
+      patient.health.setCurrentValue(Math.min(patient.health.effectiveMax, patient.health.currentValue + (6 + t.level * 0.15) * t.power));
+      fx.beam(t.d, t.hand, above(patient.entity, 1), "holy");
+      fx.rise(t.d, patient.entity.location, "holy", 0.7);
+      if (patient.entity.id === t.player.id) say(t.player, t.member, "Hold on, Master - I have you.", 30);
+      return true;
+    } },
+    { key: "smite", name: "Smite", level: 8, cooldown: 7, help: "a bolt of holy light, half as strong again against the undead", use: (t) => {
+      if (!t.foe || t.gap > 18) return false;
+      let undead = false;
+      try {
+        undead = t.foe.matches({ families: ["undead"] });
+      } catch {
+        // not readable
+      }
+      hit(t, t.foe, (5 + t.level * 0.3) * (undead ? 1.5 : 1), "magic");
+      fx.beam(t.d, t.hand, above(t.foe, 1), "holy");
+      fx.spark(t.d, above(t.foe, 1), "holy", 1);
+      return true;
+    } },
+    { key: "sanctuary", name: "Sanctuary", level: 20, cooldown: 40, urgent: true, help: "a great heal when you are near death", use: (t) => {
+      if (!t.masterHealth || t.masterShare >= 0.3 || !t.near) return false;
+      t.masterHealth.setCurrentValue(Math.min(t.masterHealth.effectiveMax, t.masterHealth.currentValue + (12 + t.level * 0.25) * t.power));
+      t.player.addEffect("regeneration", 5 * TICKS, { amplifier: 1 });
+      fx.dome(t.d, t.player.location, "holy");
+      say(t.player, t.member, "Sanctuary! You will not fall here, Master.", 30);
+      return true;
+    } },
+    { key: "blessing", name: "Blessing", level: 35, cooldown: 45, help: "Regeneration and Resistance for you, and healing for the party, in battle", use: (t) => {
+      if (!inCombat(t.player) || !t.near) return false;
+      t.player.addEffect("regeneration", 8 * TICKS, { amplifier: 0 });
+      t.player.addEffect("resistance", 8 * TICKS, { amplifier: 0 });
+      for (let i = 0; i < MAX_PARTY; i++) {
+        for (const ally of entitiesOf(t.player, i)) {
+          try {
+            const health = ally.getComponent("minecraft:health");
+            if (health && health.currentValue > 0) health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + 10 * t.power));
+            fx.rise(t.d, ally.location, "holy", 0.6);
+          } catch {
+            // that ally is unloading
+          }
+        }
+      }
+      fx.ring(t.d, t.player.location, "holy", 6);
+      return true;
+    } },
+  ],
+  // -------------------------------------------------------------------- Rogue
+  [
+    { key: "backstab", name: "Backstab", level: 1, cooldown: 5, help: "a poisoned strike", use: (t) => {
+      if (!t.foe || t.gap > 3.5) return false;
+      hit(t, t.foe, 7 + t.level * 0.4);
+      afflict(t.foe, "poison", 4, 1);
+      fx.spark(t.d, above(t.foe, 1), "dark", 0.9);
+      return true;
+    } },
+    { key: "flask", name: "Poison Flask", level: 8, cooldown: 12, help: "a flask of poison over the foe and those beside it", use: (t) => {
+      if (!t.foe || t.gap > 12) return false;
+      for (const foe of around(t, 3)) {
+        hit(t, foe, 3 + t.level * 0.2, "magic");
+        afflict(foe, "poison", 5, 1);
+      }
+      fx.beam(t.d, t.hand, above(t.foe, 0.5), "acid", 0.6);
+      fx.nova(t.d, above(t.foe, 0.6), "acid", 3);
+      return true;
+    } },
+    { key: "knives", name: "Throwing Knives", level: 20, cooldown: 8, help: "three knives from a distance", use: (t) => {
+      if (!t.foe || t.gap > 14) return false;
+      for (let knife = 0; knife < 3; knife++) hit(t, t.foe, 2 + t.level * 0.12);
+      fx.beam(t.d, t.hand, above(t.foe, 1), "none", 0.6);
+      fx.spark(t.d, above(t.foe, 1), "none", 0.7);
+      return true;
+    } },
+    { key: "flurry", name: "Shadow Flurry", level: 35, cooldown: 16, help: "four cuts faster than the eye", use: (t) => {
+      if (!t.foe || t.gap > 4) return false;
+      const foe = t.foe;
+      for (let cut = 0; cut < 4; cut++) {
+        // Spaced past the target's hurt cooldown so every cut lands.
+        system.runTimeout(() => {
+          if (!foe.isValid || !t.entity.isValid) return;
+          hit(t, foe, 5 + t.level * 0.25, "magic");
+          fx.slash(t.d, above(foe, 1), "dark", 1.2);
+        }, cut * 11);
+      }
+      return true;
+    } },
+  ],
+  // --------------------------------------------------------------------- Bard
+  [
+    { key: "ballad", name: "Ballad of Valour", level: 1, cooldown: 16, help: "Strength and Speed for you in battle", use: (t) => {
+      if (!inCombat(t.player) || Math.hypot(t.player.location.x - t.entity.location.x, t.player.location.z - t.entity.location.z) > 16) return false;
+      t.player.addEffect("strength", Math.round(8 * t.power * TICKS), { amplifier: 0 });
+      t.player.addEffect("speed", Math.round(8 * t.power * TICKS), { amplifier: 0 });
+      fx.ring(t.d, t.player.location, "holy", 2.5);
+      fx.rise(t.d, t.entity.location, "holy", 0.6);
+      return true;
+    } },
+    { key: "dissonance", name: "Dissonance", level: 8, cooldown: 7, help: "a jarring chord that hurts and weakens one foe", use: (t) => {
+      if (!t.foe || t.gap > 18) return false;
+      hit(t, t.foe, 5 + t.level * 0.3, "magic");
+      afflict(t.foe, "weakness", 3, 0);
+      fx.beam(t.d, t.hand, above(t.foe, 1), "arcane", 0.8);
+      fx.ring(t.d, t.foe.location, "arcane", 1.4);
+      return true;
+    } },
+    { key: "dirge", name: "Dirge", level: 20, cooldown: 20, help: "slows and weakens foes around the target", use: (t) => {
+      if (!t.foe || t.gap > 18) return false;
+      for (const foe of around(t, 6)) {
+        afflict(foe, "slowness", 6 * t.power, 1);
+        afflict(foe, "weakness", 6 * t.power, 0);
+      }
+      fx.ring(t.d, t.foe.location, "dark", 6);
+      return true;
+    } },
+    { key: "crescendo", name: "Crescendo", level: 35, cooldown: 24, help: "a wall of sound that hurts and stuns every foe around the target", use: (t) => {
+      if (!t.foe || t.gap > 18) return false;
+      for (const foe of around(t, 5)) {
+        hit(t, foe, 6 + t.level * 0.3, "magic");
+        afflict(foe, "slowness", 1.5, 6);
+      }
+      fx.nova(t.d, above(t.foe, 0.8), "none", 5);
+      return true;
+    } },
+  ],
+];
+
+/** The attacks a member of this vocation knows at this level. @param {number} vocation @param {number} level */
+export function attacksKnown(vocation, level) {
+  return (ATTACKS[vocation] ?? []).filter((attack) => level >= attack.level);
+}
+
+/**
+ * Lets one retainer act: it uses the next attack in its cycle that is ready and has something
+ * to do. Returns the name of the attack used, if any.
  * @param {Player} player @param {Entity} entity @param {Member} member
  */
-function useSkill(player, entity, member) {
+export function useSkill(player, entity, member) {
   const now = system.currentTick;
+  if (now < (busy.get(entity.id) ?? 0)) return undefined;
   const vocation = Math.floor(member.look / 2);
   const level = levelOf(player, member);
+  const known = attacksKnown(vocation, level);
+  if (known.length === 0) return undefined;
   const formation = formationOf(player);
-  // A strong bond and fighting beside one's own kind make every skill hit harder.
   const unison = now - (orders.get(player.id)?.tick ?? -1e9) <= FRESH;
+  // A strong bond, fighting beside one's own kind, a keen edge and a Unison order all make an attack hit harder.
   const power =
     (1 + BOND_POWER * bondRank(member)) *
     (formation.doubled.has(vocation) ? 1.15 : 1) *
     (hasTrait(player, member, "keen") ? 1.15 : 1) *
     (unison ? UNISON_POWER : 1);
   const haste = (formation.balanced ? 0.8 : 1) * (hasTrait(player, member, "swift") ? 0.85 : 1);
-  const firstReady = now >= (skillReady.get(entity.id) ?? 0);
-  const secondOpen = level >= SECOND_SKILL_LEVEL && now >= (secondReady.get(entity.id) ?? 0);
-  const rest = (/** @type {number} */ seconds) => skillReady.set(entity.id, now + Math.round(seconds * haste * TICKS));
-  const restSecond = (/** @type {number} */ seconds) => secondReady.set(entity.id, now + Math.round(seconds * haste * TICKS));
-  const hand = above(entity, 1.3);
-  const reach = (/** @type {Entity} */ other) =>
-    Math.hypot(other.location.x - entity.location.x, other.location.z - entity.location.z);
   const masterHealth = player.getComponent("minecraft:health");
-  const masterShare = masterHealth && masterHealth.currentValue > 0 ? masterHealth.currentValue / masterHealth.effectiveMax : 1;
-
-  if (vocation === 3) {
-    // Healer. Sanctuary: a great heal when the master is close to death.
-    if (secondOpen && masterHealth && masterShare < 0.3 && reach(player) <= 12) {
-      masterHealth.setCurrentValue(Math.min(masterHealth.effectiveMax, masterHealth.currentValue + (10 + level * 0.2) * power));
-      player.addEffect("regeneration", 5 * TICKS, { amplifier: 1 });
-      fx.dome(player.dimension, player.location, "holy");
-      restSecond(45);
-      rest(6);
-      say(player, member, "Sanctuary! You will not fall here, Master.", 30);
-      return;
+  let foe = pickFoe(player, entity, member);
+  const reach = (/** @type {Entity} */ other) => Math.hypot(other.location.x - entity.location.x, other.location.z - entity.location.z);
+  // A member told to hold its ground only fights what comes to it.
+  if (foe && profileOf(player).stance === "stay" && reach(foe) > 10) foe = undefined;
+  /** @type {Turn} */
+  const turn = {
+    player, entity, member, level, power, foe,
+    d: player.dimension,
+    hand: above(entity, 1.3),
+    gap: foe ? reach(foe) : Infinity,
+    masterHealth,
+    masterShare: masterHealth && masterHealth.currentValue > 0 ? masterHealth.currentValue / masterHealth.effectiveMax : 1,
+    near: reach(player) <= 12,
+  };
+  let mine = ready.get(entity.id);
+  if (!mine) {
+    mine = new Map();
+    ready.set(entity.id, mine);
+  }
+  // What answers need comes first; after that the member takes the next attack in its cycle.
+  const start = ((lastUsed.get(entity.id) ?? -1) + 1) % known.length;
+  const cycle = known.map((_, step) => (start + step) % known.length);
+  const order = [...cycle.filter((i) => known[i].urgent).sort((a, b) => known[b].level - known[a].level), ...cycle.filter((i) => !known[i].urgent)];
+  for (const index of order) {
+    const attack = known[index];
+    if (now < (mine.get(attack.key) ?? 0)) continue;
+    let used = false;
+    try {
+      used = attack.use(turn);
+    } catch {
+      used = false; // the target vanished mid-attack
     }
-    // Mend whoever needs it most: the master or another member of the party.
-    if (!firstReady) return;
-    const patient = mostWounded(player, entity);
-    if (!patient) return;
-    patient.health.setCurrentValue(Math.min(patient.health.effectiveMax, patient.health.currentValue + (4 + level * 0.1) * power));
-    fx.beam(player.dimension, hand, above(patient.entity, 1), "holy");
-    fx.rise(player.dimension, patient.entity.location, "holy", 0.7);
-    rest(6);
-    if (patient.entity.id === player.id) say(player, member, "Hold on, Master - I have you.", 30);
-    return;
+    if (!used) continue;
+    mine.set(attack.key, now + Math.round(attack.cooldown * haste * TICKS));
+    busy.set(entity.id, now + Math.round(ATTACK_GAP * haste));
+    if (!attack.urgent) lastUsed.set(entity.id, index);
+    return attack.name;
   }
-
-  // Fighter. Rallying Cry: stands between the master and harm when things turn bad.
-  if (vocation === 0 && secondOpen && masterShare < 0.5 && reach(player) <= 12) {
-    player.addEffect("resistance", 6 * TICKS, { amplifier: 0 });
-    fx.ring(player.dimension, entity.location, "holy", 3);
-    restSecond(30);
-    say(player, member, "Behind me, Master!", 30);
-  }
-
-  // Bard. Ballad of Valour: a song that puts heart into the master while the fight lasts.
-  if (vocation === 5 && firstReady && inCombat(player) && reach(player) <= 16) {
-    player.addEffect("strength", Math.round(8 * power * TICKS), { amplifier: 0 });
-    player.addEffect("speed", Math.round(8 * power * TICKS), { amplifier: 0 });
-    fx.ring(player.dimension, player.location, "holy", 2.5);
-    fx.rise(player.dimension, entity.location, "holy", 0.6);
-    rest(16);
-  }
-
-  if (profileOf(player).stance === "stay") return;
-  const foe = pickFoe(player, entity, member);
-  if (!foe) return;
-  const at = above(foe, 1);
-  const distance = reach(foe);
-
-  // Second skills that strike several foes around the target.
-  if (vocation === 1 && secondOpen && distance <= 22) {
-    // Archer. Volley: up to three monsters around the target.
-    const struck = [foe, ...monstersNear(player, foe.location, 5).filter((m) => m.id !== foe.id)].slice(0, 3);
-    for (const mob of struck) {
-      try {
-        mob.applyDamage((3 + level * 0.2) * power, { cause: EntityDamageCause.entityAttack, damagingEntity: entity });
-        fx.beam(player.dimension, hand, above(mob, 1), "none", 0.7);
-      } catch {
-        // already dead
-      }
-    }
-    restSecond(16);
-    return;
-  }
-  if (vocation === 2 && secondOpen && distance <= 18) {
-    // Mage. Burst: everything within a few blocks of the target.
-    const element = WEAK_TO[foe.typeId] ?? "arcane";
-    const struck = [foe, ...monstersNear(player, foe.location, 3.5).filter((m) => m.id !== foe.id)];
-    for (const mob of struck) {
-      try {
-        mob.applyDamage((4 + level * 0.25) * (WEAK_TO[mob.typeId] === element ? 1.5 : 1) * power, { cause: EntityDamageCause.magic, damagingEntity: entity });
-      } catch {
-        // already dead
-      }
-    }
-    fx.circle(player.dimension, entity.location, element, 1.2);
-    fx.ring(player.dimension, foe.location, element, 3.5);
-    restSecond(18);
-    return;
-  }
-
-  if (vocation === 5 && secondOpen && distance <= 18) {
-    // Bard. Dirge: a mournful air that slows and weakens everything around the target.
-    for (const mob of [foe, ...monstersNear(player, foe.location, 6).filter((m) => m.id !== foe.id)]) {
-      try {
-        mob.addEffect("slowness", Math.round(6 * power * TICKS), { amplifier: 1 });
-        mob.addEffect("weakness", Math.round(6 * power * TICKS), { amplifier: 0 });
-      } catch {
-        // already dead
-      }
-    }
-    fx.ring(player.dimension, foe.location, "dark", 6);
-    restSecond(20);
-    return;
-  }
-
-  if (!firstReady) return;
-  if (vocation === 4 && distance <= 3.5) {
-    // Rogue: backstab - a poisoned strike on a short recharge.
-    foe.applyDamage((5 + level * 0.3) * power, { cause: EntityDamageCause.entityAttack, damagingEntity: entity });
-    if (foe.isValid) foe.addEffect("poison", 4 * TICKS, { amplifier: 1 });
-    fx.spark(player.dimension, at, "dark", 0.9);
-    rest(6);
-  } else if (vocation === 0 && distance <= 4) {
-    // Fighter: shield bash - a heavy blow that staggers the target.
-    foe.applyDamage((3 + level * 0.2) * power, { cause: EntityDamageCause.entityAttack, damagingEntity: entity });
-    if (foe.isValid) {
-      foe.addEffect("slowness", 2 * TICKS, { amplifier: 3 });
-      const len = distance || 1;
-      foe.applyKnockback({ x: ((foe.location.x - entity.location.x) / len) * 1.2, z: ((foe.location.z - entity.location.z) / len) * 1.2 }, 0.3);
-    }
-    fx.ring(player.dimension, foe.location, "none", 1.5);
-    rest(8);
-  } else if (vocation === 1 && distance <= 22) {
-    // Archer: an aimed shot.
-    foe.applyDamage((4 + level * 0.25) * power, { cause: EntityDamageCause.entityAttack, damagingEntity: entity });
-    fx.beam(player.dimension, hand, at, "none", 0.7);
-    fx.spark(player.dimension, at, "none", 0.8);
-    rest(7);
-  } else if (vocation === 2 && distance <= 18) {
-    // Mage: a bolt of whatever element the foe likes least.
-    const element = WEAK_TO[foe.typeId] ?? "arcane";
-    const bonus = WEAK_TO[foe.typeId] ? 1.5 : 1;
-    foe.applyDamage((5 + level * 0.3) * bonus * power, { cause: EntityDamageCause.magic, damagingEntity: entity });
-    fx.circle(player.dimension, entity.location, element, 1.0);
-    fx.beam(player.dimension, hand, at, element);
-    fx.spark(player.dimension, at, element, 1.1);
-    rest(8);
-  }
+  return undefined;
 }
 
 // ------------------------------------------------------------------- growth
@@ -826,7 +1061,7 @@ export function shareKill(player, dead, random = Math.random) {
     changed = true;
     addBond(player, member, bond * (hasTrait(player, member, "devoted") ? 2 : 1));
     if (hasTrait(player, member, "scavenger") && random() < 0.1) coins += 1;
-    if (Math.floor(member.look / 2) === 4 && levelOf(player, member) >= SECOND_SKILL_LEVEL && random() < 0.2) coins += 1; // Cutpurse
+    if (Math.floor(member.look / 2) === 4 && levelOf(player, member) >= CUTPURSE_LEVEL && random() < 0.2) coins += 1; // Cutpurse
     if (member.hired && member.level < MAX_LEVEL) {
       member.xp += Math.round(xp * MERC_SHARE);
       const start = member.level;
@@ -868,8 +1103,8 @@ export function unison(player, foe) {
     if (!member.out || recovering(player, index) > 0) return;
     const entity = entitiesOf(player, index)[0];
     if (!entity) return;
-    skillReady.delete(entity.id);
-    secondReady.delete(entity.id);
+    ready.delete(entity.id);
+    busy.delete(entity.id);
     try {
       useSkill(player, entity, member);
     } catch {
@@ -1040,6 +1275,21 @@ system.runInterval(() => {
     }
   }
 }, 2 * TICKS);
+
+// Between upkeep passes the party gets another chance to act, so attacks come about once a second.
+system.runInterval(() => {
+  for (const player of world.getAllPlayers()) {
+    try {
+      partyOf(player).forEach((member, index) => {
+        if (!member.out || recovering(player, index) > 0) return;
+        const entity = entitiesOf(player, index)[0];
+        if (entity) useSkill(player, entity, member);
+      });
+    } catch {
+      // player is leaving
+    }
+  }
+}, TICKS);
 
 /**
  * One line with the health of every member at the player's side.
@@ -1221,7 +1471,9 @@ function openMember(player, index) {
       (member.hired ? `\nXP: ${level >= MAX_LEVEL ? "max level" : `${member.xp}/${xpForNext(level)}`}` : "") +
       `\nTactic: §e${TACTICS[member.tactic]}§r - ${TACTIC_HELP[member.tactic]}` +
       `\nTraits: ${member.traits.length > 0 ? member.traits.map((key) => TRAITS.find((t) => t.key === key)?.name).join(", ") : "none"} (${member.traits.length}/${traitSlots(level)}; slots open at levels 10 and 30)` +
-      `\nSkills: ${SKILLS[vocation][0]}; ${SKILLS[vocation][1]} ${level >= SECOND_SKILL_LEVEL ? "" : `(from level ${SECOND_SKILL_LEVEL})`}`
+      `\nAttacks:\n` +
+      (ATTACKS[vocation] ?? []).map((a) => `${level >= a.level ? "§a" : "§8"}${a.name}§r - ${a.help}${level >= a.level ? "" : ` §8(level ${a.level})§r`}`).join("\n") +
+      (vocation === 4 ? `\n${level >= CUTPURSE_LEVEL ? "§a" : "§8"}Cutpurse§r - one kill in five turns up a Gold Coin${level >= CUTPURSE_LEVEL ? "" : ` §8(level ${CUTPURSE_LEVEL})§r`}` : "")
   );
   /** @type {(() => void)[]} */
   const actions = [];

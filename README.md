@@ -297,17 +297,21 @@ sticks in a flag shape).
   vocation. It levels with you and can be restyled or change vocation at any time.
 - **Mercenaries:** hire up to three more (four party members in all) for Gold Coins; friends of the
   Adventurers' Guild pay a quarter less. Mercenaries earn half of your kill XP and level up on their own.
-- **Vocations and skills** — every vocation has a second skill from level 20:
+- **Vocations and attacks.** Every vocation has a set of attacks that it learns as it levels and uses in turn,
+  about one a second, so two in a row are never the same while another is ready. Attacks that answer need (a
+  heal, a Rallying Cry) are always used first.
 
-  | Vocation | Looks | Fights | Skill | From level 20 |
-  | --- | --- | --- | --- | --- |
-  | Fighter | Knight, Swordsman | Melee | Shield Bash: a staggering blow | Rallying Cry: Resistance for you below half health |
-  | Archer | Ranger, Hunter | Arrows, keeps its distance | Aimed Shot | Volley: three foes at once |
-  | Mage | Sorcerer, Wizard | Magic bolts, keeps its distance | Elemental Bolt in the element the foe is weak to | Burst: everything around the foe |
-  | Healer | Priest, Acolyte | Stays back | Mend: heals the most wounded of you and the party | Sanctuary: a great heal when you are near death |
-  | Rogue | Assassin, Thief | Fast melee | Backstab: a poisoned strike on a short recharge | Cutpurse: one kill in five turns up a Gold Coin |
-  | Bard | Minstrel, Skald | Stays back | Ballad of Valour: Strength and Speed for you in battle | Dirge: slows and weakens foes around the target |
+  | Vocation | Looks | Level 1 | Level 8 | Level 20 | Level 35 |
+  | --- | --- | --- | --- | --- | --- |
+  | Fighter | Knight, Swordsman | Shield Bash: a staggering blow | Cleave: a sweep through every foe in reach | Rallying Cry: Resistance for you below half health | Earthshatter: the ground bursts under every foe near |
+  | Archer | Ranger, Hunter | Aimed Shot | Volley: three foes at once | Fire Arrow: bursts into flame | Rain of Arrows: three flights over an area |
+  | Mage | Sorcerer, Wizard | Elemental Bolt in the foe's weakness | Flame Burst around the foe | Chain Lightning to four foes (and Frost Nova at 28) | Meteor |
+  | Healer | Priest, Acolyte | Mend: heals the most wounded | Smite: holy bolt, stronger against undead | Sanctuary: a great heal when you are near death | Blessing: Regeneration and Resistance for you, healing for the party |
+  | Rogue | Assassin, Thief | Backstab: a poisoned strike | Poison Flask over the foe and those beside it | Throwing Knives from range (and Cutpurse: coins from kills) | Shadow Flurry: four cuts |
+  | Bard | Minstrel, Skald | Ballad of Valour: Strength and Speed for you | Dissonance: hurts and weakens one foe | Dirge: slows and weakens a group | Crescendo: hurts and stuns a group |
 
+  Companions start with 60 health, gain two hearts every 5 levels and Strength every 20, and their attacks
+  scale with level, bond, formation and the Keen trait.
 - **Stances** (whole party): *Come* (stay close and defend), *Go* (range ahead and attack monsters on sight),
   *Stay* (hold a spot and defend it). Sneak + use the Command Banner to switch.
 - **Tactics** (each member): *Vanguard* strikes the foe you are fighting, *Guardian* strikes whatever last
@@ -504,7 +508,7 @@ the in-game effects are this add-on's own interpretation.
 
 ### Spell visuals
 
-Every spell, scroll, tome and weapon skill has its own effects, drawn with 25 custom particle effects that
+Every spell, scroll, tome and weapon skill has its own effects, drawn with 32 custom particle effects that
 are tinted by element (purple arcane, orange fire, pale-blue ice, yellow lightning, gold holy, green acid,
 violet dark, white for the unaligned) and rendered additively so they glow.
 
@@ -541,6 +545,16 @@ violet dark, white for the unaligned) and rendered additively so they glow.
   raised, arms spread then drawn in, sweep, slam, channelling, summoning, the long super-tier cast, reading
   a scroll, reading a tome, weapon slash and weapon slam. They are visible in third person and to other
   players.
+
+- **Light.** Spells light up their surroundings: the casting hand, the ground under a magic circle, the
+  length of a beam, the point of impact, a pillar from base to top and a nova out to its edge. It is real
+  block light (an invisible light block set for a fraction of a second and then removed, only ever in air),
+  so it shows in every graphics mode and, with Vibrant Visuals, falls on the scene the way a torch's does.
+  The light is white rather than coloured. **Grimoire → Spell lighting** switches it off for the world.
+- **What a spell leaves behind.** Flames burn on and the ground is scorched where fire struck; mist hangs
+  where cold, shadow or acid struck; lightning goes on crackling over a scorch mark; light and runes keep
+  rising after holy and arcane magic. Beams have a soft glow round their core, and motes circle a caster of
+  the fifth tier and above.
 
 When a great deal is drawn in the same instant the decorative layers are dropped first, so a big fight keeps
 its basic effects without flooding the screen. **Grimoire → Preview the eight elements** plays each
