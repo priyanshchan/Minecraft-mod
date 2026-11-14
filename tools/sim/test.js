@@ -1421,7 +1421,7 @@ players.splice(0, players.length, ...everyone, zoe);
   pq.mana = 0; q.health.currentValue = 3; await pick(5); assert.equal(pq.mana, rpg.maxMana(pq)); assert.equal(q.health.currentValue, 20);
   await pick(6); assert.equal(spells.countItem(q, "overlord:codex_of_skills"), 10); assert.equal(spells.countItem(q, "overlord:gem_onyx"), 4);
   await pick(7); assert.equal(pq.story.length, 10); assert.equal(spells.countItem(q, "overlord:royal_seal"), 1, "the campaign shortcut crowns and hands over the Seal");
-  pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(8); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
+  pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(9); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
   assert.ok(shown.some((f) => f.title === "Creative Tome of Ascension"));
   players.splice(players.indexOf(q), 1);
 }
@@ -1575,6 +1575,115 @@ players.splice(0, players.length, ...everyone, zoe);
   held = coins(); assert.equal(coins() - held, 0);
   realm.name = "x"; pw.realm = {}; assert.equal(king.realmOf(w), undefined);
   for (const m of spawned) m.isValid = false; here.length = 0; players.splice(players.indexOf(w), 1);
+}
+
+// v8.1: races of Yggdrasil, and steeds
+{
+  const races = await import("./races.js");
+  const steeds = await import("./steeds.js");
+  // a field of creatures that answers by tag, type, family and distance
+  const all = []; let n = 0;
+  const creature = (typeId, at, families = ["monster"], hp = 100) => { const m = { id: `c${n++}`, typeId, location: { ...at }, isValid: true, tags: new Set(), props: new Map(), effects: new Map(),
+    families, events: [], vel: { x: 0, y: 0, z: 0 }, isOnGround: true, burning: 0, get dimension() { return field; },
+    health: { currentValue: hp, effectiveMax: hp, setCurrentValue(v) { this.currentValue = v; } },
+    getComponent(c) { return c === "minecraft:health" ? m.health : undefined; }, addTag(t) { m.tags.add(t); }, hasTag: (t) => m.tags.has(t),
+    matches: (q) => (q.families ?? []).every((f) => m.families.includes(f)), remove() { m.isValid = false; },
+    getDynamicProperty: (k) => m.props.get(k), setDynamicProperty: (k, v) => m.props.set(k, v),
+    addEffect(e, d, o = {}) { m.effects.set(e, { duration: d, amplifier: o.amplifier ?? 0 }); }, getEffect: (e) => m.effects.get(e),
+    teleport(to) { m.location = { ...to }; }, triggerEvent(e) { m.events.push(e); }, clearVelocity() { m.vel = { x: 0, y: 0, z: 0 }; },
+    applyImpulse(v) { m.vel = { x: m.vel.x + v.x, y: m.vel.y + v.y, z: m.vel.z + v.z }; }, setRotation(r) { m.rot = r; },
+    setOnFire(s) { m.burning = s; }, applyKnockback() {}, applyDamage(x) { m.health.currentValue = Math.max(0, m.health.currentValue - x); } }; all.push(m); return m; };
+  const near = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+  const field = { id: "minecraft:overworld", spawnParticle() {}, playSound() {}, getTopmostBlock: ({ x, z }) => ({ location: { x, y: 63, z } }), getPlayers: () => [],
+    getEntities: (q) => all.filter((m) => m.isValid && (q.tags ?? []).every((t) => m.tags.has(t)) && (!q.type || m.typeId === q.type) &&
+      (q.families ?? []).every((f) => m.families.includes(f)) && (!q.maxDistance || near(m.location, q.location) <= q.maxDistance)),
+    spawnEntity: (type, at) => creature(type, at, type.endsWith("_steed") ? ["mob"] : ["monster"]) };
+  const r = mkPlayer("rae"); r.dimension = field; r.location = { x: 9000.5, y: 64, z: 9000.5 }; r.isSneaking = false; r.isJumping = false; r.isOnGround = true;
+  r.getVelocity = () => ({ x: 0, y: 0, z: 0 }); r.getRotation = () => ({ x: 0, y: 0 }); r.camera = { fade() {} };
+  world.afterEvents.playerSpawn.fire({ player: r, initialSpawn: true }); advance(80);
+  const pr = rpg.profileOf(r); rpg.setLevel(r, 30); pr.mana = 200;
+  // a first race is free; it levels from a quarter of the XP earned
+  assert.equal(races.raceOf(pr), "none"); assert.ok(races.chooseRace(r, "undead").includes("Skeleton")); assert.equal(pr.race, "undead");
+  rpg.grantXp(r, 1200); assert.equal(pr.raceLv, 2); assert.equal(pr.raceXp, 0);
+  // the undead: poison and wither do not hold, it sees in the dark and is never hungry
+  r.effects.set("poison", { duration: 100, amplifier: 0 }); r.effects.set("wither", { duration: 100, amplifier: 0 });
+  races.tick(r, system.currentTick); assert.ok(!r.effects.has("poison") && !r.effects.has("wither")); assert.ok(r.effects.has("night_vision") && r.effects.has("saturation"));
+  const living = creature("minecraft:pig", { x: 9001, y: 64, z: 9001 }, ["mob"]); const zombie = creature("minecraft:zombie", { x: 9001, y: 64, z: 9001 }, ["undead", "monster"]);
+  assert.equal(races.meleeBonus(r, pr, living), 0.2); assert.equal(races.meleeBonus(r, pr, zombie), 0);
+  // the true form awakens at race level 5, costs mana and rests afterwards
+  let now = 900000; assert.ok(races.transform(r, now).includes("race level 5"));
+  races.setRaceLevel(r, 5); assert.equal(races.rankName(pr), "Elder Lich");
+  zombie.location = { x: 9003, y: 64, z: 9001 }; const manaBefore = pr.mana;
+  assert.ok(races.transform(r, now).includes("Overlord Form")); assert.ok(pr.mana < manaBefore); assert.ok(races.inForm(r));
+  races.tick(r, now + 20); assert.equal(r.effects.get("resistance").amplifier, 1); assert.ok(zombie.effects.has("weakness") && zombie.effects.has("slowness"), "the Aura of Despair");
+  assert.ok(races.transform(r, now + 40).includes("already"));
+  races.tick(r, now + (races.FORM_SECONDS + 5) * 20 + 1); assert.ok(!races.inForm(r)); assert.ok(races.transform(r, now + (races.FORM_SECONDS + 6) * 20).includes("returns in"));
+  // sneak + jump takes the form once it has rested
+  races.rested.set("rae", 0); r.isSneaking = true; r.isJumping = true; advance(4); assert.ok(races.inForm(r), "sneak + jump"); r.isSneaking = false; r.isJumping = false;
+  races.forms.clear();
+  // the third rank is a title
+  races.setRaceLevel(r, 10); assert.ok(guild.checkTitles(r).includes("Overlord"));
+  // reincarnation costs coins and starts over; a vampire weakens in the sun and drinks what it strikes
+  assert.ok(races.chooseRace(r, "vampire").includes("costs")); rpg.giveItem(r, "overlord:yggdrasil_gold_coin", races.REBIRTH_COST);
+  assert.ok(races.chooseRace(r, "vampire").includes("Lesser Vampire")); assert.equal(pr.raceLv, 1); assert.equal(pr.reborn, 1);
+  r.effects.clear(); world.clock.time = 6000; assert.equal(races.tick(r, now), "the sun"); assert.ok(r.effects.has("weakness"));
+  r.effects.clear(); world.clock.time = 18000; assert.equal(races.tick(r, now), ""); assert.ok(r.effects.has("strength") && r.effects.has("speed")); world.clock.time = 6000;
+  r.health.currentValue = 10; const prey = creature("minecraft:zombie", { x: 9001, y: 64, z: 9001 }, ["monster"], 300);
+  world.afterEvents.entityHurt.fire({ hurtEntity: prey, damage: 20, damageSource: { damagingEntity: r, cause: "entityAttack" } });
+  assert.ok(r.health.currentValue > 10, "blows drink"); r.health.currentValue = 20;
+  // an angel glides; a dragonkin is tough; a human learns faster
+  rpg.giveItem(r, "overlord:yggdrasil_gold_coin", 300); races.chooseRace(r, "angel"); r.isSneaking = true; r.isOnGround = false; r.getVelocity = () => ({ x: 0, y: -0.6, z: 0 });
+  assert.ok(races.glide(r) && r.effects.has("slow_falling")); r.isSneaking = false; r.isOnGround = true; r.getVelocity = () => ({ x: 0, y: 0, z: 0 });
+  assert.equal(races.meleeBonus(r, pr, zombie), 0.25, "angels smite the undead");
+  races.chooseRace(r, "dragonkin"); races.setRaceLevel(r, 11); races.tick(r, now); assert.equal(r.effects.get("health_boost").amplifier, 2); assert.ok(r.effects.has("resistance"));
+  races.chooseRace(r, "human"); races.setRaceLevel(r, 4); assert.ok(Math.abs(races.xpFactor(pr) - 1.14) < 1e-9);
+  // dragon form breathes on what is ahead, not behind
+  races.chooseRace(r, "dragonkin"); races.setRaceLevel(r, 5); r.getViewDirection = () => ({ x: 0, y: 0, z: 1 }); for (const m of all) m.isValid = false;
+  const ahead = creature("minecraft:zombie", { x: 9000.5, y: 64, z: 9004 }, ["monster"]); const behind = creature("minecraft:zombie", { x: 9000.5, y: 64, z: 8997 }, ["monster"]);
+  assert.equal(races.breathe(r), 1); assert.ok(ahead.health.currentValue < 100 && behind.health.currentValue === 100);
+
+  // steeds: one of each, called to your side
+  const callWyrm = steeds.call(r, "overlord:wyrm_whistle", now); assert.ok(callWyrm.includes("answers")); const wyrm = steeds.steedOf(r, "wyrm");
+  assert.ok(wyrm && wyrm.typeId === "overlord:wyrm_steed" && wyrm.props.get("overlord:owner") === "rae");
+  r.location = { x: 9010.5, y: 64, z: 9000.5 }; assert.ok(steeds.call(r, "overlord:wyrm_whistle", now).includes("comes")); assert.ok(near(wyrm.location, r.location) < 3);
+  assert.equal(all.filter((m) => m.typeId === "overlord:wyrm_steed").length, 1, "never two");
+  // riding: on the ground it walks, a jump takes it up, then it flies where the rider looks
+  let move = { x: 0, y: 1 }; r.inputInfo = { getMovementVector: () => move };
+  r.getComponent = ((base) => (c) => (c === "minecraft:riding" ? { entityRidingOn: wyrm } : base(c)))(r.getComponent);
+  assert.equal(steeds.mountOf(r), wyrm);
+  let v = steeds.fly(r, wyrm); assert.ok(v && Math.abs(v.z - steeds.WALK_SPEED) < 1e-9 && !steeds.aloft.get(wyrm.id));
+  r.isJumping = true; wyrm.isOnGround = false; v = steeds.fly(r, wyrm); assert.ok(steeds.aloft.get(wyrm.id) && wyrm.events.includes("overlord:take_off"));
+  assert.ok(Math.abs(v.z - steeds.FLY_SPEED) < 1e-9 && Math.abs(v.y - steeds.CLIMB) < 1e-9); r.isJumping = false;
+  r.isSprinting = true; v = steeds.fly(r, wyrm); assert.ok(Math.abs(v.z - steeds.SPRINT_SPEED) < 1e-9); r.isSprinting = false;
+  r.getViewDirection = () => ({ x: 0, y: -0.6, z: 0.8 }); v = steeds.fly(r, wyrm); assert.ok(v.y < 0, "it dives where the rider looks");
+  move = { x: 0, y: 0 }; v = steeds.fly(r, wyrm); assert.deepEqual(v, { x: 0, y: 0, z: 0 }, "and hovers when let go");
+  r.getViewDirection = () => ({ x: 0, y: -0.6, z: 0.8 }); move = { x: 0, y: 1 }; wyrm.isOnGround = true; steeds.fly(r, wyrm);
+  assert.ok(!steeds.aloft.get(wyrm.id) && wyrm.events.includes("overlord:land"), "touching down lands it");
+  // its breath burns what lies ahead
+  r.getViewDirection = () => ({ x: 0, y: 0, z: 1 }); for (const m of all) if (m.families.includes("monster")) m.isValid = false;
+  const target = creature("minecraft:zombie", { x: wyrm.location.x, y: 64, z: wyrm.location.z + 6 }, ["monster"], 200); const aside = creature("minecraft:zombie", { x: wyrm.location.x + 8, y: 64, z: wyrm.location.z }, ["monster"], 200);
+  assert.equal(steeds.breathe(r, wyrm, now), 1); assert.ok(target.health.currentValue < 200 && target.burning > 0 && aside.health.currentValue === 200);
+  assert.equal(steeds.breathe(r, wyrm, now + 10), -1, "it draws breath between");
+  // the Soul Eater: called by its reins, it charges and tramples
+  steeds.call(r, "overlord:soul_reins", now); const soul = steeds.steedOf(r, "soul"); assert.ok(soul && soul.typeId === "overlord:soul_steed");
+  for (const m of all) if (m.families.includes("monster")) m.isValid = false;
+  const lane = creature("minecraft:zombie", { x: soul.location.x, y: 64, z: soul.location.z + 4 }, ["monster"], 200);
+  assert.equal(steeds.charge(r, soul, now + 1000), 1); assert.ok(lane.health.currentValue < 200 && soul.vel.z > 2);
+  const under = creature("minecraft:zombie", { ...soul.location }, ["monster"], 200); assert.ok(steeds.trample(r, soul) >= 1 && under.health.currentValue < 200);
+  // barding: only on your own steeds or a tamed Hamsuke; a second one hands the first back
+  assert.ok(steeds.armour(r, soul, "overlord:adamantite_barding").includes("wears")); assert.equal(steeds.bardingOf(soul), 1);
+  assert.ok(steeds.tendBarding(soul)); assert.equal(soul.effects.get("resistance").amplifier, 0);
+  const before = spells.countItem(r, "overlord:adamantite_barding");
+  assert.ok(steeds.armour(r, soul, "overlord:nazarick_barding").includes("Nazarick")); assert.equal(spells.countItem(r, "overlord:adamantite_barding") - before, 1);
+  steeds.tendBarding(soul); assert.equal(soul.effects.get("resistance").amplifier, 1); assert.ok(soul.effects.has("fire_resistance") && soul.effects.has("regeneration"));
+  const stranger = creature("overlord:soul_steed", soul.location, ["mob"]); stranger.addTag("overlord_steed"); stranger.setDynamicProperty("overlord:owner", "someone");
+  assert.ok(steeds.armour(r, stranger, "overlord:adamantite_barding").includes("Only"));
+  const wild = creature("overlord:hamsuke", soul.location, ["mob"]); assert.ok(steeds.armour(r, wild, "overlord:adamantite_barding").includes("Only"));
+  // sent away; slain, it mourns a minute
+  assert.ok(steeds.dismiss(r, "overlord:soul_reins").includes("departs")); assert.equal(steeds.steedOf(r, "soul"), undefined);
+  world.afterEvents.entityDie.fire({ deadEntity: wyrm, damageSource: {} }); wyrm.isValid = false;
+  assert.ok(steeds.call(r, "overlord:wyrm_whistle", system.currentTick).includes("slain"));
+  all.forEach((m) => { m.isValid = false; }); players.splice(players.indexOf(r), 1); races.forms.clear();
 }
 
 // persistence: saved profile is restored after leaving

@@ -1000,6 +1000,33 @@
           "death": "game.player.die",
           "step": "mob.zombie.step"
         }
+      },
+      "overlord:wyrm_steed": {
+        "volume": 1.0,
+        "pitch": [
+          0.7,
+          0.85
+        ],
+        "events": {
+          "ambient": "mob.enderdragon.growl",
+          "hurt": "mob.enderdragon.hit",
+          "death": "mob.enderdragon.death",
+          "step": "mob.irongolem.walk",
+          "shoot": "random.glass"
+        }
+      },
+      "overlord:soul_steed": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.8
+        ],
+        "events": {
+          "ambient": "mob.wither.ambient",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.zombie.step"
+        }
       }
     }
   }

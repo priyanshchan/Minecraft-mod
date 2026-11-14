@@ -1,0 +1,431 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.overlord.armor_dragonscale_chestplate",
+        "texture_width": 64,
+        "texture_height": 64,
+        "visible_bounds_width": 3.0,
+        "visible_bounds_height": 3.0,
+        "visible_bounds_offset": [
+          0,
+          1.0,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "waist",
+          "parent": "root",
+          "pivot": [
+            0,
+            12,
+            0
+          ]
+        },
+        {
+          "name": "body",
+          "parent": "waist",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "head",
+          "parent": "body",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "leftArm",
+          "parent": "body",
+          "pivot": [
+            5,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "leftItem",
+          "parent": "leftArm",
+          "pivot": [
+            6,
+            15,
+            1
+          ]
+        },
+        {
+          "name": "rightArm",
+          "parent": "body",
+          "pivot": [
+            -5,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "rightItem",
+          "parent": "rightArm",
+          "pivot": [
+            -6,
+            15,
+            1
+          ]
+        },
+        {
+          "name": "leftLeg",
+          "parent": "root",
+          "pivot": [
+            1.9,
+            12,
+            0
+          ]
+        },
+        {
+          "name": "rightLeg",
+          "parent": "root",
+          "pivot": [
+            -1.9,
+            12,
+            0
+          ]
+        },
+        {
+          "name": "armor_body",
+          "parent": "body",
+          "pivot": [
+            0,
+            24,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4,
+                12,
+                -2
+              ],
+              "size": [
+                8,
+                12,
+                4
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": 1.01
+            },
+            {
+              "origin": [
+                -1,
+                19,
+                -3.9
+              ],
+              "size": [
+                2,
+                2,
+                1
+              ],
+              "uv": [
+                40,
+                33
+              ],
+              "inflate": 0.1
+            },
+            {
+              "origin": [
+                -1.5,
+                18.5,
+                -3.6
+              ],
+              "size": [
+                3,
+                3,
+                1
+              ],
+              "uv": [
+                48,
+                25
+              ]
+            }
+          ]
+        },
+        {
+          "name": "armor_rightArm",
+          "parent": "rightArm",
+          "pivot": [
+            -5,
+            22,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -8,
+                12,
+                -2
+              ],
+              "size": [
+                4,
+                12,
+                4
+              ],
+              "uv": [
+                24,
+                0
+              ],
+              "inflate": 0.85
+            },
+            {
+              "origin": [
+                -8,
+                12,
+                -2
+              ],
+              "size": [
+                4,
+                4,
+                4
+              ],
+              "uv": [
+                40,
+                16
+              ],
+              "inflate": 1.05
+            },
+            {
+              "origin": [
+                -9,
+                20,
+                -2.5
+              ],
+              "size": [
+                5,
+                4,
+                5
+              ],
+              "uv": [
+                0,
+                16
+              ],
+              "inflate": 0.2
+            },
+            {
+              "origin": [
+                -8.5,
+                18.5,
+                -2
+              ],
+              "size": [
+                4,
+                2,
+                4
+              ],
+              "uv": [
+                16,
+                25
+              ],
+              "inflate": 0.2
+            },
+            {
+              "origin": [
+                -9.5,
+                22.5,
+                -2.5
+              ],
+              "size": [
+                2,
+                1,
+                2
+              ],
+              "uv": [
+                56,
+                25
+              ],
+              "inflate": 0.1
+            },
+            {
+              "origin": [
+                -9.5,
+                22.1,
+                -0.5
+              ],
+              "size": [
+                2,
+                1,
+                2
+              ],
+              "uv": [
+                0,
+                33
+              ],
+              "inflate": 0.1
+            },
+            {
+              "origin": [
+                -9.5,
+                21.7,
+                1.5
+              ],
+              "size": [
+                2,
+                1,
+                2
+              ],
+              "uv": [
+                8,
+                33
+              ],
+              "inflate": 0.1
+            }
+          ]
+        },
+        {
+          "name": "armor_leftArm",
+          "parent": "leftArm",
+          "pivot": [
+            5,
+            22,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                4,
+                12,
+                -2
+              ],
+              "size": [
+                4,
+                12,
+                4
+              ],
+              "uv": [
+                40,
+                0
+              ],
+              "inflate": 0.85
+            },
+            {
+              "origin": [
+                4,
+                12,
+                -2
+              ],
+              "size": [
+                4,
+                4,
+                4
+              ],
+              "uv": [
+                0,
+                25
+              ],
+              "inflate": 1.05
+            },
+            {
+              "origin": [
+                4,
+                20,
+                -2.5
+              ],
+              "size": [
+                5,
+                4,
+                5
+              ],
+              "uv": [
+                20,
+                16
+              ],
+              "inflate": 0.2
+            },
+            {
+              "origin": [
+                4.5,
+                18.5,
+                -2
+              ],
+              "size": [
+                4,
+                2,
+                4
+              ],
+              "uv": [
+                32,
+                25
+              ],
+              "inflate": 0.2
+            },
+            {
+              "origin": [
+                7.5,
+                22.5,
+                -2.5
+              ],
+              "size": [
+                2,
+                1,
+                2
+              ],
+              "uv": [
+                16,
+                33
+              ],
+              "inflate": 0.1
+            },
+            {
+              "origin": [
+                7.5,
+                22.1,
+                -0.5
+              ],
+              "size": [
+                2,
+                1,
+                2
+              ],
+              "uv": [
+                24,
+                33
+              ],
+              "inflate": 0.1
+            },
+            {
+              "origin": [
+                7.5,
+                21.7,
+                1.5
+              ],
+              "size": [
+                2,
+                1,
+                2
+              ],
+              "uv": [
+                32,
+                33
+              ],
+              "inflate": 0.1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

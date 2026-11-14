@@ -3408,6 +3408,12 @@ def frost_dragon():
                          "#f2c21b", "#8fe9ff")
 
 
+def wyrm_steed():
+    """A young dragon of Nazarick, bred to be ridden (steeds.js): scaled in purple and black, horned in gold."""
+    return _great_dragon("wyrm_steed", "plated", "#3a2452", "#6b4a8f", "#1d1029", "#c9a227", "#d9a92b", "#5a2a7a",
+                         "#ff3040", "#b56cff")
+
+
 def skeletal_dragon():
     return _great_dragon("skeletal_dragon", "bone", "#d8d0b4", "#f1eee0", "#8a8166", "#a59c7e", "#b8b094", "#5a5545",
                          "#b6ff4a", "#7dff5a")
@@ -3429,5 +3435,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        climb, zesshi, eclair,
        skeletal_dragon, khajiit, gigant_basilisk, frost_giant, beastman, lakyus, enri, zero, dark_young, jaldabaoth,
        go_gin, elf_ranger, decem, behemoth, neia, remedios, paladin, bafolk, eight_edge_assassin, arena_master,
-       platinum_dragon_lord, rubedo,
+       platinum_dragon_lord, rubedo, wyrm_steed,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [8, 0, 0]
+VERSION = [8, 1, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.0.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.1.0"
 
 
 def oid(name):
@@ -329,6 +329,15 @@ ITEMS = {
     "royal_seal": ("Seal of the Sorcerer Kingdom", "equipment", {
         "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
         **_cooldown("overlord_royal_seal", 1.0)}),
+    # v8.1 steeds (steeds.js): call your mount, and armour for it.
+    "wyrm_whistle": ("Whistle of the Nazarick Wyrm", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
+        **_cooldown("overlord_wyrm_whistle", 1.0)}),
+    "soul_reins": ("Reins of the Soul Eater", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "rare", **_cooldown("overlord_soul_reins", 1.0)}),
+    "adamantite_barding": ("Adamantite Barding", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "uncommon"}),
+    "nazarick_barding": ("Barding of Nazarick", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "epic",
+                                                              "minecraft:glint": True}),
     **{f"gem_{gem}": (title, "items", {"minecraft:max_stack_size": 16, "minecraft:rarity": "rare"})
        for gem, title in (("ruby", "Ruby of Embers"), ("sapphire", "Sapphire of Frost"), ("topaz", "Topaz of Storms"),
                           ("jade", "Jade of Venom"), ("onyx", "Onyx of Night"), ("sunstone", "Sunstone"))},
@@ -634,6 +643,16 @@ def recipe_files():
                                   ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
         "tomb_key": _shaped("tomb_key", ["BCB", "CKC", "BCB"], {
             "B": oid("nazarick_bricks"), "C": cry, "K": oid("guardian_crest")}, oid("tomb_key"), unlock=oid("guardian_crest")),
+        "wyrm_whistle": _shaped("wyrm_whistle", ["BSB", "SKS", "BSB"], {
+            "B": oid("dragon_bone"), "S": oid("frost_dragon_scale"), "K": oid("guardian_crest")}, oid("wyrm_whistle"),
+            unlock=oid("frost_dragon_scale")),
+        "soul_reins": _shaped("soul_reins", ["LSL", "SCS", "LSL"], {
+            "L": "minecraft:leather", "S": oid("soul_fragment"), "C": cry}, oid("soul_reins"), unlock=oid("soul_fragment")),
+        "adamantite_barding": _shaped("adamantite_barding", ["A A", "AAA", "A A"], {"A": oid("adamantite_ingot")},
+                                      oid("adamantite_barding")),
+        "nazarick_barding": _shaped("nazarick_barding", ["SCS", "CBC", "SCS"], {
+            "S": oid("soul_fragment"), "C": cry, "B": oid("adamantite_barding")}, oid("nazarick_barding"),
+            unlock=oid("adamantite_barding")),
         "refining_stone": _shapeless("refining_stone", [oid("adamantite_ingot"), cry, cry, "minecraft:stone"],
                                      oid("refining_stone"), count=2),
         **{f"gem_{gem}": _shapeless(f"gem_{gem}", [cry, cry, cry, cry, oid("refining_stone"), core], oid(f"gem_{gem}"))
@@ -1955,6 +1974,29 @@ def entity_files():
             "add": {"component_groups": [f"overlord:stance_{stance}"]}}
     out["retainer"] = _entity("retainer", c, groups, events, spawnable=False)
 
+    # v8.1: steeds called with an item (steeds.js), which also flies the wyrm and drives the Soul Eater.
+    for name, families, health, speed, box, scale, seat, flying in (
+            ("wyrm_steed", ["wyrm_steed", "nazarick_ally", "mob"], 90, 0.3, (1.6, 1.3), 0.55, [0.0, 0.75, -0.1], True),
+            ("soul_steed", ["soul_steed", "nazarick_ally", "undead", "mob"], 70, 0.34, (1.1, 1.3), 1.1, [0.0, 0.8, 0.1], False)):
+        c = _mob(name, families, health, speed, box, xp=0, scale=scale, kb=0.6, persistent=True, fire_immune=True, undead=not flying)
+        del c["minecraft:can_climb"]
+        del c["minecraft:experience_reward"]
+        c["minecraft:navigation.walk"] = {"can_path_over_water": True, "avoid_damage_blocks": True}
+        c["minecraft:damage_sensor"] = _no_fall()
+        c["minecraft:rideable"] = {"seat_count": 1, "crouching_skip_interact": True, "family_types": ["player"],
+                                   "interact_text": "action.interact.ride.horse", "seats": {"position": seat}}
+        c["minecraft:behavior.random_stroll"] = {"priority": 8, "speed_multiplier": 0.5}
+        c["minecraft:variable_max_auto_step"] = {"base_value": 1.0625, "controlled_value": 1.5625, "jump_prevented_value": 0.5625}
+        groups, events = {}, {}
+        if flying:
+            groups["overlord:airborne"] = {"minecraft:physics": {"has_gravity": False, "has_collision": True},
+                                           "minecraft:movement": {"value": 0.0}}
+            events = {"overlord:take_off": {"add": {"component_groups": ["overlord:airborne"]}},
+                      "overlord:land": {"remove": {"component_groups": ["overlord:airborne"]}}}
+        else:
+            c["minecraft:input_ground_controlled"] = {}
+        out[name] = _entity(name, c, groups, events, spawnable=False)
+
     _apply_ai(out)
     _resize(out)
     out["frost_breath"] = projectile("frost_breath", 0.4, {
@@ -2137,6 +2179,7 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard", "frost_breath"]
 
 ENTITY_NAMES = {
+    "wyrm_steed": "Nazarick Wyrm", "soul_steed": "Soul Eater Steed",
     "ainz": "Ainz Ooal Gown", "albedo": "Albedo", "shalltear": "Shalltear Bloodfallen",
     "cocytus": "Cocytus", "demiurge": "Demiurge", "sebas": "Sebas Tian",
     "death_knight": "Death Knight", "elder_lich": "Elder Lich", "hamsuke": "Hamsuke",
@@ -2487,7 +2530,8 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("go_gin", "ogre"), ("elf_ranger", "archer"), ("decem", "climb"), ("behemoth", "ogre"),
                     ("neia", "archer"), ("remedios", "climb"), ("paladin", "soldier"), ("bafolk", "lizardman"),
                     ("eight_edge_assassin", "soul_eater"), ("arena_master", "nfirea"),
-                    ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri")):
+                    ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri"),
+                    ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater")):
     SOUNDS[_new] = SOUNDS[_like]
 
 
@@ -2677,7 +2721,8 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("go_gin", "ogre"), ("elf_ranger", "archer"), ("decem", "climb"), ("behemoth", "ogre"),
                     ("neia", "archer"), ("remedios", "climb"), ("paladin", "soldier"), ("bafolk", "lizardman"),
                     ("eight_edge_assassin", "soul_eater"), ("arena_master", "nfirea"),
-                    ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri")):
+                    ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri"),
+                    ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater")):
     ENTITY_ANIMS[_new] = ENTITY_ANIMS[_like]
 
 # Every creature breathes and flinches; walkers lean into their stride, fighters follow their swings
@@ -3284,6 +3329,10 @@ def render_controllers_json():
     }}
 
 
+# creatures drawn with another one's model and skin
+MODEL_ALIASES = {"soul_steed": "soul_eater"}
+
+
 def client_entity_files():
     out = {}
     for name, anims in ENTITY_ANIMS.items():
@@ -3300,6 +3349,9 @@ def client_entity_files():
             d["textures"] = {f"v{n}": f"textures/entity/{NS}/retainer_{n}" for n in range(RETAINER_LOOKS)}
             d["geometry"] = {f"v{n}": f"geometry.overlord.retainer_{n}" for n in range(RETAINER_LOOKS)}
             d["render_controllers"] = [RETAINER_CONTROLLER]
+        if name in MODEL_ALIASES:  # drawn with another creature's model and skin
+            d["textures"] = {"default": f"textures/entity/{NS}/{MODEL_ALIASES[name]}"}
+            d["geometry"] = {"default": f"geometry.overlord.{MODEL_ALIASES[name]}"}
         if name in MOBS:
             d["spawn_egg"] = {"texture": f"{NS}_egg_{name}", "texture_index": 0}
         out[f"entity/{name}.entity.json"] = {"format_version": "1.10.0",

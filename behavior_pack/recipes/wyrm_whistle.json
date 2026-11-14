@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:wyrm_whistle"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "BSB",
+      "SKS",
+      "BSB"
+    ],
+    "key": {
+      "B": {
+        "item": "overlord:dragon_bone"
+      },
+      "S": {
+        "item": "overlord:frost_dragon_scale"
+      },
+      "K": {
+        "item": "overlord:guardian_crest"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:frost_dragon_scale"
+      }
+    ],
+    "result": {
+      "item": "overlord:wyrm_whistle",
+      "count": 1
+    }
+  }
+}

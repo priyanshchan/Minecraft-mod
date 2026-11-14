@@ -288,6 +288,72 @@ def royal_seal():
     ], {"P": "#5a1f8c", "p": "#7a35b5", "G": GOLD, "g": GOLD_D, "W": "#fff4c2", "R": "#d9a92b", "r": "#9c7414"})
 
 
+def wyrm_whistle():
+    """A gold dragon-horn whistle wound with purple cord, a red gem at its mouth."""
+    return sprite16([
+        "................",
+        "................",
+        "............GG..",
+        "...........GgRG.",
+        "..........GgRRG.",
+        ".........GgGGG..",
+        "........GgG.....",
+        ".......GgG......",
+        "......GgGP......",
+        ".....GgGPP......",
+        "....GgGPP.......",
+        "...GgG.P........",
+        "..GGgG..........",
+        "..GgG...........",
+        "..GG............",
+        "................",
+    ], {"G": GOLD, "g": GOLD_D, "R": "#ff3040", "P": "#7a35b5"})
+
+
+def soul_reins():
+    """Black leather reins in a loop, with a green soul gem on the bit."""
+    return sprite16([
+        "................",
+        "....LLLLLL......",
+        "...LllllllL.....",
+        "..Ll......lL....",
+        "..L........L....",
+        "..L........L....",
+        "..L........L....",
+        "..Ll......lL....",
+        "...LllllllL.....",
+        "....LLMMLL......",
+        "......MSSM......",
+        ".....MSssSM.....",
+        ".....MSssSM.....",
+        "......MSSM......",
+        ".......MM.......",
+        "................",
+    ], {"L": "#2a2420", "l": "#4a3f38", "M": "#8a93a0", "S": "#3fdc8a", "s": "#b8ffd6"})
+
+
+def barding(plate, light, dark, trim):
+    """A horse-shaped coat of plate: a chanfron for the head and a crinet down the neck."""
+    return sprite16([
+        "................",
+        "..........PPP...",
+        ".........PlllP..",
+        "........PlPPlTP.",
+        ".......PlP..PTP.",
+        "......PlP...PP..",
+        ".....PlPT.......",
+        "...PPlPPTPPPP...",
+        "..PllllllllllP..",
+        "..PlTTTTTTTTlP..",
+        "..PPllllllllPP..",
+        "..PD.PDDDDP.DP..",
+        "..PD.PD..DP.DP..",
+        "..PP.PP..PP.PP..",
+        "................",
+        "................",
+    ], {"P": dark, "l": plate, "T": trim, "D": light})
+
+
 def whetstone():
     """A grey refining stone with a seam of adamantite green and a glint of crystal."""
     return sprite16([
@@ -1829,6 +1895,10 @@ def all_item_icons():
         "refining_stone": whetstone(),
         "tomb_key": tomb_key(),
         "royal_seal": royal_seal(),
+        "wyrm_whistle": wyrm_whistle(),
+        "soul_reins": soul_reins(),
+        "adamantite_barding": barding("#7fd6b0", "#c8f5e0", "#2f6a55", "#e8e0c8"),
+        "nazarick_barding": barding("#3a2452", "#6b4a8f", "#140a1c", GOLD),
         "ascension_tome": tome(cover="#e8e4f0", cover_d="#b9b2c8", glyph="#2fbf8f", band="#d9a92b"),
         "gem_ruby": gem("#d4202a", "#ff6a6a", "#7a0d14"),
         "gem_sapphire": gem("#2a62d8", "#7fb0ff", "#13306e"),

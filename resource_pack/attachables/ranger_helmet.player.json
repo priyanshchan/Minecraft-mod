@@ -7,27 +7,29 @@
         "overlord:ranger_helmet": "query.owner_identifier == 'minecraft:player'"
       },
       "materials": {
-        "default": "armor",
-        "enchanted": "armor_enchanted"
+        "default": "entity_emissive_alpha",
+        "enchanted": "entity_alphatest_glint"
       },
       "textures": {
-        "default": "textures/models/armor/overlord_ranger_1",
-        "enchanted": "textures/misc/enchanted_actor_glint"
+        "default": "textures/models/armor3d/ranger_helmet",
+        "enchanted": "textures/misc/enchanted_item_glint"
       },
       "geometry": {
-        "default": "geometry.player.armor.helmet"
+        "default": "geometry.overlord.armor_ranger_helmet"
+      },
+      "animations": {
+        "first_person": "animation.overlord.armor.first_person"
       },
       "scripts": {
         "parent_setup": "variable.helmet_layer_visible = 0.0;",
         "animate": [
-          "offset"
+          {
+            "first_person": "c.is_first_person"
+          }
         ]
       },
-      "animations": {
-        "offset": "animation.armor.helmet.offset"
-      },
       "render_controllers": [
-        "controller.render.armor"
+        "controller.render.item_default"
       ]
     }
   }

@@ -19,6 +19,7 @@ import content  # noqa: E402
 import icons  # noqa: E402
 import models  # noqa: E402
 import weapons3d  # noqa: E402
+import armour3d  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 BP, RP = ROOT / "behavior_pack", ROOT / "resource_pack"
@@ -152,6 +153,15 @@ def main():
     for group in (content.client_entity_files(), content.attachable_files()):
         for rel, data in group.items():
             write_json(RP / rel, data)
+    # v8.1: the armour sets in 3D on players (other wearers keep the flat armour layers).
+    for old in list((RP / "models/entity").glob("armor_*.geo.json")):
+        old.unlink()
+    for key, pieces in armour3d.build_all().items():
+        for piece, model in pieces.items():
+            write_json(RP / f"models/entity/armor_{key}_{piece}.geo.json", model.model.geometry())
+            save_png(RP / f"textures/models/armor3d/{key}_{piece}.png", model.texture())
+            write_json(RP / f"attachables/{key}_{piece}.player.json", armour3d.attachable(key, piece))
+    write_json(RP / "animations/overlord_armor.animation.json", armour3d.animations_json())
     write_text(RP / "texts/en_US.lang", content.lang_rp())
     write_json(RP / "texts/languages.json", ["en_US"])
 

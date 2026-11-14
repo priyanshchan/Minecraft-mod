@@ -16,7 +16,7 @@ export const world = {
   getDimension: () => players[0]?.dimension ?? { id: "minecraft:overworld", getPlayers: () => [], getEntities: () => [], getBlock: () => undefined },
   clock: { time: 6000, day: 0 }, getTimeOfDay() { return this.clock.time; }, getDay() { return this.clock.day; },
   afterEvents: { playerDimensionChange: sig(), entitySpawn: sig(), entityDie: sig(), entityHurt: sig(), playerSpawn: sig(), playerLeave: sig(), worldLoad: sig(), itemUse: sig(), itemCompleteUse: sig(), projectileHitEntity: sig(), projectileHitBlock: sig() },
-  getAllPlayers: () => players, said: [], sendMessage(m) { this.said.push(m); },
+  getEntity: () => undefined, getAllPlayers: () => players, said: [], sendMessage(m) { this.said.push(m); },
   scoreboard: {
     getObjective: (n) => objectives.get(n), addObjective: (n) => { const o = { scores: new Map(), setScore(p, v) { this.scores.set(p.id, v); } }; objectives.set(n, o); return o; },
     setObjectiveAtDisplaySlot: () => {}, objectives,
