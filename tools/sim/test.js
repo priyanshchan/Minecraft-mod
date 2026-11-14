@@ -1403,6 +1403,28 @@ players.splice(0, players.length, ...everyone, zoe);
   world.sendMessage = realSend; advance(600); players.splice(players.indexOf(z), 1);
 }
 
+// ---- v7.6.1: the Creative Tome of Ascension ----
+{
+  const dev = await import("./devtools.js");
+  const q = mkPlayer("quill"); const pq = rpg.profileOf(q); world.afterEvents.playerSpawn.fire({ player: q, initialSpawn: true }); advance(80);
+  const use = (sneak = false) => { q.isSneaking = sneak; world.afterEvents.itemUse.fire({ source: q, itemStack: { typeId: "overlord:ascension_tome" } }); q.isSneaking = false; };
+  // outside creative it does nothing
+  q.getGameMode = () => "Survival"; use(true); assert.equal(pq.level, 1); assert.ok(q.bar.includes("only in creative"), q.bar);
+  // in creative: sneak + use is +10 levels, with their stat points; skill points follow
+  q.getGameMode = () => "Creative"; use(true); assert.equal(pq.level, 11); assert.equal(pq.points, 30);
+  const sk = await import("./skills.js"); assert.equal(sk.available(pq), sk.pointsForLevel(11));
+  // the menu: level 100, learn everything, unlock god-tier, refresh, test kit, back to level 1
+  const pick = async (n) => { script.push(n); dev.openTome(q); for (let i = 0; i < 4; i++) await new Promise((r) => setTimeout(r, 0)); script.length = 0; };
+  await pick(2); assert.equal(pq.level, 100); assert.equal(pq.points, 30 + 89 * 3); assert.equal(pq.mana, rpg.maxMana(pq));
+  await pick(3); assert.equal(pq.spells.length, spells.SPELLS.length);
+  await pick(4); assert.ok(pq.bosses.includes("great_tomb"));
+  pq.mana = 0; q.health.currentValue = 3; await pick(5); assert.equal(pq.mana, rpg.maxMana(pq)); assert.equal(q.health.currentValue, 20);
+  await pick(6); assert.equal(spells.countItem(q, "overlord:codex_of_skills"), 10); assert.equal(spells.countItem(q, "overlord:gem_onyx"), 4);
+  pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(7); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
+  assert.ok(shown.some((f) => f.title === "Creative Tome of Ascension"));
+  players.splice(players.indexOf(q), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);
