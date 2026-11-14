@@ -267,6 +267,8 @@ first and third person. Each has its own design and shape:
 - A scoped magic rifle.
 - Gauntlets worn on the fist.
 
+The **Magic Wand**, which casts your spells, is held as a 3D casting staff too (v8.6.2). It has dark wood bound in gold, a gold claw round a glowing Data Crystal, and arcane motes drifting from its tip.
+
 The inventory icon stays as before.
 
 - **Glow:** runes, edges, gems and orbs are drawn lit, so they glow at night and in caves.

@@ -133,7 +133,7 @@ def main():
     for key, weapon in weapons3d.build_all().items():
         write_json(RP / f"models/entity/weapon_{key}.geo.json", weapon.model.geometry())
         save_png(RP / f"textures/models/weapons/{key}.png", weapon.texture())
-        write_json(RP / f"attachables/weapon_{key}.json", weapons3d.attachable(key, weapon, elements.get(key, "none")))
+        write_json(RP / f"attachables/weapon_{key}.json", weapons3d.attachable(key, weapon, elements.get(key, weapons3d.EXTRA_ELEMENTS.get(key, "none"))))
     write_json(RP / "animations/overlord_weapons.animation.json", weapons3d.animations_json())
     for rel, data in weapons3d.particle_files().items():
         write_json(RP / rel, data)
