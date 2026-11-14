@@ -180,6 +180,13 @@ tile.overlord:cracked_nazarick_bricks.name=Cracked Nazarick Bricks
 tile.overlord:glacier_bricks.name=Glacier Bricks
 tile.overlord:nazarick_pillar.name=Nazarick Pillar
 
+entity.overlord:guardian_albedo.name=Albedo
+entity.overlord:guardian_shalltear.name=Shalltear Bloodfallen
+entity.overlord:guardian_cocytus.name=Cocytus
+entity.overlord:guardian_demiurge.name=Demiurge
+entity.overlord:guardian_aura.name=Aura Bella Fiora
+entity.overlord:guardian_mare.name=Mare Bello Fiore
+entity.overlord:guardian_pandoras_actor.name=Pandora's Actor
 entity.overlord:wyrm_steed.name=Nazarick Wyrm
 entity.overlord:soul_steed.name=Soul Eater Steed
 entity.overlord:ainz.name=Ainz Ooal Gown
@@ -344,4 +351,4 @@ item.spawn_egg.entity.overlord:platinum_dragon_lord.name=Platinum Dragon Lord Sp
 item.spawn_egg.entity.overlord:rubedo.name=Rubedo Spawn Egg
 
 pack.name=Overlord: Tomb of Nazarick
-pack.description=Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.1.0
+pack.description=Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.5.0

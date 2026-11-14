@@ -1027,6 +1027,95 @@
           "death": "mob.husk.death",
           "step": "mob.zombie.step"
         }
+      },
+      "overlord:guardian_albedo": {
+        "volume": 1.0,
+        "pitch": [
+          1.1,
+          1.25
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:guardian_shalltear": {
+        "volume": 1.0,
+        "pitch": [
+          1.3,
+          1.5
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:guardian_cocytus": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.8
+        ],
+        "events": {
+          "ambient": "mob.spider.say",
+          "hurt": "mob.irongolem.hit",
+          "death": "mob.irongolem.death",
+          "step": "mob.irongolem.walk"
+        }
+      },
+      "overlord:guardian_demiurge": {
+        "volume": 1.0,
+        "pitch": [
+          0.85,
+          0.95
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "mob.blaze.shoot"
+        }
+      },
+      "overlord:guardian_aura": {
+        "volume": 1.0,
+        "pitch": [
+          1.3,
+          1.45
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "shoot": "random.bow"
+        }
+      },
+      "overlord:guardian_mare": {
+        "volume": 1.0,
+        "pitch": [
+          1.35,
+          1.5
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step",
+          "cast.spell": "mob.evocation_illager.cast_spell",
+          "prepare.attack": "mob.evocation_illager.prepare_attack"
+        }
+      },
+      "overlord:guardian_pandoras_actor": {
+        "volume": 1.0,
+        "pitch": [
+          0.95,
+          1.05
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
       }
     }
   }

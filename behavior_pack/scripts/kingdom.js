@@ -53,7 +53,11 @@ const SIEGE_LEASH = 96;
  *   name: string, x: number, y: number, z: number, tier: number, treasury: number, vault: number,
  *   clock: number, days: number, outposts: Outpost[], invasions: boolean, raidIn: number, renown: number,
  *   defended: number, lost: number,
+ *   goods?: Record<string, number>, guardians?: Record<string, { loyalty: number }>, companion?: string,
+ *   buildings?: Record<string, number>, population?: number, routes?: string[], relations?: Record<string, number>,
+ *   envoys?: string[], raids?: number,
  * }} Realm
+ * The fields marked ? belong to the court (court.js) and the districts (districts.js), added as they are used.
  */
 
 /** The four tiers of a capital: its size, its price, what it pays, how many guard it and how many outposts it can hold. */
@@ -104,12 +108,41 @@ function tierOf(realm) {
   return TIERS[Math.max(0, Math.min(TIERS.length, realm.tier) - 1)];
 }
 
+/**
+ * Hooks through which the court (court.js) and the districts (districts.js) shape the realm without this
+ * module importing them.
+ * @type {{
+ *   income: ((realm: Realm, pay: { coins: number, crystals: number }) => void)[],
+ *   day: ((player: Player, realm: Realm) => void)[],
+ *   capDays: ((realm: Realm) => number)[],
+ *   guards: ((realm: Realm, capital: boolean) => number)[],
+ *   guardPosted: ((realm: Realm, guard: import("@minecraft/server").Entity) => void)[],
+ *   invader: ((realm: Realm, pick: number) => number | undefined)[],
+ *   siege: ((realm: Realm, siege: Siege) => void)[],
+ *   spoils: ((realm: Realm, spoils: number) => number)[],
+ *   loot: ((realm: Realm, share: number) => number)[],
+ *   repelled: ((player: Player, realm: Realm) => void)[],
+ *   body: ((player: Player, realm: Realm) => string)[],
+ *   menu: { label: (player: Player, realm: Realm) => string, open: (player: Player) => void }[],
+ * }}
+ */
+export const realmHooks = { income: [], day: [], capDays: [], guards: [], guardPosted: [], invader: [], siege: [], spoils: [], loot: [], repelled: [], body: [], menu: [] };
+
 /** What one kingdom day pays. @param {Realm} realm */
 export function income(realm) {
-  return {
+  const pay = {
     coins: tierOf(realm).income + OUTPOST_INCOME.coins * realm.outposts.length,
     crystals: realm.tier + OUTPOST_INCOME.crystals * realm.outposts.length,
   };
+  for (const hook of realmHooks.income) hook(realm, pay);
+  pay.coins = Math.round(pay.coins);
+  pay.crystals = Math.round(pay.crystals);
+  return pay;
+}
+
+/** How many days of pay the treasury holds. @param {Realm} realm */
+export function treasuryDays(realm) {
+  return TREASURY_DAYS + realmHooks.capDays.reduce((n, hook) => n + hook(realm), 0);
 }
 
 /** The capital, and each outpost, as places. @param {Realm} realm */
@@ -342,15 +375,19 @@ export function abandon(player, index) {
 export function collect(player) {
   const realm = realmOf(player);
   if (!realm) return "§7You rule no kingdom";
-  if (realm.treasury <= 0 && realm.vault <= 0) return "§7The treasury is empty";
+  const goods = /** @type {Record<string, number>} */ (realm.goods ?? {});
+  const wares = Object.values(goods).reduce((n, v) => n + v, 0);
+  if (realm.treasury <= 0 && realm.vault <= 0 && wares <= 0) return "§7The treasury is empty";
   const coins = realm.treasury;
   const crystals = realm.vault;
   if (coins > 0) giveItem(player, COIN, coins);
   if (crystals > 0) giveItem(player, CRYSTAL, crystals);
+  for (const [item, count] of Object.entries(goods)) if (count > 0) giveItem(player, item, count);
   realm.treasury = 0;
   realm.vault = 0;
+  realm.goods = {};
   touch(player);
-  return `§6Collected ${coins} Gold Coins and ${crystals} Data Crystals`;
+  return `§6Collected ${coins} Gold Coins and ${crystals} Data Crystals${wares > 0 ? ` and ${wares} goods` : ""}`;
 }
 
 /** Counts the ruler's time and pays each kingdom day. @param {Player} player @param {Realm} realm @param {number} seconds */
@@ -360,10 +397,18 @@ export function accrue(player, realm, seconds) {
   while (realm.clock >= DAY_SECONDS) {
     realm.clock -= DAY_SECONDS;
     const pay = income(realm);
-    realm.treasury = Math.min(pay.coins * TREASURY_DAYS, realm.treasury + pay.coins);
-    realm.vault = Math.min(pay.crystals * TREASURY_DAYS, realm.vault + pay.crystals);
+    const days = treasuryDays(realm);
+    realm.treasury = Math.min(pay.coins * days, realm.treasury + pay.coins);
+    realm.vault = Math.min(pay.crystals * days, realm.vault + pay.crystals);
     realm.days += 1;
     paid = true;
+    for (const hook of realmHooks.day) {
+      try {
+        hook(player, realm);
+      } catch (error) {
+        console.warn(`[Overlord] a kingdom day hook failed: ${error}`);
+      }
+    }
   }
   if (paid) {
     touch(player);
@@ -387,8 +432,9 @@ function guardTag(player) {
  * Tops up the guards at one holding. Returns how many were posted.
  * @param {Player} player @param {Vector3} at @param {number} wanted @param {number} tier
  * @param {boolean} [courtyard] the capital's guards stand in its courtyard, an outpost's round its middle
+ * @param {Realm} [realm]
  */
-export function postGuards(player, at, wanted, tier, courtyard = false) {
+export function postGuards(player, at, wanted, tier, courtyard = false, realm = undefined) {
   const tag = guardTag(player);
   const center = { x: at.x + 0.5, y: at.y, z: at.z + 0.5 };
   let present = 0;
@@ -408,6 +454,7 @@ export function postGuards(player, at, wanted, tier, courtyard = false) {
       const guard = player.dimension.spawnEntity(type, spot, { spawnEvent: `${NS}:become_summoned` });
       guard.addTag(tag);
       guard.addTag("overlord_guard");
+      if (realm) for (const hook of realmHooks.guardPosted) hook(realm, guard);
       fx.rise(player.dimension, spot, "dark", 0.7);
       posted++;
     } catch {
@@ -422,7 +469,7 @@ export function postGuards(player, at, wanted, tier, courtyard = false) {
 /**
  * @typedef {{
  *   ruler: Player, rulerId: string, holding: number, at: Vector3, name: string, foe: typeof INVADERS[number],
- *   wave: number, until: number, tag: string,
+ *   wave: number, until: number, tag: string, scale: number,
  * }} Siege
  */
 /** @type {Map<string, Siege>} */
@@ -461,7 +508,7 @@ function spawnWave(siege) {
   const total = wave.reduce((n, [, count]) => n + count, 0);
   let index = 0;
   for (const [type, count] of wave) {
-    for (let i = 0; i < count; i++, index++) {
+    for (let i = 0; i < Math.max(1, Math.round(count * siege.scale)); i++, index++) {
       const angle = (index / total) * Math.PI * 2 + siege.wave;
       const spot = ground(siege.ruler.dimension, siege.at.x + 0.5 + Math.cos(angle) * 12, siege.at.z + 0.5 + 16 + Math.sin(angle) * 4, siege.at.y);
       try {
@@ -482,6 +529,15 @@ function spawnWave(siege) {
   }
 }
 
+/** Who marches: the hooks may choose (diplomacy), else chance. @param {Realm} realm @param {number} pick */
+function chooseInvader(realm, pick) {
+  for (const hook of realmHooks.invader) {
+    const chosen = hook(realm, pick);
+    if (chosen !== undefined && INVADERS[chosen]) return chosen;
+  }
+  return Math.floor(pick * INVADERS.length) % INVADERS.length;
+}
+
 /**
  * Sends an invasion against one of the ruler's holdings.
  * @param {Player} player @param {Realm} realm @param {number} holding -1 for the capital, else the outpost's index @param {number} now @param {number} [pick]
@@ -492,8 +548,9 @@ export function invade(player, realm, holding, now, pick = Math.random()) {
   /** @type {Siege} */
   const siege = {
     ruler: player, rulerId: player.id, holding, at: { x: place.x, y: place.y, z: place.z }, name: holding < 0 ? realm.name : `the ${place.name}`,
-    foe: INVADERS[Math.floor(pick * INVADERS.length) % INVADERS.length], wave: 0, until: now + SIEGE_SECONDS * TICKS, tag: `overlord_siege_${player.id}`,
+    foe: INVADERS[chooseInvader(realm, pick)], wave: 0, until: now + SIEGE_SECONDS * TICKS, tag: `overlord_siege_${player.id}`, scale: 1,
   };
+  for (const hook of realmHooks.siege) hook(realm, siege);
   sieges.set(player.id, siege);
   player.sendMessage(`§6[Kingdom] §c${siege.foe.name} march on ${siege.name}! §fDefeat three waves within ${SIEGE_SECONDS / 60} minutes${holding >= 0 ? " or the outpost is lost" : ""}.`);
   spawnWave(siege);
@@ -522,7 +579,8 @@ export function loseSiege(siege, reason) {
   realm.lost += 1;
   let what;
   if (siege.holding < 0) {
-    const looted = Math.floor(realm.treasury * 0.3);
+    const share = realmHooks.loot.reduce((s, hook) => hook(realm, s), 0.3);
+    const looted = Math.floor(realm.treasury * share);
     realm.treasury -= looted;
     what = `They looted ${looted} Gold Coins from the treasury.`;
   } else {
@@ -545,7 +603,7 @@ function winSiege(siege) {
   const player = siege.ruler;
   const realm = realmOf(player);
   if (!realm) return;
-  const spoils = 20 + 10 * realm.tier;
+  const spoils = Math.round(realmHooks.spoils.reduce((n, hook) => hook(realm, n), 20 + 10 * realm.tier));
   realm.renown += 1;
   realm.defended += 1;
   realm.treasury += spoils;
@@ -558,6 +616,7 @@ function winSiege(siege) {
     // the player left
   }
   grantXp(player, 2500 * realm.tier, "invasion repelled");
+  for (const hook of realmHooks.repelled) hook(player, realm);
 }
 
 /** Advances an invasion. @param {Siege} siege @param {number} now */
@@ -597,7 +656,8 @@ export function pulse(player, now, random = Math.random) {
   for (const place of places) {
     const distance = flat(player.location, place);
     if (distance > GUARD_RANGE) continue;
-    postGuards(player, place, place.outpost < 0 ? tier.guards : OUTPOST_GUARDS, realm.tier, place.outpost < 0);
+    const extra = realmHooks.guards.reduce((n, hook) => n + hook(realm, place.outpost < 0), 0);
+    postGuards(player, place, (place.outpost < 0 ? tier.guards : OUTPOST_GUARDS) + extra, realm.tier, place.outpost < 0, realm);
     if (distance <= WATCH_RANGE && near === -2) near = place.outpost;
   }
   if (!realm.invasions || sieges.has(player.id) || near === -2) return;
@@ -671,6 +731,7 @@ export function openKingdom(player) {
         `§fEach kingdom day pays §6${pay.coins}§f coins and §b${pay.crystals}§f crystals; next in §e${clockText(DAY_SECONDS - realm.clock)}§f of play.\n` +
         `§fRenown: §d${realm.renown}§f   Invasions repelled: §a${realm.defended}§f, lost: §c${realm.lost}\n` +
         `§fInvasions: ${realm.invasions ? "§con" : "§7off"}` +
+        realmHooks.body.map((hook) => hook(player, realm)).join("") +
         (siege ? `\n\n§c${siege.foe.name} are attacking ${siege.name}! Wave ${siege.wave + 1}/${siege.foe.waves.length}.` : "")
     );
   /** @type {[string, () => void][]} */
@@ -688,6 +749,7 @@ export function openKingdom(player) {
       notify(player, realm.invasions ? "§cYour enemies will test your kingdom" : "§7Your kingdom is left in peace");
       openKingdom(player);
     }],
+    ...realmHooks.menu.map((m) => /** @type {[string, () => void]} */ ([m.label(player, realm), () => m.open(player)])),
     ["Rename the kingdom", () => openRename(player)],
     ["How it works", () => openKingdomHelp(player)],
   ];

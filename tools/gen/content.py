@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [8, 1, 0]
+VERSION = [8, 5, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.1.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.5.0"
 
 
 def oid(name):
@@ -888,6 +888,10 @@ def loot_path(name):
 # =============================================================== entities
 def _is_family(value, subject="other"):
     return {"test": "is_family", "subject": subject, "value": value}
+
+
+# Floor Guardians who can serve a crowned player (court.js), with the harm of their blows
+GUARDIAN_COMPANIONS = {"albedo": 16, "shalltear": 15, "cocytus": 16, "demiurge": 12, "aura": 11, "mare": 11, "pandoras_actor": 13}
 
 
 def _mob(name, families, health, speed, box, loot=None, xp=10, scale=None, kb=None, follow=32,
@@ -1997,6 +2001,37 @@ def entity_files():
             c["minecraft:input_ground_controlled"] = {}
         out[name] = _entity(name, c, groups, events, spawnable=False)
 
+    # v8.5: the Floor Guardians as they serve a crowned player (court.js): at their side, or standing at
+    # court in the capital (then still, and gone again after a while unless posted anew).
+    for key, damage in GUARDIAN_COMPANIONS.items():
+        base = out[key]["minecraft:entity"]["components"]
+        name = f"guardian_{key}"
+        box = base["minecraft:collision_box"]
+        c = _mob(name, ["guardian", "nazarick_ally", "mob"], 300, 0.32, (box["width"], box["height"]), xp=0,
+                 scale=base.get("minecraft:scale", {}).get("value"), kb=0.8, persistent=True, fire_immune=True)
+        del c["minecraft:experience_reward"]
+        c["minecraft:attack"] = {"damage": damage}
+        c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.25, "track_target": True}
+        c["minecraft:behavior.nearest_attackable_target"] = {"priority": 2, "must_see": True, "reselect_targets": True,
+            "entity_types": [{"filters": {"test": "is_family", "subject": "other", "value": "monster"}, "max_dist": 16}]}
+        c["minecraft:tameable"] = {"probability": 1.0, "tame_items": [oid("ascension_tome")]}
+        c["minecraft:behavior.follow_owner"] = {"priority": 4, "speed_multiplier": 1.3, "start_distance": 8, "stop_distance": 3}
+        c["minecraft:behavior.owner_hurt_by_target"] = {"priority": 1}
+        c["minecraft:behavior.owner_hurt_target"] = {"priority": 2}
+        c["minecraft:damage_sensor"] = _no_fall()
+        groups = {
+            "overlord:court": {"minecraft:movement": {"value": 0.0},
+                               "minecraft:timer": {"looping": False, "time": 150,
+                                                   "time_down_event": {"event": "overlord:expire", "target": "self"}}},
+            "overlord:despawn": {"minecraft:instant_despawn": {}},
+        }
+        groups["overlord:sortie"] = {"minecraft:timer": {"looping": False, "time": 420,
+                                                        "time_down_event": {"event": "overlord:expire", "target": "self"}}}
+        events = {"overlord:to_court": {"add": {"component_groups": ["overlord:court"]}},
+                  "overlord:sortie": {"add": {"component_groups": ["overlord:sortie"]}},
+                  "overlord:expire": {"add": {"component_groups": ["overlord:despawn"]}}}
+        out[name] = _entity(name, c, groups, events, spawnable=False)
+
     _apply_ai(out)
     _resize(out)
     out["frost_breath"] = projectile("frost_breath", 0.4, {
@@ -2179,6 +2214,9 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard", "frost_breath"]
 
 ENTITY_NAMES = {
+    "guardian_albedo": "Albedo", "guardian_shalltear": "Shalltear Bloodfallen", "guardian_cocytus": "Cocytus",
+    "guardian_demiurge": "Demiurge", "guardian_aura": "Aura Bella Fiora", "guardian_mare": "Mare Bello Fiore",
+    "guardian_pandoras_actor": "Pandora's Actor",
     "wyrm_steed": "Nazarick Wyrm", "soul_steed": "Soul Eater Steed",
     "ainz": "Ainz Ooal Gown", "albedo": "Albedo", "shalltear": "Shalltear Bloodfallen",
     "cocytus": "Cocytus", "demiurge": "Demiurge", "sebas": "Sebas Tian",
@@ -2533,6 +2571,8 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri"),
                     ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater")):
     SOUNDS[_new] = SOUNDS[_like]
+for _key in GUARDIAN_COMPANIONS:
+    SOUNDS[f"guardian_{_key}"] = SOUNDS[_key]
 
 
 def animations_json():
@@ -2724,6 +2764,8 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri"),
                     ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater")):
     ENTITY_ANIMS[_new] = ENTITY_ANIMS[_like]
+for _key in GUARDIAN_COMPANIONS:
+    ENTITY_ANIMS[f"guardian_{_key}"] = ENTITY_ANIMS[_key]
 
 # Every creature breathes and flinches; walkers lean into their stride, fighters follow their swings
 # through, the caped have capes that move and the beasts have tails that do.
@@ -3330,7 +3372,7 @@ def render_controllers_json():
 
 
 # creatures drawn with another one's model and skin
-MODEL_ALIASES = {"soul_steed": "soul_eater"}
+MODEL_ALIASES = {"soul_steed": "soul_eater", **{f"guardian_{k}": k for k in GUARDIAN_COMPANIONS}}
 
 
 def client_entity_files():

@@ -49,6 +49,8 @@ VANILLA = {
         "chiseled_stone_bricks", "amethyst_block",
         # the Sorcerer Kingdom (v8.0), verified against @minecraft/vanilla-data
         "dark_oak_fence", "purple_carpet",
+        # the districts (v8.5), verified against @minecraft/vanilla-data
+        "pumpkin", "melon_block", "enchanting_table", "purple_stained_glass",
         # structure overhaul (v7.0), verified against @minecraft/vanilla-data
         "basalt", "blackstone", "blast_furnace", "brewing_stand", "brown_carpet", "cauldron", "chiseled_quartz_block", "coal_block",
         "dark_oak_log", "dark_oak_planks", "deepslate", "emerald_block", "glass_pane", "gray_wool", "grindstone", "lapis_block",

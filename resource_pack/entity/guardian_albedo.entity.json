@@ -1,0 +1,44 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:guardian_albedo",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/albedo"
+      },
+      "geometry": {
+        "default": "geometry.overlord.albedo"
+      },
+      "scripts": {
+        "animate": [
+          "look_at_target",
+          "idle",
+          "robe_walk",
+          "attack",
+          "wings",
+          "breathe",
+          "flinch",
+          "lean",
+          "follow"
+        ]
+      },
+      "animations": {
+        "look_at_target": "animation.overlord.look_at_target",
+        "idle": "animation.overlord.idle",
+        "robe_walk": "animation.overlord.robe_walk",
+        "attack": "animation.overlord.attack",
+        "wings": "animation.overlord.wings",
+        "breathe": "animation.overlord.breathe",
+        "flinch": "animation.overlord.flinch",
+        "lean": "animation.overlord.lean",
+        "follow": "animation.overlord.follow"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ]
+    }
+  }
+}

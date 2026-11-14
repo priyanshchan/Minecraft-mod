@@ -1,0 +1,46 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "overlord:guardian_cocytus",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/overlord/cocytus"
+      },
+      "geometry": {
+        "default": "geometry.overlord.cocytus"
+      },
+      "scripts": {
+        "animate": [
+          "look_at_target",
+          "idle",
+          "walk",
+          "attack",
+          "tail",
+          "lower_arms",
+          "breathe",
+          "flinch",
+          "lean",
+          "follow"
+        ]
+      },
+      "animations": {
+        "look_at_target": "animation.overlord.look_at_target",
+        "idle": "animation.overlord.idle",
+        "walk": "animation.overlord.walk",
+        "attack": "animation.overlord.attack",
+        "tail": "animation.overlord.tail",
+        "lower_arms": "animation.overlord.lower_arms",
+        "breathe": "animation.overlord.breathe",
+        "flinch": "animation.overlord.flinch",
+        "lean": "animation.overlord.lean",
+        "follow": "animation.overlord.follow"
+      },
+      "render_controllers": [
+        "controller.render.overlord.entity"
+      ]
+    }
+  }
+}
