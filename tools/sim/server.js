@@ -24,7 +24,7 @@ export const world = {
 };
 export const EntityInitializationCause = { Spawned: "Spawned", Loaded: "Loaded", Born: "Born", Event: "Event", Transformed: "Transformed" };
 export const DisplaySlotId = { BelowName: "BelowName" };
-export const EntityDamageCause = { entityAttack: "entityAttack", magic: "magic", fire: "fire", lightning: "lightning", entityExplosion: "entityExplosion", wither: "wither" };
+export const EntityDamageCause = { entityAttack: "entityAttack", magic: "magic", fire: "fire", lightning: "lightning", entityExplosion: "entityExplosion", wither: "wither", fallingBlock: "fallingBlock" };
 export const Direction = { Up: "Up", Down: "Down", North: "North", South: "South", East: "East", West: "West" };
 export const EquipmentSlot = { Head: "Head", Chest: "Chest", Legs: "Legs", Feet: "Feet", Mainhand: "Mainhand", Offhand: "Offhand" };
 export const GameMode = { Creative: "Creative" };

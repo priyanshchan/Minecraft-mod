@@ -141,6 +141,22 @@ export const BOSSES = {
       [{ name: "Fall of the World Tree", shape: "slam", power: 2.0, radius: 11, delay: 50 }, { name: "Saplings Awaken", shape: "summon", power: 1.0, radius: 6, type: id("treant_sapling"), count: 3 }],
     ],
   },
+  quagoa_warlord: {
+    name: "Quagoa Warlord", element: "none", damage: 14, adds: [[id("quagoa"), 2]],
+    moves: [
+      [{ name: "Burrowing Charge", shape: "line", power: 1.1, length: 12 }, { name: "Pick Slam", shape: "slam", power: 1.2, radius: 5 }],
+      [{ name: "Cave-In", shape: "barrage", power: 1.0, radius: 2.5, count: 5, hazard: 6 }, { name: "Clan Muster", shape: "summon", power: 1, radius: 5, type: id("quagoa"), count: 3 }],
+      [{ name: "Tremor of the Deep", shape: "ring", power: 1.4, inner: 2.5, radius: 9 }, { name: "Ambush from Below", shape: "blink", power: 1.3, radius: 3.5 }],
+    ],
+  },
+  rune_golem: {
+    name: "Rune Golem of the Royal Forge", element: "lightning", damage: 18,
+    moves: [
+      [{ name: "Anvil Fall", shape: "slam", power: 1.2, radius: 6 }, { name: "Rune Beam", shape: "line", power: 1.2, length: 16 }],
+      [{ name: "Runic Lattice", shape: "line", power: 1.2, length: 14, lines: 4 }, { name: "Forge Magnet", shape: "pull", power: 1.0, radius: 11 }],
+      [{ name: "Overcharged Core", shape: "ring", power: 1.5, inner: 3, radius: 10, hazard: 6 }, { name: "Storm of Runes", shape: "barrage", power: 1.1, radius: 3, count: 6 }],
+    ],
+  },
   dark_young: {
     name: "Dark Young", element: "acid", damage: 14,
     moves: [

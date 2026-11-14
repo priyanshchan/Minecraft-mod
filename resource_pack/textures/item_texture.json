@@ -26,6 +26,9 @@
     "overlord_avarice_and_generosity": {
       "textures": "textures/items/overlord/avarice_and_generosity"
     },
+    "overlord_bareare_ring": {
+      "textures": "textures/items/overlord/bareare_ring"
+    },
     "overlord_basilisk_eye": {
       "textures": "textures/items/overlord/basilisk_eye"
     },
@@ -53,6 +56,9 @@
     "overlord_blue_potion": {
       "textures": "textures/items/overlord/blue_potion"
     },
+    "overlord_blue_rose_brooch": {
+      "textures": "textures/items/overlord/blue_rose_brooch"
+    },
     "overlord_bonedragon_boots": {
       "textures": "textures/items/overlord/bonedragon_boots"
     },
@@ -73,6 +79,9 @@
     },
     "overlord_brain_katana": {
       "textures": "textures/items/overlord/brain_katana"
+    },
+    "overlord_carne_charm": {
+      "textures": "textures/items/overlord/carne_charm"
     },
     "overlord_cavalier_boots": {
       "textures": "textures/items/overlord/cavalier_boots"
@@ -157,6 +166,9 @@
     },
     "overlord_dragonscale_leggings": {
       "textures": "textures/items/overlord/dragonscale_leggings"
+    },
+    "overlord_dryad_blossom": {
+      "textures": "textures/items/overlord/dryad_blossom"
     },
     "overlord_egg_adventurer": {
       "textures": "textures/items/overlord/egg_adventurer"
@@ -344,11 +356,17 @@
     "overlord_egg_quagoa": {
       "textures": "textures/items/overlord/egg_quagoa"
     },
+    "overlord_egg_quagoa_warlord": {
+      "textures": "textures/items/overlord/egg_quagoa_warlord"
+    },
     "overlord_egg_remedios": {
       "textures": "textures/items/overlord/egg_remedios"
     },
     "overlord_egg_rubedo": {
       "textures": "textures/items/overlord/egg_rubedo"
+    },
+    "overlord_egg_rune_golem": {
+      "textures": "textures/items/overlord/egg_rune_golem"
     },
     "overlord_egg_sebas": {
       "textures": "textures/items/overlord/egg_sebas"
@@ -421,6 +439,9 @@
     },
     "overlord_fluder_staff": {
       "textures": "textures/items/overlord/fluder_staff"
+    },
+    "overlord_four_tribes_ring": {
+      "textures": "textures/items/overlord/four_tribes_ring"
     },
     "overlord_frost_dragon_scale": {
       "textures": "textures/items/overlord/frost_dragon_scale"
@@ -593,8 +614,14 @@
     "overlord_ring_of_sustenance": {
       "textures": "textures/items/overlord/ring_of_sustenance"
     },
+    "overlord_royal_rune": {
+      "textures": "textures/items/overlord/royal_rune"
+    },
     "overlord_royal_seal": {
       "textures": "textures/items/overlord/royal_seal"
+    },
+    "overlord_rune_key": {
+      "textures": "textures/items/overlord/rune_key"
     },
     "overlord_rune_of_fire": {
       "textures": "textures/items/overlord/rune_of_fire"
@@ -607,6 +634,9 @@
     },
     "overlord_rune_of_storm": {
       "textures": "textures/items/overlord/rune_of_storm"
+    },
+    "overlord_runeblade": {
+      "textures": "textures/items/overlord/runeblade"
     },
     "overlord_runic_hammer": {
       "textures": "textures/items/overlord/runic_hammer"
@@ -787,6 +817,9 @@
     },
     "overlord_vestment_leggings": {
       "textures": "textures/items/overlord/vestment_leggings"
+    },
+    "overlord_warrior_captains_sigil": {
+      "textures": "textures/items/overlord/warrior_captains_sigil"
     },
     "overlord_world_champion_boots": {
       "textures": "textures/items/overlord/world_champion_boots"

@@ -575,6 +575,95 @@ def gem_ring(gem, gem_l):
     ], {"G": GOLD, "g": GOLD_D, "E": gem, "e": gem_l})
 
 
+def rune_key():
+    """The Rune Key of the Royal Capital: a heavy key of dark iron and gold, its bow a rune-carved ring
+    round a blue glyph (v9.5)."""
+    return sprite16([
+        "................",
+        "...IIII.........",
+        "..IgBBgI........",
+        "..IBWBBI........",
+        "..IBBBbI........",
+        "..IgbbgI........",
+        "...IIIII........",
+        ".......GG.......",
+        "........II......",
+        ".........GG.....",
+        "..........II....",
+        "..........IgI...",
+        "...........II.G.",
+        "............GGG.",
+        ".............G..",
+        "................",
+    ], {"I": "#4a4e58", "G": GOLD, "g": GOLD_D, "B": "#4ac8ff", "b": "#1e6a9a", "W": "#e0f8ff"})
+
+
+def royal_rune():
+    """A Royal Rune: a slab of dark stone bound in gold, a dwarven glyph burning blue in its face (v9.5)."""
+    return sprite16([
+        "................",
+        "....GGGGGGGG....",
+        "...GSSSSSSSSG...",
+        "..GSsSSBSSSsSG..",
+        "..GSSSSBSSSSSG..",
+        "..GSSBBBBBSSSG..",
+        "..GSSSSBSSBSSG..",
+        "..GSSSSBSBSSSG..",
+        "..GSSSSBBSSSSG..",
+        "..GSSSSBSSSSSG..",
+        "..GSsSSBSSSsSG..",
+        "..GSSSSSSSSSSG..",
+        "...GSSSSSSSSG...",
+        "....GGGGGGGG....",
+        "................",
+        "................",
+    ], {"G": GOLD_D, "S": "#4a4e58", "s": "#6a6e78", "B": "#4ac8ff"})
+
+
+def badge(metal, metal_d, centre, centre_l, ribbon, ribbon_d):
+    """A keepsake of the sagas: a medallion on a ribbon (v9.5)."""
+    return sprite16([
+        "................",
+        ".....RR..RR.....",
+        ".....RrR.RrR....",
+        "......RrRRr.....",
+        ".......RRR......",
+        "......GGGGG.....",
+        ".....GgGGGgG....",
+        "....GgGCCCGgG...",
+        "....GGCcCcCGG...",
+        "....GGCCcCCGG...",
+        "....GgGCCCGgG...",
+        ".....GgGGGgG....",
+        "......GGGGG.....",
+        "................",
+        "................",
+        "................",
+    ], {"R": ribbon, "r": ribbon_d, "G": metal, "g": metal_d, "C": centre, "c": centre_l})
+
+
+def blossom():
+    """The Dryad's Blossom: a pink flower on a green sprig (v9.5)."""
+    return sprite16([
+        "................",
+        "................",
+        "......PP.PP.....",
+        ".....PppPppP....",
+        ".....PpYYYpP....",
+        "......PYyYP.....",
+        ".....PpYYYpP....",
+        ".....PppPppP....",
+        "......PP.PP.....",
+        "........L.......",
+        ".......LL.LL....",
+        "......LlL..Ll...",
+        "........L.......",
+        ".......L........",
+        "......L.........",
+        "................",
+    ], {"P": "#e86aa8", "p": "#ffb0d8", "Y": "#ffe27a", "y": "#fff6c8", "L": "#3f8a3a", "l": "#6ac05a"})
+
+
 def medal():
     """A gold medal on a crimson ribbon, the sigil of Ainz Ooal Gown at its heart."""
     return sprite16([
@@ -2005,6 +2094,8 @@ BLOCK_TEXTURES = {
 
 
 EGG_COLORS = {
+    "quagoa_warlord": ("#3a2a1e", "#4ac8ff"),
+    "rune_golem": ("#7a6a52", "#4ac8ff"),
     "skeleton_archer": ("#d8d0b4", "#7a5230"),
     "ghoul": ("#7d8a6a", "#f2e21b"),
     "wraith": ("#16202a", "#9cffe8"),
@@ -2158,6 +2249,15 @@ def all_item_icons():
         "feast_pie": feast_pie(),
         "dragon_skewer": dragon_skewer(),
         "ring_of_fleet_foot": gem_ring("#59d0ff", "#d0f4ff"),
+        "rune_key": rune_key(),
+        "royal_rune": royal_rune(),
+        "runeblade": blade_icon("#3a2a1a", "#22170f", GOLD, "#9ab8c8", "#4ac8ff", "#4a5560", length=11, glow="#d0f4ff"),
+        "warrior_captains_sigil": badge("#c8ccd4", "#8a8e98", "#c9302c", "#ff8a7a", "#2a4a9a", "#1a2e66"),
+        "carne_charm": badge("#a07a4a", "#6a4a2a", "#5aa040", "#a8e07a", "#c9302c", "#8a1a1a"),
+        "bareare_ring": gem_ring("#7a3fd0", "#d0b0ff"),
+        "blue_rose_brooch": badge(GOLD, GOLD_D, "#3a6ad0", "#a8c8ff", "#1a2e66", "#0e1a3e"),
+        "four_tribes_ring": gem_ring("#3fa86a", "#b8ffd0"),
+        "dryad_blossom": blossom(),
         "ghoul_fang": ghoul_fang(),
         "spectral_iron": spectral_iron(),
         "heartwood": heartwood(),

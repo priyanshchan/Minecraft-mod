@@ -84,13 +84,10 @@ const DIALOGUE = {
   [id("remedios")]: ["A paladin does not think. A paladin strikes what is evil.", "If you see demi-humans in the hills, cut them down before they reach the wall."],
   [id("paladin")]: ["The Holy Kingdom stands while its wall stands.", "Bafolk have been raiding out of the hills again. Watch the ridgelines."],
   [id("elf_ranger")]: ["The forest hears you long before we do, human.", "The Theocracy burns our groves. If you fight their priests, you are welcome here."],
-  [id("lakyus")]: ["Blue Roses takes the jobs nobody else dares to. If you see a demon gate, do not go in alone.", "My sword? Kilineyram drinks darkness. Sometimes I worry what it gives back."],
   [id("enri")]: ["Welcome to Carne. We are a small village, but we look after our friends.", "The goblins answer the horn. I still cannot quite believe they call me General."],
   [id("climb")]: ["I will become strong enough to protect the Princess. Until then, I train.", "Sir Gazef says a blade is only as true as the arm behind it."],
   [id("eclair")]: ["One day I, Eclair Ecleir Eicler, shall rule the Great Tomb of Nazarick!", "You there - polish something. A clean tomb is a conquered tomb."],
-  [id("gazef")]: ["I am Gazef Stronoff, Warrior-Captain of the Kingdom. These lands are under my protection."],
   [id("brain")]: ["I am looking for an opponent worth my blade. You are not there yet."],
-  [id("zaryusu")]: ["The tribes stand together now. Leave our swamp in peace and we will do the same."],
   [id("evileye")]: ["Hmph. Do not get in my way, and do not die where I have to see it."],
 };
 

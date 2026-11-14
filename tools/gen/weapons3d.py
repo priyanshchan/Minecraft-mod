@@ -568,6 +568,24 @@ def heartwood_staff():
     return staff("heartwood_staff", "#5a3e24", "#4f8a3a", top)
 
 
+# ------------------------------------------------------------------ v9.5
+def runeblade():
+    """The Runeblade of the Dwarf King: a broad blade of dark adamantite with a gold-bound ricasso, a
+    crossguard shaped like an anvil and a line of blue runes burning down its fuller."""
+    w = Weapon("runeblade", "greatsword")
+    w.grip(-5, 8, "#3a2a1a", wrap=GOLD)
+    w.pommel(-7, GOLD, size=2, gem="#4ac8ff")
+    w.box(-1.5, 3, -4.5, 3, 2, 9, "#3a3e46")  # the anvil guard
+    w.box(-1, 2, -3, 2, 1, 6, "#2a2e36")
+    for z in (-4.5, 3.5):
+        w.box(-1, 2.5, z, 2, 1, 1, GOLD, inflate=0.05)
+    w.box(-0.75, 5, -2, 1.5, 3, 4, GOLD_D)  # the ricasso, bound in gold
+    w.blade(8, 17, 5, "#4a5560", "#9ab8c8", fuller="#2e3640", taper=5,
+            runes=[(1, "#4ac8ff"), (3.5, "#4ac8ff"), (6, "#4ac8ff"), (8.5, "#4ac8ff"), (11, "#4ac8ff")])
+    w.gem(0, 4, 0, "#4ac8ff")
+    return w
+
+
 def magic_wand():
     """The casting staff: dark wood bound in gold, its head a gold claw closed round a floating Data Crystal."""
     w = Weapon("magic_wand", "staff")
@@ -599,6 +617,7 @@ ALL = {
     "elf_kings_staff": elf_kings_staff, "giants_maul": giants_maul, "dragonbone_blade": dragonbone_blade,
     "six_arms_knuckles": six_arms_knuckles,
     "cavalier_lance": cavalier_lance, "ghoulfang_sickle": ghoulfang_sickle, "heartwood_staff": heartwood_staff,
+    "runeblade": runeblade,
     "magic_wand": magic_wand,
 }
 

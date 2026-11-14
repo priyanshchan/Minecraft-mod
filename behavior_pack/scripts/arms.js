@@ -79,6 +79,7 @@ export const WEAPONS = {
   cavalier_lance: { kind: "polearm", element: "dark", trait: "-", art: "Death Charge: you ride down everything in a 9-block line, withering it" },
   ghoulfang_sickle: { kind: "blade", element: "acid", trait: "-", art: "Paralysing Rend: three quick cuts at the foe ahead; it can barely move afterwards" },
   heartwood_staff: { kind: "staff", element: "acid", trait: "-", art: "Grasping Roots: roots burst from the ground where you look, binding and crushing every foe within 4 blocks" },
+  runeblade: { kind: "greatsword", element: "lightning", trait: "the sweep carries half the blow to foes beside the target", art: "Rune Sovereign's Decree: three runes blaze out along the ground ahead - frost, storm, then fire - and a fourth wards you" },
 };
 
 /** The new weapon arts: weapon -> [cooldown category, seconds]. */
@@ -98,6 +99,7 @@ export const NEW_ARTS = {
   cavalier_lance: ["overlord_death_charge", 9],
   ghoulfang_sickle: ["overlord_rend", 7],
   heartwood_staff: ["overlord_roots", 8],
+  runeblade: ["overlord_rune_sovereign", 10],
 };
 
 /**
@@ -552,6 +554,31 @@ export function useWeaponArt(player, item) {
     fx.shake(d, at, 8, 0.25, 0.3);
     fx.pose(player, "slam");
     sound(player, "block.composter.ready", 0.6);
+  } else if (key === "runeblade") {
+    /** @type {[string, number][]} */
+    const runes = [["ice", 3], ["lightning", 6], ["fire", 9]];
+    runes.forEach(([element, n], i) => {
+      const at = add({ x: player.location.x, y: player.location.y, z: player.location.z }, dir, n);
+      fx.circle(d, at, element, 2);
+      system.runTimeout(() => {
+        try {
+          for (const foe of foesNear(player, at, 2.5)) {
+            strike(player, foe, 11);
+            if (element === "ice") foe.addEffect("slowness", 4 * TICKS, { amplifier: 2 });
+            else if (element === "fire") foe.setOnFire(4, true);
+            else strike(player, foe, 4);
+          }
+          fx.pillar(d, at, element, 4, 1.2);
+          fx.nova(d, at, element, 2.5);
+        } catch {
+          // the wielder left
+        }
+      }, 6 + i * 6);
+    });
+    player.addEffect("resistance", 5 * TICKS, { amplifier: 0, showParticles: false });
+    fx.ring(d, player.location, "lightning", 1.5);
+    fx.pose(player, "slam");
+    sound(player, "random.anvil_land", 0.7);
   } else if (key === "spuit_lance") {
     let drawn = 0;
     for (const foe of foesInLine(player, 8)) {

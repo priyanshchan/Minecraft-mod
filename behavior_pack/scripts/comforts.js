@@ -4,6 +4,11 @@
 // and adds two hearts for five minutes; the Spicy Dragon Skewer wards off fire and lends strength. A Ring of
 // Sustenance in the off hand keeps its wearer fed and slowly mends them while they stand still; a Ring of
 // the Fleet Foot lends Speed and Jump Boost.
+//
+// Since 9.5 the keepsakes of the sagas (sagas.js) are worn the same way: Gazef's Warrior-Captain's Sigil lends
+// Strength, Enri's Charm of Carne Village two more hearts, Nfirea's Ring of the Bareare Apothecary a steady trickle
+// of mana, Lakyus's Blue Rose Brooch Resistance, Zaryusu's Ring of the Four Tribes water breathing (and Speed in
+// water), and Pinison's Dryad's Blossom mends its wearer while they stand on grass or moss.
 import { world, system, EquipmentSlot } from "@minecraft/server";
 import { notify, restoreMana } from "./rpg.js";
 import * as fx from "./vfx.js";
@@ -38,11 +43,52 @@ export function eat(player, item) {
   return true;
 }
 
+/** The keepsakes of the sagas, worn in the off hand. */
+export const KEEPSAKES = new Set(["warrior_captains_sigil", "carne_charm", "bareare_ring", "blue_rose_brooch", "four_tribes_ring", "dryad_blossom"].map(id));
+/** Blocks the Dryad's Blossom draws strength from. */
+const GREEN = new Set(["minecraft:grass_block", "minecraft:moss_block", "minecraft:podzol", "minecraft:moss_carpet"]);
+
+/** One keepsake's gift. Returns what it did. @param {Player} player @param {string} item */
+function keepsake(player, item) {
+  const lend = (/** @type {string} */ effect, amplifier = 0) => player.addEffect(effect, 3 * TICKS, { amplifier, showParticles: false });
+  if (item === id("warrior_captains_sigil")) {
+    lend("strength");
+    return "strength";
+  }
+  if (item === id("carne_charm")) {
+    lend("health_boost");
+    return "hearts";
+  }
+  if (item === id("bareare_ring")) {
+    restoreMana(player, 2);
+    return "mana";
+  }
+  if (item === id("blue_rose_brooch")) {
+    lend("resistance");
+    return "resistance";
+  }
+  if (item === id("four_tribes_ring")) {
+    lend("water_breathing");
+    if (player.isInWater) lend("speed");
+    return "breath";
+  }
+  try {
+    const below = player.dimension.getBlock({ x: Math.floor(player.location.x), y: Math.floor(player.location.y) - 1, z: Math.floor(player.location.z) });
+    if (below && GREEN.has(below.typeId)) {
+      lend("regeneration");
+      return "bloom";
+    }
+  } catch {
+    // not loaded
+  }
+  return "";
+}
+
 /** The ring in the player's off hand, if any. @param {Player} player */
 export function ringOf(player) {
   try {
     const item = player.getComponent("minecraft:equippable")?.getEquipment(EquipmentSlot.Offhand)?.typeId;
-    return item === id("ring_of_sustenance") || item === id("ring_of_fleet_foot") ? item : undefined;
+    return item && (item === id("ring_of_sustenance") || item === id("ring_of_fleet_foot") || KEEPSAKES.has(item)) ? item : undefined;
   } catch {
     return undefined;
   }
@@ -55,6 +101,7 @@ const stood = new Map();
 export function wear(player) {
   const ring = ringOf(player);
   if (!ring) return "";
+  if (KEEPSAKES.has(ring)) return keepsake(player, ring);
   if (ring === id("ring_of_fleet_foot")) {
     player.addEffect("speed", 3 * TICKS, { amplifier: 0, showParticles: false });
     player.addEffect("jump_boost", 3 * TICKS, { amplifier: 0, showParticles: false });

@@ -1,0 +1,25 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:warrior_captains_sigil",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_warrior_captains_sigil"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.warrior_captains_sigil.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "epic",
+      "minecraft:allow_off_hand": true,
+      "minecraft:glint": true
+    }
+  }
+}

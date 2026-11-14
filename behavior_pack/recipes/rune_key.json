@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:rune_key"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "RGR",
+      "GIG",
+      "RGR"
+    ],
+    "key": {
+      "R": {
+        "item": "overlord:royal_rune"
+      },
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "I": {
+        "item": "minecraft:iron_block"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:royal_rune"
+      }
+    ],
+    "result": {
+      "item": "overlord:rune_key",
+      "count": 1
+    }
+  }
+}

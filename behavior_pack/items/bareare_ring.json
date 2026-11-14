@@ -1,0 +1,25 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:bareare_ring",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_bareare_ring"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.bareare_ring.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "epic",
+      "minecraft:allow_off_hand": true,
+      "minecraft:glint": true
+    }
+  }
+}

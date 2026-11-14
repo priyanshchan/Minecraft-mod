@@ -53,6 +53,8 @@ import "./haunts.js";
 import "./comforts.js";
 import "./necromancy.js";
 import "./events.js";
+import "./deeps.js";
+import "./sagas.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
