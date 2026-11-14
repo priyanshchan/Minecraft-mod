@@ -6,7 +6,7 @@
 // (flames and embers, ice shards, lightning arcs, shafts of holy light, wisps of shadow,
 // acid droplets, drifting runes). The decorative layers are dropped first when a great
 // deal is being drawn in the same tick.
-import { MolangVariableMap, system } from "@minecraft/server";
+import { MolangVariableMap, system, world } from "@minecraft/server";
 
 /** @typedef {import("@minecraft/server").Dimension} Dimension */
 /** @typedef {import("@minecraft/server").Vector3} Vector3 */
@@ -99,6 +99,142 @@ export function puff(dimension, effect, at, element, scale = 1) {
   adorn(dimension, effect, at, element, scale);
 }
 
+// ------------------------------------------------------------------- light
+// Spells light up their surroundings. The game has no light that particles can give off, so
+// an invisible light block is set where the light should be and taken away again a moment
+// later. It is ordinary block light, so it shows in every graphics mode; with Vibrant Visuals
+// it also falls on the scene the way a torch's does.
+
+const LIGHTS_KEY = "overlord:lights"; // where lights still standing are noted, so none outlives a crash
+const LIGHTS_OFF_KEY = "overlord:lights_off";
+export const MAX_LIGHTS = 48;
+/** @type {Map<string, { dimension: Dimension, at: Vector3, until: number }>} */
+const lights = new Map();
+let lightsDirty = false;
+/** @type {boolean | undefined} */
+let lightsOff;
+
+/** Whether spells light their surroundings in this world. */
+export function lightsEnabled() {
+  if (lightsOff === undefined) {
+    try {
+      lightsOff = world.getDynamicProperty(LIGHTS_OFF_KEY) === true;
+    } catch {
+      return true; // the world is not readable yet
+    }
+  }
+  return !lightsOff;
+}
+
+/** Switches spell lighting on or off for the world. @param {boolean} on */
+export function setLights(on) {
+  lightsOff = !on;
+  try {
+    world.setDynamicProperty(LIGHTS_OFF_KEY, !on);
+  } catch {
+    // remembered for this session only
+  }
+}
+
+/** How many spell lights are standing right now. */
+export function lightCount() {
+  return lights.size;
+}
+
+/**
+ * Lights a place for a moment.
+ * @param {Dimension} dimension @param {Vector3} at @param {number} [level] 1-15 @param {number} [ticks]
+ */
+export function light(dimension, at, level = 14, ticks = 8) {
+  if (!lightsEnabled()) return false;
+  const brightness = Math.max(1, Math.min(15, Math.round(level)));
+  for (const lift of [0, 1]) { // if the spot itself is taken, the block above will do
+    const spot = { x: Math.floor(at.x), y: Math.floor(at.y) + lift, z: Math.floor(at.z) };
+    const key = `${dimension.id}|${spot.x}|${spot.y}|${spot.z}`;
+    const standing = lights.get(key);
+    if (standing) {
+      standing.until = Math.max(standing.until, system.currentTick + ticks);
+      return true;
+    }
+    if (lights.size >= MAX_LIGHTS) return false;
+    try {
+      const block = dimension.getBlock(spot);
+      if (!block || !block.isAir) continue; // only ever air is replaced
+      dimension.setBlockType(spot, `minecraft:light_block_${brightness}`);
+      lights.set(key, { dimension, at: spot, until: system.currentTick + ticks });
+      lightsDirty = true;
+      return true;
+    } catch {
+      return false; // unloaded chunk
+    }
+  }
+  return false;
+}
+
+/** Takes away every light whose moment has passed (or all of them). @param {boolean} [all] */
+export function dim(all = false) {
+  for (const [key, entry] of lights) {
+    if (!all && system.currentTick < entry.until) continue;
+    try {
+      const block = entry.dimension.getBlock(entry.at);
+      if (block && block.typeId.startsWith("minecraft:light_block")) entry.dimension.setBlockType(entry.at, "minecraft:air");
+      lights.delete(key);
+      lightsDirty = true;
+    } catch {
+      // the chunk is unloaded: the light is taken away when it loads again
+    }
+  }
+}
+
+system.runInterval(() => {
+  dim();
+  if (!lightsDirty) return;
+  lightsDirty = false;
+  try {
+    world.setDynamicProperty(LIGHTS_KEY, [...lights.keys()].join(";").slice(0, 4000));
+  } catch {
+    // noted again on the next change
+  }
+}, 2);
+
+// Lights left standing by a session that ended abruptly are taken away when the world next loads.
+world.afterEvents.worldLoad.subscribe(() => {
+  try {
+    const noted = world.getDynamicProperty(LIGHTS_KEY);
+    if (typeof noted !== "string" || noted === "") return;
+    for (const key of noted.split(";")) {
+      const [dimensionId, x, y, z] = key.split("|");
+      if (lights.has(key) || z === undefined) continue;
+      lights.set(key, { dimension: world.getDimension(dimensionId), at: { x: Number(x), y: Number(y), z: Number(z) }, until: 0 });
+    }
+  } catch {
+    // nothing was noted
+  }
+});
+
+/** What each element leaves behind where it struck: particles that go on for a second or so. */
+/** @type {Record<string, string[]>} */
+const AFTER = {
+  fire: ["flame_linger", "scorch"],
+  ice: ["mist", "linger"],
+  lightning: ["crackle", "scorch"],
+  holy: ["linger"],
+  dark: ["mist", "linger"],
+  acid: ["mist"],
+  arcane: ["linger", "orbit"],
+  none: ["linger"],
+};
+
+/**
+ * What a spell leaves behind where it struck - flames that burn on, mist, crackling, a scorched mark.
+ * @param {Dimension} dimension @param {Vector3} at @param {string} element @param {number} [radius]
+ */
+export function afterglow(dimension, at, element, radius = 1) {
+  for (const effect of AFTER[element] ?? AFTER.none) {
+    adorn(dimension, effect, up(at, effect === "scorch" ? 0.05 : 0.15), element, effect === "scorch" ? radius * 1.3 : radius * 0.8);
+  }
+}
+
 /** @param {Vector3} v @param {number} dy */
 function up(v, dy) {
   return { x: v.x, y: v.y + dy, z: v.z };
@@ -113,6 +249,7 @@ export function circle(dimension, at, element, radius) {
   emit(dimension, "magic_circle", up(at, 0.08), element, radius);
   adorn(dimension, "magic_circle_inner", up(at, 0.1), element, radius * 0.74);
   if (radius >= 2.2) adorn(dimension, "glyph", up(at, 0.2), element, radius * 0.9);
+  light(dimension, up(at, 0.4), Math.min(13, 7 + radius * 1.5), 24);
 }
 
 /**
@@ -143,6 +280,8 @@ export function spark(dimension, at, element, scale = 1) {
   // Shafts of light and runes rise from below the point of impact; the rest burst from it.
   adorn(dimension, accent, accent === "ray" || accent === "glyph" ? up(at, -0.7) : at, element, accent === "ray" || accent === "glyph" ? 0.6 * scale : scale);
   if (accent === "flame") adorn(dimension, "ember", at, element, scale);
+  light(dimension, at, 9 + scale * 3, 6);
+  if (scale >= 1.2) afterglow(dimension, up(at, -0.9), element, scale);
 }
 
 /**
@@ -174,7 +313,13 @@ export function beam(dimension, from, to, element, scale = 1) {
     length,
     direction: { x: dx / length, y: dy / length, z: dz / length },
   });
+  adorn(dimension, "beam_glow", { x: from.x + dx / 2, y: from.y + dy / 2, z: from.z + dz / 2 }, element, scale, {
+    length,
+    direction: { x: dx / length, y: dy / length, z: dz / length },
+  });
   flash(dimension, from, element, 0.45 * scale);
+  for (let d = 0; d <= length; d += 6) light(dimension, { x: from.x + (dx * d) / length, y: from.y + (dy * d) / length, z: from.z + (dz * d) / length }, 11 + scale, 5);
+  light(dimension, to, 12 + scale, 6);
   const trail = TRAIL[element];
   if (!trail) return;
   for (let d = trail[1] / 2; d < length; d += trail[1]) {
@@ -191,6 +336,9 @@ export function pillar(dimension, base, element, height, scale = 1.5) {
   adorn(dimension, "pillar_light", up(base, height / 2), element, scale, { height });
   for (let h = 0.5; h <= height; h += 2) spark(dimension, up(base, h), element, scale);
   flash(dimension, up(base, 0.4), element, 1.6 * scale);
+  light(dimension, up(base, 1), 15, 12);
+  light(dimension, up(base, height * 0.6), 15, 12);
+  afterglow(dimension, base, element, Math.max(1, scale));
 }
 
 /**
@@ -230,7 +378,10 @@ export function fall(dimension, target, element, ticks, lean = 6) {
       adorn(dimension, ACCENT[element] ?? ACCENT.none, head, element, 1.4);
     }, Math.round((i * ticks) / segments));
   }
-  system.runTimeout(() => flash(dimension, up(target, 0.5), element, 4), ticks);
+  system.runTimeout(() => {
+    flash(dimension, up(target, 0.5), element, 4);
+    light(dimension, up(target, 1), 15, 14);
+  }, ticks);
 }
 
 /** Sparkles rushing in to a point: a spell gathering power. @param {Dimension} dimension @param {Vector3} at @param {string} element @param {number} [radius] */
@@ -247,6 +398,12 @@ export function nova(dimension, at, element, radius) {
   flash(dimension, at, element, Math.max(1.5, radius * 0.9));
   adorn(dimension, "streak", at, element, Math.max(1, radius * 0.4));
   ring(dimension, up(at, -0.5), element, radius);
+  light(dimension, at, 15, 12);
+  for (let i = 0; i < 4 && radius >= 4; i++) { // a wide blast lights the ground out to its edge
+    const a = (i / 4) * Math.PI * 2;
+    light(dimension, { x: at.x + Math.cos(a) * radius * 0.6, y: at.y, z: at.z + Math.sin(a) * radius * 0.6 }, 14, 10);
+  }
+  afterglow(dimension, up(at, -0.6), element, Math.min(4, Math.max(1, radius * 0.5)));
 }
 
 /** The crescent a blade leaves in the air. @param {Dimension} dimension @param {Vector3} at @param {string} element @param {number} [scale] */
@@ -269,6 +426,9 @@ export function dome(dimension, at, element) {
   circle(dimension, up(at, 4.0), element, 1.4);
   rise(dimension, at, element, 3.5);
   implode(dimension, up(at, 1.2), element, 4.5);
+  adorn(dimension, "orbit", at, element, 3);
+  light(dimension, up(at, 1), 15, 40);
+  light(dimension, up(at, 4), 15, 40);
 }
 
 /**
@@ -354,6 +514,8 @@ export function castFx(player, element, tier, how) {
   }
   circle(dimension, feet, element, 1.1 + tier * 0.14);
   flash(dimension, handOf(player), element, 0.35 + tier * 0.05);
+  light(dimension, handOf(player), 9 + tier * 0.6, 10);
+  if (tier >= 5) adorn(dimension, "orbit", feet, element, 0.9 + tier * 0.05);
   if (tier >= 4) rise(dimension, feet, element, 0.7 + tier * 0.05);
   if (tier >= 6) implode(dimension, up(feet, 1.1), element, 1.4 + tier * 0.1);
   if (tier >= 7) circle(dimension, up(feet, 1.2), element, 0.8 + tier * 0.08);

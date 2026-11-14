@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [6, 6, 0]
+VERSION = [6, 7, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v6.6.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v6.7.0"
 
 
 def oid(name):
@@ -1815,8 +1815,8 @@ def entity_files():
         "minecraft:is_hidden_when_invisible": {},
         "minecraft:type_family": {"family": ["retainer", ally, "human", "mob"]},
         "minecraft:collision_box": {"width": 0.6, "height": 1.9},
-        "minecraft:health": {"value": 40, "max": 40},
-        "minecraft:movement": {"value": 0.32},
+        "minecraft:health": {"value": 60, "max": 60},
+        "minecraft:movement": {"value": 0.34},
         "minecraft:follow_range": {"value": 32, "max": 32},
         "minecraft:nameable": {"always_show": True, "allow_name_tag_renaming": False},
         "minecraft:movement.basic": {},
@@ -1849,22 +1849,22 @@ def entity_files():
                                    "attack_radius": radius, "speed_multiplier": 1.0}
     groups = {
         "overlord:voc_fighter": {
-            "minecraft:attack": {"damage": 6},
-            "minecraft:knockback_resistance": {"value": 0.5},
+            "minecraft:attack": {"damage": 9},
+            "minecraft:knockback_resistance": {"value": 0.6},
             "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.3, "track_target": True}},
         # Ranged vocations keep monsters at arm's length instead of standing in melee.
         "overlord:voc_archer": {"minecraft:shooter": {"def": "minecraft:arrow"},
-                                "minecraft:behavior.ranged_attack": shot(1.2, 2.2, 16.0),
+                                "minecraft:behavior.ranged_attack": shot(0.9, 1.7, 18.0),
                                 "minecraft:behavior.avoid_mob_type": keep_away(4, 2)},
         "overlord:voc_mage": {"minecraft:shooter": {"def": oid("magic_bullet")},
-                              "minecraft:behavior.ranged_attack": shot(1.5, 2.5, 18.0),
+                              "minecraft:behavior.ranged_attack": shot(1.1, 2.0, 18.0),
                               "minecraft:behavior.avoid_mob_type": keep_away(4, 2)},
         "overlord:voc_healer": {"minecraft:shooter": {"def": oid("magic_bullet")},
                                 "minecraft:behavior.ranged_attack": shot(2.5, 4.0, 14.0),
                                 "minecraft:behavior.avoid_mob_type": keep_away(6, 2)},
         # Rogues are quick on their feet; bards hang back and sing.
         "overlord:voc_rogue": {
-            "minecraft:attack": {"damage": 7},
+            "minecraft:attack": {"damage": 10},
             "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.5, "track_target": True}},
         "overlord:voc_bard": {"minecraft:shooter": {"def": oid("magic_bullet")},
                               "minecraft:behavior.ranged_attack": shot(3.0, 4.5, 14.0),
@@ -2928,6 +2928,82 @@ def particle_files():
                     "variable.direction.x", "variable.direction.y", "variable.direction.z"]}),
             **colour(hot, fade),
         }),
+        # ------------------------------------------------- what a spell leaves behind
+        # sparkles that keep rising from where a spell struck
+        "linger": effect("linger", "star", {
+            "minecraft:emitter_rate_steady": {"spawn_rate": 18, "max_particles": 40},
+            "minecraft:emitter_shape_disc": {"radius": "variable.scale", "plane_normal": [0, 1, 0],
+                                             "direction": [0, 1, 0]},
+            **lifetime(0.6, 1.1),
+            "minecraft:particle_initial_speed": "math.random(0.5, 1.4)",
+            **moving,
+            "minecraft:particle_appearance_billboard": quad(f"0.1 * {fade}", "lookat_xyz", (32, 32)),
+            **colour(tint, twinkle),
+        }, active=1.4),
+        # flames that burn on for a moment
+        "flame_linger": effect("flame_linger", "flame", {
+            "minecraft:emitter_rate_steady": {"spawn_rate": 14, "max_particles": 30},
+            "minecraft:emitter_shape_disc": {"radius": "variable.scale", "plane_normal": [0, 1, 0],
+                                             "direction": [0, 1, 0]},
+            **lifetime(0.4, 0.7),
+            "minecraft:particle_initial_speed": "math.random(0.6, 1.6)",
+            **moving,
+            "minecraft:particle_appearance_billboard": quad(
+                f"0.34 * (1.0 - 0.6 * {life})", "lookat_xyz", (128, 32),
+                flipbook={"base_UV": [0, 0], "size_UV": [32, 32], "step_UV": [32, 0],
+                          "frames_per_second": 10, "max_frame": 4, "loop": True}),
+            **colour(hot, f"math.min(1.0, 2.5 * {fade})"),
+        }, active=1.2),
+        # a low mist that spreads and thins (cold, shadow, acid)
+        "mist": effect("mist", "smoke", {
+            "minecraft:emitter_rate_steady": {"spawn_rate": 10, "max_particles": 24},
+            "minecraft:emitter_shape_disc": {"radius": "variable.scale", "plane_normal": [0, 1, 0],
+                                             "direction": "outwards"},
+            **lifetime(1.0, 1.8),
+            "minecraft:particle_initial_speed": "math.random(0.2, 0.7)",
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)", "rotation_rate": "math.random(-30, 30)"},
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, 0.15, 0], "linear_drag_coefficient": 0.8},
+            "minecraft:particle_appearance_billboard": quad(f"0.5 + 0.7 * {life}", "lookat_xyz", (32, 32)),
+            **colour([f"(0.35 + 0.65 * variable.color.{c})" for c in "rgb"], f"0.45 * {fade}"),
+        }, material="particles_blend", active=1.3),
+        # lightning that goes on spitting where it struck
+        "crackle": effect("crackle", "arc", {
+            "minecraft:emitter_rate_steady": {"spawn_rate": 16, "max_particles": 24},
+            "minecraft:emitter_shape_sphere": {"radius": "variable.scale", "direction": "outwards"},
+            **lifetime(0.06, 0.14),
+            "minecraft:particle_initial_speed": 0.0,
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)"},
+            "minecraft:particle_appearance_billboard": quad(
+                ["0.22", "0.44"], "lookat_xyz", (128, 64),
+                uv=["math.floor(variable.particle_random_1 * 3.99) * 32", 0], uv_size=[32, 64]),
+            **colour(hot, 1.0),
+        }, active=1.0),
+        # a dark mark burnt into the ground that fades over a few seconds
+        "scorch": effect("scorch", "glow", {
+            **burst(1), **point, **lifetime(4.0),
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)"},
+            "minecraft:particle_appearance_billboard": quad("variable.scale", "emitter_transform_xz", (32, 32)),
+            **colour([f"(0.12 * variable.color.{c})" for c in "rgb"], f"0.7 * {fade}"),
+        }, material="particles_blend"),
+        # motes circling the caster as power gathers
+        "orbit": effect("orbit", "star", {
+            **burst(10), **point, **lifetime(1.2),
+            "minecraft:particle_motion_parametric": {"relative_position": [
+                "math.cos(variable.particle_age * 300.0 + variable.particle_random_1 * 360.0) * variable.scale",
+                "0.2 + variable.particle_age * 1.3 + variable.particle_random_2 * 0.8",
+                "math.sin(variable.particle_age * 300.0 + variable.particle_random_1 * 360.0) * variable.scale"]},
+            "minecraft:particle_appearance_billboard": quad(f"0.12 * {pulse}", "lookat_xyz", (32, 32)),
+            **colour(hot, pulse),
+        }),
+        # the soft glow round the core of a beam
+        "beam_glow": effect("beam_glow", "streak", {
+            **burst(1), **point, **lifetime(0.35),
+            "minecraft:particle_appearance_billboard": quad(
+                [f"0.4 * variable.scale * (1.0 + {life})", "variable.length * 0.5"], "lookat_direction", (16, 64),
+                direction={"mode": "custom", "custom_direction": [
+                    "variable.direction.x", "variable.direction.y", "variable.direction.z"]}),
+            **colour(tint, f"0.35 * {fade}"),
+        }),
         # a second of sparkles climbing around whoever stands in the middle (buffs)
         "aura": effect("aura", "star", {
             "minecraft:emitter_rate_steady": {"spawn_rate": 34, "max_particles": 60},
@@ -2945,7 +3021,8 @@ def particle_files():
 
 PARTICLES = ["spark", "mote", "rise", "magic_circle", "magic_circle_inner", "ring", "flash", "streak", "nova",
              "implode", "shockwave", "dust", "slash", "flame", "ember", "shard", "arc", "ray", "wisp", "skull",
-             "droplet", "glyph", "pillar_light", "beam_core", "aura"]
+             "droplet", "glyph", "pillar_light", "beam_core", "aura", "linger", "flame_linger", "mist", "crackle",
+             "scorch", "orbit", "beam_glow"]
 PLAYER_BONES = ["head", "body", "rightArm", "leftArm", "rightLeg", "leftLeg"]
 
 

@@ -10,10 +10,10 @@
     "component_groups": {
       "overlord:voc_fighter": {
         "minecraft:attack": {
-          "damage": 6
+          "damage": 9
         },
         "minecraft:knockback_resistance": {
-          "value": 0.5
+          "value": 0.6
         },
         "minecraft:behavior.melee_box_attack": {
           "priority": 3,
@@ -27,9 +27,9 @@
         },
         "minecraft:behavior.ranged_attack": {
           "priority": 3,
-          "attack_interval_min": 1.2,
-          "attack_interval_max": 2.2,
-          "attack_radius": 16.0,
+          "attack_interval_min": 0.9,
+          "attack_interval_max": 1.7,
+          "attack_radius": 18.0,
           "speed_multiplier": 1.0
         },
         "minecraft:behavior.avoid_mob_type": {
@@ -54,8 +54,8 @@
         },
         "minecraft:behavior.ranged_attack": {
           "priority": 3,
-          "attack_interval_min": 1.5,
-          "attack_interval_max": 2.5,
+          "attack_interval_min": 1.1,
+          "attack_interval_max": 2.0,
           "attack_radius": 18.0,
           "speed_multiplier": 1.0
         },
@@ -104,7 +104,7 @@
       },
       "overlord:voc_rogue": {
         "minecraft:attack": {
-          "damage": 7
+          "damage": 10
         },
         "minecraft:behavior.melee_box_attack": {
           "priority": 3,
@@ -292,11 +292,11 @@
         "height": 1.9
       },
       "minecraft:health": {
-        "value": 40,
-        "max": 40
+        "value": 60,
+        "max": 60
       },
       "minecraft:movement": {
-        "value": 0.32
+        "value": 0.34
       },
       "minecraft:follow_range": {
         "value": 32,

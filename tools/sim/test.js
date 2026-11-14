@@ -534,7 +534,7 @@ assert.ok(party.toggleTrait(j, 0, "devoted").includes("now Devoted")); assert.ok
 assert.ok(party.toggleTrait(j, 0, "keen").includes("already has two")); assert.ok(party.toggleTrait(j, 0, "sturdy").includes("no longer")); party.toggleTrait(j, 0, "sturdy");
 assert.ok(party.toggleTrait(j, 1, "keen").includes("from level 10"), "mercenaries need the level themselves");
 assert.ok(party.toggleTrait(j, 3, "resolute").includes("now Resolute")); assert.equal(party.recoveryOf(member(3)), 30); assert.ok(party.toggleTrait(j, 3, "keen").includes("second trait from level 30"));
-advance(45); advance(45); assert.equal(ally("Rex").effects.get("health_boost"), 4, "level 30 = 3 tiers, Sturdy = 2 more");
+advance(45); advance(45); assert.equal(ally("Rex").effects.get("health_boost"), 7, "level 30 = 6 tiers, Sturdy = 2 more");
 const bondRex = member(0).bond; kill(j, mob("minecraft:zombie", 20)); assert.equal(member(0).bond, bondRex + 2, "Devoted doubles the bond");
 // tactics: Free hand finds its own foe, Guardian answers whatever hurt the master, Vanguard strikes the master's target
 const beast = (name, at) => { const m = mob("minecraft:zombie", 200, ["monster"]);
@@ -829,6 +829,65 @@ players.splice(0, players.length, ...everyone, zoe);
   assert.ok(drawn("pillar_light").length >= 5 && ray.msgs.some((m) => m.includes("Frost Dragon has fallen"))); assert.equal(dragons.stateOf(wyrm).roared, false);
   for (const kind of Object.values(dragons.DRAGONS)) assert.ok(kind.size >= 2.5, `${kind.name} is big`);
   players.splice(0, players.length, ...others, ray);
+}
+
+// ---- v6.7: spell lighting, lingering effects and the companions' wider set of attacks ----
+{
+  const lux = mkPlayer("lux"); lux.dimension = makeLand(); lux.dimension.getPlayers = () => [lux]; lux.location = { x: 0, y: 64, z: 0 };
+  lux.dimension.spawnParticle = (effect) => lux.fx.push({ effect }); const lit = () => [...lux.dimension.placed.entries()].filter(([, block]) => block.startsWith("minecraft:light_block"));
+  const drew = (name) => lux.fx.filter((f) => f.effect === `overlord:${name}`).length; const rest = players.splice(0, players.length, lux);
+  advance(80); vfx.dim(true); assert.equal(vfx.lightCount(), 0, "earlier effects have played out and their lights are gone");
+  // a spell light is an invisible light block set in air and taken away again a moment later
+  assert.equal(vfx.light(lux.dimension, { x: 0.5, y: 66.2, z: 0.5 }, 14, 6), true); assert.equal(lux.dimension.placed.get("0,66,0"), "minecraft:light_block_14");
+  assert.equal(vfx.lightCount(), 1); advance(4); assert.equal(lit().length, 1, "still lit"); advance(6); assert.equal(lux.dimension.placed.get("0,66,0"), "minecraft:air", "and dark again"); assert.equal(vfx.lightCount(), 0);
+  // only air is ever replaced: in the ground the light goes one block up, and where there is no room there is no light
+  assert.equal(vfx.light(lux.dimension, { x: 4, y: 63, z: 4 }, 12, 6), true); assert.equal(lux.dimension.placed.get("4,64,4"), "minecraft:light_block_12"); assert.equal(lux.dimension.placed.get("4,63,4"), undefined);
+  assert.equal(vfx.light(lux.dimension, { x: 4, y: 61, z: 4 }, 12, 6), false, "solid ground is left alone"); advance(10);
+  // lighting the same spot again keeps it lit rather than stacking; the number standing at once is capped; it can be switched off
+  vfx.light(lux.dimension, { x: 8, y: 66, z: 8 }, 15, 4); advance(3); vfx.light(lux.dimension, { x: 8, y: 66, z: 8 }, 15, 10); assert.equal(vfx.lightCount(), 1); advance(6); assert.equal(lit().length, 1, "kept lit"); advance(10); assert.equal(lit().length, 0);
+  for (let i = 0; i < 80; i++) vfx.light(lux.dimension, { x: 20 + i * 2, y: 66, z: 0 }, 15, 6); assert.equal(vfx.lightCount(), vfx.MAX_LIGHTS); advance(10); assert.equal(lit().length, 0, "every one of them is taken away");
+  vfx.setLights(false); assert.equal(vfx.light(lux.dimension, { x: 0, y: 66, z: 0 }), false); assert.equal(vfx.lightsEnabled(), false); vfx.setLights(true);
+  // spells use it: an impact flashes, a beam lights its path, a nova lights the ground out to its edge
+  vfx.spark(lux.dimension, { x: 0, y: 66, z: 0 }, "fire", 1.5); assert.ok(lit().length >= 1, "an impact gives light"); advance(10);
+  vfx.beam(lux.dimension, { x: 0, y: 66, z: 0 }, { x: 0, y: 66, z: 18 }, "lightning"); assert.ok(lit().length >= 4, `a beam lights its length: ${lit().length}`); advance(10);
+  vfx.nova(lux.dimension, { x: 0, y: 66, z: 0 }, "fire", 6); assert.ok(lit().length >= 5); advance(16); assert.equal(lit().length, 0);
+  // and every element leaves something behind where it struck
+  for (const [element, trace] of [["fire", "flame_linger"], ["ice", "mist"], ["lightning", "crackle"], ["holy", "linger"], ["dark", "mist"], ["acid", "mist"], ["arcane", "orbit"], ["none", "linger"]]) {
+    advance(1); lux.fx = []; vfx.afterglow(lux.dimension, { x: 0, y: 64, z: 0 }, element, 2); assert.ok(drew(trace) === 1, `${element} leaves ${trace}`);
+  }
+  advance(1); lux.fx = []; vfx.afterglow(lux.dimension, { x: 0, y: 64, z: 0 }, "fire", 2); assert.equal(drew("scorch"), 1, "fire scorches the ground");
+  advance(1); lux.fx = []; vfx.beam(lux.dimension, { x: 0, y: 66, z: 0 }, { x: 0, y: 66, z: 8 }, "holy"); assert.ok(drew("beam_core") === 1 && drew("beam_glow") === 1, "a beam has a core and a glow");
+  advance(1); lux.fx = []; vfx.castFx(lux, "arcane", 7, "point"); assert.equal(drew("orbit"), 1, "motes circle a caster of the higher tiers"); advance(20);
+
+  // companions: more attacks as they level, used in turn
+  assert.deepEqual([1, 8, 20, 35].map((lv) => party.attacksKnown(0, lv).length), [1, 2, 3, 4]); assert.equal(party.attacksKnown(2, 40).length, 5, "a seasoned mage has five");
+  for (const kit of party.ATTACKS) { assert.ok(kit.length >= 4); assert.equal(kit[0].level, 1, "everyone starts with one attack"); assert.equal(new Set(kit.map((a) => a.key)).size, kit.length); }
+  const used = []; for (const kit of party.ATTACKS) for (const attack of kit) { const real = attack.use; attack.use = (turn) => { const ok = real(turn); if (ok) used.push([turn.member.name, attack.key]); return ok; }; }
+  const target = (name, at) => { const m = mob("minecraft:zombie", 1e6, ["monster", "undead"]); Object.assign(m, { id: name, location: at, dimension: lux.dimension, tags: new Set(), afflicted: [], addEffect(e) { m.afflicted.push(e); },
+    applyKnockback() {}, setOnFire() {}, hasTag: (t) => m.tags.has(t), addTag: (t) => m.tags.add(t), getDynamicProperty: () => undefined, applyDamage(n) { m.damaged.push(n); } }); lux.dimension.mobs.push(m); return m; };
+  const drill = (leader, looks) => { leader.dimension = lux.dimension; leader.location = { x: 0, y: 64, z: 0 }; rpg.profileOf(leader).level = 40;
+    looks.forEach((look, i) => { if (i === 0) party.createMain(leader, `${leader.name}0`, look); else party.hire(leader, { name: `${leader.name}${i}`, look, level: 40, cost: 0 }); }); party.summon(leader); };
+  const max = mkPlayer("max"); players.push(lux, max); players.splice(0, players.length, lux, max); drill(lux, [0, 2, 4, 6]); drill(max, [8, 10]); advance(45);
+  const dummy = target("dummy", { x: 2, y: 64, z: 1 }); target("dummy2", { x: 3, y: 64, z: 2 }); target("dummy3", { x: 1, y: 64, z: 3 });
+  for (let second = 0; second < 90; second++) {
+    if (second % 5 === 0) for (const leader of [lux, max]) world.afterEvents.entityHurt.fire({ hurtEntity: dummy, damage: 1, damageSource: { damagingEntity: leader, cause: "entityAttack" } });
+    advance(20);
+  }
+  const kinds = (name) => new Set(used.filter(([who]) => who === name).map(([, key]) => key));
+  assert.equal(kinds("lux0").size, 3, `fighter: ${[...kinds("lux0")]}`); assert.ok(!kinds("lux0").has("cry"), "the Rallying Cry is kept for when the master is hurt");
+  assert.equal(kinds("lux1").size, 4, `archer: ${[...kinds("lux1")]}`); assert.equal(kinds("lux2").size, 5, `mage: ${[...kinds("lux2")]}`);
+  assert.ok(kinds("lux3").has("smite") && kinds("lux3").has("blessing"), `healer: ${[...kinds("lux3")]}`);
+  assert.equal(kinds("max0").size, 4, `rogue: ${[...kinds("max0")]}`); assert.equal(kinds("max1").size, 4, `bard: ${[...kinds("max1")]}`);
+  for (const name of ["lux1", "lux2", "max0"]) { const mine = used.filter(([who]) => who === name); assert.notEqual(mine[0][1], mine[1][1], `${name} does not repeat itself straight away`); }
+  // the supportive ones answer need: a hurt master brings the Rallying Cry and Sanctuary
+  used.length = 0; lux.health.currentValue = 4; advance(60); assert.ok(kinds("lux0").has("cry") && kinds("lux3").has("sanctuary"), `${used.map((u) => u.join(":"))}`);
+  assert.ok(lux.health.currentValue > 4 && lux.effects.has("resistance"));
+  // a young companion has just the one
+  const tot = mkPlayer("tot"); players.push(tot); tot.dimension = lux.dimension; tot.location = { x: 0, y: 64, z: 0 }; party.createMain(tot, "Pip", 4); party.summon(tot); advance(45); used.length = 0;
+  for (let second = 0; second < 20; second++) { if (second % 5 === 0) world.afterEvents.entityHurt.fire({ hurtEntity: dummy, damage: 1, damageSource: { damagingEntity: tot, cause: "entityAttack" } }); advance(20); }
+  assert.deepEqual([...kinds("Pip")], ["bolt"]);
+  party.dismiss(lux); party.dismiss(max); party.dismiss(tot); lux.dimension.mobs.length = 0; vfx.dim(true);
+  players.splice(0, players.length, ...rest, lux, max, tot);
 }
 
 // persistence: saved profile is restored after leaving
