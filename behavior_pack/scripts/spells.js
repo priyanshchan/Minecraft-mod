@@ -7,7 +7,7 @@ import { world, system, EntityDamageCause, Direction } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { giveItem, notify, profileOf, setHudExtra, spellPower, spendMana, restoreMana, touch, hasAllies } from "./rpg.js";
 import * as skills from "./skills.js";
-import { cataclysm, goalOfAllLife, pantheon } from "./godspells.js";
+import { cataclysm, creation, goalOfAllLife, ouroboros, pantheon, requiemOfFortyOne, summonBehemoth } from "./godspells.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -570,7 +570,7 @@ POSE.shock_wave = "slam";
 // -------------------------------------------------------------------- spells
 
 /** Tier 11 is super-tier magic; tier 12 god-tier, taught only to those who have conquered the Great Tomb. */
-const SUPER = 11;
+export const SUPER = 11;
 export const GOD = 12;
 
 /** @type {Spell[]} */
@@ -626,6 +626,11 @@ export const SPELLS = [
   { key: "goal_of_all_life", name: "The Goal of All Life Is Death", tier: GOD, mana: 200, cooldown: 300, element: "dark", help: "God-tier (for those who have conquered the Great Tomb): a clock of twelve marks counts down for six seconds; then every lesser creature within 40 blocks dies, bosses lose a third of their health, the souls heal you and four Death Knights rise to serve you.", cast: goalOfAllLife },
   { key: "pantheon", name: "Pantheon", tier: GOD, mana: 180, cooldown: 300, element: "holy", help: "God-tier (for those who have conquered the Great Tomb): the heavens open, six Archangel Flames descend to fight for you, and for ten seconds pillars of judgement fall on your foes within 32 blocks (twice as hard on the undead and demons) while your allies are healed; then all of them are struck at once.", cast: pantheon },
   { key: "cataclysm", name: "Cataclysm", tier: GOD, mana: 200, cooldown: 300, element: "fire", help: "God-tier (for those who have conquered the Great Tomb): the sky darkens over the place you point at; thirty meteors rain down across 20 blocks, then a colossal meteor strikes its heart, leaving burning ground and a shockwave out to 26 blocks.", cast: cataclysm },
+  { key: "wish_upon_a_star", name: "Wish Upon a Star", tier: SUPER, mana: 150, cooldown: 240, element: "holy", help: "Super-tier: a wish on a falling star - you and every player within 16 blocks are fully healed and shielded (Absorption IV, Resistance II for 30 s), and all your other spells are ready at once.", cast: wishUponAStar },
+  { key: "creation", name: "Creation", tier: SUPER, mana: 140, cooldown: 180, element: "ice", help: "Super-tier: remakes the land where you aim - 12 blocks freeze over and everything on them is locked in ice for 8 seconds, the cold biting each second.", cast: creation },
+  { key: "summon_behemoth", name: "Summon Behemoth", tier: SUPER, mana: 120, cooldown: 180, element: "fire", help: "Super-tier: two Behemoths rise from pillars of fire to fight for you for a minute, beyond your usual summons.", cast: summonBehemoth },
+  { key: "requiem_of_the_41", name: "Requiem of the Forty-One", tier: GOD, mana: 220, cooldown: 300, element: "dark", help: "God-tier (for those who have conquered the Great Tomb): the banners of Ainz Ooal Gown fill the sky and forty-one beams, one for each Supreme Being, fall on your foes within 36 blocks; then all of them are struck and weakened together. Allies near fight with Strength II and Resistance for 20 seconds.", cast: requiemOfFortyOne },
+  { key: "ouroboros", name: "Ouroboros", tier: GOD, mana: 200, cooldown: 300, element: "arcane", help: "God-tier (for those who have conquered the Great Tomb): the world serpent coils round 32 blocks and turns time back for your side - every ally is fully healed and cleansed - while time all but stops for your foes, crushed by the tightening coils for ten seconds.", cast: ouroboros },
   { key: "sword_of_damocles", name: "Sword of Damocles", tier: SUPER, mana: 130, cooldown: 150, element: "arcane", help: "Super-tier: a colossal blade falls after 4 seconds (6 blocks).", cast: burst(6, 200, "arcane", { delay: 4, sound: "random.anvil_land" }) },
 ];
 
@@ -687,6 +692,40 @@ const ready = new Map();
 /** Clears every spell's recharge for a player (the Creative Tome of Ascension). @param {Player} player */
 export function resetCooldowns(player) {
   for (const key of [...ready.keys()]) if (key.startsWith(`${player.id}|`)) ready.delete(key);
+}
+
+/**
+ * Wish Upon a Star: everyone near is healed and shielded, and the caster's other spells are made ready (its own
+ * recharge is set as usual once the cast is done).
+ * @param {Player} player
+ */
+function wishUponAStar(player) {
+  const d = player.dimension;
+  fx.pose(player, "super");
+  fx.fall(d, player.location, "holy", 12);
+  fx.pillar(d, player.location, "holy", 16, 2);
+  fx.dome(d, player.location, "holy");
+  let allies = [player];
+  try {
+    allies = d.getPlayers({ location: player.location, maxDistance: 16 });
+  } catch {
+    // alone
+  }
+  for (const ally of allies) {
+    try {
+      const health = ally.getComponent("minecraft:health");
+      if (health && health.currentValue > 0) health.setCurrentValue(health.effectiveMax);
+      ally.addEffect("absorption", 30 * TICKS, { amplifier: 3, showParticles: false });
+      ally.addEffect("resistance", 30 * TICKS, { amplifier: 1, showParticles: false });
+      fx.rise(d, ally.location, "holy", 1);
+    } catch {
+      // gone
+    }
+  }
+  resetCooldowns(player);
+  playSound(d, "random.levelup", player.location, 0.8);
+  notify(player, "§eYour wish is granted");
+  return true;
 }
 
 /** Teaches every spell, god-tier included, filling free slots. Returns how many were new. @param {Player} player */

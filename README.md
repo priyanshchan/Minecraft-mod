@@ -1102,6 +1102,26 @@ kingdom from **Court of Nazarick** on the Kingdom page.
 **Skeleton Archer**: the lowest of Nazarick's archers. It shoots from range and burns by day like its kin. It
 spawns at night and guards Katze Plains Barrows, and drops bones and arrows.
 
+### More of the highest magic (v8.9)
+
+**New super-tier spells** (level 70)
+- **Wish Upon a Star:** you and every player within 16 blocks are fully healed and shielded (Absorption IV and
+  Resistance II for 30 s). All your other spells are ready at once.
+- **Creation:** remakes the land where you aim. 12 blocks freeze over, and everything on them is locked in ice
+  for 8 seconds, taking cold damage each second.
+- **Summon Behemoth:** two Behemoths rise from pillars of fire and fight for you for a minute, beyond your usual
+  summons.
+
+**New god-tier spells** (level 80, for those who have conquered the Great Tomb)
+- **Requiem of the Forty-One:** the banners of Ainz Ooal Gown fill the sky. Forty-one beams, one for each Supreme
+  Being, fall on your foes within 36 blocks, and then all of them are struck and weakened together. Allies near
+  fight with Strength II and Resistance for 20 seconds.
+- **Ouroboros:** the world serpent coils round 32 blocks and turns time back for your side. Every ally is fully
+  healed and cleansed, while time all but stops for your foes, who are crushed by the tightening coils for ten
+  seconds.
+
+Like the earlier god-tier spells, these two pull the camera back and announce themselves to every player.
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it

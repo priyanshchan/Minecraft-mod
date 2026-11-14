@@ -112,7 +112,8 @@ VANILLA = {
     },
     "effect": {"slowness", "slow_falling", "instant_health", "regeneration", "strength", "resistance",
                "wither", "night_vision", "saturation", "levitation", "invisibility", "speed", "jump_boost",
-               "fire_resistance", "poison", "weakness", "health_boost", "haste", "absorption"},
+               "fire_resistance", "poison", "weakness", "health_boost", "haste", "absorption",
+               "mining_fatigue"},  # v8.9, verified against @minecraft/vanilla-data
 }
 
 errors: list[str] = []
