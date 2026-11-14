@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:ghoulfang_sickle"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "FF",
+      " I",
+      " S"
+    ],
+    "key": {
+      "F": {
+        "item": "overlord:ghoul_fang"
+      },
+      "I": {
+        "item": "overlord:spectral_iron"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:ghoul_fang"
+      }
+    ],
+    "result": {
+      "item": "overlord:ghoulfang_sickle",
+      "count": 1
+    }
+  }
+}

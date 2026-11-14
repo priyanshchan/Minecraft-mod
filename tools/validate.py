@@ -51,6 +51,8 @@ VANILLA = {
         "dark_oak_fence", "purple_carpet",
         # the districts (v8.5), verified against @minecraft/vanilla-data
         "pumpkin", "melon_block", "enchanting_table", "purple_stained_glass",
+        # the new sites (v8.6), verified against @minecraft/vanilla-data
+        "water", "flowering_azalea", "fern",
         # structure overhaul (v7.0), verified against @minecraft/vanilla-data
         "basalt", "blackstone", "blast_furnace", "brewing_stand", "brown_carpet", "cauldron", "chiseled_quartz_block", "coal_block",
         "dark_oak_log", "dark_oak_planks", "deepslate", "emerald_block", "glass_pane", "gray_wool", "grindstone", "lapis_block",
@@ -68,6 +70,8 @@ VANILLA = {
         "minecraft:iron_block", "minecraft:wheat_seeds", "minecraft:pumpkin_seeds",
         "minecraft:melon_seeds", "minecraft:beetroot_seeds", "minecraft:wheat", "minecraft:apple",
         "minecraft:carrot", "minecraft:golden_carrot", "minecraft:blaze_rod", "minecraft:grass_block",
+        # Pinison's trades and the treants' loot (v8.6), verified against @minecraft/vanilla-data
+        "minecraft:oak_sapling", "minecraft:flowering_azalea", "minecraft:bone_meal",
         "minecraft:paper", "minecraft:stick", "minecraft:copper_ingot", "minecraft:feather",
         "minecraft:copper_block", "minecraft:gold_block", "minecraft:glowstone",
         "minecraft:gold_ingot", "minecraft:fermented_spider_eye", "minecraft:ender_pearl",

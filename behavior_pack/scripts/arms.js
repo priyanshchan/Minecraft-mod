@@ -76,6 +76,9 @@ export const WEAPONS = {
   giants_maul: { kind: "heavy", element: "ice", trait: "-", art: "Quake" },
   dragonbone_blade: { kind: "greatsword", element: "none", trait: "the sweep carries half the blow to foes beside the target", art: "Dragon's Cleave: a great cut through everything in a 5-block cone" },
   six_arms_knuckles: { kind: "fist", element: "none", trait: "-", art: "Flurry" },
+  cavalier_lance: { kind: "polearm", element: "dark", trait: "-", art: "Death Charge: you ride down everything in a 9-block line, withering it" },
+  ghoulfang_sickle: { kind: "blade", element: "acid", trait: "-", art: "Paralysing Rend: three quick cuts at the foe ahead; it can barely move afterwards" },
+  heartwood_staff: { kind: "staff", element: "acid", trait: "-", art: "Grasping Roots: roots burst from the ground where you look, binding and crushing every foe within 4 blocks" },
 };
 
 /** The new weapon arts: weapon -> [cooldown category, seconds]. */
@@ -92,6 +95,9 @@ export const NEW_ARTS = {
   angel_mace: ["overlord_judgement", 10],
   blade_bug: ["overlord_swarm", 9],
   dragonbone_blade: ["overlord_dragon_cleave", 9],
+  cavalier_lance: ["overlord_death_charge", 9],
+  ghoulfang_sickle: ["overlord_rend", 7],
+  heartwood_staff: ["overlord_roots", 8],
 };
 
 /**
@@ -109,6 +115,7 @@ export const SETS = {
   crimson: { name: "Crimson Valkyrie", element: "fire", particle: "droplet", two: "your blows drink 4% of their harm", full: "your blows drink 10% of their harm", art: "Blood Frenzy: Strength II and blows that drink 30% for 10 seconds", cooldown: 40 },
   platinum: { name: "Platinum", element: "holy", particle: "mote", two: "Resistance I", full: "Resistance II and Regeneration I", art: "Platinum Bulwark: Absorption III, Resistance III, and half of every blow thrown back for 8 seconds", cooldown: 45 },
   bonedragon: { name: "Bone Dragon", element: "dark", particle: "wisp", two: "15% of magical harm turned aside", full: "35% of magical harm turned aside", art: "Bone Prison: bones bind every foe within 6 blocks", cooldown: 35 },
+  cavalier: { name: "Death Cavalier", element: "dark", particle: "wisp", two: "Speed I", full: "Strength I and Resistance I", art: "Spectral Charge: a ghostly steed carries you 8 blocks, trampling and withering everything in its path", cooldown: 30 },
   beasthide: { name: "Beast Hide", element: "acid", particle: "dust", two: "Haste I", full: "Haste I and Saturation", art: "Hunter's Howl: Speed II, Strength I and Jump Boost II for 12 seconds; foes nearby falter", cooldown: 35 },
 };
 
@@ -502,7 +509,50 @@ export function useWeaponArt(player, item) {
   const element = WEAPONS[key].element;
   const dir = facing(player);
   const ahead = (/** @type {number} */ n) => add(above(player, 1.1), dir, n);
-  if (key === "spuit_lance") {
+  if (key === "cavalier_lance") {
+    for (const foe of foesInLine(player, 9)) {
+      strike(player, foe, 13);
+      foe.addEffect("wither", 4 * TICKS, { amplifier: 1 });
+      fx.slash(d, above(foe), "dark", 1.4);
+    }
+    try {
+      player.applyKnockback({ x: dir.x * 3, z: dir.z * 3 }, 0.15);
+    } catch {
+      // cannot be moved
+    }
+    fx.beam(d, above(player, 1), ahead(9), "dark", 1.4);
+    fx.pose(player, "thrust");
+    sound(player, "mob.wither.shoot", 0.8);
+  } else if (key === "ghoulfang_sickle") {
+    const foe = foesAhead(player, 4, 0.6)[0];
+    if (!foe) {
+      cooldowns.delete(`${player.id}|${art[0]}`);
+      notify(player, "§7No foe before you");
+      return true;
+    }
+    for (let i = 0; i < 3; i++) {
+      system.runTimeout(() => {
+        strike(player, foe, 6);
+        if (foe.isValid) fx.slash(d, above(foe, 0.7 + i * 0.3), "acid", 1.2);
+      }, i * 4);
+    }
+    foe.addEffect("slowness", 5 * TICKS, { amplifier: 4 });
+    foe.addEffect("weakness", 5 * TICKS, { amplifier: 1 });
+    fx.pose(player, "slash");
+    sound(player, "mob.spider.say", 0.8);
+  } else if (key === "heartwood_staff") {
+    const foe = aimed(player, 20);
+    const at = foe ? foe.location : ahead(8);
+    for (const other of foesNear(player, at, 4)) {
+      strike(player, other, 10);
+      other.addEffect("slowness", 4 * TICKS, { amplifier: 5 });
+      fx.rise(d, other.location, "acid", 0.9);
+    }
+    fx.ring(d, at, "acid", 4);
+    fx.shake(d, at, 8, 0.25, 0.3);
+    fx.pose(player, "slam");
+    sound(player, "block.composter.ready", 0.6);
+  } else if (key === "spuit_lance") {
     let drawn = 0;
     for (const foe of foesInLine(player, 8)) {
       strike(player, foe, 10);
@@ -769,6 +819,21 @@ export function armourArt(player, set) {
     fx.skull(d, above(player, 2.3), 1.3);
     fx.pose(player, "summon");
     sound(player, "mob.skeleton.death", 0.6);
+  } else if (set === "cavalier") {
+    for (const foe of foesInLine(player, 8)) {
+      strike(player, foe, 11);
+      foe.addEffect("wither", 3 * TICKS, { amplifier: 1 });
+      fx.slash(d, above(foe), "dark", 1.3);
+    }
+    try {
+      player.applyKnockback({ x: dir.x * 3.4, z: dir.z * 3.4 }, 0.2);
+    } catch {
+      // cannot be moved
+    }
+    player.addEffect("speed", 4 * TICKS, { amplifier: 1, showParticles: false });
+    fx.beam(d, above(player, 1), ahead(8), "dark", 1.2);
+    fx.pose(player, "thrust");
+    sound(player, "item.trident.riptide_1", 0.7);
   } else if (set === "beasthide") {
     player.addEffect("speed", 12 * TICKS, { amplifier: 1, showParticles: false });
     player.addEffect("strength", 12 * TICKS, { amplifier: 0, showParticles: false });
@@ -904,6 +969,7 @@ const TWO_EFFECTS = {
   ranger: ["jump_boost", 0],
   platinum: ["resistance", 0],
   beasthide: ["haste", 0],
+  cavalier: ["speed", 0],
 };
 
 /** Armour Art input: sneak tapped twice within half a second; and when sneak was last pressed (Perfect Parry). */

@@ -177,7 +177,7 @@ assert.equal(spells.masteryOf(c, "magic_arrow"), 2);
 advance(20); dummy.damaged = []; spells.castSelected(c); assert.deepEqual(dummy.damaged, [8], "7 * 1.08 rounds to 8");
 // every spell is castable without throwing and has sane data
 assert.equal(new Set(spells.SPELLS.map((s) => s.key)).size, spells.SPELLS.length);
-assert.equal(spells.SPELLS.length, 49);
+assert.equal(spells.SPELLS.length, 52);
 for (let tier = 1; tier <= 12; tier++) assert.ok(spells.SPELLS.filter((s) => s.tier === tier).length >= 3, `tier ${tier}`);
 // dark magic is weak against undead: Death (52) on an undead dummy deals a quarter
 pc.level = 100; c.inv.push(new ItemStack("overlord:data_crystal", 64)); assert.ok(spells.learnSpell(c, "death").includes("Learned"));
@@ -1148,6 +1148,20 @@ players.splice(0, players.length, ...everyone, zoe);
   // the Arsenal page describes what is held and worn
   hand = "overlord:dragonbone_blade"; worn = { Head: "overlord:ranger_helmet", Chest: "overlord:ranger_chestplate" }; arms.openArsenal(k);
   const page = shown[shown.length - 1]; assert.equal(page.title, "Arsenal"); assert.ok(page.body.includes("Cleaving Arc") && page.body.includes("Ranger") && page.body.includes("Arrow Rain"), page.body);
+  // v8.6: the Death Charge rides down a line and withers it; the Rend needs a foe; Grasping Roots binds where you look
+  advance(400); worn = {}; const rider1 = foe(0, 3), rider2 = foe(0, 7), aside1 = foe(7, 0); k.dimension.mobs = [rider1, rider2, aside1];
+  assert.ok(arms.useWeaponArt(k, "overlord:cavalier_lance")); assert.ok(rider1.health.currentValue === 187, `${rider1.health.currentValue} ${rider2.health.currentValue} ${aside1.health.currentValue} ${k.bar}`); assert.equal(rider2.health.currentValue, 187, "the whole line");
+  assert.ok(rider1.afflicted.includes("wither"));
+  k.dimension.mobs = []; arms.useWeaponArt(k, "overlord:ghoulfang_sickle"); assert.ok(k.bar.includes("No foe"), k.bar);
+  const prey2 = foe(0, 2); k.dimension.mobs = [prey2]; arms.useWeaponArt(k, "overlord:ghoulfang_sickle"); advance(12);
+  assert.equal(prey2.health.currentValue, 200 - 18); assert.ok(prey2.afflicted.includes("slowness") && prey2.afflicted.includes("weakness"));
+  const root1 = foe(0, 8), root2 = foe(2, 9); k.dimension.mobs = [root1, root2]; arms.useWeaponArt(k, "overlord:heartwood_staff");
+  assert.ok(root1.health.currentValue === 190 && root2.health.currentValue === 190 && root1.afflicted.includes("slowness"));
+  // the Death Cavalier set: two pieces give Speed, four its Spectral Charge
+  worn = { Head: "overlord:cavalier_helmet", Chest: "overlord:cavalier_chestplate" }; k.effects.clear(); arms.step(k, 20 * 900); assert.ok(k.effects.has("speed"));
+  worn = { Head: "overlord:cavalier_helmet", Chest: "overlord:cavalier_chestplate", Legs: "overlord:cavalier_leggings", Feet: "overlord:cavalier_boots" };
+  assert.equal(arms.fullSet(k), "cavalier"); const lane2 = foe(0, 4); k.dimension.mobs = [lane2]; arms.armourArt(k, "cavalier");
+  assert.equal(lane2.health.currentValue, 189); assert.ok(lane2.afflicted.includes("wither"));
   k.dimension.mobs = []; players.splice(players.indexOf(k), 1);
 }
 
@@ -1790,6 +1804,30 @@ players.splice(0, players.length, ...everyone, zoe);
   script.push(99); king.openKingdom(q); await new Promise((r) => setTimeout(r, 10));
   const page = shown.filter((f) => f.title === "Nazarick Reborn").at(-1); assert.ok(page.buttons.some((b) => b.startsWith("Districts")) && page.buttons.some((b) => b.startsWith("Court of Nazarick")) && page.body.includes("Citizens"));
   all.forEach((m) => { m.isValid = false; }); players.splice(players.indexOf(q), 1); pq.realm = {};
+}
+
+// v8.6: the dead of the Katze Plains and the Destroyer Tree
+{
+  const haunts = await import("./haunts.js");
+  const bosses = await import("./bosses.js");
+  // a Wraith steps out of the air behind the player, then rests
+  const h = mkPlayer("hana"); h.location = { x: 0, y: 64, z: 0 }; h.getViewDirection = () => ({ x: 0, y: 0, z: 1 });
+  const wraith = { id: "w1", typeId: "overlord:wraith", isValid: true, location: { x: 0, y: 64, z: 9 }, teleport(to) { this.location = { ...to }; } };
+  h.dimension = { id: "minecraft:overworld", spawnParticle() {}, playSound() {}, getEntities: () => [wraith], getBlock: () => ({ isAir: true }) };
+  assert.equal(haunts.haunt(h, 5000, () => 0).length, 1); assert.deepEqual(wraith.location, { x: 0, y: 64, z: -2 }, "behind the player");
+  assert.equal(haunts.haunt(h, 5000 + 20, () => 0).length, 0, "it rests between blinks");
+  assert.equal(haunts.haunt(h, 5000 + haunts.BLINK_REST * 20, () => 0.9).length, 0, "and does not always blink");
+  players.splice(players.indexOf(h), 1);
+  // the Destroyer Tree fights in three phases and calls up its saplings
+  const tree = bosses.BOSSES.zytl_qae; assert.ok(tree && tree.moves.length === 3);
+  const awaken = tree.moves[2].find((m) => m.shape === "summon"); assert.ok(awaken && awaken.type === "overlord:treant_sapling" && awaken.count === 3);
+  // new spells, and a summoning of Ghouls
+  for (const key of ["paralysis", "summon_undead_5", "wail_of_the_banshee"]) assert.ok(spells.SPELLS.some((sp) => sp.key === key), key);
+  // the new sites: a hostile grove with the Destroyer Tree at its strongest, a barrow of the dead, a friendly spring
+  const grove = sites.SITES.find((x) => x.key === "destroyer_grove"); assert.ok(grove.garrison(2).some(([t]) => t === "overlord:zytl_qae"));
+  assert.ok(!grove.garrison(0).some(([t]) => t === "overlord:zytl_qae"), "not for the weak");
+  const barrow = sites.SITES.find((x) => x.key === "katze_barrow"); assert.ok(barrow.garrison(1).some(([t]) => t === "overlord:death_cavalier"));
+  const spring = sites.SITES.find((x) => x.key === "dryad_spring"); assert.deepEqual(spring.garrison(0), [["overlord:pinison", 1]]);
 }
 
 // persistence: saved profile is restored after leaving

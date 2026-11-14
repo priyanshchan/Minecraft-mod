@@ -354,6 +354,146 @@ def barding(plate, light, dark, trim):
     ], {"P": dark, "l": plate, "T": trim, "D": light})
 
 
+# ------------------------------------------------------------------ v8.6
+def ghoul_fang():
+    """A long yellowed fang, dark at the root."""
+    return sprite16([
+        "................",
+        "................",
+        "......KKK.......",
+        ".....KbbbK......",
+        ".....KBBbK......",
+        "......BBBb......",
+        "......BWBb......",
+        "......BBBb......",
+        ".......BWb......",
+        ".......BBb......",
+        ".......BB.......",
+        "........Bb......",
+        "........B.......",
+        "........b.......",
+        "................",
+        "................",
+    ], {"K": "#3a2a1a", "B": "#e9e2c4", "b": "#b8ad86", "W": "#ffffff"})
+
+
+def spectral_iron():
+    """An ingot of black iron with a ghost-green sheen."""
+    return sprite16([
+        "................",
+        "................",
+        "................",
+        "................",
+        "....GGGGGGGG....",
+        "...GgKKKKKKgG...",
+        "..GgKkkkkkkKgG..",
+        "..GKkGkkkkkkKG..",
+        "..GKkkkkGkkkKG..",
+        "..GKKKKKKKKKKG..",
+        "...GGGGGGGGGG...",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], {"G": "#59e0a0", "g": "#9cffd0", "K": "#1d1b24", "k": "#3a3644"})
+
+
+def heartwood():
+    """A cut of dark living wood with a glowing green heart and rings."""
+    return sprite16([
+        "................",
+        "................",
+        ".....WWWWWW.....",
+        "....WwwwwwwW....",
+        "...WwRRRRRRwW...",
+        "...WwRrrrrRwW...",
+        "...WwRrGGrRwW...",
+        "...WwRrGGrRwW...",
+        "...WwRrrrrRwW...",
+        "...WwRRRRRRwW...",
+        "....WwwwwwwW....",
+        ".....WWWWWW.....",
+        "......L..L......",
+        ".....LL..LL.....",
+        "................",
+        "................",
+    ], {"W": "#3a2a1e", "w": "#5a4430", "R": "#7a5a3a", "r": "#9a7a52", "G": "#9cff6a", "L": "#4f8a3a"})
+
+
+def cavalier_lance():
+    """A black lance with a barbed head and a green-lit point."""
+    return sprite16([
+        "...............G",
+        "..............Gg",
+        ".............GgK",
+        "............KgK.",
+        "...........KkK..",
+        "..........KkK...",
+        ".........KKKK...",
+        "........K.K.....",
+        ".......KkK......",
+        "......KkK.......",
+        ".....KkK........",
+        "....KkK.........",
+        "...KkK..........",
+        "..KkK...........",
+        ".KkK............",
+        ".KK.............",
+    ], {"K": "#1d1b24", "k": "#3a3644", "G": "#59e0a0", "g": "#9cffd0"})
+
+
+def ghoulfang_sickle():
+    """A bone sickle with fangs along its inner edge."""
+    return sprite16([
+        "................",
+        ".....BBBBB......",
+        "...BBbbbbbBB....",
+        "..BbG.....bB....",
+        "..BG.......BB...",
+        ".BbF........B...",
+        ".B.F.........B..",
+        ".B...........Bb.",
+        "..............B.",
+        ".............WB.",
+        "............W...",
+        "...........W....",
+        "..........L.....",
+        ".........L......",
+        "........L.......",
+        ".......L........",
+    ], {"B": "#e9e2cc", "b": "#b8ad86", "G": "#9cff6a", "F": "#ffffff", "W": "#d8d0b4", "L": "#3a2a1a"})
+
+
+def heartwood_staff():
+    """A gnarled staff of heartwood, its head curled round a green glow."""
+    return sprite16([
+        "...........WW...",
+        "..........W.LW..",
+        ".........W.GG.W.",
+        ".........W.GG.W.",
+        "..........W..W..",
+        "...........WW...",
+        "..........W.....",
+        ".........W......",
+        "........W.......",
+        ".......W........",
+        "......W.........",
+        ".....W..........",
+        "....W...........",
+        "...W............",
+        "..W.............",
+        ".W..............",
+    ], {"W": "#5a3e24", "L": "#4f8a3a", "G": "#9cff6a"})
+
+
+CAVALIER_PAL = {"K": "#0c0b10", "k": "#3a3644", "l": "#5e5868", "G": "#59e0a0", "g": "#1e5a44", "R": "#59e0a0"}
+
+
+def cavalier_layers():
+    return armor_layers("#1d1b24", "#3a3644", "#0c0b10", "#59e0a0", GOLD="#59e0a0", GOLD_D="#1e5a44")
+
+
 def whetstone():
     """A grey refining stone with a seam of adamantite green and a glint of crystal."""
     return sprite16([
@@ -1755,6 +1895,12 @@ BLOCK_TEXTURES = {
 
 
 EGG_COLORS = {
+    "ghoul": ("#7d8a6a", "#f2e21b"),
+    "wraith": ("#16202a", "#9cffe8"),
+    "death_cavalier": ("#1d1b24", "#59e0a0"),
+    "treant_sapling": ("#6b4a2a", "#4f8a3a"),
+    "zytl_qae": ("#3a2a1e", "#ff7a2a"),
+    "pinison": ("#c8d9a0", "#4f8a3a"),
     "ainz": ("#2b1a3d", "#d9a92b"),
     "albedo": ("#f1eff0", "#17141d"),
     "shalltear": ("#a3121f", "#dfe0ee"),
@@ -1895,6 +2041,16 @@ def all_item_icons():
         "refining_stone": whetstone(),
         "tomb_key": tomb_key(),
         "royal_seal": royal_seal(),
+        "ghoul_fang": ghoul_fang(),
+        "spectral_iron": spectral_iron(),
+        "heartwood": heartwood(),
+        "cavalier_lance": cavalier_lance(),
+        "ghoulfang_sickle": ghoulfang_sickle(),
+        "heartwood_staff": heartwood_staff(),
+        "cavalier_helmet": helmet(CAVALIER_PAL),
+        "cavalier_chestplate": chestplate(CAVALIER_PAL),
+        "cavalier_leggings": leggings(CAVALIER_PAL),
+        "cavalier_boots": boots(CAVALIER_PAL),
         "wyrm_whistle": wyrm_whistle(),
         "soul_reins": soul_reins(),
         "adamantite_barding": barding("#7fd6b0", "#c8f5e0", "#2f6a55", "#e8e0c8"),

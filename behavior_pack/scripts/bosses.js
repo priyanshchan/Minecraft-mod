@@ -133,6 +133,14 @@ export const BOSSES = {
       [{ name: "Inferno", shape: "ring", power: 1.5, inner: 3, radius: 10 }],
     ],
   },
+  zytl_qae: {
+    name: "Zy'tl Q'ae, the Destroyer Tree", element: "acid", damage: 20, adds: [[id("treant_sapling"), 2]],
+    moves: [
+      [{ name: "Root Eruption", shape: "ring", power: 1.1, inner: 2, radius: 9 }, { name: "Vine Lash", shape: "line", power: 1.2, length: 16 }],
+      [{ name: "Seed Barrage", shape: "barrage", power: 1.0, radius: 3, count: 6, hazard: 8 }, { name: "Uprooting Grasp", shape: "pull", power: 1.1, radius: 12 }],
+      [{ name: "Fall of the World Tree", shape: "slam", power: 2.0, radius: 11, delay: 50 }, { name: "Saplings Awaken", shape: "summon", power: 1.0, radius: 6, type: id("treant_sapling"), count: 3 }],
+    ],
+  },
   dark_young: {
     name: "Dark Young", element: "acid", damage: 14,
     moves: [

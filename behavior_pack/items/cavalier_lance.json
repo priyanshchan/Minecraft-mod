@@ -1,0 +1,34 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:cavalier_lance",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_cavalier_lance"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.cavalier_lance.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:damage": 12,
+      "minecraft:can_destroy_in_creative": false,
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 15
+      },
+      "minecraft:rarity": "rare",
+      "minecraft:cooldown": {
+        "category": "overlord_death_charge",
+        "duration": 9.0
+      }
+    }
+  }
+}

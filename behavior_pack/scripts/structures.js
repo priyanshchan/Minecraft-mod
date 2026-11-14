@@ -825,6 +825,57 @@ export const SITES = [
           ? [[id("lupusregina"), 1], [id("death_knight"), 2], [id("elder_lich"), 2]]
           : [[id("shalltear"), 1], [id("vampire_bride"), 2], [id("death_knight"), 2]],
   },
+  // ================================================== v8.6: the dead and the deep forest
+  {
+    key: "destroyer_grove", name: "Grove of the Destroyer Tree", weight: 3, radius: 13, pad: mc("podzol"), height: 16, muster: 7,
+    build(b) {
+      b.rubble(10, 12, [mc("moss_block"), mc("dark_oak_log"), mc("coarse_dirt")]);
+      // a ring of dead trees, bare and black, branches reaching for the middle
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2 + 0.3;
+        const x = Math.round(Math.cos(a) * 11);
+        const z = Math.round(Math.sin(a) * 11);
+        if (z > 9 && Math.abs(x) <= 2) continue; // the way in
+        b.column(x, z, 7 + (i % 3), mc("dark_oak_log"));
+        b.set(x - Math.sign(x), 6, z - Math.sign(z), mc("dark_oak_log"));
+      }
+      b.disc(0, -1, 0, 5, mc("moss_block"));
+      b.column(0, 0, 2, mc("dark_oak_log"), mc("soul_campfire")); // the stump where it slept
+      for (const [x, z] of [[-3, 9], [3, 9]]) b.lamp(x, z, mc("dark_oak_fence"), mc("soul_lantern"));
+      b.chest(0, 0, -10, [[id("heartwood"), 1, 2], [COIN, 6, 14], [id("data_crystal"), 2, 5], [mc("golden_apple"), 0, 1]]);
+    },
+    garrison: (tier) => (tier === 0 ? [[id("treant_sapling"), 4]] : tier === 1 ? [[id("treant_sapling"), 6]] : [[id("zytl_qae"), 1], [id("treant_sapling"), 3]]),
+  },
+  {
+    key: "katze_barrow", name: "Katze Plains Barrow", weight: 5, radius: 11, pad: mc("coarse_dirt"), height: 12,
+    build(b) {
+      b.rubble(8, 10, [mc("bone_block"), mc("mossy_cobblestone"), mc("cobblestone_wall")]);
+      b.mound(0, -7, 3, mc("moss_block")); // the barrow
+      b.fill(-1, 0, -5, 1, 2, -4, mc("mossy_stone_bricks"));
+      b.fill(0, 0, -5, 0, 1, -4, mc("air")); // its mouth
+      for (const [x, z] of [[-8, -3], [-6, 2], [6, 2], [8, -3], [-8, 6], [8, 6]]) b.grave(x, z);
+      b.ruin(-10, 8, -6, 8, 2, [mc("cobblestone_wall"), mc("mossy_cobblestone")]);
+      b.ruin(6, 8, 10, 8, 2, [mc("cobblestone_wall"), mc("mossy_cobblestone")]);
+      b.column(-9, -9, 6, mc("dark_oak_log")); // a dead tree
+      for (const [x, z] of [[-4, 7], [4, 7]]) b.lamp(x, z, mc("cobblestone_wall"), mc("soul_lantern"));
+      b.chest(0, 0, -6, [[id("spectral_iron"), 1, 3], [id("soul_fragment"), 1, 3], [COIN, 4, 10], [mc("bone"), 2, 6]]);
+    },
+    garrison: (tier) => (tier === 0 ? [[id("ghoul"), 4], [id("wraith"), 1]] : tier === 1 ? [[id("ghoul"), 4], [id("wraith"), 2], [id("death_cavalier"), 1]]
+      : [[id("ghoul"), 5], [id("wraith"), 3], [id("death_cavalier"), 2]]),
+  },
+  {
+    key: "dryad_spring", name: "Dryad's Spring", weight: 4, radius: 10, pad: mc("moss_block"), height: 14,
+    build(b) {
+      b.disc(0, -1, -6, 2.6, mc("water")); // the spring
+      for (const [x, z] of [[-7, -7], [7, -7], [-8, 3], [8, 3], [-4, 8], [4, 8]]) b.tree(x, z, 7);
+      for (const [x, z] of [[-3, -6], [3, -6], [-6, 0], [6, 0]]) b.set(x, 0, z, mc("flowering_azalea"));
+      for (const [x, z] of [[-2, 6], [2, 6]]) b.set(x, 0, z, mc("fern"));
+      b.lamp(-5, -4, mc("oak_fence"), mc("lantern"));
+      b.lamp(5, -4, mc("oak_fence"), mc("lantern"));
+      b.chest(0, 0, 9, [[mc("golden_apple"), 0, 1], [mc("apple"), 2, 5], [id("red_potion"), 1, 2], [COIN, 2, 5]]);
+    },
+    garrison: () => [[id("pinison"), 1]],
+  },
   // =============================================================== the undead
   {
     key: "graveyard", name: "Katze Graveyard", weight: 8, radius: 10, pad: mc("coarse_dirt"),
@@ -1192,10 +1243,10 @@ const sieges = new Map();
 /** Sites whose garrison is hostile: clearing them out is rewarded. */
 const HOSTILE_SITES = new Set(["goblin_camp", "bandit_camp", "nazarick_outpost", "troll_den", "dragon_hoard", "theocracy_camp", "demon_gate",
   "graveyard", "great_tomb", "zurrernorn_shrine", "beastman_camp", "bafolk_camp", "frost_giant_hold", "mage_tower", "besieged_mine",
-  "ruined_keep", "angel_sanctum"]);
+  "ruined_keep", "angel_sanctum", "destroyer_grove", "katze_barrow"]);
 /** Sites a player can travel back to once discovered. */
 const FRIENDLY_SITES = new Set(["adventurer_camp", "kingdom_camp", "empire_outpost", "dwarven_forge", "lizardman_village", "carne_village", "imperial_arena", "paladin_fort",
-  "elven_grove", "roadside_inn"]);
+  "elven_grove", "roadside_inn", "dryad_spring"]);
 export const TRAVEL_COST = 5;
 
 /** @param {number} level */
@@ -1518,7 +1569,7 @@ registerMenu(
         (lead ? `${lead.replace("Word is there's", "Nearest site nobody has found yet:")}\n\n` : "") +
           (places.length > 0
           ? `Return to a friendly camp you have discovered for ${skills.haggle(profileOf(player), TRAVEL_COST)} Gold Coins. Your party follows.`
-          : "You have not discovered any friendly camps yet. Adventurers' camps, Kingdom and Empire army posts, Dwarven Forges, Lizardman villages, Carne Village, Roadside Inns, Imperial Arenas, Holy Kingdom Forts and Elven Groves can be travelled to once found.")
+          : "You have not discovered any friendly camps yet. Adventurers' camps, Kingdom and Empire army posts, Dwarven Forges, Lizardman villages, Carne Village, Roadside Inns, Imperial Arenas, Holy Kingdom Forts, Elven Groves and Dryad's Springs can be travelled to once found.")
       );
     for (const place of places) {
       const distance = Math.round(Math.hypot(place.x - player.location.x, place.z - player.location.z));

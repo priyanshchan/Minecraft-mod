@@ -1002,6 +1002,50 @@ kingdom from **Court of Nazarick** on the Kingdom page.
 - **Titles:** Master of the Guardians (all seven sworn), Beloved Sovereign (100 citizens), Merchant King (4 trade
   routes).
 
+### The Dead and the Deep Forest (v8.6)
+
+**New creatures**
+| Creature | Where | What it does |
+|----------|-------|--------------|
+| Ghoul | anywhere at night, in packs | fast; leaps; its bite slows you. Drops Ghoul Fangs |
+| Wraith | anywhere at night | vanishes and steps out of the air behind you; its touch withers |
+| Death Cavalier | plains and savannas at night (rare) | an undead knight that charges with its lance. Drops Spectral Iron, sometimes its lance |
+| Treant | forests at night | slow, but its roots hold you fast |
+| Pinison Pole Perlia | the Dryad's Spring | a dryad who trades saplings, golden apples, potions and moss, and buys Ghoul Fangs and Heartwood |
+| **Zy'tl Q'ae, the Destroyer Tree** | the Grove of the Destroyer Tree (for level 50+) | a world boss, 1300 health, three phases |
+
+**Zy'tl Q'ae's moves**
+- Root Eruption and Vine Lash.
+- Seed Barrage, which leaves blighted ground, and Uprooting Grasp, which drags you in.
+- Fall of the World Tree, and Saplings Awaken, which calls up three Treants.
+- It drops 6 to 10 Heartwood, a Codex, the Heartwood Staff, coins and crystals.
+
+**New weapons** (3D in the hand, with arts)
+- **Lance of the Death Cavalier** (3 Spectral Iron and a stick), with **Death Charge**: you ride down everything
+  in a 9-block line, withering it.
+- **Ghoulfang Sickle** (2 Ghoul Fangs, Spectral Iron and a stick), with **Paralysing Rend**: three quick cuts at
+  the foe ahead, leaving it barely able to move.
+- **Heartwood Staff** (2 Heartwood and a Data Crystal, or from the Destroyer Tree), with **Grasping Roots**:
+  roots burst where you look, binding and crushing every foe within 4 blocks.
+
+**New armour set: Death Cavalier** (Spectral Iron), worn in 3D with a spectral green glow and a cape.
+- Two pieces: Speed I.
+- Full set: Strength I and Resistance I.
+- **Spectral Charge** (double-tap sneak): a ghostly charge 8 blocks ahead that tramples and withers.
+
+**New spells**
+- **Paralysis** (tier 4): holds one mob almost still for 6 seconds.
+- **Summon Undead 5th Tier** (tier 5): two Ghouls fight for you for 2 minutes.
+- **Wail of the Banshee** (tier 7): a shriek of the dead 8 blocks ahead that harms every mob and throws it back.
+
+**New places**
+- **Grove of the Destroyer Tree:** a ring of dead black trees around the stump where the Destroyer Tree sleeps.
+  Treants guard it, and the tree itself wakes for players of level 50 or more.
+- **Katze Plains Barrow:** a burial mound among graves and broken walls, held by Ghouls, Wraiths and Death
+  Cavaliers.
+- **Dryad's Spring:** a quiet pool among trees and azaleas, home to Pinison. It is friendly, so you can travel
+  back to it.
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
@@ -1206,7 +1250,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys) and `devtools.js` (the Creative Tome of Ascension) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink) and `devtools.js` (the Creative Tome of Ascension) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 
