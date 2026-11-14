@@ -4,12 +4,13 @@
 // with /give @s overlord:ascension_tome). Using it opens a menu to raise or reset your level, learn every
 // spell, unlock god-tier magic, refill health and mana and clear spell recharges, or take a kit of the
 // materials the add-on's systems use. Sneak + use is a quick +10 levels.
-import { world, GameMode } from "@minecraft/server";
+import { world, system, GameMode } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { MAX_LEVEL, giveItem, notify, profileOf, restoreMana, setLevel, touch } from "./rpg.js";
 import { learnAll, resetCooldowns } from "./spells.js";
 import { CHAPTERS, completeStory } from "./campaign.js";
 import { MAX_RACE_LEVEL, RACES, raceOf, setRaceLevel } from "./races.js";
+import { EVENTS, KINDS, proclaim, state } from "./events.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -104,6 +105,11 @@ export function openTome(player) {
       for (const key of ["albedo", "demiurge", "cocytus", "shalltear", "aura", "mare", "pandoras_actor"]) if (!p.bosses.includes(key)) p.bosses.push(key);
       touch(player);
       return "§dEvery Floor Guardian counts as defeated: swear them in from the Kingdom page";
+    }],
+    ["Start a world event now\n(near you, after the usual warning)", () => {
+      if (state.current) return `§7${EVENTS[state.current.kind].name} is already under way`;
+      const event = proclaim(player, KINDS[Math.floor(Math.random() * KINDS.length)], system.currentTick);
+      return event ? `§6${EVENTS[event.kind].name} gathers nearby` : "§7No event could be started";
     }],
     ["Back to level 1\n(refunds stat points, forgets skills)", () => {
       profileOf(player).skills = {};

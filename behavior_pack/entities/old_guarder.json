@@ -66,6 +66,56 @@
       "overlord:despawn": {
         "minecraft:instant_despawn": {}
       },
+      "overlord:raised": {
+        "minecraft:type_family": {
+          "family": [
+            "old_guarder",
+            "nazarick_ally",
+            "undead",
+            "raised",
+            "mob"
+          ]
+        },
+        "minecraft:persistent": {},
+        "minecraft:loot": {
+          "table": "loot_tables/entities/overlord/empty.json"
+        },
+        "minecraft:tameable": {
+          "probability": 1.0,
+          "tame_items": [
+            "overlord:ascension_tome"
+          ]
+        },
+        "minecraft:behavior.owner_hurt_by_target": {
+          "priority": 1
+        },
+        "minecraft:behavior.owner_hurt_target": {
+          "priority": 2
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 3,
+          "must_see": true,
+          "reselect_targets": true,
+          "entity_types": [
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "monster"
+              },
+              "max_dist": 16
+            }
+          ]
+        }
+      },
+      "overlord:raised_follow": {
+        "minecraft:behavior.follow_owner": {
+          "priority": 4,
+          "speed_multiplier": 1.2,
+          "start_distance": 10,
+          "stop_distance": 3
+        }
+      },
       "overlord:wild": {
         "minecraft:burns_in_daylight": {}
       }
@@ -206,6 +256,31 @@
         "add": {
           "component_groups": [
             "overlord:despawn"
+          ]
+        }
+      },
+      "overlord:become_raised": {
+        "remove": {
+          "component_groups": []
+        },
+        "add": {
+          "component_groups": [
+            "overlord:raised",
+            "overlord:raised_follow"
+          ]
+        }
+      },
+      "overlord:order_hold": {
+        "remove": {
+          "component_groups": [
+            "overlord:raised_follow"
+          ]
+        }
+      },
+      "overlord:order_follow": {
+        "add": {
+          "component_groups": [
+            "overlord:raised_follow"
           ]
         }
       },

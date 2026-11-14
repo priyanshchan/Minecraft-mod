@@ -1122,6 +1122,62 @@ spawns at night and guards Katze Plains Barrows, and drops bones and arrows.
 
 Like the earlier god-tier spells, these two pull the camera back and announce themselves to every player.
 
+### Necromancy: the Undead Army (v9.0)
+
+Whatever falls near you leaves a **corpse** for 30 seconds, marked by drifting souls. Use the **Book of the Dead**
+(a book, 2 soul fragments and 2 Data Crystals) within 8 blocks of corpses to raise them. Each corpse becomes the
+strongest undead its body and your level allow:
+
+| Undead | From a body of | Your level | Mana |
+|--------|----------------|------------|------|
+| Skeleton | any | 1 | 10 |
+| Elder Lich | 40+ health | 10 | 20 |
+| Soul Eater | 100+ health | 25 | 35 |
+| Death Knight | 250+ health | 45 | 50 |
+
+- **They serve for good:** raised undead don't time out. They follow you, fight whatever threatens you, and
+  earn a rank every 5 kills (up to 5 stars), gaining hearts, Strength and Resistance.
+- **Army size:** 2, plus 1 for every 10 levels, up to 16.
+- **Undead race:** an Undead player commands 2 to 6 more, raises them for half the mana, and raises them one
+  rank stronger.
+- **Commanding them:** sneak + use the Book, or open **Undead Army** on the Plate. From there you can raise the
+  dead, tell them to follow you, hold their ground or gather to you, rename them, or release one or all.
+
+### World Events (v9.0)
+
+Every 30 to 45 minutes a **world event** is proclaimed to every player, at a place 90 to 160 blocks from one of
+them.
+- **Finding it:** after a two-minute warning it waits up to 8 minutes for a hero. The action bar shows its
+  distance and direction, and a beacon marks the spot.
+- **Fighting it:** the first player within 48 blocks begins it. Waves of foes come, and then its boss, all within
+  10 minutes.
+- **Scoring:** every foe slain there scores for its slayer, including foes slain by your party and your raised
+  undead.
+- **Rewards:** when the boss falls, everyone who fought earns XP, Gold Coins and **Medals of Valor** by score.
+  The best fighter earns 5 more.
+
+| Event | Foes | Boss | Title |
+|-------|------|------|-------|
+| The Battle of Katze Plains | Ghouls, Skeleton Archers, Wraiths, Death Cavaliers (Imperial Knights fight beside you) | a Skeletal Dragon with Death Cavaliers | Hero of Katze |
+| The Theocracy's Crusade | Theocracy priests, Archangel Flames, Nigun | the Dominion Authority | Crusade Breaker |
+| The Demon Plague | Hellhounds, Shadow Demons, an Evil Lord of Wrath | Jaldabaoth | Plaguebane |
+| The Dragon Descent | quagoa and Frost Giants | two Frost Dragons | Dragonwatch |
+
+**The medal shop** is on the Plate's **World Events** page, which also shows the current event. Medals buy:
+
+| Item | Medals |
+|------|--------|
+| 16 Data Crystals | 4 |
+| 4 Refining Stones | 3 |
+| a Sunstone | 5 |
+| a Guardian Crest | 6 |
+| the Book of the Dead | 8 |
+| a Codex | 12 |
+| the Barding of Nazarick | 15 |
+| the Wyrm Whistle | 20 |
+
+**New titles:** Necromancer (raise 50 undead), Lord of the Dead (an army of 10), and one for winning each event.
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
@@ -1135,6 +1191,7 @@ cannot be crafted) works only in creative mode. Using it opens a menu:
 - **Finish the campaign**: marks all ten chapters done (you are crowned) and gives the Seal of the Sorcerer Kingdom.
 - **Race to its top level**: your race jumps to level 15 (choose a race first), so its true form is ready.
 - **Count every Floor Guardian defeated**: so they can all be sworn to your court at once.
+- **Start a world event now**: one gathers near you, after the usual warning.
 - **Back to level 1**: refunds stat points and forgets learned skills.
 
 Sneak + use the tome for a quick +10 levels. In survival or adventure mode it does nothing.
@@ -1326,7 +1383,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink), `comforts.js` (meals and off-hand rings) and `devtools.js` (the Creative Tome of Ascension) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink), `comforts.js` (meals and off-hand rings), `necromancy.js` (the Undead Army), `events.js` (world events) and `devtools.js` (the Creative Tome of Ascension) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

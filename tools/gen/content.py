@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [8, 9, 0]
+VERSION = [9, 0, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.9.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v9.0.0"
 
 
 def oid(name):
@@ -340,6 +340,10 @@ ITEMS = {
     "royal_seal": ("Seal of the Sorcerer Kingdom", "equipment", {
         "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
         **_cooldown("overlord_royal_seal", 1.0)}),
+    # v9.0: necromancy (necromancy.js) and the medals of the world events (events.js)
+    "book_of_the_dead": ("Book of the Dead", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True, **_cooldown("overlord_raise", 1.0)}),
+    "medal_of_valor": ("Medal of Valor", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "rare"}),
     # v8.8: comforts of Nazarick - meals with effects (main.js) and rings worn in the off hand (comforts.js)
     "sebas_tea": ("Sebas's Black Tea", "items", _meal(2, 0.2, drink=True)),
     "feast_pie": ("Nazarick Feast Pie", "items", _meal(10, 1.2)),
@@ -674,6 +678,8 @@ def recipe_files():
                                   ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
         "tomb_key": _shaped("tomb_key", ["BCB", "CKC", "BCB"], {
             "B": oid("nazarick_bricks"), "C": cry, "K": oid("guardian_crest")}, oid("tomb_key"), unlock=oid("guardian_crest")),
+        "book_of_the_dead": _shaped("book_of_the_dead", [" S ", "CBC", " S "], {
+            "S": oid("soul_fragment"), "C": cry, "B": "minecraft:book"}, oid("book_of_the_dead"), unlock=oid("soul_fragment")),
         "sebas_tea": _shapeless("sebas_tea", ["minecraft:glass_bottle", "minecraft:sugar", "minecraft:cocoa_beans"], oid("sebas_tea"), count=2),
         "feast_pie": _shapeless("feast_pie", ["minecraft:egg", "minecraft:sugar", "minecraft:wheat", "minecraft:cooked_beef", "minecraft:apple"],
                                 oid("feast_pie")),
@@ -948,6 +954,9 @@ def loot_path(name):
 def _is_family(value, subject="other"):
     return {"test": "is_family", "subject": subject, "value": value}
 
+
+# The undead a necromancer can raise from corpses (necromancy.js)
+RAISABLE = ["old_guarder", "elder_lich", "soul_eater", "death_knight"]
 
 # Floor Guardians who can serve a crowned player (court.js), with the harm of their blows
 GUARDIAN_COMPANIONS = {"albedo": 16, "shalltear": 15, "cocytus": 16, "demiurge": 12, "aura": 11, "mare": 11, "pandoras_actor": 13}
@@ -2259,6 +2268,29 @@ def _apply_ai(out):
         entity["component_groups"]["overlord:despawn"] = {"minecraft:instant_despawn": {}}
         entity["events"]["overlord:become_summoned"] = {"add": {"component_groups": ["overlord:summoned"]}}
         entity["events"]["overlord:expire"] = {"add": {"component_groups": ["overlord:despawn"]}}
+
+    # v9.0: the raised dead (necromancy.js) - undead that serve their raiser for good, following or holding
+    # their ground as ordered. Raised from a corpse with "overlord:become_raised".
+    for name in RAISABLE:
+        entity = out[name]["minecraft:entity"]
+        entity["component_groups"]["overlord:raised"] = {
+            "minecraft:type_family": {"family": [name, "nazarick_ally", "undead", "raised", "mob"]},
+            "minecraft:persistent": {},
+            "minecraft:loot": {"table": loot_path("empty")},
+            "minecraft:tameable": {"probability": 1.0, "tame_items": [oid("ascension_tome")]},
+            "minecraft:behavior.owner_hurt_by_target": {"priority": 1},
+            "minecraft:behavior.owner_hurt_target": {"priority": 2},
+            "minecraft:behavior.nearest_attackable_target": {
+                "priority": 3, "must_see": True, "reselect_targets": True,
+                "entity_types": [{"filters": _is_family("monster"), "max_dist": 16}]},
+        }
+        entity["component_groups"]["overlord:raised_follow"] = {
+            "minecraft:behavior.follow_owner": {"priority": 4, "speed_multiplier": 1.2, "start_distance": 10, "stop_distance": 3}}
+        wild = [g for g in ("overlord:wild",) if g in entity["component_groups"]]
+        entity["events"]["overlord:become_raised"] = {"remove": {"component_groups": wild},
+                                                      "add": {"component_groups": ["overlord:raised", "overlord:raised_follow"]}}
+        entity["events"]["overlord:order_hold"] = {"remove": {"component_groups": ["overlord:raised_follow"]}}
+        entity["events"]["overlord:order_follow"] = {"add": {"component_groups": ["overlord:raised_follow"]}}
 
     # Climb serves the Kingdom as well.
     parts("climb")["minecraft:type_family"]["family"].insert(1, "kingdom")

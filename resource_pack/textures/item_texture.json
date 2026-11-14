@@ -65,6 +65,9 @@
     "overlord_bonedragon_leggings": {
       "textures": "textures/items/overlord/bonedragon_leggings"
     },
+    "overlord_book_of_the_dead": {
+      "textures": "textures/items/overlord/book_of_the_dead"
+    },
     "overlord_bow_of_houyi": {
       "textures": "textures/items/overlord/bow_of_houyi"
     },
@@ -517,6 +520,9 @@
     },
     "overlord_mask_of_envy": {
       "textures": "textures/items/overlord/mask_of_envy"
+    },
+    "overlord_medal_of_valor": {
+      "textures": "textures/items/overlord/medal_of_valor"
     },
     "overlord_nazarick_barding": {
       "textures": "textures/items/overlord/nazarick_barding"
