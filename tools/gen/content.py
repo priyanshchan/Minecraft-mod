@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [8, 6, 2]
+VERSION = [8, 7, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.6.2"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.7.0"
 
 
 def oid(name):
@@ -2873,7 +2873,7 @@ for _key in GUARDIAN_COMPANIONS:
 # Every creature breathes and flinches; walkers lean into their stride, fighters follow their swings
 # through, the caped have capes that move and the beasts have tails that do.
 CAPED = ["climb", "lakyus", "remedios", "paladin", "imperial_knight", "guard", "zesshi", "nigun", "khajiit",
-         "decem", "arena_master", "theocracy_priest", "zero", "soldier"]
+         "decem", "arena_master", "theocracy_priest", "zero", "soldier", "retainer"]
 TAILED = ["soul_eater", "hellhound", "gigant_basilisk", "dark_young", "eight_edge_assassin"]
 for _name in list(ENTITY_ANIMS):
     if _name in PROJECTILES:
@@ -3435,6 +3435,51 @@ def player_animations_json():
             rightArm=[(0, Z), (0.06, (-80, 50, 0)), (0.16, (-86, 46, 0)), (0.26, (-60, -40, 0)), (0.45, Z)],
             body=[(0, Z), (0.06, (0, 20, 0)), (0.16, (0, 18, 0)), (0.26, (0, -16, 0)), (0.45, Z)],
             leftArm=[(0, Z), (0.06, (-30, 0, -20)), (0.45, Z)]),
+        # ---- v8.7: the party's own poses (they share the player's bone names)
+        # the shield driven forward off the left arm
+        "animation.overlord.party_bash": anim(
+            0.5,
+            leftArm=[(0, Z), (0.1, (20, 0, -10)), (0.2, (-80, -20, 0)), (0.32, (-70, -20, 0)), (0.5, Z)],
+            body=[(0, Z), (0.1, (0, 15, 0)), (0.2, (0, -20, 0)), (0.5, Z)],
+            rightArm=[(0, Z), (0.2, (25, 0, 10)), (0.5, Z)]),
+        # arms flung wide, chest out: a challenge
+        "animation.overlord.party_taunt": anim(
+            0.9,
+            rightArm=[(0, Z), (0.15, (-30, 0, 70)), (0.6, (-25, 0, 75)), (0.9, Z)],
+            leftArm=[(0, Z), (0.15, (-30, 0, -70)), (0.6, (-25, 0, -75)), (0.9, Z)],
+            head=[(0, Z), (0.15, (-15, 0, 0)), (0.6, (-15, 0, 0)), (0.9, Z)],
+            body=[(0, Z), (0.15, (-6, 0, 0)), (0.9, Z)]),
+        # the bow raised and the string drawn to the cheek, then loosed
+        "animation.overlord.party_draw": anim(
+            0.7,
+            leftArm=[(0, Z), (0.15, (-90, 10, 0)), (0.5, (-90, 10, 0)), (0.7, Z)],
+            rightArm=[(0, Z), (0.15, (-90, -25, 0)), (0.42, (-95, -60, 0)), (0.5, (-80, 20, 0)), (0.7, Z)],
+            body=[(0, Z), (0.15, (0, -20, 0)), (0.5, (0, -20, 0)), (0.7, Z)],
+            head=[(0, Z), (0.15, (0, -15, 0)), (0.5, (0, -15, 0)), (0.7, Z)]),
+        # an arrow loosed high at the sky
+        "animation.overlord.party_skyshot": anim(
+            0.8,
+            leftArm=[(0, Z), (0.15, (-150, 10, 0)), (0.6, (-150, 10, 0)), (0.8, Z)],
+            rightArm=[(0, Z), (0.15, (-140, -20, 0)), (0.5, (-150, -50, 0)), (0.6, (-130, 20, 0)), (0.8, Z)],
+            head=[(0, Z), (0.15, (-35, 0, 0)), (0.6, (-35, 0, 0)), (0.8, Z)]),
+        # hands together at the chest, head bowed
+        "animation.overlord.party_pray": anim(
+            1.0,
+            rightArm=[(0, Z), (0.2, (-60, 30, 0)), (0.8, (-62, 32, 0)), (1.0, Z)],
+            leftArm=[(0, Z), (0.2, (-60, -30, 0)), (0.8, (-62, -32, 0)), (1.0, Z)],
+            head=[(0, Z), (0.2, (20, 0, 0)), (0.8, (22, 0, 0)), (1.0, Z)]),
+        # an overarm throw
+        "animation.overlord.party_throw": anim(
+            0.5,
+            rightArm=[(0, Z), (0.12, (-170, 0, 10)), (0.24, (-40, 0, 0)), (0.5, Z)],
+            body=[(0, Z), (0.12, (0, -15, 0)), (0.24, (0, 15, 0)), (0.5, Z)]),
+        # fingers across the lute's strings, a sway to the music
+        "animation.overlord.party_strum": anim(
+            1.0,
+            rightArm=[(0, Z), (0.15, (-40, 30, 0)), (0.3, (-30, 20, 0)), (0.45, (-40, 30, 0)), (0.6, (-30, 20, 0)), (0.8, (-40, 30, 0)), (1.0, Z)],
+            leftArm=[(0, Z), (0.15, (-50, -40, 0)), (0.8, (-50, -40, 0)), (1.0, Z)],
+            body=[(0, Z), (0.25, (0, 0, 5)), (0.5, (0, 0, -5)), (0.75, (0, 0, 5)), (1.0, Z)],
+            head=[(0, Z), (0.25, (0, 0, -6)), (0.5, (0, 0, 6)), (0.75, (0, 0, -6)), (1.0, Z)]),
         # the weapon raised high in both hands and held while it wakes
         "animation.overlord.weapon_awaken": anim(
             1.4,

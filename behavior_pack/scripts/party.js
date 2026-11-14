@@ -13,6 +13,7 @@ import { countItem, takeItem } from "./spells.js";
 import { rumour } from "./structures.js";
 import * as fx from "./vfx.js";
 import * as skills from "./skills.js";
+import { fights, hazards } from "./bosses.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -38,7 +39,7 @@ const SCOUT_FIRST = 120; // seconds before an archer first reports what lies ahe
 const SCOUT_EVERY = 360;
 /** How a member chooses the foe for its skills. */
 export const TACTICS = ["Vanguard", "Guardian", "Free hand"];
-const TACTIC_HELP = ["strikes the foe you are fighting", "strikes whatever last hurt you", "picks its own foe within 12 blocks"];
+const TACTIC_HELP = ["strikes the foe you are fighting", "strikes whatever last hurt you", "picks its own foe within 12 blocks: whatever hurts you, elites and staggered foes first"];
 const STANCES = /** @type {const} */ (["come", "go", "stay"]);
 const STANCE_HELP = {
   come: "Come - stay close and defend",
@@ -99,7 +100,75 @@ const WEAK_TO = {
 
 /** @typedef {import("@minecraft/server").Player} Player */
 /** @typedef {import("@minecraft/server").Entity} Entity */
-/** @typedef {{ name: string, look: number, gear: number, hired: boolean, level: number, out: boolean, xp: number, bond: number, tactic: number, traits: string[], gift: number }} Member */
+/** @typedef {{ name: string, look: number, gear: number, hired: boolean, level: number, out: boolean, xp: number, bond: number, tactic: number, traits: string[], gift: number, persona?: string }} Member */
+
+// ------------------------------------------------------------------- v8.7: who they are and how they fight
+
+/** Each member's temper colours what they say in battle. */
+export const PERSONAS = {
+  brave: { name: "Brave", start: ["For the Master!", "Stand fast - they will break on us!", "Here they come. Good."], elite: ["A worthy foe, felled!", "That one fought well. Not well enough."], low: ["It is only a scratch!", "I will not fall here!"] },
+  cautious: { name: "Cautious", start: ["Careful, Master - more than one.", "Stay close. Watch the flanks.", "I count several. Let us be wise."], elite: ["Done. Let us not meet another like it.", "We were lucky there, Master."], low: ["Too close - I am pulling back!", "I need a moment!"] },
+  cheerful: { name: "Cheerful", start: ["Oh, company! Let us say hello!", "Ready when you are, Master!", "This should be fun!"], elite: ["Ha! Did you see that, Master?", "And that is how it is done!"], low: ["Ouch, ouch, ouch!", "That one stung!"] },
+  stoic: { name: "Stoic", start: ["Engaging.", "As you command.", "Hostiles ahead."], elite: ["It is finished.", "Threat removed."], low: ["Wounded. Continuing.", "Pain is irrelevant."] },
+};
+const PERSONA_KEYS = Object.keys(PERSONAS);
+/** How each vocation fights: front holds the line, back keeps its distance, support stays by the master, flank goes behind. */
+export const ROLES = ["front", "back", "back", "support", "flank", "back"];
+const ROLE_NAMES = { front: "Vanguard - holds the line and draws foes off you", back: "Back line - keeps its distance and steps away from foes that close in", support: "Support - stays at your side and keeps everyone standing", flank: "Flanker - slips behind foes and strikes where they are open" };
+/**
+ * The pose each attack is drawn with: the casting and weapon animations the player uses, and the party's own.
+ * @type {Record<string, string>}
+ */
+export const POSES = {
+  bash: "animation.overlord.party_bash", cleave: "animation.overlord.weapon_slash", taunt: "animation.overlord.party_taunt",
+  cry: "animation.overlord.cast_raise", quake: "animation.overlord.weapon_slam", tempest: "animation.overlord.weapon_spin",
+  shot: "animation.overlord.party_draw", volley: "animation.overlord.party_draw", pin: "animation.overlord.party_draw",
+  fire_arrow: "animation.overlord.party_draw", rain: "animation.overlord.party_skyshot", starfall: "animation.overlord.party_skyshot",
+  bolt: "animation.overlord.cast_point", burst: "animation.overlord.cast_sweep", chain: "animation.overlord.cast_point",
+  frost: "animation.overlord.cast_slam", meteor: "animation.overlord.cast_raise", rift: "animation.overlord.cast_channel",
+  mend: "animation.overlord.cast_self", smite: "animation.overlord.cast_point", purify: "animation.overlord.party_pray",
+  sanctuary: "animation.overlord.cast_raise", blessing: "animation.overlord.party_pray", aegis: "animation.overlord.cast_raise",
+  backstab: "animation.overlord.weapon_thrust", flask: "animation.overlord.party_throw", shadowstep: "animation.overlord.weapon_thrust",
+  knives: "animation.overlord.party_throw", flurry: "animation.overlord.weapon_slash", lotus: "animation.overlord.weapon_spin",
+  ballad: "animation.overlord.party_strum", dissonance: "animation.overlord.party_strum", haste: "animation.overlord.party_strum",
+  dirge: "animation.overlord.party_strum", crescendo: "animation.overlord.party_strum", requiem: "animation.overlord.party_strum",
+};
+/** The element of each vocation's attacks, for the flash at the hand. */
+const VOC_ELEMENT = ["none", "none", "arcane", "holy", "dark", "arcane"];
+/** Foe id -> tick until which it is staggered and open to the party's blows. */
+/** @type {Map<string, number>} */
+export const staggered = new Map();
+/** How much harder blows land on a staggered foe. */
+export const OPENING = 1.4;
+/** Entity id -> tick of its next dash (a dodge, a step back, an interception). */
+/** @type {Map<string, number>} */
+const dashReady = new Map();
+/** Player id -> tick of the last time the party went into battle. */
+const lastBattle = new Map();
+
+/** A member's temper; older members are given one from their name. @param {Member} member */
+export function personaOf(member) {
+  if (member.persona && member.persona in PERSONAS) return member.persona;
+  let h = 0;
+  for (const ch of member.name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return PERSONA_KEYS[h % PERSONA_KEYS.length];
+}
+
+/** One of a member's lines for a moment. @param {Member} member @param {"start" | "elite" | "low"} moment @param {() => number} [random] */
+export function lineFor(member, moment, random = Math.random) {
+  const lines = PERSONAS[/** @type {keyof typeof PERSONAS} */ (personaOf(member))][moment];
+  return lines[Math.floor(random() * lines.length) % lines.length];
+}
+
+/** Marks a foe staggered for a while. @param {Entity} foe @param {number} seconds */
+function stagger(foe, seconds) {
+  staggered.set(foe.id, system.currentTick + Math.round(seconds * TICKS));
+}
+
+/** Whether a foe is open to an exploiting blow. @param {Entity} foe */
+export function isStaggered(foe) {
+  return system.currentTick < (staggered.get(foe.id) ?? 0);
+}
 
 // ------------------------------------------------------------------- roster
 
@@ -124,6 +193,7 @@ export function partyOf(player) {
     m.tactic = Math.min(TACTICS.length - 1, Math.max(0, Math.floor(Number(m.tactic) || 0)));
     m.traits = [...new Set(Array.isArray(m.traits) ? m.traits : [])].filter((key) => TRAITS.some((t) => t.key === key)).slice(0, 2);
     m.gift = Number.isFinite(Number(m.gift)) ? Math.floor(Number(m.gift)) : -1;
+    m.persona = personaOf(m);
   }
   if (!STANCES.includes(/** @type {any} */ (p.stance))) p.stance = "come";
   return p.party;
@@ -556,15 +626,59 @@ function pickFoe(player, entity, member) {
   const ordered = current(orders.get(player.id)); // a Unison order outranks every tactic
   if (ordered) return ordered;
   if (member.tactic === 2) {
-    try {
-      const near = player.dimension.getEntities({ location: entity.location, maxDistance: 12, families: ["monster"], closest: 1 });
-      if (near[0]) return near[0];
-    } catch {
-      // unloaded chunk
-    }
+    const chosen = bestFoe(player, entity, member);
+    if (chosen) return chosen;
   }
   if (member.tactic === 1) return current(threats.get(player.id)) ?? current(targets.get(player.id));
   return current(targets.get(player.id));
+}
+
+/**
+ * A free hand weighs its choice (v8.7): whatever is hurting the master first, then elites and foes the party
+ * has staggered; a Rogue or an Archer goes for the wounded it can finish; a Fighter for what is nearest the
+ * master; and nearer is always better.
+ * @param {Player} player @param {Entity} entity @param {Member} member
+ * @returns {Entity | undefined}
+ */
+export function bestFoe(player, entity, member) {
+  /** @type {Entity[]} */
+  let near = [];
+  try {
+    near = player.dimension.getEntities({ location: entity.location, maxDistance: 12, families: ["monster"] });
+  } catch {
+    return undefined;
+  }
+  const threat = threats.get(player.id);
+  const hunting = threat && system.currentTick - threat.tick <= FRESH ? threat.entity : undefined;
+  const role = ROLES[Math.floor(member.look / 2)];
+  const vocation = Math.floor(member.look / 2);
+  let best;
+  let bestScore = -Infinity;
+  for (const foe of near) {
+    if (!foe.isValid) continue;
+    let score = -Math.hypot(foe.location.x - entity.location.x, foe.location.z - entity.location.z);
+    if (hunting && foe.id === hunting.id) score += 30;
+    try {
+      if (isElite(foe)) score += 20;
+    } catch {
+      // no mark
+    }
+    if (isStaggered(foe)) score += 15;
+    if (vocation === 1 || vocation === 4) {
+      try {
+        const health = foe.getComponent("minecraft:health");
+        if (health && health.effectiveMax > 0 && health.currentValue / health.effectiveMax < 0.35) score += 20;
+      } catch {
+        // unreadable
+      }
+    }
+    if (role === "front") score -= Math.hypot(foe.location.x - player.location.x, foe.location.z - player.location.z);
+    if (score > bestScore) {
+      bestScore = score;
+      best = foe;
+    }
+  }
+  return best;
 }
 
 /**
@@ -615,6 +729,8 @@ world.afterEvents.entityHurt.subscribe((event) => {
 /** Entity id -> attack key -> tick at which that attack is ready again. */
 /** @type {Map<string, Map<string, number>>} */
 const ready = new Map();
+/** Player id -> tick before which no member calls out another opening. */
+const openingCalled = new Map();
 /** Entity id -> tick before which it will not attack again. */
 const busy = new Map();
 /** Entity id -> which of its attacks it used last, so the next one is a different one. */
@@ -668,7 +784,14 @@ function mostWounded(player, healer) {
  */
 function hit(t, target, amount, cause = "entityAttack") {
   try {
-    target.applyDamage(amount * t.power, { cause: EntityDamageCause[cause], damagingEntity: t.entity });
+    // A foe the party has staggered is open: every blow on it lands harder.
+    const open = isStaggered(target);
+    target.applyDamage(amount * t.power * (open ? OPENING : 1), { cause: EntityDamageCause[cause], damagingEntity: t.entity });
+    if (open && system.currentTick >= (openingCalled.get(t.player.id) ?? 0)) {
+      openingCalled.set(t.player.id, system.currentTick + 12 * TICKS);
+      fx.spark(t.d, above(target, 1.6), "holy", 1.2);
+      say(t.player, t.member, "An opening - strike now!", 6);
+    }
     return true;
   } catch {
     return false; // already dead
@@ -718,6 +841,33 @@ export const ATTACKS = [
       fx.slash(t.d, above(t.entity, 1.1), "none", 2);
       return true;
     } },
+    { key: "taunt", name: "Taunt", level: 14, cooldown: 16, urgent: true, help: "draws monsters menacing you or the back line onto itself, weakened", use: (t) => {
+      const menaced = [t.player, ...backLine(t.player)];
+      /** @type {Entity[]} */
+      const drawn = [];
+      for (const ally of menaced) {
+        for (const foe of monstersNear(t.player, ally.location, 5)) {
+          const far = Math.hypot(foe.location.x - t.entity.location.x, foe.location.z - t.entity.location.z);
+          if (far > 3 && far < 14 && !drawn.some((d) => d.id === foe.id)) drawn.push(foe);
+        }
+      }
+      if (drawn.length === 0) return false;
+      for (const foe of drawn.slice(0, 5)) {
+        const dx = t.entity.location.x - foe.location.x;
+        const dz = t.entity.location.z - foe.location.z;
+        const len = Math.hypot(dx, dz) || 1;
+        try {
+          foe.applyKnockback({ x: (dx / len) * 1.4, z: (dz / len) * 1.4 }, 0.25);
+        } catch {
+          // immovable
+        }
+        afflict(foe, "weakness", 5, 0);
+        fx.beam(t.d, above(foe, 1), above(t.entity, 1.2), "fire", 0.6);
+      }
+      fx.ring(t.d, t.entity.location, "fire", 3);
+      say(t.player, t.member, "Face me, you cowards!", 20);
+      return true;
+    } },
     { key: "cry", name: "Rallying Cry", level: 20, cooldown: 30, urgent: true, help: "Resistance for you below half health", use: (t) => {
       if (t.masterShare >= 0.5 || !t.near) return false;
       t.player.addEffect("resistance", 6 * TICKS, { amplifier: 0 });
@@ -741,6 +891,27 @@ export const ATTACKS = [
       fx.shake(t.d, t.entity.location, 8, 0.3, 0.3);
       return true;
     } },
+    { key: "tempest", name: "Blade Tempest", level: 45, cooldown: 28, help: "three whirling turns that cut every foe within 4.5 blocks", use: (t) => {
+      if (monstersNear(t.player, t.entity.location, 4.5).length === 0) return false;
+      for (let turn = 0; turn < 3; turn++) {
+        system.runTimeout(() => {
+          if (!t.entity.isValid || !t.player.isValid) return;
+          for (const foe of monstersNear(t.player, t.entity.location, 4.5)) hit(t, foe, 6 + t.level * 0.3);
+          fx.ring(t.d, t.entity.location, "none", 4.5);
+          for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2 + turn;
+            fx.slash(t.d, { x: t.entity.location.x + Math.cos(a) * 2.5, y: t.entity.location.y + 1.1, z: t.entity.location.z + Math.sin(a) * 2.5 }, "none", 1.5);
+          }
+          try {
+            t.entity.playAnimation(POSES.tempest);
+          } catch {
+            // cosmetic
+          }
+        }, turn * 9);
+      }
+      say(t.player, t.member, "Blade Tempest!", 25);
+      return true;
+    } },
   ],
   // ------------------------------------------------------------------- Archer
   [
@@ -757,6 +928,15 @@ export const ATTACKS = [
         hit(t, foe, 4 + t.level * 0.25);
         fx.beam(t.d, t.hand, above(foe, 1), "none", 0.7);
       }
+      return true;
+    } },
+    { key: "pin", name: "Pinning Shot", level: 14, cooldown: 10, help: "an arrow through the foot: the foe is pinned and staggered", use: (t) => {
+      if (!t.foe || t.gap > 24 || isStaggered(t.foe)) return false;
+      hit(t, t.foe, 5 + t.level * 0.3);
+      afflict(t.foe, "slowness", 3, 6);
+      stagger(t.foe, 3);
+      fx.beam(t.d, t.hand, above(t.foe, 0.3), "none", 0.8);
+      fx.circle(t.d, t.foe.location, "none", 1);
       return true;
     } },
     { key: "fire_arrow", name: "Fire Arrow", level: 20, cooldown: 14, help: "an arrow that bursts into flame", use: (t) => {
@@ -784,6 +964,22 @@ export const ATTACKS = [
         }, wave * 10);
       }
       fx.circle(t.d, centre, "none", 4);
+      return true;
+    } },
+    { key: "starfall", name: "Starfall Arrow", level: 45, cooldown: 30, help: "an arrow loosed at the sky comes down as a rain of light over the foe", use: (t) => {
+      if (!t.foe || t.gap > 26) return false;
+      const centre = { ...t.foe.location };
+      fx.beam(t.d, t.hand, { x: t.entity.location.x, y: t.entity.location.y + 14, z: t.entity.location.z }, "holy", 0.8);
+      fx.circle(t.d, centre, "holy", 5);
+      system.runTimeout(() => {
+        if (!t.entity.isValid || !t.player.isValid) return;
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2;
+          fx.fall(t.d, { x: centre.x + Math.cos(a) * 2.5, y: centre.y, z: centre.z + Math.sin(a) * 2.5 }, "holy", 6, 1);
+        }
+        fx.nova(t.d, { x: centre.x, y: centre.y + 0.6, z: centre.z }, "holy", 5);
+        for (const foe of monstersNear(t.player, centre, 5)) hit(t, foe, 10 + t.level * 0.45, "magic");
+      }, 24);
       return true;
     } },
   ],
@@ -848,6 +1044,30 @@ export const ATTACKS = [
       }, 16);
       return true;
     } },
+    { key: "rift", name: "Arcane Rift", level: 45, cooldown: 30, help: "a rift drags every foe near the target into one point, then bursts", use: (t) => {
+      if (!t.foe || t.gap > 20) return false;
+      const centre = { ...t.foe.location };
+      const caught = monstersNear(t.player, centre, 7);
+      for (const foe of caught) {
+        const dx = centre.x - foe.location.x;
+        const dz = centre.z - foe.location.z;
+        const len = Math.hypot(dx, dz) || 1;
+        try {
+          foe.applyKnockback({ x: (dx / len) * 1.2, z: (dz / len) * 1.2 }, 0.2);
+        } catch {
+          // immovable
+        }
+        stagger(foe, 3);
+      }
+      fx.implode(t.d, { x: centre.x, y: centre.y + 1, z: centre.z }, "arcane", 3);
+      system.runTimeout(() => {
+        if (!t.entity.isValid || !t.player.isValid) return;
+        fx.nova(t.d, { x: centre.x, y: centre.y + 1, z: centre.z }, "arcane", 4);
+        fx.shake(t.d, centre, 10, 0.4, 0.3);
+        for (const foe of monstersNear(t.player, centre, 4)) hit(t, foe, 14 + t.level * 0.5, "magic");
+      }, 14);
+      return true;
+    } },
   ],
   // ------------------------------------------------------------------- Healer
   [
@@ -871,6 +1091,30 @@ export const ATTACKS = [
       hit(t, t.foe, (5 + t.level * 0.3) * (undead ? 1.5 : 1), "magic");
       fx.beam(t.d, t.hand, above(t.foe, 1), "holy");
       fx.spark(t.d, above(t.foe, 1), "holy", 1);
+      return true;
+    } },
+    { key: "purify", name: "Purify", level: 14, cooldown: 18, urgent: true, help: "washes poison, wither, weakness and slowness from you and the party", use: (t) => {
+      const bad = ["poison", "wither", "weakness", "slowness", "blindness", "nausea", "hunger"];
+      /** @type {Entity[]} */
+      const allies = [t.player];
+      for (let i = 0; i < MAX_PARTY; i++) allies.push(...entitiesOf(t.player, i));
+      let washed = 0;
+      for (const ally of allies) {
+        if (Math.hypot(ally.location.x - t.entity.location.x, ally.location.z - t.entity.location.z) > 12) continue;
+        for (const effect of bad) {
+          try {
+            if (ally.getEffect(effect)) {
+              ally.removeEffect(effect);
+              washed++;
+            }
+          } catch {
+            // none
+          }
+        }
+      }
+      if (washed === 0) return false;
+      fx.rise(t.d, t.player.location, "holy", 1);
+      fx.ring(t.d, t.entity.location, "holy", 4);
       return true;
     } },
     { key: "sanctuary", name: "Sanctuary", level: 20, cooldown: 40, urgent: true, help: "a great heal when you are near death", use: (t) => {
@@ -899,6 +1143,24 @@ export const ATTACKS = [
       fx.ring(t.d, t.player.location, "holy", 6);
       return true;
     } },
+    { key: "aegis", name: "Divine Aegis", level: 45, cooldown: 50, urgent: true, help: "a shield of light over you and the party when the fight turns against you", use: (t) => {
+      if (!inCombat(t.player) || !t.near || t.masterShare >= 0.6) return false;
+      t.player.addEffect("absorption", 12 * TICKS, { amplifier: 2 });
+      for (let i = 0; i < MAX_PARTY; i++) {
+        for (const ally of entitiesOf(t.player, i)) {
+          try {
+            ally.addEffect("absorption", 12 * TICKS, { amplifier: 1 });
+            fx.dome(t.d, ally.location, "holy");
+          } catch {
+            // that ally is unloading
+          }
+        }
+      }
+      fx.pillar(t.d, t.player.location, "holy", 6);
+      fx.dome(t.d, t.player.location, "holy");
+      say(t.player, t.member, "Divine Aegis - the light protects us!", 30);
+      return true;
+    } },
   ],
   // -------------------------------------------------------------------- Rogue
   [
@@ -917,6 +1179,31 @@ export const ATTACKS = [
       }
       fx.beam(t.d, t.hand, above(t.foe, 0.5), "acid", 0.6);
       fx.nova(t.d, above(t.foe, 0.6), "acid", 3);
+      return true;
+    } },
+    { key: "shadowstep", name: "Shadowstep", level: 14, cooldown: 12, help: "slips through the shadows to behind the foe and strikes at its back", use: (t) => {
+      if (!t.foe || t.gap > 12 || t.gap < 2) return false;
+      let view = { x: 0, z: 1 };
+      try {
+        const v = t.foe.getViewDirection();
+        const len = Math.hypot(v.x, v.z) || 1;
+        view = { x: v.x / len, z: v.z / len };
+      } catch {
+        // a foe with no facing: step behind it from where the rogue stands
+        const len = t.gap || 1;
+        view = { x: (t.foe.location.x - t.entity.location.x) / len, z: (t.foe.location.z - t.entity.location.z) / len };
+      }
+      const from = { ...t.entity.location };
+      const to = { x: t.foe.location.x - view.x * 1.5, y: t.foe.location.y, z: t.foe.location.z - view.z * 1.5 };
+      try {
+        t.entity.teleport(to, { facingLocation: t.foe.location });
+      } catch {
+        return false;
+      }
+      fx.blink(t.d, from, to, "dark");
+      hit(t, t.foe, (8 + t.level * 0.45) * 1.5);
+      stagger(t.foe, 2);
+      fx.slash(t.d, above(t.foe, 1), "dark", 1.4);
       return true;
     } },
     { key: "knives", name: "Throwing Knives", level: 20, cooldown: 8, help: "three knives from a distance", use: (t) => {
@@ -939,6 +1226,21 @@ export const ATTACKS = [
       }
       return true;
     } },
+    { key: "lotus", name: "Death Lotus", level: 45, cooldown: 26, help: "a whirl of blades: four cuts at every foe within 4 blocks", use: (t) => {
+      if (monstersNear(t.player, t.entity.location, 4).length === 0) return false;
+      for (let cut = 0; cut < 4; cut++) {
+        system.runTimeout(() => {
+          if (!t.entity.isValid || !t.player.isValid) return;
+          for (const foe of monstersNear(t.player, t.entity.location, 4)) {
+            hit(t, foe, 4 + t.level * 0.2, "magic");
+            fx.slash(t.d, above(foe, 1), "dark", 1.1);
+          }
+          fx.ring(t.d, t.entity.location, "dark", 4);
+        }, cut * 11);
+      }
+      say(t.player, t.member, "Death Lotus.", 25);
+      return true;
+    } },
   ],
   // --------------------------------------------------------------------- Bard
   [
@@ -956,6 +1258,23 @@ export const ATTACKS = [
       afflict(t.foe, "weakness", 3, 0);
       fx.beam(t.d, t.hand, above(t.foe, 1), "arcane", 0.8);
       fx.ring(t.d, t.foe.location, "arcane", 1.4);
+      return true;
+    } },
+    { key: "haste", name: "Song of Swiftness", level: 14, cooldown: 24, help: "Speed and Haste for you and the party in battle", use: (t) => {
+      if (!inCombat(t.player) || !t.near) return false;
+      t.player.addEffect("speed", Math.round(10 * t.power * TICKS), { amplifier: 1 });
+      t.player.addEffect("haste", Math.round(10 * t.power * TICKS), { amplifier: 1 });
+      for (let i = 0; i < MAX_PARTY; i++) {
+        for (const ally of entitiesOf(t.player, i)) {
+          try {
+            ally.addEffect("speed", 10 * TICKS, { amplifier: 1 });
+          } catch {
+            // unloading
+          }
+        }
+      }
+      fx.ring(t.d, t.player.location, "lightning", 3);
+      fx.rise(t.d, t.entity.location, "lightning", 1);
       return true;
     } },
     { key: "dirge", name: "Dirge", level: 20, cooldown: 20, help: "slows and weakens foes around the target", use: (t) => {
@@ -976,8 +1295,40 @@ export const ATTACKS = [
       fx.nova(t.d, above(t.foe, 0.8), "none", 5);
       return true;
     } },
+    { key: "requiem", name: "Requiem", level: 45, cooldown: 30, help: "a song for the dead: four waves of sorrow that hurt and slow every foe near the target", use: (t) => {
+      if (!t.foe || t.gap > 18) return false;
+      const centre = { ...t.foe.location };
+      for (let wave = 0; wave < 4; wave++) {
+        system.runTimeout(() => {
+          if (!t.entity.isValid || !t.player.isValid) return;
+          for (const foe of monstersNear(t.player, centre, 7)) {
+            hit(t, foe, 4 + t.level * 0.2, "magic");
+            afflict(foe, "slowness", 2, 1);
+          }
+          fx.ring(t.d, centre, "dark", 3 + wave * 1.3);
+        }, wave * 12);
+      }
+      say(t.player, t.member, "Requiem...", 25);
+      return true;
+    } },
   ],
 ];
+
+/**
+ * How an attack looks: the member's pose, a flash at its hand, and - on the first blow of a fight -
+ * a word that suits its temper.
+ * @param {Player} player @param {Entity} entity @param {Member} member @param {string} key @param {number} vocation @param {number} now
+ */
+function perform(player, entity, member, key, vocation, now) {
+  try {
+    if (POSES[key]) entity.playAnimation(POSES[key], { blendOutTime: 0.2 });
+  } catch {
+    // poses are cosmetic
+  }
+  fx.flash(player.dimension, above(entity, 1.3), VOC_ELEMENT[vocation] ?? "none", 0.7);
+  if (now - (lastBattle.get(player.id) ?? -1e9) > 30 * TICKS) say(player, member, lineFor(member, "start"), 10);
+  lastBattle.set(player.id, now);
+}
 
 /** The attacks a member of this vocation knows at this level. @param {number} vocation @param {number} level */
 export function attacksKnown(vocation, level) {
@@ -1042,6 +1393,7 @@ export function useSkill(player, entity, member) {
     if (!used) continue;
     mine.set(attack.key, now + Math.round(attack.cooldown * haste * TICKS));
     busy.set(entity.id, now + Math.round(ATTACK_GAP * haste));
+    perform(player, entity, member, attack.key, vocation, now);
     if (!attack.urgent) lastUsed.set(entity.id, index);
     return attack.name;
   }
@@ -1083,6 +1435,10 @@ export function shareKill(player, dead, random = Math.random) {
   if (coins > 0) {
     giveItem(player, COIN, coins);
     notify(player, `§6Your party turned up ${coins} Gold Coin${coins === 1 ? "" : "s"}`);
+  }
+  if (isElite(dead)) {
+    const awake = party.filter((m, i) => m.out && recovering(player, i) === 0);
+    if (awake.length > 0) say(player, awake[Math.floor(random() * awake.length) % awake.length], lineFor(awake[0], "elite", random), 10);
   }
   if (changed) touch(player);
 }
@@ -1186,6 +1542,7 @@ export function tend(player) {
         const name = label(player, member);
         if (entity.nameTag !== name) entity.nameTag = name;
         lookAfter(player, entity, member);
+        brain(player, entity, member);
         useSkill(player, entity, member);
       } catch {
         // entity is unloading
@@ -1198,6 +1555,128 @@ export function tend(player) {
     const awake = party.filter((m, i) => m.out && recovering(player, i) === 0);
     if (awake.length > 0) say(player, awake[0], "Master, you are badly hurt - fall back!", 40);
   }
+}
+
+// ------------------------------------------------------------------- v8.7: battle sense
+
+/** The party members out at the back of the line (archers, mages, bards). @param {Player} player */
+function backLine(player) {
+  /** @type {Entity[]} */
+  const out = [];
+  partyOf(player).forEach((member, index) => {
+    if (ROLES[Math.floor(member.look / 2)] === "back") out.push(...entitiesOf(player, index));
+  });
+  return out;
+}
+
+/** @param {import("@minecraft/server").Vector3} p @param {import("@minecraft/server").Vector3} from @param {{ x: number, z: number }} dir @param {number} length */
+function offLine(p, from, dir, length) {
+  const t = Math.max(0, Math.min(length, (p.x - from.x) * dir.x + (p.z - from.z) * dir.z));
+  return Math.hypot(p.x - (from.x + dir.x * t), p.z - (from.z + dir.z * t));
+}
+
+/**
+ * Whether a spot lies where a boss's telegraphed blow or a hazard on the ground is about to hurt, and if so
+ * which way is out (a flat unit vector).
+ * @param {import("@minecraft/server").Vector3} at
+ * @returns {{ x: number, z: number } | undefined}
+ */
+export function danger(at) {
+  const away = (/** @type {{ x: number, z: number }} */ from) => {
+    const dx = at.x - from.x;
+    const dz = at.z - from.z;
+    const len = Math.hypot(dx, dz);
+    return len < 0.01 ? { x: 1, z: 0 } : { x: dx / len, z: dz / len };
+  };
+  for (const fight of fights.values()) {
+    const pending = fight.pending;
+    if (!pending) continue;
+    let boss;
+    try {
+      boss = fight.entity.location;
+    } catch {
+      continue;
+    }
+    const move = pending.move;
+    const dist = Math.hypot(at.x - boss.x, at.z - boss.z);
+    if ((move.shape === "slam" || move.shape === "pull") && dist <= (move.radius ?? 6) + 0.5) return away(boss);
+    if (move.shape === "ring" && dist >= (move.inner ?? 2.5) - 0.5 && dist <= (move.radius ?? 8) + 0.5) {
+      const out = away(boss);
+      return dist < ((move.inner ?? 2.5) + (move.radius ?? 8)) / 2 ? { x: -out.x, z: -out.z } : out; // into the safe middle, or out
+    }
+    if (move.shape === "barrage" || move.shape === "blink") {
+      for (const spot of pending.spots) if (Math.hypot(at.x - spot.x, at.z - spot.z) <= (move.radius ?? 3) + 0.5) return away(spot);
+    }
+    if (move.shape === "line") {
+      for (const line of pending.lines) {
+        if (offLine(at, line.from, line.dir, move.length ?? 12) <= 1.8) return { x: -line.dir.z, z: line.dir.x }; // sidestep
+      }
+    }
+  }
+  for (const hazard of hazards) {
+    if (Math.hypot(at.x - hazard.at.x, at.z - hazard.at.z) <= hazard.radius + 0.5) return away(hazard.at);
+  }
+  return undefined;
+}
+
+/** A quick dash in a direction. @param {Entity} entity @param {{ x: number, z: number }} dir @param {number} strength */
+function dash(entity, dir, strength) {
+  try {
+    entity.applyImpulse({ x: dir.x * strength, y: 0.25, z: dir.z * strength });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A member's sense of the battle, each second: it gets out of a boss's blow before it falls, and takes the
+ * place its vocation fights from - the back line steps away from foes that close in, the vanguard throws
+ * itself between the master and what threatens them, and the healer keeps to the master's side. Returns
+ * what it did, if anything.
+ * @param {Player} player @param {Entity} entity @param {Member} member @param {number} [now]
+ */
+export function brain(player, entity, member, now = system.currentTick) {
+  if (now < (dashReady.get(entity.id) ?? 0)) return "";
+  const role = ROLES[Math.floor(member.look / 2)];
+  const out = danger(entity.location);
+  if (out) {
+    dashReady.set(entity.id, now + 2 * TICKS);
+    dash(entity, out, 1.1);
+    fx.puff(entity.dimension, "streak", above(entity, 0.5), "none", 0.8);
+    return "dodge";
+  }
+  if (!inCombat(player)) return "";
+  const at = entity.location;
+  const flat = (/** @type {Entity} */ e) => Math.hypot(e.location.x - at.x, e.location.z - at.z);
+  if (role === "back") {
+    const close = monstersNear(player, at, 3.5);
+    if (close.length > 0) {
+      const foe = close[0];
+      const len = flat(foe) || 1;
+      dashReady.set(entity.id, now + 3 * TICKS);
+      dash(entity, { x: (at.x - foe.location.x) / len, z: (at.z - foe.location.z) / len }, 0.9);
+      return "kite";
+    }
+  } else if (role === "front") {
+    const guarded = [player, ...backLine(player)];
+    for (const ally of guarded) {
+      const threat = monstersNear(player, ally.location, 4).find((foe) => flat(foe) > 3 && flat(foe) < 14);
+      if (!threat) continue;
+      const len = flat(threat) || 1;
+      dashReady.set(entity.id, now + 4 * TICKS);
+      dash(entity, { x: (threat.location.x - at.x) / len, z: (threat.location.z - at.z) / len }, Math.min(1.6, len * 0.18));
+      return "intercept";
+    }
+  } else if (role === "support") {
+    const gap = Math.hypot(player.location.x - at.x, player.location.z - at.z);
+    if (gap > 8) {
+      dashReady.set(entity.id, now + 3 * TICKS);
+      dash(entity, { x: (player.location.x - at.x) / gap, z: (player.location.z - at.z) / gap }, Math.min(1.5, gap * 0.12));
+      return "regroup";
+    }
+  }
+  return "";
 }
 
 /** Entity id -> tick at which it may drink another of the master's potions. */
@@ -1228,7 +1707,7 @@ function lookAfter(player, entity, member) {
   if (!back && share < 0.3 && Math.floor(member.look / 2) !== 0) {
     entity.setDynamicProperty("overlord:back", true);
     entity.triggerEvent(`${NS}:fall_back`);
-    say(player, member, "I am hurt - falling back!", 20);
+    say(player, member, `${lineFor(member, "low")} §7(falling back)`, 20);
   } else if (back && share >= 0.6) {
     entity.setDynamicProperty("overlord:back", false);
     entity.triggerEvent(`${NS}:rally_${VOC_KEYS[Math.floor(member.look / 2)]}`); // back to the vocation's own way of fighting
@@ -1476,6 +1955,8 @@ function openMember(player, index) {
     describe(player, member, index) +
       `\n\nBond: §e${BOND_RANKS[rank]}§r (${member.bond}/${MAX_BOND}) - skills +${Math.round(rank * BOND_POWER * 100)}%, returns ${recoveryOf(member)} s after falling` +
       (member.hired ? `\nXP: ${level >= MAX_LEVEL ? "max level" : `${member.xp}/${xpForNext(level)}`}` : "") +
+      `\nRole: §e${ROLE_NAMES[/** @type {keyof typeof ROLE_NAMES} */ (ROLES[vocation])]}§r` +
+      `\nTemper: §e${PERSONAS[/** @type {keyof typeof PERSONAS} */ (personaOf(member))].name}§r` +
       `\nTactic: §e${TACTICS[member.tactic]}§r - ${TACTIC_HELP[member.tactic]}` +
       `\nTraits: ${member.traits.length > 0 ? member.traits.map((key) => TRAITS.find((t) => t.key === key)?.name).join(", ") : "none"} (${member.traits.length}/${traitSlots(level)}; slots open at levels 10 and 30)` +
       `\nAttacks:\n` +

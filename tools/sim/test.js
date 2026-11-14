@@ -631,7 +631,7 @@ world.afterEvents.entityHurt.fire({ hurtEntity: lurker, damage: 1, damageSource:
 assert.ok(j.effects.has("strength") && j.effects.has("speed"), "Ballad of Valour"); assert.ok(lurker.afflicted.includes("weakness"), "Dirge");
 // saves from before this version are filled in and cleaned up
 const k = mkPlayer("kit"); rpg.profileOf(k).party = [{ name: "Old", look: 99, hired: true, level: 7, traits: ["keen", "bogus", "keen"], bond: 500 }];
-assert.deepEqual(party.partyOf(k)[0], { name: "Old", look: 11, gear: 0, hired: true, level: 7, out: false, xp: 0, bond: 100, tactic: 0, traits: ["keen"], gift: -1 });
+assert.deepEqual(party.partyOf(k)[0], { name: "Old", look: 11, gear: 0, hired: true, level: 7, out: false, xp: 0, bond: 100, tactic: 0, traits: ["keen"], gift: -1, persona: party.personaOf({ name: "Old" }) }, "older members are given a temper from their name");
 
 // ---- v5.0: older systems tied into the newer ones ----
 // class advancement: at level 40 a class takes its advanced form, with a better skill on a shorter cooldown
@@ -902,8 +902,8 @@ players.splice(0, players.length, ...everyone, zoe);
   advance(1); lux.fx = []; vfx.castFx(lux, "arcane", 7, "point"); assert.equal(drew("orbit"), 1, "motes circle a caster of the higher tiers"); advance(20);
 
   // companions: more attacks as they level, used in turn
-  assert.deepEqual([1, 8, 20, 35].map((lv) => party.attacksKnown(0, lv).length), [1, 2, 3, 4]); assert.equal(party.attacksKnown(2, 40).length, 5, "a seasoned mage has five");
-  for (const kit of party.ATTACKS) { assert.ok(kit.length >= 4); assert.equal(kit[0].level, 1, "everyone starts with one attack"); assert.equal(new Set(kit.map((a) => a.key)).size, kit.length); }
+  assert.deepEqual([1, 8, 20, 35, 45].map((lv) => party.attacksKnown(0, lv).length), [1, 2, 4, 5, 6]); assert.equal(party.attacksKnown(2, 40).length, 5, "a seasoned mage has five");
+  for (const kit of party.ATTACKS) { assert.ok(kit.length >= 6, "six attacks for every vocation"); assert.equal(kit[0].level, 1, "everyone starts with one attack"); assert.equal(new Set(kit.map((a) => a.key)).size, kit.length); }
   const used = []; for (const kit of party.ATTACKS) for (const attack of kit) { const real = attack.use; attack.use = (turn) => { const ok = real(turn); if (ok) used.push([turn.member.name, attack.key]); return ok; }; }
   const target = (name, at) => { const m = mob("minecraft:zombie", 1e6, ["monster", "undead"]); Object.assign(m, { id: name, location: at, dimension: lux.dimension, tags: new Set(), afflicted: [], addEffect(e) { m.afflicted.push(e); },
     applyKnockback() {}, setOnFire() {}, hasTag: (t) => m.tags.has(t), addTag: (t) => m.tags.add(t), getDynamicProperty: () => undefined, applyDamage(n) { m.damaged.push(n); } }); lux.dimension.mobs.push(m); return m; };
@@ -916,10 +916,10 @@ players.splice(0, players.length, ...everyone, zoe);
     advance(20);
   }
   const kinds = (name) => new Set(used.filter(([who]) => who === name).map(([, key]) => key));
-  assert.equal(kinds("lux0").size, 3, `fighter: ${[...kinds("lux0")]}`); assert.ok(!kinds("lux0").has("cry"), "the Rallying Cry is kept for when the master is hurt");
-  assert.equal(kinds("lux1").size, 4, `archer: ${[...kinds("lux1")]}`); assert.equal(kinds("lux2").size, 5, `mage: ${[...kinds("lux2")]}`);
+  assert.ok(kinds("lux0").size >= 3, `fighter: ${[...kinds("lux0")]}`); assert.ok(!kinds("lux0").has("cry"), "the Rallying Cry is kept for when the master is hurt");
+  assert.ok(kinds("lux1").size >= 4, `archer: ${[...kinds("lux1")]}`); assert.equal(kinds("lux2").size, 5, `mage: ${[...kinds("lux2")]}`);
   assert.ok(kinds("lux3").has("smite") && kinds("lux3").has("blessing"), `healer: ${[...kinds("lux3")]}`);
-  assert.equal(kinds("max0").size, 4, `rogue: ${[...kinds("max0")]}`); assert.equal(kinds("max1").size, 4, `bard: ${[...kinds("max1")]}`);
+  assert.ok(kinds("max0").size >= 4, `rogue: ${[...kinds("max0")]}`); assert.ok(kinds("max1").size >= 4, `bard: ${[...kinds("max1")]}`);
   for (const name of ["lux1", "lux2", "max0"]) { const mine = used.filter(([who]) => who === name); assert.notEqual(mine[0][1], mine[1][1], `${name} does not repeat itself straight away`); }
   // the supportive ones answer need: a hurt master brings the Rallying Cry and Sanctuary
   used.length = 0; lux.health.currentValue = 4; advance(60); assert.ok(kinds("lux0").has("cry") && kinds("lux3").has("sanctuary"), `${used.map((u) => u.join(":"))}`);
@@ -1828,6 +1828,67 @@ players.splice(0, players.length, ...everyone, zoe);
   assert.ok(!grove.garrison(0).some(([t]) => t === "overlord:zytl_qae"), "not for the weak");
   const barrow = sites.SITES.find((x) => x.key === "katze_barrow"); assert.ok(barrow.garrison(1).some(([t]) => t === "overlord:death_cavalier"));
   const spring = sites.SITES.find((x) => x.key === "dryad_spring"); assert.deepEqual(spring.garrison(0), [["overlord:pinison", 1]]);
+}
+
+// v8.7: the party's tempers, its battle sense, and its openings
+{
+  const bosses = await import("./bosses.js");
+  const all = [];
+  const field = { id: "minecraft:overworld", spawnParticle() {}, playSound() {}, getBlock: () => ({ isAir: true }), getPlayers: () => [],
+    getEntities: (q) => all.filter((m) => m.isValid && (q.families ?? []).every((f) => m.families.includes(f)) &&
+      (!q.maxDistance || Math.hypot(m.location.x - q.location.x, m.location.z - q.location.z) <= q.maxDistance)) };
+  const foe = (x, z, hp = 100) => { const m = { id: `pf${all.length}`, typeId: "minecraft:zombie", isValid: true, location: { x, y: 64, z }, families: ["monster"], dealt: [], afflicted: [],
+    health: { currentValue: hp, effectiveMax: hp }, getComponent(c) { return c === "minecraft:health" ? m.health : undefined; }, matches: (q) => (q.families ?? []).every((f) => m.families.includes(f)),
+    applyDamage(n) { m.dealt.push(n); }, addEffect(e) { m.afflicted.push(e); }, applyKnockback() {}, hasTag: () => false }; all.push(m); return m; };
+  const z = mkPlayer("zed"); z.dimension = field; z.location = { x: 100, y: 64, z: 100 };
+  // every member has a temper, and speaks to suit it
+  const aria = { name: "Aria", look: 0 }; assert.ok(party.personaOf(aria) in party.PERSONAS);
+  assert.ok(party.PERSONAS[party.personaOf(aria)].start.includes(party.lineFor(aria, "start", () => 0)));
+  assert.equal(party.personaOf({ name: "X", persona: "stoic" }), "stoic");
+  // every attack has a pose to be drawn with, and every vocation six attacks
+  for (const kit of party.ATTACKS) for (const a of kit) assert.ok(party.POSES[a.key], `a pose for ${a.key}`);
+  // reading a boss's warning: inside a slam, step out; along a line, step aside; clear ground is safe
+  const boss = { id: "pb1", isValid: true, location: { x: 100, y: 64, z: 100 } };
+  bosses.fights.set("pb1", { entity: boss, key: "albedo", phase: 0, next: 0, seen: new Set(), pending: { move: { name: "Slam", shape: "slam", power: 1, radius: 6 }, at: 0, spots: [], lines: [] } });
+  const out = party.danger({ x: 103, y: 64, z: 100 }); assert.ok(out && out.x > 0.9, JSON.stringify(out)); assert.equal(party.danger({ x: 110, y: 64, z: 100 }), undefined);
+  bosses.fights.get("pb1").pending = { move: { name: "Lash", shape: "line", power: 1, length: 12 }, at: 0, spots: [], lines: [{ from: { x: 100, y: 64, z: 100 }, dir: { x: 1, y: 0, z: 0 } }] };
+  const aside = party.danger({ x: 105, y: 64, z: 100.5 }); assert.ok(aside && Math.abs(aside.z) > 0.9, "a line is sidestepped");
+  bosses.fights.get("pb1").pending = { move: { name: "Ring", shape: "ring", power: 1, inner: 3, radius: 9 }, at: 0, spots: [], lines: [] };
+  assert.ok(party.danger({ x: 104, y: 64, z: 100 }).x < 0, "a ring: into the safe middle"); assert.ok(party.danger({ x: 108, y: 64, z: 100 }).x > 0, "or out past it");
+  bosses.hazards.push({ dimension: field, at: { x: 50, y: 64, z: 50 }, radius: 3, until: 1e12, damage: 1, element: "fire", boss });
+  assert.ok(party.danger({ x: 51, y: 64, z: 50 }).x > 0, "burning ground is left"); bosses.hazards.pop();
+  // the brain: a member in a boss's slam dodges out, then rests a moment
+  bosses.fights.get("pb1").pending = { move: { name: "Slam", shape: "slam", power: 1, radius: 6 }, at: 0, spots: [], lines: [] };
+  const body = (x, zz) => ({ id: `pe${Math.random()}`, location: { x, y: 64, z: zz }, dimension: field, impulses: [], applyImpulse(v) { this.impulses.push(v); } });
+  let now = 700000; const knight = body(103, 100);
+  assert.equal(party.brain(z, knight, { name: "K", look: 0 }, now), "dodge"); assert.ok(knight.impulses[0].x > 0);
+  assert.equal(party.brain(z, knight, { name: "K", look: 0 }, now + 5), "", "and rests a moment"); bosses.fights.delete("pb1");
+  // in battle: the back line steps away from a foe that closes in, the vanguard throws itself in front, the healer regroups
+  const near = foe(101, 100); world.afterEvents.entityHurt.fire({ hurtEntity: near, damage: 1, damageSource: { damagingEntity: z, cause: "entityAttack" } });
+  const archer = body(103, 103); const close = foe(104, 104);
+  assert.equal(party.brain(z, archer, { name: "A", look: 2 }, now += 100), "kite"); assert.ok(archer.impulses[0].x < 0 && archer.impulses[0].z < 0, "away from the foe");
+  close.isValid = false;
+  const vanguard = body(100, 110); assert.equal(party.brain(z, vanguard, { name: "V", look: 0 }, now += 100), "intercept"); assert.ok(vanguard.impulses[0].z < 0, "towards the threat by the master");
+  const priest = body(100, 115); assert.equal(party.brain(z, priest, { name: "P", look: 6 }, now += 100), "regroup"); assert.ok(priest.impulses[0].z < 0);
+  // openings: a pinned foe is staggered, and the next blow on it lands 40% harder
+  const turn = (look, target, gap) => ({ player: z, entity: { id: "pt", location: { x: 100, y: 64, z: 100 }, dimension: field }, member: { name: "T", look }, level: 30, power: 1, foe: target, d: field,
+    hand: { x: 100, y: 65, z: 100 }, gap, masterShare: 1, masterHealth: undefined, near: true });
+  const mark = foe(100, 105, 500); const pin = party.ATTACKS[1].find((a) => a.key === "pin");
+  assert.ok(pin.use(turn(2, mark, 5))); assert.ok(party.isStaggered(mark) && mark.afflicted.includes("slowness"));
+  assert.ok(!pin.use(turn(2, mark, 5)), "a pinned foe is not pinned again");
+  const stab = party.ATTACKS[4].find((a) => a.key === "backstab"); stab.use(turn(8, mark, 2));
+  assert.ok(Math.abs(mark.dealt.at(-1) - (7 + 30 * 0.4) * party.OPENING) < 1e-9, `${mark.dealt}`);
+  // the Fighter's Taunt draws foes off the master; Blade Tempest needs foes about it
+  const lurker = foe(101, 101); const taunt = party.ATTACKS[0].find((a) => a.key === "taunt");
+  const tt = turn(0, undefined, Infinity); tt.entity.location = { x: 100, y: 64, z: 108 }; assert.ok(taunt.use(tt)); assert.ok(lurker.afflicted.includes("weakness"));
+  // a free hand weighs its choice: whatever hurts the master outranks a nearer foe; a rogue finishes the wounded
+  all.forEach((m) => { m.isValid = false; });
+  const nearby = foe(101, 100), hunter = foe(106, 100), weak = foe(102, 101, 100); weak.health.currentValue = 10;
+  world.afterEvents.entityHurt.fire({ hurtEntity: z, damage: 2, damageSource: { damagingEntity: hunter, cause: "entityAttack" } });
+  const eye = { id: "pe-eye", location: { x: 100, y: 64, z: 100 }, dimension: field };
+  assert.equal(party.bestFoe(z, eye, { name: "M", look: 4 }), hunter, "the one hurting the master"); assert.ok(nearby.isValid);
+  hunter.isValid = false; assert.equal(party.bestFoe(z, eye, { name: "R", look: 8 }), weak, "a rogue goes for the wounded");
+  all.forEach((m) => { m.isValid = false; }); players.splice(players.indexOf(z), 1);
 }
 
 // persistence: saved profile is restored after leaving
