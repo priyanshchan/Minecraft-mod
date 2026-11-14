@@ -43,6 +43,8 @@ import "./bosses.js";
 import "./gear.js";
 import "./dungeon.js";
 import "./devtools.js";
+import "./campaign.js";
+import "./kingdom.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;

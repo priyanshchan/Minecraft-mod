@@ -827,6 +827,67 @@ under water or too steep, the site moves up to 24 blocks to one side.
 `python3 tools/preview_sites.py` draws every site without the game (into `dist/sites/`) and reports anything
 that stands where the garrison is posted or reaches outside the site.
 
+### Campaign: Rise of the Sorcerer King (v8.0)
+
+Ten story chapters, played in order from the **Chronicle** page of the Adventurer's Plate. Each chapter is fought
+where you stand.
+- **Intro:** the camera circles the field while the characters speak. Sneak to skip.
+- **Battle:** allies join you, then foes come in stages, and the last stage is the chapter's boss. Friends who
+  stand with you make the early stages bigger and share the XP.
+- **Failing:** a chapter fails if you die, move more than 60 blocks away, or a stage runs past 5 minutes. You can
+  start it again straight away.
+
+| # | Chapter | Level | Final battle | Allies |
+|---|---------|-------|--------------|--------|
+| 1 | The Battle of Carne Village | 5 | Nigun Grid Luin | Gazef and soldiers |
+| 2 | Night of the Undead | 15 | Khajiit, Clementine and a Skeletal Dragon | adventurers |
+| 3 | The Bloody Valkyrie | 25 | Shalltear Bloodfallen | - |
+| 4 | The Lizardmen War | 35 | Cocytus | Zaryusu and lizardmen |
+| 5 | The Six Arms | 45 | Zero | Brain and Climb |
+| 6 | Gehenna | 55 | Jaldabaoth | Lakyus and Evileye |
+| 7 | The Dwarven Kingdom | 65 | the Frost Dragon | dwarves |
+| 8 | The Black Scripture | 75 | Zesshi Zetsumei | - |
+| 9 | The Platinum Dragon Lord | 85 | the Platinum Dragon Lord | - |
+| 10 | Coronation of the Sorcerer King | 90 | Rubedo | - |
+
+- **Rewards:** every chapter pays XP, Gold Coins, Data Crystals and items such as Codices, Guardian Crests and gems.
+- **Titles:** Saviour of Carne, Dark Hero Momon, Hero of Gehenna, Equal of the Dragon Lord and Sorcerer King.
+- **Replays:** a finished chapter can be played again for a quarter of its XP and coins.
+- **The ending:** Chapter 10 crowns you and gives you the **Seal of the Sorcerer Kingdom**.
+
+### The Sorcerer Kingdom (v8.0)
+
+Once crowned, open the **Kingdom** page (or use the Seal) to found your kingdom where you stand. Pick open, flat
+ground away from camps: everything inside the capital's square is replaced.
+
+| Tier | Capital | Size | Cost | Pays each day | Guards | Outposts |
+|------|---------|------|------|---------------|--------|----------|
+| 1 | Throne Keep | 23 x 23 | free | 12 coins | 2 | 3 |
+| 2 | Walled Town | 31 x 31 | 200 coins, 40 crystals | 24 coins | 3 | 5 |
+| 3 | Fortress City | 39 x 39 | 500 coins, 100 crystals, 2 crests | 40 coins | 4 | 7 |
+| 4 | Sorcerous Capital | 47 x 47 | 1200 coins, 250 crystals, 4 crests | 64 coins | 6 | 10 |
+
+- **The capital:** it is built from Nazarick's bricks around a throne hall with a crystal throne. Higher tiers add:
+  - a town with houses, market stalls and a well
+  - a fortress wall with spires
+  - an outer wall with corner towers, a great central spire and a lantern colonnade
+- **Upgrades:** raise a tier from the capital's courtyard.
+- **Outposts:** clear an enemy camp, stand in it and claim it from the Kingdom page.
+  - A claimed camp never posts an enemy garrison again.
+  - Each outpost adds 8 Gold Coins and 1 Data Crystal to each day's pay.
+  - Giving one up returns the camp to the wild.
+- **Treasury:** every 20 minutes of play is a kingdom day and pays into the treasury, which holds 5 days.
+  - Collect it from the Kingdom page, or sneak + use the Seal.
+- **Guards:** while you are near, summoned Death Knights stand guard at the capital and at each outpost. A
+  Sorcerous Capital adds a Behemoth.
+- **Invasions:** now and then an enemy marches on the holding you are at.
+  - Enemies: the Slane Theocracy, Jaldabaoth's Remnant, the Beastman Horde, or the Quagoa and the Giants.
+  - Beat three waves within 6 minutes for spoils, XP and renown.
+  - If you fail, the outpost is lost, or at the capital 30% of the treasury is looted.
+  - Invasions can be turned off.
+- **Travel:** go to any of your holdings for free.
+- **Titles:** Lord of Many Lands (5 outposts) and Sorcerous Majesty (a tier 4 capital).
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
@@ -837,6 +898,7 @@ cannot be crafted) works only in creative mode. Using it opens a menu:
 - **Full health and mana, spells ready**: also clears every spell's recharge.
 - **Test kit**: 64 Data Crystals, 64 Gold Coins, 32 Refining Stones, 16 Adamantite Ingots, 10 Codices, a Key of
   the Great Tomb, 4 Floor Guardian Crests, 8 mana potions and 4 of each gem.
+- **Finish the campaign**: marks all ten chapters done (you are crowned) and gives the Seal of the Sorcerer Kingdom.
 - **Back to level 1**: refunds stat points and forgets learned skills.
 
 Sneak + use the tome for a quick +10 levels. In survival or adventure mode it does nothing.
@@ -1027,7 +1089,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects) `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic) and `devtools.js` (the Creative Tome of Ascension) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom) and `devtools.js` (the Creative Tome of Ascension) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

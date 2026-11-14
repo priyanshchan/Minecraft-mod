@@ -266,6 +266,28 @@ def tomb_key():
     ], {"G": GOLD, "g": GOLD_D, "P": "#7a2fc0", "p": "#4a1878", "W": "#e9d8ff"})
 
 
+def royal_seal():
+    """A wax seal of royal purple on a gold ribbon, stamped with the gold sigil of the Sorcerer Kingdom."""
+    return sprite16([
+        "................",
+        ".....PPPPPP.....",
+        "...PPpppppPP....",
+        "..PppGGGGppPP...",
+        "..PpGgppgGpP....",
+        ".PPpGpWWpGpPP...",
+        ".PppGpWWpGppP...",
+        ".PPpGgppgGpPP...",
+        "..PppGGGGppP....",
+        "..PPpppppppPP...",
+        "...PPPPPPPP.....",
+        ".....RR..RR.....",
+        "....RRr..rRR....",
+        "....Rr....rR....",
+        "...RR......RR...",
+        "................",
+    ], {"P": "#5a1f8c", "p": "#7a35b5", "G": GOLD, "g": GOLD_D, "W": "#fff4c2", "R": "#d9a92b", "r": "#9c7414"})
+
+
 def whetstone():
     """A grey refining stone with a seam of adamantite green and a glint of crystal."""
     return sprite16([
@@ -1806,6 +1828,7 @@ def all_item_icons():
         "rune_of_fire": rune_stone("#ff7a1a"),
         "refining_stone": whetstone(),
         "tomb_key": tomb_key(),
+        "royal_seal": royal_seal(),
         "ascension_tome": tome(cover="#e8e4f0", cover_d="#b9b2c8", glyph="#2fbf8f", band="#d9a92b"),
         "gem_ruby": gem("#d4202a", "#ff6a6a", "#7a0d14"),
         "gem_sapphire": gem("#2a62d8", "#7fb0ff", "#13306e"),

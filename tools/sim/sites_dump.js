@@ -57,4 +57,28 @@ tomb.FLOORS.forEach((floor, i) => {
   }
   out[`tomb_${floor.key}`] = { name: `Tomb ${i + 1}: ${floor.name}`, radius: 18, height: 12, muster: 0, garrison: [], blocks, tomb: true };
 });
+// The four tiers of a Sorcerer Kingdom's capital (kingdom.js).
+const kingdom = await import("./kingdom.js");
+kingdom.TIERS.forEach((tier, i) => {
+  const placed = new Map();
+  const key = (l) => `${Math.floor(l.x)},${l.y},${Math.floor(l.z)}`;
+  const land = {
+    id: "minecraft:overworld",
+    getBlock: () => undefined,
+    setBlockType: (l, t) => placed.set(key(l), t),
+    fillBlocks(v, t) {
+      for (let x = Math.min(v.from.x, v.to.x); x <= Math.max(v.from.x, v.to.x); x++)
+        for (let y = Math.min(v.from.y, v.to.y); y <= Math.max(v.from.y, v.to.y); y++)
+          for (let z = Math.min(v.from.z, v.to.z); z <= Math.max(v.from.z, v.to.z); z++) placed.set(`${x},${y},${z}`, t);
+    },
+  };
+  if (!kingdom.layCapital(land, { x: 0, y: 64, z: 0 }, i + 1)) throw new Error(`capital tier ${i + 1} was not laid`);
+  const blocks = [];
+  for (const [k, block] of placed) {
+    const [x, y, z] = k.split(",").map(Number);
+    if (block === "minecraft:air" || y - 64 < -1) continue;
+    blocks.push([x, y - 64, z, block.replace("minecraft:", "")]);
+  }
+  out[`capital_${i + 1}`] = { name: `Capital ${i + 1}: ${tier.name}`, radius: tier.radius, height: tier.height, muster: 0, garrison: [], blocks, capital: true };
+});
 writeFileSync(process.argv[2], JSON.stringify(out));

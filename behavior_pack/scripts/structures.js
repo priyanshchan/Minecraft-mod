@@ -1203,6 +1203,83 @@ function tierFor(level) {
   return level >= 50 ? 2 : level >= 20 ? 1 : 0;
 }
 
+// ------------------------------------------------------------------- claims
+
+/** World property holding the camps taken into a player's kingdom (kingdom.js): region -> ruler's id. */
+const CLAIMS = "overlord:claims";
+/** @type {Record<string, string> | undefined} */
+let claims;
+
+/** @returns {Record<string, string>} */
+function claimMap() {
+  if (claims) return claims;
+  claims = {};
+  try {
+    const raw = world.getDynamicProperty(CLAIMS);
+    if (typeof raw === "string") {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") claims = parsed;
+    }
+  } catch {
+    // a broken record: nothing is claimed
+  }
+  return /** @type {Record<string, string>} */ (claims);
+}
+
+function saveClaims() {
+  try {
+    world.setDynamicProperty(CLAIMS, JSON.stringify(claimMap()));
+  } catch {
+    // the world is closing
+  }
+}
+
+/** The region key of a spot. @param {Vector3} at */
+export function regionKey(at) {
+  return `${Math.floor(at.x / REGION)},${Math.floor(at.z / REGION)}`;
+}
+
+/** Who holds a camp's region, if anyone. @param {string} key */
+export function claimOf(key) {
+  return claimMap()[key];
+}
+
+/** Takes a camp's region into a ruler's kingdom: it posts no hostile garrison from now on. @param {string} key @param {string} ruler */
+export function claim(key, ruler) {
+  claimMap()[key] = ruler;
+  saveClaims();
+}
+
+/** Gives a region back to the wild: its garrison returns. @param {string} key */
+export function unclaim(key) {
+  delete claimMap()[key];
+  manned.delete(key);
+  saveClaims();
+}
+
+/** Whether a site's garrison is hostile. @param {SiteType} type */
+export function isHostile(type) {
+  return HOSTILE_SITES.has(type.key);
+}
+
+/** The camp's defenders still standing. @param {Dimension} dimension @param {Camp} camp */
+export function defendersLeft(dimension, camp) {
+  try {
+    return dimension
+      .getEntities({ tags: ["overlord_camp"], location: { x: camp.x + 0.5, y: camp.y, z: camp.z + 0.5 }, maxDistance: camp.type.radius + 20 })
+      .filter((e) => {
+        try {
+          const health = e.getComponent("minecraft:health");
+          return e.isValid && (!health || health.currentValue > 0);
+        } catch {
+          return false;
+        }
+      }).length;
+  } catch {
+    return 0;
+  }
+}
+
 /**
  * Posts the missing members of a camp's garrison. Returns how many were spawned.
  * @param {Dimension} dimension @param {Camp} camp @param {number} tier
@@ -1314,6 +1391,7 @@ function visit(player, rx, rz) {
       touch(player);
     }
   }
+  if (claimOf(key)) return; // part of a player's kingdom: kingdom.js keeps it
   const last = manned.get(key);
   if (last !== undefined && system.currentTick - last < REFILL_TICKS) return;
   manned.set(key, system.currentTick);
