@@ -1,0 +1,321 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.overlord.weapon.blade.third_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            60,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.blade.first_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            150,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.greatsword.third_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            60,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.greatsword.first_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            150,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.dagger.third_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            70,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.dagger.first_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            150,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.heavy.third_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            55,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.heavy.first_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            150,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.polearm.third_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            60,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.polearm.first_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            150,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.staff.third_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            25,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.staff.first_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            165,
+            0,
+            -10
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.whip.third_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            60,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.whip.first_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            150,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.rifle.third_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            90,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.rifle.first_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            115,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.fist.third_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.fist.first_person": {
+      "loop": true,
+      "bones": {
+        "weapon": {
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "position": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.overlord.weapon.aura": {
+      "loop": true,
+      "animation_length": 0.25,
+      "particle_effects": {
+        "0.0": {
+          "effect": "aura",
+          "locator": "tip"
+        }
+      }
+    }
+  }
+}

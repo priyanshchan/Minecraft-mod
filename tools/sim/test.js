@@ -721,7 +721,7 @@ advance(1); v.fx = []; v.anims = []; vfx.castFx(v, "fire", 2, "point"); const lo
 advance(1); v.fx = []; vfx.castFx(v, "fire", 9, "raise"); assert.ok(v.fx.length > low && drew("implode").length === 1 && drew("magic_circle").length === 2, "high tiers gather power under a second circle");
 advance(1); v.anims = []; vfx.castFx(v, "holy", 11, "point"); assert.deepEqual(v.anims, ["animation.overlord.cast_super"]);
 for (const pose of vfx.POSE_NAMES) { v.anims = []; vfx.pose(v, pose); assert.ok(v.anims[0].startsWith("animation.overlord."), pose); }
-assert.equal(vfx.POSE_NAMES.length, 18);
+assert.equal(vfx.POSE_NAMES.length, 19);
 // scrolls are read, tomes are held open and weapon skills are swung - each in the right colour
 pv.level = 100; rpg.restoreMana(v, 1e6); v.fx = []; v.anims = []; use(v, "overlord:scroll_of_fly");
 assert.deepEqual(v.anims, ["animation.overlord.use_scroll"]); assert.ok(drew("glyph").length >= 1 && drew("aura").length === 1, "the scroll's runes lift off and the wind takes hold");
@@ -1423,6 +1423,38 @@ players.splice(0, players.length, ...everyone, zoe);
   pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(7); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
   assert.ok(shown.some((f) => f.title === "Creative Tome of Ascension"));
   players.splice(players.indexOf(q), 1);
+}
+
+// ---- v7.7: weapon techniques ----
+{
+  const arms = await import("./arms.js");
+  const t = mkPlayer("tess"); t.dimension.mobs = []; world.afterEvents.playerSpawn.fire({ player: t, initialSpawn: true }); advance(80);
+  let hand = "overlord:razor_edge";
+  t.getComponent = ((base) => (c) => (c === "minecraft:equippable" ? { getEquipment: (slot) => (slot === "Mainhand" && hand ? { typeId: hand } : undefined) } : base(c)))(t.getComponent);
+  t.applyKnockback = () => {}; t.startItemCooldown = () => {}; t.isSneaking = false; t.isOnGround = true; t.getVelocity = () => ({ x: 0, y: 0, z: 0 });
+  const foe = (x, z, hp = 300) => { const m = mob("minecraft:zombie", hp, ["monster"]); Object.assign(m, { id: `tq${Math.random()}`, location: { x, y: 64, z }, tags: new Set(), afflicted: [], lifted: 0,
+    hasTag: (tg) => m.tags.has(tg), addEffect(e) { m.afflicted.push(e); }, setOnFire() {}, applyKnockback(_h, v) { m.lifted = v; }, applyDamage(n) { m.health.currentValue = Math.max(0, m.health.currentValue - n); } }); return m; };
+  // Plunging Strike: a blow while falling slams everything round the target
+  const a = foe(0, 2), b = foe(2, 3); t.dimension.mobs = [a, b];
+  t.isOnGround = false; t.getVelocity = () => ({ x: 0, y: -0.8, z: 0 }); t.bar = "";
+  arms.techniques(t, a, 10, "none"); assert.ok(t.bar.includes("Plunging Strike"), t.bar); assert.ok(b.health.currentValue < 300 && b.lifted > 0, "the slam reaches the foe beside");
+  const after = b.health.currentValue; arms.techniques(t, a, 10, "none"); assert.equal(b.health.currentValue, after, "and rests a moment"); assert.ok(!t.bar.includes("Recharging"), "quietly");
+  // Charging Strike: a blow while sprinting runs on through a line of foes
+  t.isOnGround = true; t.getVelocity = () => ({ x: 0, y: 0, z: 0 }); t.isSprinting = true; advance(41);
+  const line = foe(0, 4); t.dimension.mobs = [a, line]; arms.techniques(t, a, 10, "none"); assert.ok(t.bar.includes("Charging Strike")); assert.equal(line.health.currentValue, 295);
+  t.isSprinting = false;
+  // Perfect Parry: sneak pressed just before the blow - the harm is undone and the attacker is struck back
+  const brute = foe(0, 1); brute.typeId = "overlord:war_troll"; t.dimension.mobs = [brute]; advance(200);
+  t.isSneaking = true; arms.step(t, system.currentTick); t.isSneaking = false; arms.step(t, system.currentTick + 2);
+  t.health.currentValue = 12; world.afterEvents.entityHurt.fire({ hurtEntity: t, damage: 8, damageSource: { damagingEntity: brute, cause: "entityAttack" } });
+  assert.equal(t.health.currentValue, 20, "parried"); assert.equal(brute.health.currentValue, 300 - 12); assert.ok(brute.afflicted.includes("slowness") && t.anims.includes("animation.overlord.weapon_parry"));
+  // too late: no parry
+  advance(5 * 20); t.isSneaking = true; arms.step(t, system.currentTick); t.isSneaking = false; advance(20);
+  t.health.currentValue = 12; world.afterEvents.entityHurt.fire({ hurtEntity: t, damage: 8, damageSource: { damagingEntity: brute, cause: "entityAttack" } }); assert.equal(t.health.currentValue, 12, "the window had passed");
+  // without one of the add-on's weapons there is nothing to parry with
+  hand = undefined; t.isSneaking = true; arms.step(t, system.currentTick); t.isSneaking = false; arms.step(t, system.currentTick + 2);
+  assert.equal(arms.parry(t, brute, 8, "entityAttack"), false);
+  t.dimension.mobs = []; players.splice(players.indexOf(t), 1);
 }
 
 // persistence: saved profile is restored after leaving

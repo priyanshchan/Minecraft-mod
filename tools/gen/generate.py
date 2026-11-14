@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import content  # noqa: E402
 import icons  # noqa: E402
 import models  # noqa: E402
+import weapons3d  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 BP, RP = ROOT / "behavior_pack", ROOT / "resource_pack"
@@ -124,6 +125,17 @@ def main():
         layer1, layer2 = make()
         save_png(RP / f"textures/models/armor/{content.NS}_{name}_1.png", icons.hd_armor(layer1, 1))
         save_png(RP / f"textures/models/armor/{content.NS}_{name}_2.png", icons.hd_armor(layer2, 2))
+
+    # v7.7: the weapons in 3D - a model, a texture (with glowing parts) and an attachable each.
+    for old in list((RP / "attachables").glob("weapon_*.json")) + list((RP / "models/entity").glob("weapon_*.geo.json")):
+        old.unlink()
+    for key, weapon in weapons3d.build_all().items():
+        write_json(RP / f"models/entity/weapon_{key}.geo.json", weapon.model.geometry())
+        save_png(RP / f"textures/models/weapons/{key}.png", weapon.texture())
+        write_json(RP / f"attachables/weapon_{key}.json", weapons3d.attachable(key, weapon, elements.get(key, "none")))
+    write_json(RP / "animations/overlord_weapons.animation.json", weapons3d.animations_json())
+    for rel, data in weapons3d.particle_files().items():
+        write_json(RP / rel, data)
 
     write_json(RP / "textures/item_texture.json", content.item_texture_json(item_icons))
     write_json(RP / "textures/terrain_texture.json", content.terrain_texture_json())

@@ -26,9 +26,9 @@ VANILLA = {
     "geometry": {f"geometry.{kind}.armor.{p}" for kind in ("player", "humanoid")
                  for p in ("helmet", "chestplate", "leggings", "boots")},
     "animation": {f"animation.armor.{p}.offset" for p in ("helmet", "chestplate", "leggings", "boots")},
-    "render_controller": {"controller.render.armor"},
-    "material": {"entity_alphatest", "armor", "armor_enchanted"},
-    "texture": {"textures/misc/enchanted_actor_glint"},
+    "render_controller": {"controller.render.armor", "controller.render.item_default"},
+    "material": {"entity_alphatest", "armor", "armor_enchanted", "entity_emissive_alpha", "entity_alphatest_glint"},
+    "texture": {"textures/misc/enchanted_actor_glint", "textures/misc/enchanted_item_glint"},
     "entity": {"minecraft:small_fireball", "minecraft:player", "minecraft:lightning_bolt",
                "minecraft:arrow", "minecraft:evocation_fang", "minecraft:zombie",
                "minecraft:villager_v2"},
@@ -269,7 +269,7 @@ def main():
     for f in sorted((RP / "animations").glob("*.json")):
         for name, anim in load(f)["animations"].items():
             animations[name] = anim
-            for bone, channels in anim["bones"].items():
+            for bone, channels in anim.get("bones", {}).items():
                 for values in channels.values():
                     for v in values if isinstance(values, list) else [values]:
                         if isinstance(v, str):
@@ -358,15 +358,27 @@ def main():
             check(it in items, f"{rel(f)}: attachable for unknown item {it}")
         for mat in d["materials"].values():
             check(mat in VANILLA["material"], f"{rel(f)}: unknown material {mat}")
+        held = f.stem.startswith("weapon_")  # a 3D weapon (v7.7) rather than a piece of armour
         for tex in d["textures"].values():
             used_textures.add(tex)
             check(tex in VANILLA["texture"] or png(tex).is_file(), f"{rel(f)}: missing texture {tex}.png")
-            if png(tex).is_file():
+            if png(tex).is_file() and not held:
                 check(Image.open(png(tex)).size in ((64, 32), (128, 64)), f"{rel(f)}: armour texture must be 64x32 or 128x64")
         for gid in d["geometry"].values():
-            check(gid in VANILLA["geometry"], f"{rel(f)}: unknown geometry {gid}")
+            check(gid in VANILLA["geometry"] or gid in geometries, f"{rel(f)}: unknown geometry {gid}")
+            if held and gid in geometries:
+                g = geometries[gid]
+                names = {b["name"] for b in g["bones"]}
+                check({"rightArm", "rightItem", "weapon"} <= names, f"{rel(f)}: the weapon must hang from the player's rightItem bone")
+                tex = d["textures"]["default"]
+                if png(tex).is_file():
+                    size = Image.open(png(tex)).size
+                    want = (g["description"]["texture_width"], g["description"]["texture_height"])
+                    check(size[0] % want[0] == 0 and size[0] // want[0] == size[1] / want[1], f"{rel(f)}: texture {size} does not fit {want}")
         for anim in d.get("animations", {}).values():
-            check(anim in VANILLA["animation"], f"{rel(f)}: unknown animation {anim}")
+            check(anim in VANILLA["animation"] or anim in animations, f"{rel(f)}: unknown animation {anim}")
+        for effect in d.get("particle_effects", {}).values():
+            check((RP / "particles" / f"{effect.split(':')[1]}.json").is_file(), f"{rel(f)}: unknown particle {effect}")
         for rc in d["render_controllers"]:
             check(rc in VANILLA["render_controller"], f"{rel(f)}: unknown render controller {rc}")
 
@@ -466,6 +478,8 @@ def main():
         check(element in ("fire", "ice", "lightning", "holy", "dark", "arcane", "acid", "none"), f"arms.js: {key} has unknown element {element}")
     hand_weapons = {f.stem for f in (BP / "items").glob("*.json") if load(f)["minecraft:item"]["components"].get("minecraft:hand_equipped")}
     not_melee = {"magic_wand", "command_banner", "bow_of_houyi"}  # a casting focus, a banner and a bow
+    for key, _kind, _element in weapon_keys:  # v7.7: every weapon is held as a 3D model
+        check((RP / f"attachables/weapon_{key}.json").is_file(), f"weapon {key} has no 3D attachable")
     for key in hand_weapons - {k for k, _, _ in weapon_keys} - not_melee:
         check(False, f"arms.js: weapon {key} has no kind or element")
     art_block = arms[arms.index("export const NEW_ARTS"):arms.index("};", arms.index("export const NEW_ARTS"))]
@@ -548,7 +562,7 @@ def main():
         if check(anim_id in animations, f"scripts: animation {anim_id} is not defined"):
             anim = animations[anim_id]
             check(set(anim["bones"]) <= player_bones, f"{anim_id}: uses bones the player model does not have")
-            for bone, channels in anim["bones"].items():
+            for bone, channels in anim.get("bones", {}).items():
                 for frames in channels.values():
                     times = [float(t) for t in frames]
                     check(times == sorted(times) and times[-1] <= anim["animation_length"] + 1e-6,

@@ -359,6 +359,7 @@ export function onBlow(player, victim, damage) {
   const weapon = WEAPONS[key];
   const d = player.dimension;
   fx.slash(d, above(victim), weapon.element, 1);
+  techniques(player, victim, damage, weapon.element);
 
   // An awakened weapon hits harder and bursts in its element around the target.
   if (isAwake(player)) {
@@ -781,6 +782,95 @@ export function armourArt(player, set) {
   return `§6${info.art.split(":")[0]}!`;
 }
 
+// ------------------------------------------------------------------ techniques (v7.7)
+
+/** Ticks after pressing sneak in which a blow can be parried, and the rests between techniques. */
+export const PARRY_WINDOW = 8;
+const PARRY_REST = 4 * TICKS;
+const TECHNIQUE_REST = 2 * TICKS;
+
+/** A quiet rest between techniques: true (and starts it) when it has passed. @param {Player} player @param {string} what @param {number} ticks */
+function rested(player, what, ticks) {
+  const key = `${player.id}|technique_${what}`;
+  if (system.currentTick < (cooldowns.get(key) ?? 0)) return false;
+  cooldowns.set(key, system.currentTick + ticks);
+  return true;
+}
+
+/**
+ * Plunging Strike and Charging Strike: a blow struck while falling slams down on everything around
+ * the target; one struck while sprinting runs on through a line of foes.
+ * @param {Player} player @param {Entity} victim @param {number} damage @param {string} element
+ */
+export function techniques(player, victim, damage, element) {
+  const d = player.dimension;
+  let falling = 0;
+  try {
+    const v = player.getVelocity();
+    if (!player.isOnGround && v.y < -0.3) falling = -v.y;
+  } catch {
+    // no velocity to read
+  }
+  if (falling > 0 && rested(player, "plunge", TECHNIQUE_REST)) {
+    const bonus = damage * (0.6 + Math.min(1.5, falling));
+    for (const foe of foesNear(player, victim.location, 3.5)) {
+      strike(player, foe, bonus);
+      lift(foe, 0.4, victim.location);
+    }
+    fx.nova(d, victim.location, element, 3.5);
+    fx.ring(d, victim.location, element, 4.5);
+    fx.puff(d, "dust", victim.location, "none", 1.4);
+    fx.shake(d, victim.location, 10, 0.4, 0.35);
+    fx.pose(player, "smash");
+    sound(player, "random.anvil_land", 0.5);
+    notify(player, "§6Plunging Strike!");
+    return;
+  }
+  if (player.isSprinting && rested(player, "charge", TECHNIQUE_REST)) {
+    const dir = facing(player);
+    for (const foe of foesInLine(player, 5)) strike(player, foe, damage * 0.5);
+    fx.beam(d, above(player, 1), add(above(player, 1), dir, 5), element, 1.2);
+    for (let n = 1.5; n <= 5; n += 1.75) fx.slash(d, add(above(player, 1), dir, n), element, 1.1);
+    fx.pose(player, "thrust");
+    sound(player, "item.trident.riptide_1", 1.2);
+    notify(player, "§6Charging Strike!");
+  }
+}
+
+/**
+ * Perfect Parry: pressing sneak just before a melee blow lands, with one of the add-on's weapons in
+ * hand, turns it aside entirely, staggers the attacker and strikes back. Returns whether it parried.
+ * @param {Player} player @param {Entity | undefined} attacker @param {number} damage @param {string} cause
+ */
+export function parry(player, attacker, damage, cause) {
+  if (cause !== "entityAttack" || !attacker || !attacker.isValid || attacker.typeId === "minecraft:player") return false;
+  const key = heldWeapon(player);
+  if (!key) return false;
+  const pressed = taps.get(player.id)?.at ?? -1e9;
+  if (system.currentTick - pressed > PARRY_WINDOW) return false;
+  const restKey = `${player.id}|overlord_parry`;
+  if (system.currentTick < (cooldowns.get(restKey) ?? 0)) return false;
+  cooldowns.set(restKey, system.currentTick + PARRY_REST);
+  heal(player, damage);
+  const element = WEAPONS[key].element;
+  try {
+    attacker.addEffect("slowness", 2 * TICKS, { amplifier: 3 });
+    attacker.addEffect("weakness", 2 * TICKS, { amplifier: 1 });
+  } catch {
+    // immune
+  }
+  strike(player, attacker, damage + 4);
+  const d = player.dimension;
+  const between = { x: (player.location.x + attacker.location.x) / 2, y: player.location.y + 1.2, z: (player.location.z + attacker.location.z) / 2 };
+  fx.flash(d, between, "holy", 1.4);
+  fx.spark(d, between, element, 1.2);
+  fx.slash(d, above(attacker), element, 1.4);
+  fx.pose(player, "parry");
+  sound(player, "random.anvil_land", 1.6);
+  notify(player, "§e§lPerfect Parry!");
+  return true;
+}
+
 // Defences of the partial sets and the Platinum Bulwark.
 world.afterEvents.entityHurt.subscribe((event) => {
   try {
@@ -789,6 +879,7 @@ world.afterEvents.entityHurt.subscribe((event) => {
     const player = /** @type {Player} */ (victim);
     const health = player.getComponent("minecraft:health");
     if (!health || health.currentValue <= 0) return;
+    if (parry(player, event.damageSource.damagingEntity, event.damage, String(event.damageSource.cause))) return;
     const sets = wornSets(player);
     const cause = String(event.damageSource.cause);
     const magical = ["magic", "fire", "lightning", "entityExplosion", "wither", "fireTick"].includes(cause);
@@ -815,8 +906,8 @@ const TWO_EFFECTS = {
   beasthide: ["haste", 0],
 };
 
-/** Armour Art input: sneak tapped twice within half a second. */
-/** @type {Map<string, { was: boolean, taps: number[] }>} */
+/** Armour Art input: sneak tapped twice within half a second; and when sneak was last pressed (Perfect Parry). */
+/** @type {Map<string, { was: boolean, taps: number[], at: number }>} */
 const taps = new Map();
 
 /**
@@ -825,10 +916,11 @@ const taps = new Map();
  * @param {Player} player @param {number} tick
  */
 export function step(player, tick) {
-  const state = taps.get(player.id) ?? { was: false, taps: [] };
+  const state = taps.get(player.id) ?? { was: false, taps: [], at: -1e9 };
   taps.set(player.id, state);
   const sneaking = player.isSneaking === true;
   if (sneaking && !state.was) {
+    state.at = tick; // for a Perfect Parry
     state.taps = state.taps.filter((t) => tick - t <= 10);
     state.taps.push(tick);
     if (state.taps.length >= 2) {

@@ -1,0 +1,46 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "overlord:god_slaying_emperor_blade.held",
+      "item": {
+        "overlord:god_slaying_emperor_blade": "query.owner_identifier == 'minecraft:player'"
+      },
+      "materials": {
+        "default": "entity_emissive_alpha",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/models/weapons/god_slaying_emperor_blade",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.overlord.weapon_god_slaying_emperor_blade"
+      },
+      "animations": {
+        "hold_first_person": "animation.overlord.weapon.blade.first_person",
+        "hold_third_person": "animation.overlord.weapon.blade.third_person",
+        "aura": "animation.overlord.weapon.aura"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "hold_first_person": "c.is_first_person"
+          },
+          {
+            "hold_third_person": "!c.is_first_person"
+          },
+          {
+            "aura": "!c.is_first_person"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ],
+      "particle_effects": {
+        "aura": "overlord:weapon_aura_ice"
+      }
+    }
+  }
+}
