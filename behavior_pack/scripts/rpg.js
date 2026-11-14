@@ -30,7 +30,7 @@ const PARTY_SHARE = 0.5;
  *   spells: string[], slots: string[], slot: number, casts: Record<string, number>,
  *   party: any[], stance: string, kills: Record<string, number>, rep: Record<string, number>,
  *   daily: object, title: string, titles: string[], sites: string[], supply: boolean, bank: number,
- *   skills: Record<string, number>, codex: number, bosses: string[],
+ *   skills: Record<string, number>, codex: number, bosses: string[], story: string[], realm: Record<string, any>,
  * }} Profile
  */
 
@@ -327,7 +327,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [] };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [], story: [], realm: {} };
 }
 
 /**

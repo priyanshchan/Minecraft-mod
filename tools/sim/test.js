@@ -1420,7 +1420,8 @@ players.splice(0, players.length, ...everyone, zoe);
   await pick(4); assert.ok(pq.bosses.includes("great_tomb"));
   pq.mana = 0; q.health.currentValue = 3; await pick(5); assert.equal(pq.mana, rpg.maxMana(pq)); assert.equal(q.health.currentValue, 20);
   await pick(6); assert.equal(spells.countItem(q, "overlord:codex_of_skills"), 10); assert.equal(spells.countItem(q, "overlord:gem_onyx"), 4);
-  pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(7); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
+  await pick(7); assert.equal(pq.story.length, 10); assert.equal(spells.countItem(q, "overlord:royal_seal"), 1, "the campaign shortcut crowns and hands over the Seal");
+  pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(8); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
   assert.ok(shown.some((f) => f.title === "Creative Tome of Ascension"));
   players.splice(players.indexOf(q), 1);
 }
@@ -1455,6 +1456,125 @@ players.splice(0, players.length, ...everyone, zoe);
   hand = undefined; t.isSneaking = true; arms.step(t, system.currentTick); t.isSneaking = false; arms.step(t, system.currentTick + 2);
   assert.equal(arms.parry(t, brute, 8, "entityAttack"), false);
   t.dimension.mobs = []; players.splice(players.indexOf(t), 1);
+}
+
+// v8.0: the campaign, Rise of the Sorcerer King, and the Sorcerer Kingdom
+{
+  const story = await import("./campaign.js");
+  const king = await import("./kingdom.js");
+  assert.equal(story.CHAPTERS.length, 10); assert.equal(story.CHAPTERS[9].key, "coronation");
+  assert.ok(story.CHAPTERS.every((c, i) => i === 0 || c.level > story.CHAPTERS[i - 1].level), "chapters ask for rising levels");
+  assert.ok(story.CHAPTERS.every((c) => c.stages.at(-1).boss && c.intro.length > 0 && c.outro.length > 0), "every chapter ends with a boss and is told");
+  // a field that records blocks and the people on it
+  const placed = new Map(); const k = (l) => `${Math.floor(l.x)},${Math.floor(l.y)},${Math.floor(l.z)}`; const spawned = []; let biggest = 0; const here = [];
+  const field = { id: "minecraft:overworld", spawnParticle() {}, playSound() {},
+    setBlockType: (l, t) => placed.set(k(l), t),
+    fillBlocks(v, t) { biggest = Math.max(biggest, (v.to.x - v.from.x + 1) * (v.to.y - v.from.y + 1) * (v.to.z - v.from.z + 1));
+      for (let x = v.from.x; x <= v.to.x; x++) for (let y = v.from.y; y <= v.to.y; y++) for (let z = v.from.z; z <= v.to.z; z++) placed.set(`${x},${y},${z}`, t); },
+    getBlock: (l) => ({ isAir: true, typeId: placed.get(k(l)) ?? "minecraft:air", getComponent: () => ({ container: { addItem() {} } }) }),
+    getTopmostBlock: ({ x, z }) => ({ location: { x, y: 63, z } }),
+    getPlayers: (q) => here.filter((p) => !q || !q.maxDistance || Math.hypot(p.location.x - q.location.x, p.location.z - q.location.z) <= q.maxDistance),
+    getEntities: (q) => spawned.filter((m) => m.isValid && (q.tags ?? []).every((t) => m.tags.has(t)) && (!q.type || m.typeId === q.type) &&
+      (!q.maxDistance || Math.hypot(m.location.x - q.location.x, m.location.z - q.location.z) <= q.maxDistance)),
+    spawnEntity(type, at, opts) { const m = { id: `s${spawned.length}`, typeId: type, location: at, isValid: true, tags: new Set(), event: opts?.spawnEvent,
+      addTag(t) { m.tags.add(t); }, hasTag: (t) => m.tags.has(t), remove() { m.isValid = false; },
+      health: { currentValue: 100, effectiveMax: 100 }, getComponent(c) { return c === "minecraft:health" ? m.health : undefined; } }; spawned.push(m); return m; } };
+  const w = mkPlayer("wren"); w.dimension = field; here.push(w); w.location = { x: 20000.5, y: 64, z: 20000.5 }; w.isSneaking = false;
+  w.teleport = (to) => { w.location = { ...to }; }; w.camera = { set: [], setCamera(_k, o) { this.set.push(o); }, clear() { this.cleared = true; }, fade() {} };
+  world.afterEvents.playerSpawn.fire({ player: w, initialSpawn: true }); advance(80);
+  const pw = rpg.profileOf(w); const coins = () => spells.countItem(w, "overlord:yggdrasil_gold_coin");
+  const foes = (run) => story.foesOf(run); const slay = (list) => list.forEach((m) => { m.health.currentValue = 0; });
+  // chapters open in order, each at its level
+  const [carne, graveyard] = story.CHAPTERS; rpg.setLevel(w, 1);
+  assert.ok(story.blocked(w, carne).includes("level 5"), story.blocked(w, carne) + " lvl " + pw.level); assert.ok(story.blocked(w, graveyard).includes("Finish"));
+  rpg.setLevel(w, 5); assert.equal(story.blocked(w, carne), "");
+  let now = 600000;
+  assert.ok(story.begin(w, carne, now).includes("Chapter 1")); const run = story.runs.get("wren");
+  assert.equal(spawned.filter((m) => m.tags.has("overlord_story_wren_ally")).length, 3, "Gazef and two soldiers");
+  assert.equal(foes(run).length, 0, "allies are not foes"); assert.ok(story.begin(w, carne, now).includes("already"));
+  // the intro: a line at a time while the camera circles, then the battle
+  story.tick(now += 50); assert.equal(run.line, 1); assert.equal(w.camera.set.length, 1); assert.ok(w.msgs.at(-1).includes("smoke") || w.msgs.at(-1).includes("Smoke"));
+  for (let i = 0; i < 3; i++) story.tick(now += story.LINE_TICKS);
+  assert.equal(run.phase, "intro"); story.tick(now += story.LINE_TICKS); assert.equal(run.phase, "fight"); assert.ok(w.camera.cleared, "the camera is handed back");
+  assert.equal(foes(run).length, 3); assert.ok(w.title.includes("Priests"));
+  story.tick(now += 20); assert.equal(run.stage, 0, "the stage holds while foes stand");
+  slay(foes(run)); story.tick(now += 20); assert.equal(run.stage, 1); assert.equal(foes(run).length, 4);
+  slay(foes(run)); story.tick(now += 20); assert.equal(run.stage, 2); assert.ok(foes(run).some((m) => m.typeId === "overlord:nigun")); assert.ok(w.title.includes("Nigun"));
+  slay(foes(run)); story.tick(now += 20); assert.equal(run.phase, "outro");
+  const purse = coins(); for (let i = 0; i < 5; i++) story.tick(now += story.LINE_TICKS);
+  assert.ok(!story.runs.has("wren"), "the chapter is over"); assert.deepEqual(pw.story, ["carne"]); assert.equal(coins() - purse, 20);
+  assert.equal(spells.countItem(w, "overlord:blue_potion"), 3); assert.ok(spawned.every((m) => !m.isValid), "allies leave the field");
+  assert.ok(guild.checkTitles(w).includes("Saviour of Carne"));
+  // played again: a quarter of the coins, no items, no second entry
+  story.begin(w, carne, now); const again = story.runs.get("wren"); assert.ok(again.replay);
+  w.isSneaking = true; story.tick(now += 50); story.tick(now += story.LINE_TICKS); assert.equal(again.phase, "fight", "sneaking skips the dialogue"); w.isSneaking = false;
+  for (let i = 0; i < 3; i++) { slay(foes(again)); story.tick(now += 20); }
+  const before = coins(); for (let i = 0; i < 5; i++) story.tick(now += story.LINE_TICKS);
+  assert.equal(coins() - before, 5); assert.deepEqual(pw.story, ["carne"]); assert.equal(spells.countItem(w, "overlord:blue_potion"), 3);
+  // failing: straying, running out of time, falling
+  rpg.setLevel(w, 15); story.begin(w, graveyard, now); w.location = { x: 20000.5 + story.LEASH + 5, y: 64, z: 20000.5 }; story.tick(now += 50);
+  assert.ok(!story.runs.has("wren") && w.title.includes("failed")); w.location = { x: 20000.5, y: 64, z: 20000.5 };
+  story.begin(w, graveyard, now); w.isSneaking = true; story.tick(now += 50); story.tick(now += story.LINE_TICKS); w.isSneaking = false;
+  const slow = story.runs.get("wren"); assert.equal(slow.phase, "fight"); story.tick(now += story.STAGE_TIME * 20 + 1); assert.ok(!story.runs.has("wren"));
+  assert.ok(w.msgs.at(-1).includes("time ran out")); assert.ok(spawned.every((m) => !m.isValid), "a failed chapter clears its field");
+  story.begin(w, graveyard, now); world.afterEvents.entityDie.fire({ deadEntity: w, damageSource: {} }); assert.ok(!story.runs.has("wren"));
+  assert.deepEqual(pw.story, ["carne"]);
+
+  // the kingdom waits for the crown
+  assert.ok(king.found(w).includes("crowned")); assert.ok(!story.crowned(w));
+  story.completeStory(w); assert.ok(story.crowned(w)); assert.equal(pw.story.length, 10);
+  assert.ok(guild.checkTitles(w).includes("Sorcerer King"));
+  assert.ok(king.found(w, "Nazarick Reborn").includes("founded")); const realm = king.realmOf(w);
+  assert.ok(realm && realm.name === "Nazarick Reborn" && realm.tier === 1 && realm.x === 20000 && realm.y === 64);
+  assert.equal(placed.get(`20000,67,${20000 - 8}`), "overlord:data_crystal_block", "the throne's crystal"); assert.equal(placed.get(`20006,63,20006`), "overlord:nazarick_tiles"); assert.equal(placed.get(`20000,63,20005`), "overlord:gilded_nazarick_bricks", "the gilded way");
+  assert.ok(king.found(w).includes("already"));
+  // the treasury fills each kingdom day, up to five days
+  assert.deepEqual(king.income(realm), { coins: 12, crystals: 1 });
+  king.accrue(w, realm, king.DAY_SECONDS - 1); assert.equal(realm.treasury, 0); king.accrue(w, realm, 1); assert.equal(realm.treasury, 12);
+  king.accrue(w, realm, king.DAY_SECONDS * 10); assert.equal(realm.treasury, 60); assert.equal(realm.vault, 5);
+  let held = coins(); assert.ok(king.collect(w).includes("60")); assert.equal(coins() - held, 60); assert.equal(realm.treasury, 0);
+  // raising the capital: paid for, laid again larger, one layer at a time
+  assert.ok(king.upgrade(w).includes("costs")); assert.equal(realm.tier, 1);
+  rpg.giveItem(w, "overlord:yggdrasil_gold_coin", 2000); rpg.giveItem(w, "overlord:data_crystal", 400); rpg.giveItem(w, "overlord:guardian_crest", 6);
+  assert.ok(king.upgrade(w).includes("Walled Town")); assert.equal(placed.get(`${20000 + 14},64,20000`), "overlord:nazarick_bricks", "the town wall");
+  assert.ok(king.upgrade(w).includes("Fortress City")); assert.ok(king.upgrade(w).includes("Sorcerous Capital")); assert.equal(realm.tier, 4);
+  assert.equal(placed.get(`20000,${64 + 20},${20000 - 12}`), "overlord:data_crystal_block", "the great spire"); assert.ok(king.upgrade(w).includes("already"));
+  assert.ok(biggest <= 32768, `every fill stays inside the game's limit (${biggest})`); assert.ok(guild.checkTitles(w).includes("Sorcerous Majesty"));
+  // guards: Death Knights in their summoned form, topped up but never doubled
+  king.pulse(w, now); const guards = spawned.filter((m) => m.isValid && m.tags.has("overlord_realm_wren"));
+  assert.equal(guards.length, 6); assert.ok(guards.every((m) => m.event === "overlord:become_summoned")); assert.ok(guards.some((m) => m.typeId === "overlord:behemoth"));
+  king.pulse(w, now); assert.equal(spawned.filter((m) => m.isValid && m.tags.has("overlord_realm_wren")).length, 6);
+  // outposts: a cleared enemy camp can be claimed, and then posts no garrison of its own
+  const cx = 20700, cz = 20000; const region = `${Math.floor(cx / sites.REGION)},${Math.floor(cz / sites.REGION)}`; // a region nobody walked near const region = `${Math.floor(cx / sites.REGION)},${Math.floor(cz / sites.REGION)}`;
+  world.setDynamicProperty(`overlord:site7:${region}`, `goblin_camp|${cx}|64|${cz}|1`);
+  w.location = { x: 20100.5, y: 64, z: 20000.5 }; assert.ok(king.claimHere(w).includes("Stand in a camp"));
+  w.location = { x: cx + 2, y: 64, z: cz }; const defender = field.spawnEntity("overlord:goblin", { x: cx, y: 64, z: cz + 2 }); defender.addTag("overlord_camp");
+  { const m = king.claimHere(w); assert.ok(m.includes("1 defender"), m); } defender.health.currentValue = 0;
+  assert.ok(king.claimHere(w).includes("outpost")); assert.equal(sites.claimOf(region), "wren"); assert.equal(realm.outposts.length, 1);
+  assert.ok(JSON.parse(world.getDynamicProperty("overlord:claims"))[region] === "wren"); assert.ok(king.claimHere(w).includes("already yours"));
+  assert.deepEqual(king.income(realm), { coins: 64 + 8, crystals: 4 + 1 });
+  const mobs = spawned.length; sites.explore(w); assert.equal(spawned.filter((m, i) => i >= mobs && m.tags.has("overlord_camp")).length, 0, "a claimed camp posts no garrison");
+  // an invasion at the outpost: three waves, then spoils and renown
+  king.pulse(w, now); assert.equal(spawned.filter((m) => m.isValid && m.tags.has("overlord_realm_wren") && Math.hypot(m.location.x - cx, m.location.z - cz) < 10).length, 2, "the outpost's guards");
+  realm.raidIn = 1; king.pulse(w, now, () => 0); const siege = king.sieges.get("wren"); assert.ok(siege && siege.holding === 0 && siege.foe.name === "The Slane Theocracy");
+  const invaders = () => spawned.filter((m) => m.isValid && m.tags.has("overlord_siege_wren") && m.health.currentValue > 0);
+  assert.equal(invaders().length, 7); const xpBefore = pw.xp + pw.level * 1e9;
+  for (let i = 0; i < 3; i++) { slay(invaders()); king.stepSiege(siege, now += 20); }
+  assert.ok(!king.sieges.has("wren")); assert.equal(realm.renown, 1); assert.equal(realm.defended, 1); assert.equal(realm.treasury, 60);
+  assert.ok(pw.xp + pw.level * 1e9 > xpBefore);
+  // a second invasion, left to run out: the outpost is lost and its camp goes back to the wild
+  king.invade(w, realm, 0, now, 0.3); const lost = king.sieges.get("wren"); assert.equal(lost.foe.name, "Jaldabaoth's Remnant");
+  king.stepSiege(lost, now + king.SIEGE_SECONDS * 20 + 1); assert.equal(realm.outposts.length, 0); assert.equal(sites.claimOf(region), undefined); assert.equal(realm.lost, 1);
+  // at the capital a defeat loots the treasury instead
+  w.location = { x: 20000.5, y: 64, z: 20003.5 }; king.invade(w, realm, -1, now); const sack = king.sieges.get("wren");
+  world.afterEvents.entityDie.fire({ deadEntity: w, damageSource: {} }); assert.ok(!king.sieges.has("wren")); assert.equal(realm.treasury, 42); assert.equal(realm.lost, 2);
+  // invasions can be turned off
+  realm.invasions = false; realm.raidIn = 0; king.pulse(w, now); assert.ok(!king.sieges.has("wren"));
+  // the Kingdom page and the Seal
+  script.push(0); king.openKingdom(w); await new Promise((r) => setTimeout(r, 20)); assert.ok(shown.some((f) => f.title === "Nazarick Reborn"));
+  held = coins(); assert.equal(coins() - held, 0);
+  realm.name = "x"; pw.realm = {}; assert.equal(king.realmOf(w), undefined);
+  for (const m of spawned) m.isValid = false; here.length = 0; players.splice(players.indexOf(w), 1);
 }
 
 // persistence: saved profile is restored after leaving

@@ -7,6 +7,7 @@ import { ActionFormData } from "@minecraft/server-ui";
 import * as skills from "./skills.js";
 import { ADVANCE_LEVEL, creditedPlayer, giveItem, grantXp, notify, profileOf, questEvent, registerMenu, touch } from "./rpg.js";
 import { partyOf } from "./party.js";
+import { STORY_TITLES } from "./campaign.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -135,6 +136,10 @@ export const TITLES = [
   { key: "guardians_bane", name: "Guardian's Bane", how: "Defeat a Floor Guardian", earned: (p) => slain(p, GUARDIANS) >= 1 },
   { key: "adamantite", name: "Adamantite Adventurer", how: "Complete 24 guild quests", earned: (p) => p.done >= 24 },
   { key: "rival_of_the_king", name: "Rival of the Sorcerer King", how: "Defeat Ainz Ooal Gown", earned: (p) => slain(p, [id("ainz")]) >= 1 },
+  // v8.0: titles of the campaign and of the Sorcerer Kingdom
+  ...STORY_TITLES.map((t) => ({ key: t.key, name: t.name, how: t.how, earned: (/** @type {Profile} */ p) => Array.isArray(p.story) && p.story.includes(t.chapter) })),
+  { key: "lord_of_many_lands", name: "Lord of Many Lands", how: "Rule a kingdom with 5 outposts", earned: (p) => Array.isArray(p.realm?.outposts) && p.realm.outposts.length >= 5 },
+  { key: "sorcerous_majesty", name: "Sorcerous Majesty", how: "Raise your capital to its fourth tier", earned: (p) => Number(p.realm?.tier ?? 0) >= 4 },
 ];
 const TITLE_REWARD = 10;
 

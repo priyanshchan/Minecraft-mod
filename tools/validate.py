@@ -47,6 +47,8 @@ VANILLA = {
         "oak_planks", "composter", "bell", "purple_wool", "orange_wool", "mossy_stone_bricks",
         "cracked_stone_bricks", "polished_blackstone", "acacia_log", "acacia_fence", "bookshelf",
         "chiseled_stone_bricks", "amethyst_block",
+        # the Sorcerer Kingdom (v8.0), verified against @minecraft/vanilla-data
+        "dark_oak_fence", "purple_carpet",
         # structure overhaul (v7.0), verified against @minecraft/vanilla-data
         "basalt", "blackstone", "blast_furnace", "brewing_stand", "brown_carpet", "cauldron", "chiseled_quartz_block", "coal_block",
         "dark_oak_log", "dark_oak_planks", "deepslate", "emerald_block", "glass_pane", "gray_wool", "grindstone", "lapis_block",

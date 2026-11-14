@@ -8,6 +8,7 @@ import { world, GameMode } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { MAX_LEVEL, giveItem, notify, profileOf, restoreMana, setLevel, touch } from "./rpg.js";
 import { learnAll, resetCooldowns } from "./spells.js";
+import { CHAPTERS, completeStory } from "./campaign.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -85,6 +86,11 @@ export function openTome(player) {
     ["Unlock god-tier magic\n(counts the Great Tomb as conquered)", () => unlockGodTier(player)],
     ["Full health and mana, spells ready", () => refresh(player)],
     ["Test kit\n(crystals, coins, stones, gems, codices...)", () => testKit(player)],
+    ["Finish the campaign\n(crowned: the kingdom can be founded)", () => {
+      const added = completeStory(player);
+      giveItem(player, id("royal_seal"), 1);
+      return added > 0 ? `§6${added} chapter(s) marked done: you are crowned. Seal given.` : `§7All ${CHAPTERS.length} chapters were already done. Seal given.`;
+    }],
     ["Back to level 1\n(refunds stat points, forgets skills)", () => {
       profileOf(player).skills = {};
       return ascend(player, -MAX_LEVEL);

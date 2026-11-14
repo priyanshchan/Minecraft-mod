@@ -1,0 +1,28 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:royal_seal",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_royal_seal"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.royal_seal.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "epic",
+      "minecraft:glint": true,
+      "minecraft:cooldown": {
+        "category": "overlord_royal_seal",
+        "duration": 1.0
+      }
+    }
+  }
+}
