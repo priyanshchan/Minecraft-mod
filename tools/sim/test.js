@@ -177,7 +177,7 @@ assert.equal(spells.masteryOf(c, "magic_arrow"), 2);
 advance(20); dummy.damaged = []; spells.castSelected(c); assert.deepEqual(dummy.damaged, [8], "7 * 1.08 rounds to 8");
 // every spell is castable without throwing and has sane data
 assert.equal(new Set(spells.SPELLS.map((s) => s.key)).size, spells.SPELLS.length);
-assert.equal(spells.SPELLS.length, 52);
+assert.equal(spells.SPELLS.length, 57);
 for (let tier = 1; tier <= 12; tier++) assert.ok(spells.SPELLS.filter((s) => s.tier === tier).length >= 3, `tier ${tier}`);
 // dark magic is weak against undead: Death (52) on an undead dummy deals a quarter
 pc.level = 100; c.inv.push(new ItemStack("overlord:data_crystal", 64)); assert.ok(spells.learnSpell(c, "death").includes("Learned"));
@@ -1368,7 +1368,7 @@ players.splice(0, players.length, ...everyone, zoe);
 {
   const god = await import("./godspells.js");
   const keys = spells.SPELLS.filter((s) => s.tier === spells.GOD).map((s) => s.key);
-  assert.deepEqual(keys.sort(), ["cataclysm", "goal_of_all_life", "pantheon"]);
+  assert.deepEqual(keys.sort(), ["cataclysm", "goal_of_all_life", "ouroboros", "pantheon", "requiem_of_the_41"]);
   assert.equal(spells.levelForTier(spells.GOD), 80); assert.equal(spells.costForTier(spells.GOD), 48);
   // a battlefield: creatures are found by distance
   const field = []; const spawned = [];
@@ -1414,6 +1414,27 @@ players.splice(0, players.length, ...everyone, zoe);
   // god-tier casts through the wand like any spell, with the long recharge
   pz.spells = ["cataclysm"]; pz.slots = ["cataclysm", "", "", ""]; pz.slot = 0; pz.mana = 1000; assert.equal(spells.castSelected(z), true); assert.ok(pz.mana <= 1000 - 200 + 1e-6);
   assert.equal(spells.castSelected(z), false, "five minutes before it can be cast again");
+  // v8.9: Requiem of the Forty-One - forty-one beams, then all struck and weakened; allies under the banner
+  field.length = 0; const target41 = creature("overlord:ogre", 5000, 12, 0); z.effects.clear();
+  assert.equal(god.requiemOfFortyOne(z, 1), true); assert.ok(z.effects.has("strength") && z.titles.some((t) => t.includes("Forty-One")));
+  advance(30 + 41 * 4 + 11); assert.ok(5000 - target41.health.currentValue >= 41 * 22 + 30 - 1e-6, `${target41.health.currentValue}`); assert.ok(target41.effects.includes("weakness"));
+  // Ouroboros - time turned back for allies (full health), stopped for foes, crushed by the coils
+  field.length = 0; const coiled = creature("overlord:ogre", 1000, 10, 5); z.health.currentValue = 3; z.effects.set("poison", { duration: 100, amplifier: 0 });
+  assert.equal(god.ouroboros(z, 1), true); assert.equal(z.health.currentValue, 20); assert.ok(!z.effects.has("poison")); assert.ok(coiled.effects.includes("slowness"));
+  advance(20 + 10 * 20 + 1); assert.ok(1000 - coiled.health.currentValue >= 150 - 1e-6, `${coiled.health.currentValue}`);
+  // Creation (super-tier) - the aimed ground freezes; everything on it is locked and bitten by the cold
+  field.length = 0; const frozen = creature("overlord:ogre", 500, 20, 0), clear = creature("overlord:ogre", 500, 40, 0); z.getEntitiesFromViewDirection = () => [{ entity: frozen }];
+  assert.equal(god.creation(z, 1), true); advance(30 + 8 * 20 + 1);
+  assert.ok(frozen.effects.includes("slowness") && frozen.effects.includes("mining_fatigue") && frozen.health.currentValue <= 500 - 64 + 1e-6); assert.equal(clear.health.currentValue, 500);
+  // Summon Behemoth - two, in the summoned form, beyond the usual limit
+  spawned.length = 0; assert.equal(god.summonBehemoth(z), true);
+  assert.equal(spawned.filter((e) => e.typeId === "overlord:behemoth" && e.event === "overlord:become_summoned").length, 2);
+  // Wish Upon a Star - healed, shielded, every other spell ready again; its own recharge still applies
+  pz.spells = ["wish_upon_a_star", "cataclysm"]; pz.slots = ["wish_upon_a_star", "cataclysm", "", ""]; pz.mana = 1000; z.health.currentValue = 5; z.effects.clear();
+  pz.slot = 1; assert.equal(spells.castSelected(z), false, "cataclysm is still recharging");
+  pz.slot = 0; assert.equal(spells.castSelected(z), true); assert.equal(z.health.currentValue, 20); assert.ok(z.effects.has("absorption") && z.effects.has("resistance"));
+  pz.slot = 1; assert.equal(spells.castSelected(z), true, "the wish made cataclysm ready"); pz.slot = 0; assert.equal(spells.castSelected(z), false, "but not the wish itself");
+  assert.equal(spells.SPELLS.filter((sp) => sp.tier === spells.SUPER).length, 6);
   world.sendMessage = realSend; advance(600); players.splice(players.indexOf(z), 1);
 }
 

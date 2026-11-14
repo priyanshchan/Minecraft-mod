@@ -116,8 +116,11 @@ function playersNear(dimension, at, radius) {
   }
 }
 
-/** The name of the spell in great letters for everyone near, and a line for the whole world. @param {Player} caster @param {string} name @param {string} line */
-function proclaim(caster, name, line) {
+/**
+ * The name of the spell in great letters for everyone near, and a line for the whole world.
+ * @param {Player} caster @param {string} name @param {string} line @param {string} [rank]
+ */
+function proclaim(caster, name, line, rank = "God-tier") {
   for (const p of playersNear(caster.dimension, caster.location, 72)) {
     try {
       p.onScreenDisplay.setTitle(name, { subtitle: line, fadeInDuration: 6, stayDuration: 50, fadeOutDuration: 20 });
@@ -126,7 +129,7 @@ function proclaim(caster, name, line) {
     }
   }
   try {
-    world.sendMessage(`§5[God-tier] §6${caster.name}§f invokes §e${name.replace(/§./g, "")}§f!`);
+    world.sendMessage(`§5[${rank}] §6${caster.name}§f invokes §e${name.replace(/§./g, "")}§f!`);
   } catch {
     // no chat
   }
@@ -511,5 +514,188 @@ export function cataclysm(caster, power) {
       }, s * TICKS);
     }
   }, finale);
+  return true;
+}
+
+// ----------------------------------------------------------------- v8.9: more of the highest magic
+
+const NAMES_OF_THE_41 = 41; // a beam for each of the Supreme Beings of Ainz Ooal Gown
+const BEAM_EVERY = 4; // ticks between beams
+
+/**
+ * Requiem of the Forty-One (god-tier): the banners of Ainz Ooal Gown unfurl in the sky, and one beam for each
+ * of the forty-one Supreme Beings falls on the caster's foes; then all of them are struck together. Allies
+ * near fight under the guild's banner for twenty seconds.
+ * @param {Player} caster @param {number} power
+ */
+export function requiemOfFortyOne(caster, power) {
+  const d = caster.dimension;
+  const centre = { ...caster.location };
+  const sky = up(centre, 20);
+  invocation(caster, "dark");
+  proclaim(caster, "§5§lRequiem of the Forty-One", "§7The Supreme Beings answer");
+  cinematic(caster, centre, NAMES_OF_THE_41 * BEAM_EVERY / TICKS + 4, 16, 12);
+  for (const ally of playersNear(d, centre, 36)) {
+    try {
+      ally.addEffect("strength", 20 * TICKS, { amplifier: 1, showParticles: false });
+      ally.addEffect("resistance", 20 * TICKS, { amplifier: 0, showParticles: false });
+    } catch {
+      // gone
+    }
+  }
+  // the forty-one banners: a ring of dark and gold standards high above
+  for (let i = 0; i < 4; i++) {
+    system.runTimeout(() => {
+      fx.circle(d, sky, "dark", 18);
+      fx.ring(d, up(sky, 0.5), "holy", 14);
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * Math.PI * 2 + i * 0.2;
+        fx.pillar(d, { x: centre.x + Math.cos(a) * 18, y: centre.y + 6, z: centre.z + Math.sin(a) * 18 }, k % 2 ? "dark" : "holy", 14, 1.2);
+      }
+    }, i * 40);
+  }
+  for (let i = 0; i < NAMES_OF_THE_41; i++) {
+    system.runTimeout(() => {
+      if (!caster.isValid) return;
+      const foes = foesNear(caster, centre, 36);
+      const foe = foes[Math.floor(Math.random() * foes.length)];
+      if (!foe) return;
+      const element = i % 2 ? "dark" : "holy";
+      const a = (i / NAMES_OF_THE_41) * Math.PI * 2;
+      fx.beam(d, { x: centre.x + Math.cos(a) * 18, y: centre.y + 20, z: centre.z + Math.sin(a) * 18 }, up(foe.location, 1), element, 1.8);
+      fx.nova(d, up(foe.location, 0.6), element, 2.5);
+      smite(caster, foe, 22 * power);
+      if (i % 4 === 0) sound(d, "ambient.weather.lightning.impact", foe.location, 1.1, 3);
+    }, 30 + i * BEAM_EVERY);
+  }
+  system.runTimeout(() => {
+    if (!caster.isValid) return;
+    for (const foe of foesNear(caster, centre, 36)) {
+      fx.pillar(d, foe.location, "dark", 22, 2.2);
+      smite(caster, foe, 30 * power);
+      try {
+        foe.addEffect("weakness", 10 * TICKS, { amplifier: 2 });
+      } catch {
+        // gone
+      }
+    }
+    fx.dome(d, centre, "dark");
+    for (let r = 6; r <= 36; r += 6) system.runTimeout(() => fx.ring(d, centre, "holy", r), r / 2);
+    fx.shake(d, centre, 48, 1, 0.8);
+    sound(d, "mob.wither.death", centre, 0.6, 5);
+  }, 30 + NAMES_OF_THE_41 * BEAM_EVERY + 10);
+  return true;
+}
+
+const COILS = 10; // the serpent's coils: ten heartbeats of crushing time
+
+/**
+ * Ouroboros (god-tier): the world serpent coils round the battlefield and turns time back for the caster's
+ * side - every ally near is restored to full health and cleansed - while time stands almost still for their
+ * foes, who are crushed by the tightening coils for ten seconds.
+ * @param {Player} caster @param {number} power
+ */
+export function ouroboros(caster, power) {
+  const d = caster.dimension;
+  const centre = { ...caster.location };
+  invocation(caster, "arcane");
+  proclaim(caster, "§b§lOuroboros", "§7Time coils back upon itself");
+  cinematic(caster, centre, COILS + 3, 14, 10);
+  for (const ally of playersNear(d, centre, 32)) {
+    try {
+      const health = ally.getComponent("minecraft:health");
+      if (health && health.currentValue > 0) health.setCurrentValue(health.effectiveMax);
+      for (const bad of ["poison", "wither", "weakness", "slowness", "blindness", "nausea", "hunger", "mining_fatigue"]) {
+        if (ally.getEffect(bad)) ally.removeEffect(bad);
+      }
+      fx.wash(ally, { red: 0.5, green: 0.85, blue: 1 }, 1.2);
+      fx.rise(d, ally.location, "arcane", 1);
+    } catch {
+      // gone
+    }
+  }
+  const caught = foesNear(caster, centre, 32);
+  for (const foe of caught) {
+    try {
+      foe.addEffect("slowness", (COILS + 1) * TICKS, { amplifier: 6 });
+      foe.addEffect("weakness", (COILS + 1) * TICKS, { amplifier: 2 });
+    } catch {
+      // gone
+    }
+  }
+  for (let beat = 0; beat < COILS; beat++) {
+    system.runTimeout(() => {
+      if (!caster.isValid) return;
+      // the serpent's body turning round the field, one way and then back
+      const turn = beat % 2 ? -1 : 1;
+      for (let k = 0; k < 16; k++) {
+        const a = turn * ((k / 16) * Math.PI * 2 + beat * 0.4);
+        fx.puff(d, "orbit", { x: centre.x + Math.cos(a) * 24, y: centre.y + 1 + Math.sin(k) * 0.5, z: centre.z + Math.sin(a) * 24 }, "arcane", 1.4);
+      }
+      fx.ring(d, centre, "arcane", 24 - beat * 1.5);
+      for (const foe of foesNear(caster, centre, 32)) smite(caster, foe, 15 * power);
+      sound(d, "block.bell.hit", centre, 0.5 + beat * 0.05, 3);
+    }, 20 + beat * TICKS);
+  }
+  return true;
+}
+
+/**
+ * Creation (super-tier): reshapes the world where the caster points - the ground freezes over twelve
+ * blocks and everything on it is locked in ice for eight seconds, the cold biting each second.
+ * @param {Player} caster @param {number} power
+ */
+export function creation(caster, power) {
+  const at = aimed(caster);
+  if (!at) return false;
+  const d = caster.dimension;
+  proclaim(caster, "§b§lCreation", "§fThe land is remade", "Super-tier");
+  fx.pose(caster, "super");
+  for (const [i, r] of [[0, 4], [1, 8], [2, 12]]) system.runTimeout(() => fx.circle(d, at, "ice", r), i * 5);
+  sound(d, "random.glass", at, 0.6, 4);
+  system.runTimeout(() => {
+    if (!caster.isValid) return;
+    fx.nova(d, up(at, 0.5), "ice", 12);
+    fx.dome(d, at, "ice");
+    for (const foe of foesNear(caster, at, 12)) {
+      try {
+        foe.addEffect("slowness", 8 * TICKS, { amplifier: 10 });
+        foe.addEffect("mining_fatigue", 8 * TICKS, { amplifier: 3 });
+        foe.addEffect("weakness", 8 * TICKS, { amplifier: 3 });
+      } catch {
+        // gone
+      }
+      fx.pillar(d, foe.location, "ice", 4, 1.2);
+    }
+    for (let s = 1; s <= 8; s++) {
+      system.runTimeout(() => {
+        if (!caster.isValid) return;
+        for (const foe of foesNear(caster, at, 12)) smite(caster, foe, 8 * power);
+        fx.ring(d, at, "ice", 12);
+      }, s * TICKS);
+    }
+  }, 30);
+  return true;
+}
+
+/**
+ * Summon Behemoth (super-tier): two great elementals rise from pillars of fire to fight for the caster for
+ * a minute, beyond the usual number of summoned allies.
+ * @param {Player} caster
+ */
+export function summonBehemoth(caster) {
+  const d = caster.dimension;
+  const spots = [-1, 1].map((side) => {
+    const view = caster.getViewDirection();
+    const length = Math.hypot(view.x, view.z) || 1;
+    return { x: caster.location.x + (view.x / length) * 3 - (view.z / length) * 2.5 * side, y: caster.location.y, z: caster.location.z + (view.z / length) * 3 + (view.x / length) * 2.5 * side };
+  });
+  fx.pose(caster, "summon");
+  for (const spot of spots) {
+    fx.pillar(d, spot, "fire", 10, 1.8);
+    fx.nova(d, up(spot, 0.5), "fire", 3);
+  }
+  sound(d, "mob.blaze.shoot", caster.location, 0.5, 4);
+  host(caster, id("behemoth"), spots);
   return true;
 }
