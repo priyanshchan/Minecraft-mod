@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [7, 6, 1]
+VERSION = [7, 7, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v7.6.1"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v7.7.0"
 
 
 def oid(name):
@@ -3235,6 +3235,12 @@ def player_animations_json():
                   (3.2, Z)],
             rightLeg=[(0, Z), (0.5, (-40, 0, 0)), (1.0, (-44, 0, 0)), (1.5, Z), (3.2, Z)],
             leftLeg=[(0, Z), (0.5, (60, 0, 0)), (1.0, (64, 0, 0)), (1.5, Z), (3.2, Z)]),
+        # the blade snapped across the body to meet a blow, then swept back out in the counter
+        "animation.overlord.weapon_parry": anim(
+            0.45,
+            rightArm=[(0, Z), (0.06, (-80, 50, 0)), (0.16, (-86, 46, 0)), (0.26, (-60, -40, 0)), (0.45, Z)],
+            body=[(0, Z), (0.06, (0, 20, 0)), (0.16, (0, 18, 0)), (0.26, (0, -16, 0)), (0.45, Z)],
+            leftArm=[(0, Z), (0.06, (-30, 0, -20)), (0.45, Z)]),
         # the weapon raised high in both hands and held while it wakes
         "animation.overlord.weapon_awaken": anim(
             1.4,
@@ -3364,9 +3370,9 @@ def attachable_files():
 VANILLA_REFS = {
     "geometry": {f"geometry.player.armor.{p}" for p in ARMOR} | {f"geometry.humanoid.armor.{p}" for p in ARMOR},
     "animation": {f"animation.armor.{p}.offset" for p in ARMOR},
-    "render_controller": {"controller.render.armor"},
-    "material": {"entity_alphatest", "armor", "armor_enchanted"},
-    "texture": {"textures/misc/enchanted_actor_glint"},
+    "render_controller": {"controller.render.armor", "controller.render.item_default"},
+    "material": {"entity_alphatest", "armor", "armor_enchanted", "entity_emissive_alpha", "entity_alphatest_glint"},
+    "texture": {"textures/misc/enchanted_actor_glint", "textures/misc/enchanted_item_glint"},
     "entity": {"minecraft:small_fireball"},
 }
 

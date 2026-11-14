@@ -1,0 +1,244 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.overlord.weapon_golem_fist",
+        "texture_width": 32,
+        "texture_height": 32,
+        "visible_bounds_width": 4.0,
+        "visible_bounds_height": 4.0,
+        "visible_bounds_offset": [
+          0,
+          1.0,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "waist",
+          "parent": "root",
+          "pivot": [
+            0,
+            12,
+            0
+          ]
+        },
+        {
+          "name": "body",
+          "parent": "waist",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "head",
+          "parent": "body",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "leftArm",
+          "parent": "body",
+          "pivot": [
+            5,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "leftItem",
+          "parent": "leftArm",
+          "pivot": [
+            6,
+            15,
+            1
+          ]
+        },
+        {
+          "name": "rightArm",
+          "parent": "body",
+          "pivot": [
+            -5,
+            22,
+            0
+          ]
+        },
+        {
+          "name": "rightItem",
+          "parent": "rightArm",
+          "pivot": [
+            -6,
+            15,
+            1
+          ]
+        },
+        {
+          "name": "leftLeg",
+          "parent": "root",
+          "pivot": [
+            1.9,
+            12,
+            0
+          ]
+        },
+        {
+          "name": "rightLeg",
+          "parent": "root",
+          "pivot": [
+            -1.9,
+            12,
+            0
+          ]
+        },
+        {
+          "name": "weapon",
+          "parent": "rightItem",
+          "pivot": [
+            -6,
+            13.5,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -8,
+                11,
+                -2
+              ],
+              "size": [
+                4,
+                6,
+                4
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": 1.4
+            },
+            {
+              "origin": [
+                -8,
+                17,
+                -2
+              ],
+              "size": [
+                4,
+                1,
+                4
+              ],
+              "uv": [
+                16,
+                0
+              ],
+              "inflate": 1.5
+            },
+            {
+              "origin": [
+                -8,
+                10.9,
+                -2.6
+              ],
+              "size": [
+                4,
+                1,
+                1
+              ],
+              "uv": [
+                0,
+                14
+              ],
+              "inflate": 1.4
+            },
+            {
+              "origin": [
+                -8,
+                10.7,
+                -5
+              ],
+              "size": [
+                1,
+                1,
+                2
+              ],
+              "uv": [
+                6,
+                10
+              ]
+            },
+            {
+              "origin": [
+                -6.5,
+                10.7,
+                -5
+              ],
+              "size": [
+                1,
+                1,
+                2
+              ],
+              "uv": [
+                12,
+                10
+              ]
+            },
+            {
+              "origin": [
+                -5,
+                10.7,
+                -5
+              ],
+              "size": [
+                1,
+                1,
+                2
+              ],
+              "uv": [
+                18,
+                10
+              ]
+            },
+            {
+              "origin": [
+                -8.7,
+                13.5,
+                -1
+              ],
+              "size": [
+                1,
+                2,
+                2
+              ],
+              "uv": [
+                0,
+                10
+              ],
+              "inflate": -0.1
+            }
+          ],
+          "locators": {
+            "tip": [
+              -6,
+              10.5,
+              -3
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

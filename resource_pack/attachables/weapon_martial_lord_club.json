@@ -1,0 +1,39 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "overlord:martial_lord_club.held",
+      "item": {
+        "overlord:martial_lord_club": "query.owner_identifier == 'minecraft:player'"
+      },
+      "materials": {
+        "default": "entity_emissive_alpha",
+        "enchanted": "entity_alphatest_glint"
+      },
+      "textures": {
+        "default": "textures/models/weapons/martial_lord_club",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.overlord.weapon_martial_lord_club"
+      },
+      "animations": {
+        "hold_first_person": "animation.overlord.weapon.heavy.first_person",
+        "hold_third_person": "animation.overlord.weapon.heavy.third_person"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "hold_first_person": "c.is_first_person"
+          },
+          {
+            "hold_third_person": "!c.is_first_person"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.item_default"
+      ]
+    }
+  }
+}

@@ -252,6 +252,36 @@ country; they also step over ledges two blocks high.
 Blocks: **Nazarick Bricks** (plus **Gilded** and **Cracked** variants), **Glacier Bricks**, **Nazarick Tiles**, **Nazarick Pillar**, **Nazarick Lamp** (full light),
 **Block of Adamantite** and **Block of Data Crystal** (glows).
 
+### Weapons in 3D (v7.7)
+
+Every one of the 32 melee weapons and staves is now **held as a 3D model** instead of a flat picture, in
+first and third person. Each has its own design and shape:
+- The Staff of Ainz Ooal Gown: seven serpents holding seven gems.
+- Katanas: curved blades with glowing edges.
+- The Death Knight Flamberge: a rippling blade.
+- Ginnungagap: a great bardiche head.
+- Charon's Guidance: a scythe.
+- Hammers, maces, mauls and a spiked club.
+- Staves topped with orbs, crosses and living crystal.
+- A whip with a hanging lash.
+- A scoped magic rifle.
+- Gauntlets worn on the fist.
+
+The inventory icon stays as before.
+
+- **Glow:** runes, edges, gems and orbs are drawn lit, so they glow at night and in caves.
+- **Auras:** in third person, weapons of an element trail motes of its colour from their tips.
+- **Holding:** blades, axes and hammers are held forward and up like a vanilla sword; staves upright; the rifle
+  levelled; gauntlets on the hand. Every swing, art and finisher animation moves the model with the arm.
+- **New techniques** for every add-on weapon:
+  - **Plunging Strike:** strike while falling to slam down on everything within 3.5 blocks of the target. The
+    harder you fall, the harder it hits, and foes are thrown up.
+  - **Charging Strike:** strike while sprinting and the blow runs on through every foe in a 5-block line.
+  - **Perfect Parry:** tap sneak just before a melee blow lands. The harm is undone, the attacker is staggered
+    and struck back, and a new parry animation plays (4-second rest).
+
+`python3 tools/preview_weapons.py` draws every weapon in the hand, from both views, without the game.
+
 ### Weapons and armour (v7.2)
 
 Every weapon of the add-on now belongs to a **kind** and an **element**, and fights in its style:

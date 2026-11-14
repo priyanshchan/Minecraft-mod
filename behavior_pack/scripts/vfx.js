@@ -11,7 +11,7 @@ import { MolangVariableMap, system, world } from "@minecraft/server";
 /** @typedef {import("@minecraft/server").Dimension} Dimension */
 /** @typedef {import("@minecraft/server").Vector3} Vector3 */
 /** @typedef {import("@minecraft/server").Player} Player */
-/** @typedef {"point" | "raise" | "self" | "sweep" | "slam" | "channel" | "summon" | "super" | "scroll" | "tome" | "slash" | "smash" | "spin" | "thrust" | "uppercut" | "draw" | "awaken" | "god"} Pose */
+/** @typedef {"point" | "raise" | "self" | "sweep" | "slam" | "channel" | "summon" | "super" | "scroll" | "tome" | "slash" | "smash" | "spin" | "thrust" | "uppercut" | "draw" | "awaken" | "god" | "parry"} Pose */
 
 /** Element colours (0-1 RGB). */
 /** @type {Record<string, { red: number, green: number, blue: number }>} */
@@ -46,6 +46,7 @@ const POSES = {
   draw: "animation.overlord.weapon_draw",
   awaken: "animation.overlord.weapon_awaken",
   god: "animation.overlord.cast_god",
+  parry: "animation.overlord.weapon_parry",
 };
 
 /** The particle each element adds to an impact. */

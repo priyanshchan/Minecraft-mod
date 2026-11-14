@@ -174,6 +174,7 @@ class Bone:
     def __init__(self, name, pivot, parent=None, rotation=None):
         self.name, self.pivot, self.parent, self.rotation = name, tuple(pivot), parent, rotation
         self.cubes: list[Cube] = []
+        self.locators: dict = {}
 
     def cube(self, origin, size, inflate=0.0, rotation=None, pivot=None):
         c = Cube(origin, size, inflate, rotation, pivot)
@@ -313,6 +314,8 @@ class Model:
                         jc["pivot"] = [num(v) for v in (c.pivot or (0, 0, 0))]
                         jc["rotation"] = [num(v) for v in c.rotation]
                     jb["cubes"].append(jc)
+            if b.locators:
+                jb["locators"] = {k: [num(v) for v in p] for k, p in b.locators.items()}
             bones.append(jb)
         return {
             "format_version": "1.12.0",
