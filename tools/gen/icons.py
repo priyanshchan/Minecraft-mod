@@ -222,6 +222,50 @@ def crystal(c="#43d6e8", light="#8ff0f7", shine="#ecffff", dark="#1c8fb0"):
     ], {"C": c, "c": light, "W": shine, "D": dark})
 
 
+def gem(c, light, dark):
+    """A cut gem: a table facet on top, a crown of light and dark facets, a pointed pavilion."""
+    return sprite16([
+        "................",
+        "................",
+        "................",
+        "....LLLLLLLL....",
+        "...LWWCCCCCCD...",
+        "..LWWCCCCCCCDD..",
+        "..LCCCCCCCCDDD..",
+        "..CCLLLCCCDDDD..",
+        "...CCLLCCCDDD...",
+        "....CCLCCDDD....",
+        ".....CCCCDD.....",
+        "......CCDD......",
+        ".......CD.......",
+        "................",
+        "................",
+        "................",
+    ], {"C": c, "L": light, "W": "#ffffff", "D": dark})
+
+
+def whetstone():
+    """A grey refining stone with a seam of adamantite green and a glint of crystal."""
+    return sprite16([
+        "................",
+        "................",
+        "................",
+        "................",
+        "......SSSSSS....",
+        "....SSsSSSSSs...",
+        "...SSSSAAASSss..",
+        "..SSsAAAcAAsss..",
+        "..SSSSAAASSsss..",
+        "..sSSSSSSSsss...",
+        "...sssssssss....",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], {"S": "#9aa0a8", "s": "#5f646c", "A": "#2fbf8f", "c": "#bffbf0"})
+
+
 def coin():
     return sprite16([
         "................",
@@ -1738,6 +1782,13 @@ def all_item_icons():
         "dragonscale_leggings": leggings(DRAGON_PAL),
         "dragonscale_boots": boots(DRAGON_PAL),
         "rune_of_fire": rune_stone("#ff7a1a"),
+        "refining_stone": whetstone(),
+        "gem_ruby": gem("#d4202a", "#ff6a6a", "#7a0d14"),
+        "gem_sapphire": gem("#2a62d8", "#7fb0ff", "#13306e"),
+        "gem_topaz": gem("#e8b020", "#ffe27a", "#8a5e08"),
+        "gem_jade": gem("#2fae52", "#8de89f", "#13602a"),
+        "gem_onyx": gem("#3a2350", "#8c62b8", "#140a1e"),
+        "gem_sunstone": gem("#ff9a2a", "#fff0a0", "#b0560a"),
         "rune_of_frost": rune_stone("#8fe0ff"),
         "rune_of_storm": rune_stone("#ffe94a"),
         "rune_of_life": rune_stone("#63ff6b"),

@@ -318,6 +318,83 @@ Every weapon of the add-on now belongs to a **kind** and an **element**, and fig
 | Bone Dragon | 15% of magical harm turned aside | 35% of magical harm turned aside | Bone Prison: bones bind every foe within 6 blocks | 35 s |
 | Beast Hide | Haste I | Haste I and Saturation | Hunter's Howl: Speed II, Strength I and Jump Boost II for 12 seconds; foes nearby falter | 35 s |
 
+### Boss fights (v7.5)
+
+Every boss of the add-on — the Floor Guardians and Ainz, Pandora's Actor, Gargantua and Rubedo, the great
+demons and angels, the world bosses and the arena champions — now fights in **three phases**. (The three
+dragons keep their own staged fights.)
+
+- **Telegraphed moves:** before each move the boss's name and the move appear on your screen and glowing
+  circles or lines mark where it will land. A second or two later it lands on whoever is still standing there,
+  so **move out**. Shapes: a **slam** round the boss, a **ring** that is safe close in, **lines** (single,
+  fanned or crossed) towards a target, a **barrage** under every player, a **pull** that drags you in before a
+  slam, and a **blink** that puts the boss behind its target.
+- **Phases:** at two-thirds and one-third of its health the boss changes phase — a title on screen, a
+  moment's resistance, a blast that throws back anyone close, allies for some bosses, and harder moves. The
+  last phase is **enraged**: Strength, Speed and a burning aura, with moves coming faster (every 7 s, then 5.5 s,
+  then 4 s).
+- **Hazards:** some moves leave burning, frozen or poisoned ground that hurts anyone standing on it for a few
+  seconds.
+- **Rewards:** everyone who fought a boss gets **2–4 Refining Stones** and **a gem** (two from bosses with
+  700+ health), and the **first time** you defeat each boss, a **Codex of the Supreme Beings**.
+
+| Boss | Phase 1 | Phase 2 adds | Phase 3 adds | Allies called at each change of phase |
+| --- | --- | --- | --- | --- |
+| **Ainz Ooal Gown** | Reality Slash, Negative Burst | Explode Mine, Black Hole | The Goal of All Life Is Death, Grasp Heart | 2× Death Knight |
+| **Albedo** | Bardiche Charge, Hermes Trismegistus | Walls of Jericho | Avenger's Leap, Three-Fold Cleave | - |
+| **Shalltear Bloodfallen** | Spuit Lance Charge, Blood Pool | Vampiric Blink | Purification Javelin, Einherjar | 2× Vampire Bride |
+| **Cocytus** | Frozen Heaven, Halberd Sweep | Field of Frost | Absolute Zero, Four-Armed Fury | - |
+| **Demiurge** | Hellfire Rain, Commanding Voice | Hellflame Wall | Gehenna Flame | 2× Shadow Demon |
+| **Aura Bella Fiora** | Whip Lash, Volley | Beast Stampede | Breath of Fear | 1× Gigant Basilisk |
+| **Mare Bello Fiore** | Earth Surge, Fissure | Thorn Garden | Great Upheaval | - |
+| **Pandora's Actor** | Borrowed Burst, Borrowed Lance | Shapeshift Ambush | Grand Performance | - |
+| **Gargantua** | Titan Stomp, Boulder Charge | Quake Wave | Rockfall | - |
+| **Rubedo** | Annihilation Ray, Shatter | Starfall, Collapse | World's End, Cross of Ruin, Phase Step | 2× Death Knight |
+| **Jaldabaoth** | Meteor Fall, Infernal Claw | Gehenna | Demon Emperor's Wrath, Cross of Flames | 2× Shadow Demon |
+| **Evil Lord Wrath** | Wrathful Slam, Burning Charge | Brimstone | Inferno | - |
+| **Dark Young** | Grasping Tendrils, Trample | Spore Bloom | Black Goat's Feast | - |
+| **Decem Hougan** | Elemental Rain, Root Spear | Wild Growth | King's Command | 1× Behemoth |
+| **Zesshi Zetsumei** | Scythe Reap, Godspeed | Scythe Cross | Antilife Cocoon, Final Judgement | - |
+| **Dominion Authority** | Holy Smite, Sacred Ring | Scepter Beam | Judgement Day | 2× Archangel Flame |
+| **Go Gin** | Club Slam, Bull Rush | Ground Pound | Arena Rocks | - |
+| **Zero** | Leopard Rush, Phoenix Palm | Spirit Burst | Six Arms Fury | - |
+
+### Gear upgrades (v7.5)
+
+Use the **Workbench** entry of the Adventurer's Plate with an add-on weapon or armour piece in your hand,
+next to a Dwarf Runesmith, an anvil or a smithing table.
+
+- **Refining** raises a piece's quality one step at a time. A weapon gains 4% melee damage per step; each armour
+  piece turns aside 1.5% of the harm you take per step (up to 30% for a full Divine set). A refinement can
+  fail — the stones are lost, never the item.
+
+| Quality | Refining Stones | Gold Coins | Chance | Opens |
+| --- | --- | --- | --- | --- |
+| Fine | 1 | 10 | 100% | a weapon socket |
+| Superior | 2 | 20 | 90% | an armour socket |
+| Epic | 3 | 35 | 75% | a second weapon socket |
+| Legendary | 5 | 60 | 60% | |
+| Divine | 8 | 100 | 45% | |
+
+- **Gems** go into sockets and can be taken out again for 10 Gold Coins:
+
+| Gem | In a weapon | In armour |
+| --- | --- | --- |
+| Ruby of Embers | a quarter of blows set the foe alight and scorch it | Fire Resistance; with two, Strength I |
+| Sapphire of Frost | a third of blows slow the foe | half a mana a second each |
+| Topaz of Storms | a fifth of blows jolt the nearest other foe for 4 | with two, Speed I |
+| Jade of Venom | a quarter of blows poison the foe | half a heart every 4 seconds each |
+| Onyx of Night | blows drink 5% of their harm | turns aside 5% of magical harm each |
+| Sunstone | +20% harm to the undead and demons | a kill heals you a heart each |
+
+- **Salvage** breaks a piece you no longer need into Refining Stones (one, plus one per quality step and
+  reinforcement level), 2–4 Data Crystals and any gems it held, with a 1-in-5 chance of a bonus gem.
+- Everything is written on the item: quality, reinforcement, rune and sockets.
+- **Where materials come from:** bosses (above), Refining Stones from salvage, elites (1 in 4) and the Dwarf
+  Runesmith (2 for 8 Gold Coins); crafting — Refining Stones from an Adamantite Ingot, two Data Crystals and
+  stone (makes 2); each gem from four Data Crystals, a Refining Stone and a redstone block (Ruby), lapis
+  (Sapphire), a gold ingot (Topaz), an emerald (Jade), obsidian (Onyx) or glowstone (Sunstone).
+
 ### Trading
 
 Ring a **Bell of Nazarick** to call a **Nazarick Maid**. She sells Healing Potions, Data Crystals, all four
@@ -848,7 +925,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects) and `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects) `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards) and `gear.js` (refining, gems and salvage) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

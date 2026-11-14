@@ -819,7 +819,7 @@ advance(10); blow(hound); assert.equal(seen65("slash").length, 2); const shakes 
 world.afterEvents.entityHurt.fire({ hurtEntity: zoe, damage: 4, damageSource: { damagingEntity: hound, cause: "magic" } }); assert.equal(seen65("slash").length, 3, "only melee");
 // deaths are marked: a burst for the ordinary, a nova and a skull for a great undead
 advance(1); zoe.fx = []; world.afterEvents.entityDie.fire({ deadEntity: hound, damageSource: {} }); assert.ok(seen65("spark").length === 1 && seen65("nova").length === 0);
-advance(1); zoe.fx = []; world.afterEvents.entityDie.fire({ deadEntity: lord, damageSource: {} }); assert.ok(seen65("nova").length === 1 && seen65("skull").length === 1 && seen65("pillar_light").length === 1);
+advance(1); zoe.fx = []; world.afterEvents.entityDie.fire({ deadEntity: lord, damageSource: {} }); assert.ok(seen65("nova").length >= 1 && seen65("skull").length === 1 && seen65("pillar_light").length >= 1); // a boss adds its own fall
 // a great foe arrives inside a magic circle; lesser ones simply appear
 advance(1); zoe.fx = []; world.afterEvents.entitySpawn.fire({ entity: creature("overlord:goblin"), cause: "Spawned" }); advance(3); assert.equal(seen65("magic_circle").length, 0);
 world.afterEvents.entitySpawn.fire({ entity: creature("overlord:evil_lord_wrath", 650, ["demon"]), cause: "Spawned" }); advance(3); assert.equal(seen65("magic_circle").length, 1);
@@ -1149,6 +1149,117 @@ players.splice(0, players.length, ...everyone, zoe);
   hand = "overlord:dragonbone_blade"; worn = { Head: "overlord:ranger_helmet", Chest: "overlord:ranger_chestplate" }; arms.openArsenal(k);
   const page = shown[shown.length - 1]; assert.equal(page.title, "Arsenal"); assert.ok(page.body.includes("Cleaving Arc") && page.body.includes("Ranger") && page.body.includes("Arrow Rain"), page.body);
   k.dimension.mobs = []; players.splice(players.indexOf(k), 1);
+}
+
+// ---- boss fights ----
+{
+  const bosses = await import("./bosses.js");
+  // the table: three phases of moves each, every move of a known shape
+  const shapes = new Set(["slam", "ring", "line", "barrage", "pull", "blink", "summon"]);
+  assert.ok(Object.keys(bosses.BOSSES).length >= 18);
+  for (const [key, b] of Object.entries(bosses.BOSSES)) {
+    assert.equal(b.moves.length, 3, key); assert.ok(b.damage > 0 && b.name, key);
+    for (const m of b.moves.flat()) assert.ok(shapes.has(m.shape) && m.power > 0 && m.name, `${key}: ${m.name}`);
+  }
+  // a small arena: players are found by distance
+  const fighters = [];
+  const arena = { id: "overworld", mobs: [], spawned: [], spawnParticle() {}, playSound() {},
+    getPlayers: (q) => fighters.filter((p) => Math.hypot(p.location.x - q.location.x, p.location.z - q.location.z) <= (q.maxDistance ?? 1e9)),
+    getEntities: () => arena.mobs, spawnEntity(type, at) { const e = { typeId: type, location: at, tags: new Set(), addTag(t) { this.tags.add(t); } }; arena.spawned.push(e); return e; } };
+  const fighter = (name, x, z) => { const p = { id: name, name, typeId: "minecraft:player", isValid: true, location: { x, y: 64, z }, dimension: arena, taken: 0, titles: [], msgs: [], bar: "",
+    applyDamage(n) { p.taken += n; }, applyKnockback() {}, getViewDirection: () => ({ x: 0, y: 0, z: 1 }), sendMessage(m) { p.msgs.push(m); }, playSound() {},
+    onScreenDisplay: { setTitle(t, o) { p.titles.push(`${t}|${o?.subtitle}`); }, setActionBar(t) { p.bar = t; } }, getDynamicProperty() {}, setDynamicProperty() {}, effects: new Map(),
+    getComponent(c) { return c === "minecraft:inventory" ? { container: { addItem(s) { p.got.push(s); }, size: 0, getItem() {} } } : undefined; }, got: [] }; fighters.push(p); return p; };
+  const boss = { id: "cocy1", typeId: "overlord:cocytus", isValid: true, location: { x: 0, y: 64, z: 0 }, dimension: arena, effects: new Map(), tags: new Set(), hasTag: () => false,
+    health: { currentValue: 360, effectiveMax: 360 }, getComponent(c) { return c === "minecraft:health" ? this.health : undefined; },
+    addEffect(e, d, o) { this.effects.set(e, o?.amplifier ?? 0); }, teleport(to) { this.location = { ...to }; } };
+  const near = fighter("near", 2, 0), far = fighter("far", 20, 0);
+  const fight = bosses.engage(boss); assert.equal(bosses.engage(boss), fight, "engaged once"); assert.equal(fight.phase, 0);
+  // a slam is warned, then lands on those still inside it
+  let t = 1000; const pick = (n) => () => n;
+  fight.next = 0; bosses.step(fight, t, pick(0)); assert.equal(fight.pending.move.name, "Frozen Heaven"); assert.ok(near.bar.includes("Frozen Heaven"), near.bar);
+  assert.equal(near.taken, 0, "nothing lands at once");
+  while (fight.pending) bosses.step(fight, ++t, pick(0));
+  assert.ok(near.taken > 0, "the slam lands"); assert.equal(far.taken, 0, "out of reach is safe");
+  // ...and whoever stepped out in time is spared
+  near.taken = 0; fight.next = 0; bosses.step(fight, ++t, pick(0)); near.location = { x: 9, y: 64, z: 0 }; while (fight.pending) bosses.step(fight, ++t, pick(0)); assert.equal(near.taken, 0, "dodged");
+  // a line runs from the boss at its target: on it hurts, beside it does not
+  near.location = { x: 0, y: 64, z: 6 }; const beside = fighter("beside", 5, 3); fight.next = 0;
+  const seq = (...v) => { let i = 0; return () => v[Math.min(i++, v.length - 1)]; };
+  bosses.step(fight, ++t, seq(0.99, 0)); // the second move (the sweep), aimed at the first player near
+  assert.equal(fight.pending.move.shape, "line"); while (fight.pending) bosses.step(fight, ++t, pick(0));
+  assert.ok(near.taken > 0); assert.equal(beside.taken, 0);
+  fighters.splice(fighters.indexOf(beside), 1);
+  // phase two at two-thirds health: a title, a moment's resistance, new moves (Field of Frost)
+  boss.health.currentValue = 230; near.titles.length = 0; bosses.step(fight, ++t, pick(0)); assert.equal(fight.phase, 1);
+  assert.ok(near.titles.some((s) => s.includes("Phase 2")), near.titles.join()); assert.equal(boss.effects.get("resistance"), 4);
+  assert.ok(bosses.movesOf(fight).some((m) => m.name === "Field of Frost"));
+  // the barrage marks every player and leaves frozen ground that keeps hurting
+  near.taken = 0; near.location = { x: 4, y: 64, z: 0 }; fight.next = 0; fight.pending = undefined;
+  const barrage = bosses.movesOf(fight).findIndex((m) => m.name === "Field of Frost"); bosses.step(fight, t += 50, pick((barrage + 0.5) / bosses.movesOf(fight).length));
+  assert.equal(fight.pending.move.name, "Field of Frost"); while (fight.pending) bosses.step(fight, ++t, pick(0));
+  const struck = near.taken; assert.ok(struck > 0 && bosses.hazards.length > 0, "a frozen field");
+  bosses.tickHazards(t + 10); assert.ok(near.taken > struck, "standing on it hurts"); near.location = { x: 30, y: 64, z: 30 }; const moved = near.taken; bosses.tickHazards(t + 20); assert.equal(near.taken, moved, "stepping off is safe");
+  bosses.tickHazards(t + 100000); assert.equal(bosses.hazards.length, 0, "the ground thaws");
+  // the last phase enrages; a ring spares those close in
+  boss.health.currentValue = 100; bosses.step(fight, ++t, pick(0)); assert.equal(fight.phase, 2); assert.ok(near.titles.some((s) => s.includes("Enraged"))); assert.ok(boss.effects.has("strength"));
+  near.location = { x: 1.5, y: 64, z: 0 }; far.location = { x: 6, y: 64, z: 0 }; near.taken = 0; far.taken = 0; fight.next = 0; fight.pending = undefined;
+  const ring = bosses.movesOf(fight).findIndex((m) => m.shape === "ring"); bosses.step(fight, t += 50, pick((ring + 0.5) / bosses.movesOf(fight).length));
+  assert.equal(fight.pending.move.shape, "ring"); while (fight.pending) bosses.step(fight, ++t, pick(0)); assert.equal(near.taken, 0, "inside the ring is safe"); assert.ok(far.taken > 0);
+  // bosses with allies call them at each change of phase
+  const shal = { ...boss, id: "shal1", typeId: "overlord:shalltear", health: { currentValue: 90, effectiveMax: 300 }, effects: new Map() }; shal.getComponent = boss.getComponent; shal.addEffect = boss.addEffect;
+  arena.spawned.length = 0; const f2 = bosses.engage(shal); bosses.step(f2, ++t, pick(0)); assert.equal(f2.phase, 2); assert.equal(arena.spawned.filter((e) => e.typeId === "overlord:vampire_bride").length, 4);
+  // rewards: refining stones and gems for each foe, and a Codex the first time
+  const pr = rpg.profileOf(near); pr.bosses = []; near.location = { x: 1, y: 64, z: 1 }; fighters.splice(fighters.indexOf(far), 1);
+  const dead = { ...boss, location: { x: 0, y: 64, z: 0 } }; dead.getComponent = boss.getComponent;
+  bosses.reward(dead, "cocytus", new Set(["near"]), pick(0)); const got = near.got.map((s) => s.typeId);
+  assert.ok(got.includes("overlord:refining_stone") && got.some((g) => g.startsWith("overlord:gem_")) && got.includes("overlord:codex_of_skills"), got.join());
+  near.got.length = 0; bosses.reward(dead, "cocytus", new Set(["near"]), pick(0)); assert.ok(!near.got.some((s) => s.typeId === "overlord:codex_of_skills"), "the Codex only the first time");
+  assert.deepEqual(pr.bosses, ["cocytus"]);
+  bosses.fights.clear();
+}
+
+// ---- gear: quality, gems, salvage ----
+{
+  const gear = await import("./gear.js");
+  const g = mkPlayer("gwen"); g.dimension.mobs = []; world.afterEvents.playerSpawn.fire({ player: g, initialSpawn: true }); advance(80);
+  g.selectedSlotIndex = 0; g.inv.length = 0; const sword = new ItemStack("overlord:razor_edge", 1); g.inv.push(sword);
+  let armour = {};
+  g.getComponent = ((base) => (c) => (c === "minecraft:equippable" ? { getEquipment: (slot) => (slot === "Mainhand" ? g.inv[g.selectedSlotIndex] : armour[slot]) } : base(c)))(g.getComponent);
+  const give = (id, n) => g.inv.push(new ItemStack(id, n));
+  // a workbench is needed
+  assert.ok(gear.refine(g).includes("anvil")); g.dimension.mobs = [{ typeId: "overlord:dwarf", tags: new Set(), location: { x: 1, y: 64, z: 1 } }];
+  assert.ok(gear.refine(g).includes("costs 1 Refining Stone"));
+  give("overlord:refining_stone", 30); give("overlord:yggdrasil_gold_coin", 400);
+  assert.ok(gear.refine(g, () => 0).includes("Fine")); assert.equal(gear.qualityOf(sword), 1); assert.ok(sword.lore.includes("§aFine") && sword.lore.some((l) => l.includes("Sockets")), sword.lore.join("|"));
+  // a failed refinement costs the stones but not the item
+  gear.refine(g, () => 0); const stones = spells.countItem(g, "overlord:refining_stone"); assert.ok(gear.refine(g, () => 0.99).includes("failed"));
+  assert.equal(gear.qualityOf(sword), 2); assert.equal(spells.countItem(g, "overlord:refining_stone"), stones - 3);
+  gear.refine(g, () => 0); assert.equal(gear.qualityOf(sword), 3); assert.equal(gear.socketsFor("overlord:razor_edge", 3), 2);
+  // the held weapon's quality adds to every blow
+  assert.equal(rpg.heldQuality(g), 3);
+  // gems: two sockets, then full; they come back out for a few coins
+  give("overlord:gem_ruby", 1); give("overlord:gem_onyx", 1); give("overlord:gem_jade", 1);
+  assert.ok(gear.socket(g, "ruby").includes("Ruby")); assert.ok(gear.socket(g, "onyx").includes("Onyx")); assert.ok(gear.socket(g, "jade").includes("filled"));
+  assert.deepEqual(gear.gemsOf(sword), ["ruby", "onyx"]); assert.ok(sword.lore.some((l) => l.includes("[Ruby of Embers] [Onyx of Night]")), sword.lore.join("|"));
+  // in combat: the ruby burns and the onyx drinks
+  const foe = mob("minecraft:zombie", 100, ["monster"]); foe.id = "gz"; foe.location = { x: 0, y: 64, z: 2 }; foe.burning = 0; foe.setOnFire = (n) => { foe.burning = n; }; foe.addEffect = () => {};
+  g.health.currentValue = 10; gear.gemBlow(g, foe, 10, gear.gemsOf(sword), () => 0); assert.equal(foe.burning, 3); assert.ok(Math.abs(g.health.currentValue - 10.5) < 1e-9);
+  assert.equal(spells.countItem(g, "overlord:gem_ruby"), 0); assert.ok(gear.unsocket(g).includes("2 gems")); assert.equal(spells.countItem(g, "overlord:gem_ruby"), 1); assert.deepEqual(gear.gemsOf(sword), []);
+  // reinforcing keeps the quality lines
+  // armour: quality turns harm aside, gems work all the time
+  const helm = new ItemStack("overlord:infernal_helmet", 1); helm.setDynamicProperty("overlord:quality", 4); helm.setDynamicProperty("overlord:gems", "sapphire");
+  const plate = new ItemStack("overlord:infernal_chestplate", 1); plate.setDynamicProperty("overlord:quality", 2); plate.setDynamicProperty("overlord:gems", "topaz,topaz");
+  armour = { Head: helm, Chest: plate }; assert.deepEqual(gear.wornGear(g), { quality: 6, gems: { sapphire: 1, topaz: 2 } });
+  const pg = rpg.profileOf(g); pg.mana = 0; g.effects.clear(); gear.tickGear(g, 1); assert.equal(pg.mana, 0.5); assert.ok(g.effects.has("speed"));
+  g.health.currentValue = 10; world.afterEvents.entityHurt.fire({ hurtEntity: g, damage: 10, damageSource: { cause: "entityAttack" } }); assert.ok(Math.abs(g.health.currentValue - 10.9) < 1e-9, `${g.health.currentValue}`);
+  // salvage: the piece is gone, materials and gems come back
+  sword.setDynamicProperty("overlord:gems", "jade"); sword.setDynamicProperty("overlord:plus", 2); const before = spells.countItem(g, "overlord:refining_stone");
+  assert.ok(gear.salvage(g, () => 0.9).includes("Salvaged")); assert.equal(g.inv[0], undefined); assert.equal(spells.countItem(g, "overlord:refining_stone"), before + 1 + 3 + 2);
+  assert.equal(spells.countItem(g, "overlord:gem_jade"), 2);
+  // the workbench page
+  g.inv[0] = new ItemStack("overlord:spuit_lance", 1); gear.openWorkbench(g); const page = shown[shown.length - 1]; assert.ok(page.title.includes("Workbench") && page.body.includes("Common") && page.body.includes("Sunstone"), page.body);
+  g.dimension.mobs = []; players.splice(players.indexOf(g), 1);
 }
 
 // persistence: saved profile is restored after leaving

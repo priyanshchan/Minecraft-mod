@@ -4,7 +4,7 @@
       "total_exp_required": 0,
       "groups": [
         {
-          "num_to_select": 15,
+          "num_to_select": 16,
           "trades": [
             {
               "wants": [
@@ -230,6 +230,21 @@
                 }
               ],
               "max_uses": 4
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 8
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:refining_stone",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 8
             }
           ]
         }

@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:gem_topaz",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_gem_topaz"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.gem_topaz.name"
+      },
+      "minecraft:max_stack_size": 16,
+      "minecraft:rarity": "rare"
+    }
+  }
+}
