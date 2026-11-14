@@ -568,6 +568,24 @@ def heartwood_staff():
     return staff("heartwood_staff", "#5a3e24", "#4f8a3a", top)
 
 
+def magic_wand():
+    """The casting staff: dark wood bound in gold, its head a gold claw closed round a floating Data Crystal."""
+    w = Weapon("magic_wand", "staff")
+    w.shaft(-12, 26, "#3a2a1e", band=GOLD)
+    w.box(-1.5, 13, -1.5, 3, 2, 3, GOLD, inflate=0.1)  # the collar
+    for x, z in ((-1.5, -1.5), (1.5, -1.5), (-1.5, 1.5), (1.5, 1.5)):
+        w.box(x - 0.5, 15, z - 0.5, 1, 4, 1, GOLD_D, rotation=(15 if z < 0 else -15, 0, -15 if x < 0 else 15), pivot=(x, 15, z))
+    w.box(-1, 16, -1, 2, 3, 2, "#7fd8ff", glow=True)  # the crystal
+    w.box(-0.5, 19, -0.5, 1, 1, 1, "#c8f0ff", glow=True)
+    w.gem(0, 12, 0, "#c05bff")
+    w.tip = (0.0, 19.5, 0.0)
+    return w
+
+
+# Items held as 3D models that are not weapons of arms.js, and the element of their aura.
+EXTRA_ELEMENTS = {"magic_wand": "arcane"}
+
+
 ALL = {
     "staff_of_ainz_ooal_gown": staff_of_ainz, "spuit_lance": spuit_lance, "ginnungagap": ginnungagap,
     "god_slaying_emperor_blade": god_slaying_emperor_blade, "death_knight_sword": death_knight_sword,
@@ -581,6 +599,7 @@ ALL = {
     "elf_kings_staff": elf_kings_staff, "giants_maul": giants_maul, "dragonbone_blade": dragonbone_blade,
     "six_arms_knuckles": six_arms_knuckles,
     "cavalier_lance": cavalier_lance, "ghoulfang_sickle": ghoulfang_sickle, "heartwood_staff": heartwood_staff,
+    "magic_wand": magic_wand,
 }
 
 
