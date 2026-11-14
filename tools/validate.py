@@ -203,7 +203,9 @@ def main():
             used_textures.add(path)
             if check(png(path).is_file(), f"{atlas}.json: {key} -> missing file {path}.png"):
                 img = Image.open(png(path))
-                check(img.size == (16, 16), f"{path}.png: expected 16x16, got {img.size}")
+                # 16x16, or 32x32 for the finer weapon and armour icons
+                check(img.size in ((16, 16), (32, 32)) and (atlas == "item_texture" or img.size == (16, 16)),
+                      f"{path}.png: expected 16x16 (or 32x32 for an item), got {img.size}")
                 check(img.convert("RGBA").getbbox() is not None, f"{path}.png: image is fully transparent")
 
     # -------------------------------------------------------------------- items
@@ -360,7 +362,7 @@ def main():
             used_textures.add(tex)
             check(tex in VANILLA["texture"] or png(tex).is_file(), f"{rel(f)}: missing texture {tex}.png")
             if png(tex).is_file():
-                check(Image.open(png(tex)).size == (64, 32), f"{rel(f)}: armour texture must be 64x32")
+                check(Image.open(png(tex)).size in ((64, 32), (128, 64)), f"{rel(f)}: armour texture must be 64x32 or 128x64")
         for gid in d["geometry"].values():
             check(gid in VANILLA["geometry"], f"{rel(f)}: unknown geometry {gid}")
         for anim in d.get("animations", {}).values():
@@ -454,6 +456,26 @@ def main():
         declared = {load(f)["minecraft:item"]["components"].get("minecraft:cooldown", {}).get("category")
                     for f in (BP / "items").glob("*.json")}
         check(category in declared, f"main.js: cooldown category {category} is not declared by any item")
+
+    # ------------------------------------------------- weapons and armour (arms.js)
+    arms = (BP / "scripts/arms.js").read_text()
+    weapon_keys = re.findall(r'^  ([a-z_]+): \{ kind: "([a-z]+)", element: "([a-z]+)"', arms, re.M)
+    check(len(weapon_keys) >= 30, "arms.js: weapon table not found")
+    for key, kind, element in weapon_keys:
+        check(f"{NS}:{key}" in items, f"arms.js: unknown weapon {key}")
+        check(element in ("fire", "ice", "lightning", "holy", "dark", "arcane", "acid", "none"), f"arms.js: {key} has unknown element {element}")
+    hand_weapons = {f.stem for f in (BP / "items").glob("*.json") if load(f)["minecraft:item"]["components"].get("minecraft:hand_equipped")}
+    not_melee = {"magic_wand", "command_banner", "bow_of_houyi"}  # a casting focus, a banner and a bow
+    for key in hand_weapons - {k for k, _, _ in weapon_keys} - not_melee:
+        check(False, f"arms.js: weapon {key} has no kind or element")
+    art_block = arms[arms.index("export const NEW_ARTS"):arms.index("};", arms.index("export const NEW_ARTS"))]
+    for key, category in re.findall(r'([a-z_]+): \["([a-z_]+)", \d+\]', art_block):
+        comps = load(BP / f"items/{key}.json")["minecraft:item"]["components"] if (BP / f"items/{key}.json").is_file() else {}
+        check(comps.get("minecraft:cooldown", {}).get("category") == category, f"arms.js: {key} art needs cooldown category {category}")
+    set_block = arms[arms.index("export const SETS"):arms.index("};", arms.index("export const SETS"))]
+    for key in re.findall(r'^  ([a-z_]+): \{ name:', set_block, re.M):
+        for piece in ("helmet", "chestplate", "leggings", "boots"):
+            check(f"{NS}:{key}_{piece}" in items, f"arms.js: set {key} has no {piece}")
 
     # ------------------------------------------------- particles and player poses
     own_particles = set()

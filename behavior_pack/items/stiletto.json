@@ -24,7 +24,11 @@
         "slot": "sword",
         "value": 15
       },
-      "minecraft:rarity": "rare"
+      "minecraft:rarity": "rare",
+      "minecraft:cooldown": {
+        "category": "overlord_stored_spell",
+        "duration": 8.0
+      }
     }
   }
 }

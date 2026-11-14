@@ -24,7 +24,11 @@
         "slot": "sword",
         "value": 15
       },
-      "minecraft:rarity": "epic"
+      "minecraft:rarity": "epic",
+      "minecraft:cooldown": {
+        "category": "overlord_azure_draw",
+        "duration": 8.0
+      }
     }
   }
 }

@@ -37,6 +37,10 @@
             "repair_amount": "query.max_durability * 0.25"
           }
         ]
+      },
+      "minecraft:cooldown": {
+        "category": "overlord_blade_storm",
+        "duration": 9.0
       }
     }
   }

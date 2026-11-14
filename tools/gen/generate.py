@@ -7,6 +7,7 @@ The script is deterministic: running it twice produces identical output.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -91,6 +92,13 @@ def main():
         save_png(RP / f"textures/entity/{content.NS}/{m.name}.png", m.hd())
 
     item_icons = icons.all_item_icons()
+    # Weapons and armour pieces are shipped at 32x32 (v7.2): the same designs, finer.
+    # Each weapon's element (the colour of its glow) is read from the script that gives weapons their arts.
+    arms = (ROOT / "behavior_pack/scripts/arms.js").read_text()
+    elements = dict(re.findall(r'^  ([a-z_]+): \{ kind: "[a-z]+", element: "([a-z]+)"', arms, re.M))
+    for name, (_title, _cat, comps) in content.ITEMS.items():
+        if name in item_icons and ("minecraft:hand_equipped" in comps or "minecraft:wearable" in comps):
+            item_icons[name] = icons.hd_sprite(item_icons[name], elements.get(name))
     for name, img in item_icons.items():
         save_png(RP / f"textures/items/{content.NS}/{name}.png", img)
     assert set(icons.BLOCK_TEXTURES) == set(content.terrain_textures())
@@ -98,24 +106,24 @@ def main():
         save_png(RP / f"textures/blocks/{content.NS}/{name}.png", draw())
     save_png(RP / f"textures/models/armor/{content.NS}_mask_of_envy.png", icons.mask_layer())
     layer1, layer2 = icons.armor_layers()
-    save_png(RP / f"textures/models/armor/{content.NS}_dark_warrior_1.png", layer1)
-    save_png(RP / f"textures/models/armor/{content.NS}_dark_warrior_2.png", layer2)
+    save_png(RP / f"textures/models/armor/{content.NS}_dark_warrior_1.png", icons.hd_armor(layer1, 1))
+    save_png(RP / f"textures/models/armor/{content.NS}_dark_warrior_2.png", icons.hd_armor(layer2, 2))
     layer1, layer2 = icons.champion_layers()
-    save_png(RP / f"textures/models/armor/{content.NS}_world_champion_1.png", layer1)
-    save_png(RP / f"textures/models/armor/{content.NS}_world_champion_2.png", layer2)
+    save_png(RP / f"textures/models/armor/{content.NS}_world_champion_1.png", icons.hd_armor(layer1, 1))
+    save_png(RP / f"textures/models/armor/{content.NS}_world_champion_2.png", icons.hd_armor(layer2, 2))
     layer1, layer2 = icons.regalia_layers()
-    save_png(RP / f"textures/models/armor/{content.NS}_regalia_1.png", layer1)
-    save_png(RP / f"textures/models/armor/{content.NS}_regalia_2.png", layer2)
+    save_png(RP / f"textures/models/armor/{content.NS}_regalia_1.png", icons.hd_armor(layer1, 1))
+    save_png(RP / f"textures/models/armor/{content.NS}_regalia_2.png", icons.hd_armor(layer2, 2))
     layer1, layer2 = icons.dragonscale_layers()
-    save_png(RP / f"textures/models/armor/{content.NS}_dragonscale_1.png", layer1)
-    save_png(RP / f"textures/models/armor/{content.NS}_dragonscale_2.png", layer2)
+    save_png(RP / f"textures/models/armor/{content.NS}_dragonscale_1.png", icons.hd_armor(layer1, 1))
+    save_png(RP / f"textures/models/armor/{content.NS}_dragonscale_2.png", icons.hd_armor(layer2, 2))
     for name, make in (("ranger", icons.ranger_layers), ("crimson", icons.crimson_layers),
                        ("infernal", icons.infernal_layers), ("vestment", icons.vestment_layers),
                        ("bonedragon", icons.bonedragon_layers), ("beasthide", icons.beasthide_layers),
                        ("platinum", icons.platinum_layers)):
         layer1, layer2 = make()
-        save_png(RP / f"textures/models/armor/{content.NS}_{name}_1.png", layer1)
-        save_png(RP / f"textures/models/armor/{content.NS}_{name}_2.png", layer2)
+        save_png(RP / f"textures/models/armor/{content.NS}_{name}_1.png", icons.hd_armor(layer1, 1))
+        save_png(RP / f"textures/models/armor/{content.NS}_{name}_2.png", icons.hd_armor(layer2, 2))
 
     write_json(RP / "textures/item_texture.json", content.item_texture_json(item_icons))
     write_json(RP / "textures/terrain_texture.json", content.terrain_texture_json())

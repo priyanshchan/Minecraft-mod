@@ -38,6 +38,7 @@ import "./ambience.js";
 import "./dragons.js";
 import "./mount.js";
 import "./skilltree.js";
+import { tryAwaken, useWeaponArt } from "./arms.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -1409,6 +1410,8 @@ world.afterEvents.itemUse.subscribe((event) => {
   const item = event.itemStack?.typeId;
   if (!item || !item.startsWith(`${NS}:`)) return;
   try {
+    // A weapon whose Awakening gauge is full awakens on sneak + use, before its own art.
+    if (player.isSneaking && tryAwaken(player)) return;
     if (item === id("adventurer_plate")) {
       if (player.isSneaking) useClassSkill(player);
       else openMenu(player);
@@ -1517,6 +1520,8 @@ world.afterEvents.itemUse.subscribe((event) => {
       fireRifle(player);
     } else if (item in SIGILS) {
       useSigil(player, SIGILS[item]);
+    } else {
+      useWeaponArt(player, item); // the arts of weapons that had none before v7.2
     }
   } catch (error) {
     console.warn(`[Overlord] ability failed: ${error}`);
