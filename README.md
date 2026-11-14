@@ -797,6 +797,20 @@ under water or too steep, the site moves up to 24 blocks to one side.
 `python3 tools/preview_sites.py` draws every site without the game (into `dist/sites/`) and reports anything
 that stands where the garrison is posted or reaches outside the site.
 
+### Testing in creative mode (v7.6.1)
+
+The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
+cannot be crafted) works only in creative mode. Using it opens a menu:
+- **+1 level, +10 levels or level 100**: the stat points and skill points of every level passed are granted.
+- **Learn every spell**, god-tier included.
+- **Unlock god-tier magic**: counts the Great Tomb as conquered.
+- **Full health and mana, spells ready**: also clears every spell's recharge.
+- **Test kit**: 64 Data Crystals, 64 Gold Coins, 32 Refining Stones, 16 Adamantite Ingots, 10 Codices, a Key of
+  the Great Tomb, 4 Floor Guardian Crests, 8 mana potions and 4 of each gem.
+- **Back to level 1**: refunds stat points and forgets learned skills.
+
+Sneak + use the tome for a quick +10 levels. In survival or adventure mode it does nothing.
+
 ### Tier magic
 
 Every player also receives a **Grimoire** and a **Magic Wand** (recipes: book + data crystal; data crystal /
@@ -983,7 +997,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects) `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage) and `dungeon.js` (the Great Tomb) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects) `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic) and `devtools.js` (the Creative Tome of Ascension) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

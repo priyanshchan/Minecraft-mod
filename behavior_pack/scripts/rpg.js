@@ -596,6 +596,38 @@ export function grantLevel(player) {
 }
 
 /**
+ * Sets the player's level outright (the Creative Tome of Ascension). Going up grants the stat points of
+ * every level passed, as levelling would; going back to a lower level refunds the spent stat points and
+ * leaves only that level's worth. Skill points follow the level by themselves.
+ * @param {import("@minecraft/server").Player} player @param {number} level
+ */
+export function setLevel(player, level) {
+  const p = profileOf(player);
+  const target = Math.max(1, Math.min(MAX_LEVEL, Math.floor(level)));
+  const wasAdvanced = advanced(p);
+  if (target >= p.level) {
+    p.points += (target - p.level) * POINTS_PER_LEVEL;
+  } else {
+    p.str = p.vit = p.int = p.agi = 0;
+    p.points = (target - 1) * POINTS_PER_LEVEL;
+  }
+  p.level = target;
+  p.xp = 0;
+  p.mana = maxMana(p);
+  updateLevelTag(player);
+  save(player);
+  applyPassives(player);
+  if (!wasAdvanced && advanced(p) && p.cls !== "none") {
+    try {
+      player.sendMessage(`§6[Class] §fYou are now a §e${ADVANCED[p.cls].name}§f. ${ADVANCED[p.cls].help}`);
+    } catch {
+      // cosmetic only
+    }
+  }
+  return target;
+}
+
+/**
  * Refunds every spent stat point (Scroll: Rebirth). Returns how many were refunded.
  * @param {import("@minecraft/server").Player} player
  */

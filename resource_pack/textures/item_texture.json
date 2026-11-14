@@ -14,6 +14,9 @@
     "overlord_angel_mace": {
       "textures": "textures/items/overlord/angel_mace"
     },
+    "overlord_ascension_tome": {
+      "textures": "textures/items/overlord/ascension_tome"
+    },
     "overlord_aura_whip": {
       "textures": "textures/items/overlord/aura_whip"
     },

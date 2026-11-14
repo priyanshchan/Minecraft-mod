@@ -676,6 +676,25 @@ function refreshHud(player) {
 /** `${playerId}|${spell}` -> tick when castable again. */
 const ready = new Map();
 
+/** Clears every spell's recharge for a player (the Creative Tome of Ascension). @param {Player} player */
+export function resetCooldowns(player) {
+  for (const key of [...ready.keys()]) if (key.startsWith(`${player.id}|`)) ready.delete(key);
+}
+
+/** Teaches every spell, god-tier included, filling free slots. Returns how many were new. @param {Player} player */
+export function learnAll(player) {
+  const p = book(player);
+  let added = 0;
+  for (const spell of SPELLS) {
+    if (p.spells.includes(spell.key)) continue;
+    p.spells.push(spell.key);
+    added += 1;
+  }
+  touch(player);
+  refreshHud(player);
+  return added;
+}
+
 /**
  * Casts the spell in the selected slot (Magic Wand).
  * @param {Player} player

@@ -1806,6 +1806,7 @@ def all_item_icons():
         "rune_of_fire": rune_stone("#ff7a1a"),
         "refining_stone": whetstone(),
         "tomb_key": tomb_key(),
+        "ascension_tome": tome(cover="#e8e4f0", cover_d="#b9b2c8", glyph="#2fbf8f", band="#d9a92b"),
         "gem_ruby": gem("#d4202a", "#ff6a6a", "#7a0d14"),
         "gem_sapphire": gem("#2a62d8", "#7fb0ff", "#13306e"),
         "gem_topaz": gem("#e8b020", "#ffe27a", "#8a5e08"),
