@@ -1891,6 +1891,26 @@ players.splice(0, players.length, ...everyone, zoe);
   all.forEach((m) => { m.isValid = false; }); players.splice(players.indexOf(z), 1);
 }
 
+// v8.8: comforts of Nazarick - meals and off-hand rings
+{
+  const comforts = await import("./comforts.js");
+  const c = mkPlayer("cosy"); c.location = { x: 0, y: 64, z: 0 };
+  let off; c.getComponent = ((base) => (k) => (k === "minecraft:equippable" ? { getEquipment: (slot) => (slot === "Offhand" && off ? { typeId: off } : undefined) } : base(k)))(c.getComponent);
+  world.afterEvents.playerSpawn.fire({ player: c, initialSpawn: true }); advance(60);
+  const pc = rpg.profileOf(c); pc.mana = 0;
+  world.afterEvents.itemCompleteUse.fire({ source: c, itemStack: { typeId: "overlord:sebas_tea" } });
+  assert.ok(c.effects.get("haste").amplifier === 1 && c.effects.has("speed") && pc.mana === 30, "Sebas's tea");
+  assert.ok(comforts.eat(c, "overlord:feast_pie") && c.effects.has("health_boost") && c.effects.has("regeneration"));
+  assert.ok(comforts.eat(c, "overlord:dragon_skewer") && c.effects.has("fire_resistance") && c.effects.has("strength"));
+  assert.ok(!comforts.eat(c, "minecraft:bread"));
+  // rings: nothing in the off hand does nothing; the Fleet Foot lends speed; Sustenance feeds and mends the still
+  assert.equal(comforts.wear(c), ""); off = "overlord:ring_of_fleet_foot"; c.effects.clear(); assert.equal(comforts.wear(c), "fleet"); assert.ok(c.effects.has("jump_boost"));
+  off = "overlord:ring_of_sustenance"; c.effects.set("hunger", { duration: 100, amplifier: 0 }); assert.equal(comforts.wear(c), "fed"); assert.ok(!c.effects.has("hunger") && c.effects.has("saturation"));
+  c.health.currentValue = 10; assert.equal(comforts.wear(c), "mend"); assert.equal(c.health.currentValue, 11);
+  c.location = { x: 5, y: 64, z: 0 }; assert.equal(comforts.wear(c), "fed", "no mending on the move");
+  players.splice(players.indexOf(c), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);

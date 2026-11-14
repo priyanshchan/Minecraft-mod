@@ -487,6 +487,94 @@ def heartwood_staff():
     ], {"W": "#5a3e24", "L": "#4f8a3a", "G": "#9cff6a"})
 
 
+def sebas_tea():
+    """A white china cup of dark tea on a saucer, steam rising."""
+    return sprite16([
+        "................",
+        "......w..w......",
+        ".......w..w.....",
+        "......w..w......",
+        "................",
+        "...WWWWWWWWW....",
+        "...WTTTTTTTWWW..",
+        "...WTtttttTW.W..",
+        "...WWWWWWWWW.W..",
+        "....WWWWWWWWWW..",
+        ".....WWWWWWW....",
+        "..SSSSSSSSSSSS..",
+        "...ssssssssss...",
+        "................",
+        "................",
+        "................",
+    ], {"W": "#f4f1ea", "T": "#3a1a0a", "t": "#5a2a10", "w": "#d8d8e8", "S": "#d9a92b", "s": "#96701a"})
+
+
+def feast_pie():
+    """A golden pie with a lattice crust and a Nazarick crest pressed in its middle."""
+    return sprite16([
+        "................",
+        "................",
+        "................",
+        "....CCCCCCCC....",
+        "...CcCcCcCcCC...",
+        "..CcCCPPPPCCcC..",
+        "..CCcPpGGpPcCC..",
+        "..CcCPGppGPCcC..",
+        "..CCcPpGGpPcCC..",
+        "..CcCCPPPPCCcC..",
+        "...CcCcCcCcCC...",
+        "..DDDDDDDDDDDD..",
+        "...DDDDDDDDDD...",
+        "................",
+        "................",
+        "................",
+    ], {"C": "#e0a04a", "c": "#c07a2a", "P": "#7a1a2a", "p": "#a8263a", "G": "#d9a92b", "D": "#8a5a2a"})
+
+
+def dragon_skewer():
+    """Charred meat on a dragon-bone skewer, glowing red with spice."""
+    return sprite16([
+        "...............B",
+        "..............B.",
+        ".............MM.",
+        "............MRMM",
+        "...........MMRM.",
+        "..........MRMM..",
+        ".........MMRM...",
+        "........MRMM....",
+        ".......MMRM.....",
+        "......MRMM......",
+        ".....MMMM.......",
+        "....BB..........",
+        "...BB...........",
+        "..BB............",
+        ".BB.............",
+        "BB..............",
+    ], {"B": "#f1eee0", "M": "#7a3a1a", "R": "#ff5a2a"})
+
+
+def gem_ring(gem, gem_l):
+    """A gold band set with a gem (v8.8)."""
+    return sprite16([
+        "................",
+        "................",
+        "......GgG.......",
+        ".....gEeEg......",
+        "......EEE.......",
+        ".....GGGGG......",
+        "....GG...GG.....",
+        "...GG.....GG....",
+        "...G.......G....",
+        "...G.......G....",
+        "...GG.....GG....",
+        "....GG...GG.....",
+        ".....GGGGG......",
+        "................",
+        "................",
+        "................",
+    ], {"G": GOLD, "g": GOLD_D, "E": gem, "e": gem_l})
+
+
 CAVALIER_PAL = {"K": "#0c0b10", "k": "#3a3644", "l": "#5e5868", "G": "#59e0a0", "g": "#1e5a44", "R": "#59e0a0"}
 
 
@@ -1895,6 +1983,7 @@ BLOCK_TEXTURES = {
 
 
 EGG_COLORS = {
+    "skeleton_archer": ("#d8d0b4", "#7a5230"),
     "ghoul": ("#7d8a6a", "#f2e21b"),
     "wraith": ("#16202a", "#9cffe8"),
     "death_cavalier": ("#1d1b24", "#59e0a0"),
@@ -2041,6 +2130,10 @@ def all_item_icons():
         "refining_stone": whetstone(),
         "tomb_key": tomb_key(),
         "royal_seal": royal_seal(),
+        "sebas_tea": sebas_tea(),
+        "feast_pie": feast_pie(),
+        "dragon_skewer": dragon_skewer(),
+        "ring_of_fleet_foot": gem_ring("#59d0ff", "#d0f4ff"),
         "ghoul_fang": ghoul_fang(),
         "spectral_iron": spectral_iron(),
         "heartwood": heartwood(),

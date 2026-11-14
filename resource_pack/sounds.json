@@ -1107,6 +1107,19 @@
           "haggle.no": "mob.villager.no"
         }
       },
+      "overlord:skeleton_archer": {
+        "volume": 1.0,
+        "pitch": [
+          0.8,
+          1.0
+        ],
+        "events": {
+          "ambient": "mob.skeleton.say",
+          "hurt": "mob.skeleton.hurt",
+          "death": "mob.skeleton.death",
+          "step": "mob.skeleton.step"
+        }
+      },
       "overlord:guardian_albedo": {
         "volume": 1.0,
         "pitch": [

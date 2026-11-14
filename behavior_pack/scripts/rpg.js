@@ -230,6 +230,7 @@ export const TIPS = {
   [id("khajiit")]: "Khajiit keeps raising the dead. Cut through to him before the skeletons bury you.",
   [id("gigant_basilisk")]: "A Gigant Basilisk's bite is venom and its gaze slows you. Fight it with ranged help.",
   [id("frost_giant")]: "Frost Giants hit hard and chill you. Fire magic and quick feet serve best.",
+  [id("skeleton_archer")]: "Skeleton Archers keep their distance and burn by day. Close in fast, or use a shield.",
   [id("ghoul")]: "Ghouls hunt in packs and their bite stiffens the limbs. Holy light and fire burn them.",
   [id("wraith")]: "Wraiths slip behind you and their touch withers. Dark magic barely harms them; holy light does.",
   [id("death_cavalier")]: "Death Cavaliers charge from afar. Sidestep the lance, then strike - holy light hurts them most.",

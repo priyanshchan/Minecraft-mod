@@ -137,6 +137,9 @@
     "overlord_dragon_bone": {
       "textures": "textures/items/overlord/dragon_bone"
     },
+    "overlord_dragon_skewer": {
+      "textures": "textures/items/overlord/dragon_skewer"
+    },
     "overlord_dragonbone_blade": {
       "textures": "textures/items/overlord/dragonbone_blade"
     },
@@ -356,6 +359,9 @@
     "overlord_egg_skeletal_dragon": {
       "textures": "textures/items/overlord/egg_skeletal_dragon"
     },
+    "overlord_egg_skeleton_archer": {
+      "textures": "textures/items/overlord/egg_skeleton_archer"
+    },
     "overlord_egg_skeleton_mage": {
       "textures": "textures/items/overlord/egg_skeleton_mage"
     },
@@ -403,6 +409,9 @@
     },
     "overlord_fang_dagger": {
       "textures": "textures/items/overlord/fang_dagger"
+    },
+    "overlord_feast_pie": {
+      "textures": "textures/items/overlord/feast_pie"
     },
     "overlord_fell_iron": {
       "textures": "textures/items/overlord/fell_iron"
@@ -572,6 +581,9 @@
     "overlord_ring_of_ainz_ooal_gown": {
       "textures": "textures/items/overlord/ring_of_ainz_ooal_gown"
     },
+    "overlord_ring_of_fleet_foot": {
+      "textures": "textures/items/overlord/ring_of_fleet_foot"
+    },
     "overlord_ring_of_sustenance": {
       "textures": "textures/items/overlord/ring_of_sustenance"
     },
@@ -622,6 +634,9 @@
     },
     "overlord_sealing_crystal": {
       "textures": "textures/items/overlord/sealing_crystal"
+    },
+    "overlord_sebas_tea": {
+      "textures": "textures/items/overlord/sebas_tea"
     },
     "overlord_shadow_of_yggdrasil": {
       "textures": "textures/items/overlord/shadow_of_yggdrasil"

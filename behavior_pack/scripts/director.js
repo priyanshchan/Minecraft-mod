@@ -29,6 +29,7 @@ export const SPAWN_GATE = {
   [id("beastman")]: 6,
   [id("frost_giant")]: 14,
   [id("ghoul")]: 6,
+  [id("skeleton_archer")]: 4,
   [id("wraith")]: 9,
   [id("death_cavalier")]: 22,
   [id("treant_sapling")]: 10,

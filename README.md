@@ -1084,6 +1084,24 @@ kingdom from **Court of Nazarick** on the Kingdom page.
 - **Dryad's Spring:** a quiet pool among trees and azaleas, home to Pinison. It is friendly, so you can travel
   back to it.
 
+### Comforts of Nazarick (v8.8)
+
+**Meals**: eat or drink for their effects.
+
+| Meal | Recipe | Effect |
+|------|--------|--------|
+| Sebas's Black Tea (2 per craft; also sold by the Nazarick Maid) | glass bottle, sugar, cocoa beans | Haste II and Speed I for 90 s, +30 mana |
+| Nazarick Feast Pie | egg, sugar, wheat, cooked beef, apple | Regeneration for 30 s, +2 hearts for 5 minutes, very filling |
+| Spicy Dragon Skewer (2 per craft) | dragon bone, 2 cooked beef, blaze powder | Fire Resistance for 3 minutes, Strength I for 1 minute |
+
+**Rings worn in the off-hand**
+- **Ring of Sustenance:** worn in the off-hand, it keeps you fed and slowly mends you while you stand still. You
+  can still use it for a full meal once a minute.
+- **Ring of the Fleet Foot** (a Data Crystal, gold ingots and a rabbit's foot): Speed I and Jump Boost I.
+
+**Skeleton Archer**: the lowest of Nazarick's archers. It shoots from range and burns by day like its kin. It
+spawns at night and guards Katze Plains Barrows, and drops bones and arrows.
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
@@ -1288,7 +1306,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink) and `devtools.js` (the Creative Tome of Ascension) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink), `comforts.js` (meals and off-hand rings) and `devtools.js` (the Creative Tome of Ascension) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 
