@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:staff_of_ainz_ooal_gown.held",
-      "item": {
-        "overlord:staff_of_ainz_ooal_gown": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:staff_of_ainz_ooal_gown",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

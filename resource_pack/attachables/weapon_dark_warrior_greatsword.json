@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:dark_warrior_greatsword.held",
-      "item": {
-        "overlord:dark_warrior_greatsword": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:dark_warrior_greatsword",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

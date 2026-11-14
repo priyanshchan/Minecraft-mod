@@ -618,8 +618,9 @@ def attachable(key, weapon, element):
     }
     animate = [{"hold_first_person": "c.is_first_person"}, {"hold_third_person": "!c.is_first_person"}]
     description = {
-        "identifier": f"{item}.held",
-        "item": {item: "query.owner_identifier == 'minecraft:player'"},
+        # The identifier must be the item's own: only then does the model replace the flat item in the hand
+        # instead of being drawn beside it.
+        "identifier": item,
         "materials": {"default": "entity_emissive_alpha", "enchanted": "entity_alphatest_glint"},
         "textures": {"default": f"textures/models/weapons/{key}", "enchanted": "textures/misc/enchanted_item_glint"},
         "geometry": {"default": f"geometry.{NS}.weapon_{key}"},

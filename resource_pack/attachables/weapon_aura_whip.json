@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:aura_whip.held",
-      "item": {
-        "overlord:aura_whip": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:aura_whip",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

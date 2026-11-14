@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:safarlisia.held",
-      "item": {
-        "overlord:safarlisia": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:safarlisia",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

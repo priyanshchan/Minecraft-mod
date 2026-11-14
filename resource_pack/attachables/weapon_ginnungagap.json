@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:ginnungagap.held",
-      "item": {
-        "overlord:ginnungagap": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:ginnungagap",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

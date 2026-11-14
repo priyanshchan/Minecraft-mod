@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:fluder_staff.held",
-      "item": {
-        "overlord:fluder_staff": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:fluder_staff",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"
