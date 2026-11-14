@@ -39,6 +39,8 @@ import "./dragons.js";
 import "./mount.js";
 import "./skilltree.js";
 import { tryAwaken, useWeaponArt } from "./arms.js";
+import "./bosses.js";
+import "./gear.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;

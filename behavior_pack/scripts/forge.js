@@ -48,6 +48,21 @@ export function runeOf(item) {
   }
 }
 
+/**
+ * Writes an item's lore from its properties. gear.js installs a writer that also knows quality and
+ * gems; until then (and in tests without it) reinforcement and rune are written.
+ * @type {(item: import("@minecraft/server").ItemStack) => string[]}
+ */
+let writeLore = (item) => {
+  const raw = item.getDynamicProperty(PLUS_KEY);
+  return loreFor(typeof raw === "number" ? raw : 0, runeOf(item));
+};
+
+/** @param {(item: import("@minecraft/server").ItemStack) => string[]} writer */
+export function setLoreWriter(writer) {
+  writeLore = writer;
+}
+
 /** The lines written on a worked weapon. @param {number} plus @param {string | undefined} rune */
 function loreFor(plus, rune) {
   const lines = [];
@@ -85,7 +100,7 @@ export function reinforce(player) {
   // Mark the weapon first, so nothing is charged if the item cannot be changed.
   try {
     held.setDynamicProperty(PLUS_KEY, plus + 1);
-    held.setLore(loreFor(plus + 1, runeOf(held)));
+    held.setLore(writeLore(held));
     container.setItem(player.selectedSlotIndex, held);
   } catch {
     return "§7This weapon cannot be reinforced";
@@ -117,7 +132,7 @@ export function inscribe(player, rune) {
   const current = held.getDynamicProperty(PLUS_KEY);
   try {
     held.setDynamicProperty(RUNE_KEY, rune);
-    held.setLore(loreFor(typeof current === "number" ? current : 0, rune));
+    held.setLore(writeLore(held));
     container.setItem(player.selectedSlotIndex, held);
   } catch {
     return "§7This weapon cannot be inscribed";

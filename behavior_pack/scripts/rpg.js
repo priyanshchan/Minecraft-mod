@@ -30,7 +30,7 @@ const PARTY_SHARE = 0.5;
  *   spells: string[], slots: string[], slot: number, casts: Record<string, number>,
  *   party: any[], stance: string, kills: Record<string, number>, rep: Record<string, number>,
  *   daily: object, title: string, titles: string[], sites: string[], supply: boolean, bank: number,
- *   skills: Record<string, number>, codex: number,
+ *   skills: Record<string, number>, codex: number, bosses: string[],
  * }} Profile
  */
 
@@ -327,7 +327,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0 };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [] };
 }
 
 /**
@@ -698,6 +698,21 @@ export function heldPlus(player) {
 }
 
 /**
+ * Quality the held weapon has been refined to (0 Common .. 5 Divine); each step adds 4% melee damage.
+ * @param {import("@minecraft/server").Player} player
+ */
+export function heldQuality(player) {
+  try {
+    const held = player.getComponent("minecraft:equippable")?.getEquipment(EquipmentSlot.Mainhand);
+    if (!held || /_(helmet|chestplate|leggings|boots)$/.test(held.typeId)) return 0;
+    const q = held.getDynamicProperty("overlord:quality");
+    return typeof q === "number" ? Math.max(0, Math.min(5, Math.floor(q))) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Whether the world director made this mob an elite.
  * @param {import("@minecraft/server").Entity} mob
  */
@@ -927,7 +942,7 @@ world.afterEvents.entityHurt.subscribe((event) => {
     const health = victim.getComponent("minecraft:health");
     if (!health || health.currentValue <= 0) return;
     const undead = victim.matches({ families: ["undead"] });
-    let factor = p.str * 0.02 + (p.cls === "warrior" ? (master ? 0.3 : 0.2) : 0) + knowledgeOf(p, victim.typeId) * 0.05 + heldPlus(player) * 0.06;
+    let factor = p.str * 0.02 + (p.cls === "warrior" ? (master ? 0.3 : 0.2) : 0) + knowledgeOf(p, victim.typeId) * 0.05 + heldPlus(player) * 0.06 + heldQuality(player) * 0.04;
     if (p.cls === "cleric" && undead) factor += master ? 0.45 : 0.3;
     factor += skills.meleeBonus(p, {
       undead,

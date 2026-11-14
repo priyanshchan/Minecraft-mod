@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:gem_sunstone",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_gem_sunstone"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.gem_sunstone.name"
+      },
+      "minecraft:max_stack_size": 16,
+      "minecraft:rarity": "rare"
+    }
+  }
+}

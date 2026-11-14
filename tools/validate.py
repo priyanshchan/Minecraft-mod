@@ -477,6 +477,21 @@ def main():
         for piece in ("helmet", "chestplate", "leggings", "boots"):
             check(f"{NS}:{key}_{piece}" in items, f"arms.js: set {key} has no {piece}")
 
+    # ------------------------------------------------- boss fights and gear (bosses.js, gear.js)
+    boss_src = (BP / "scripts/bosses.js").read_text()
+    table = boss_src[boss_src.index("export const BOSSES"):boss_src.index("export const PHASES")]
+    boss_keys = re.findall(r'^  ([a-z_]+): \{\s*name:', table, re.M)
+    check(len(boss_keys) >= 18, "bosses.js: boss table not found")
+    for key in boss_keys:
+        check(f"{NS}:{key}" in known_entities, f"bosses.js: unknown boss {key}")
+    for ally in re.findall(r'id\("([a-z_]+)"\)', table):
+        check(f"{NS}:{ally}" in known_entities, f"bosses.js: unknown ally {ally}")
+    gear_src = (BP / "scripts/gear.js").read_text()
+    gem_block = gear_src[gear_src.index("export const GEMS"):gear_src.index("};", gear_src.index("export const GEMS"))]
+    for gem in re.findall(r'^  ([a-z]+): \{ name:', gem_block, re.M):
+        check(f"{NS}:gem_{gem}" in items, f"gear.js: no item for gem {gem}")
+    check(f"{NS}:refining_stone" in items, "gear.js: no Refining Stone item")
+
     # ------------------------------------------------- particles and player poses
     own_particles = set()
     for f in sorted((RP / "particles").glob("*.json")):

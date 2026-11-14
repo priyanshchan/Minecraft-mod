@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [7, 2, 0]
+VERSION = [7, 5, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v7.2.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v7.5.0"
 
 
 def oid(name):
@@ -316,6 +316,11 @@ ITEMS = {
     }),
     **{f"rune_of_{kind}": (f"Rune of {kind.capitalize()}", "items", {
         "minecraft:max_stack_size": 16, "minecraft:rarity": "rare"}) for kind in ("fire", "frost", "storm", "life")},
+    # v7.5 gear upgrades: refining raises an item's quality, gems are set into its sockets (gear.js).
+    "refining_stone": ("Refining Stone", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "uncommon"}),
+    **{f"gem_{gem}": (title, "items", {"minecraft:max_stack_size": 16, "minecraft:rarity": "rare"})
+       for gem, title in (("ruby", "Ruby of Embers"), ("sapphire", "Sapphire of Frost"), ("topaz", "Topaz of Storms"),
+                          ("jade", "Jade of Venom"), ("onyx", "Onyx of Night"), ("sunstone", "Sunstone"))},
     "platinum_scale": ("Platinum Dragon Scale", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "rare"}),
     "platinum_helmet": ("Platinum Helm", "equipment", _armor("slot.armor.head", 3, 520, "armor_head")),
     "platinum_chestplate": ("Platinum Cuirass", "equipment", _armor("slot.armor.chest", 8, 760, "armor_torso")),
@@ -616,6 +621,12 @@ def recipe_files():
                              ("platinum", "platinum_scale"))
            for piece, pattern in (("helmet", ["AAA", "A A"]), ("chestplate", ["A A", "AAA", "AAA"]),
                                   ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
+        "refining_stone": _shapeless("refining_stone", [oid("adamantite_ingot"), cry, cry, "minecraft:stone"],
+                                     oid("refining_stone"), count=2),
+        **{f"gem_{gem}": _shapeless(f"gem_{gem}", [cry, cry, cry, cry, oid("refining_stone"), core], oid(f"gem_{gem}"))
+           for gem, core in (("ruby", "minecraft:redstone_block"), ("sapphire", "minecraft:lapis_lazuli"),
+                             ("topaz", "minecraft:gold_ingot"), ("jade", "minecraft:emerald"),
+                             ("onyx", "minecraft:obsidian"), ("sunstone", "minecraft:glowstone"))},
         **{f"rune_of_{kind}": _shaped(f"rune_of_{kind}", [" C ", "CXC", " C "], {"C": cry, "X": core},
                                       oid(f"rune_of_{kind}"))
            for kind, core in (("fire", "minecraft:blaze_powder"), ("frost", "minecraft:packed_ice"),
@@ -2173,6 +2184,7 @@ def trade_files():
         buy("minecraft:gold_ingot", 4, 5), buy(oid("dragon_bone"), 2, 5), buy(oid("frost_dragon_scale"), 2, 6),
         sell(oid("rune_of_fire"), 26, uses=4), sell(oid("rune_of_frost"), 26, uses=4),
         sell(oid("rune_of_storm"), 26, uses=4), sell(oid("rune_of_life"), 32, uses=4),
+        sell(oid("refining_stone"), 8, qty=2, uses=8),
     ]
     village = [
         sell("minecraft:bread", 1, qty=3), sell("minecraft:cooked_beef", 2, qty=2), sell(oid("red_potion"), 3),

@@ -377,6 +377,24 @@
     "overlord_frost_pain": {
       "textures": "textures/items/overlord/frost_pain"
     },
+    "overlord_gem_jade": {
+      "textures": "textures/items/overlord/gem_jade"
+    },
+    "overlord_gem_onyx": {
+      "textures": "textures/items/overlord/gem_onyx"
+    },
+    "overlord_gem_ruby": {
+      "textures": "textures/items/overlord/gem_ruby"
+    },
+    "overlord_gem_sapphire": {
+      "textures": "textures/items/overlord/gem_sapphire"
+    },
+    "overlord_gem_sunstone": {
+      "textures": "textures/items/overlord/gem_sunstone"
+    },
+    "overlord_gem_topaz": {
+      "textures": "textures/items/overlord/gem_topaz"
+    },
     "overlord_giants_maul": {
       "textures": "textures/items/overlord/giants_maul"
     },
@@ -481,6 +499,9 @@
     },
     "overlord_red_potion": {
       "textures": "textures/items/overlord/red_potion"
+    },
+    "overlord_refining_stone": {
+      "textures": "textures/items/overlord/refining_stone"
     },
     "overlord_regalia_boots": {
       "textures": "textures/items/overlord/regalia_boots"
