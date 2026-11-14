@@ -113,6 +113,11 @@ export const AFFINITY = {
   [id("skeletal_dragon")]: { ice: 0.5, holy: 1.5 },
   [id("gigant_basilisk")]: { acid: 0.25, ice: 1.5 },
   [id("frost_giant")]: { ice: 0.1, fire: 1.5 },
+  [id("ghoul")]: { holy: 1.5, fire: 1.25 },
+  [id("wraith")]: { holy: 1.5, dark: 0.25 },
+  [id("death_cavalier")]: { holy: 1.5, dark: 0.5 },
+  [id("treant_sapling")]: { fire: 1.75, acid: 0.25 },
+  [id("zytl_qae")]: { fire: 1.5, acid: 0.1, ice: 0.75 },
   [id("dark_young")]: { dark: 0.25, fire: 1.5, holy: 1.25 },
   [id("jaldabaoth")]: { fire: 0.1, ice: 1.5, holy: 1.25 },
   [id("go_gin")]: { fire: 1.5 },
@@ -556,7 +561,7 @@ function castTimeStop(player) {
 /** @type {Record<string, fx.Pose>} */
 const POSE = {};
 for (const key of ["light_healing", "heal", "reinforce_armor", "lesser_strength", "haste", "fly", "regenerate", "full_potential", "dimensional_move"]) POSE[key] = "self";
-for (const key of ["summon_undead_3", "summon_angel_4", "summon_undead_6"]) POSE[key] = "summon";
+for (const key of ["summon_undead_3", "summon_angel_4", "summon_undead_5", "summon_undead_6"]) POSE[key] = "summon";
 for (const key of ["bone_lance", "ice_lance", "reality_slash", "wall_of_hell"]) POSE[key] = "sweep";
 for (const key of ["energy_drain", "sleep", "grasp_heart", "death"]) POSE[key] = "channel";
 for (const key of ["fire_rain", "ice_pillar", "napalm", "holy_smite", "gravity_maelstrom", "sand_field_all", "meteor_fall", "nuclear_blast", "time_stop"]) POSE[key] = "raise";
@@ -588,6 +593,8 @@ export const SPELLS = [
   { key: "regenerate", name: "Regenerate", tier: 4, mana: 16, cooldown: 15, element: "none", help: "Regeneration II for 12 seconds.", cast: buff([["regeneration", 12, 1]], "holy") },
   { key: "holy_ray", name: "Holy Ray", tier: 4, mana: 12, cooldown: 2, element: "holy", help: "Ray of holy light; strong against undead.", cast: bolt(28, 17, "holy", TOTEM, "random.orb") },
   { key: "summon_angel_4", name: "Summon Angel 4th Tier", tier: 4, mana: 28, cooldown: 40, element: "holy", help: "An Archangel Flame fights for you for 2 minutes.", cast: summoning(id("archangel_flame"), 1, "beacon.activate") },
+  { key: "paralysis", name: "Paralysis", tier: 4, mana: 10, cooldown: 6, element: "none", help: "Holds one mob almost still for 6 seconds.", cast: curse(20, [["slowness", 6, 6], ["weakness", 6, 2], ["mining_fatigue", 6, 2]], "random.orb") },
+  { key: "summon_undead_5", name: "Summon Undead 5th Tier", tier: 5, mana: 30, cooldown: 45, element: "dark", help: "Two Ghouls fight for you for 2 minutes.", cast: summoning(id("ghoul"), 2, "mob.wither.spawn") },
   { key: "dragon_lightning", name: "Dragon Lightning", tier: 5, mana: 16, cooldown: 3, element: "lightning", help: "Lightning that jumps to 4 mobs.", cast: chain(4, 16) },
   { key: "dimensional_move", name: "Dimensional Move", tier: 5, mana: 14, cooldown: 3, element: "none", help: "Teleport to the block you look at (32 blocks).", cast: castDimensionalMove },
   { key: "fire_rain", name: "Fire Rain", tier: 5, mana: 18, cooldown: 4, element: "fire", help: "Burning rain where you aim (4 blocks).", cast: burst(4, 16, "fire", { effect: FLAME, sound: "mob.ghast.fireball" }) },
@@ -598,6 +605,7 @@ export const SPELLS = [
   { key: "wall_of_hell", name: "Wall of Hell", tier: 6, mana: 20, cooldown: 4, element: "fire", help: "Wall of hellfire through everything ahead (14 blocks).", cast: line(14, 24, "fire", FLAME, "mob.ghast.fireball") },
   { key: "summon_undead_6", name: "Summon Undead 6th Tier", tier: 6, mana: 45, cooldown: 60, element: "dark", help: "A Death Knight fights for you for 5 minutes.", cast: summoning(id("death_knight"), 1, "mob.wither.spawn") },
   { key: "chain_dragon_lightning", name: "Chain Dragon Lightning", tier: 7, mana: 26, cooldown: 4, element: "lightning", help: "Lightning that jumps to 8 mobs.", cast: chain(8, 24) },
+  { key: "wail_of_the_banshee", name: "Wail of the Banshee", tier: 7, mana: 26, cooldown: 6, element: "dark", help: "A shriek of the dead ahead of you (8 blocks): harms every mob and throws it back.", cast: cone(8, 18, "dark", 1.6) },
   { key: "napalm", name: "Napalm", tier: 7, mana: 24, cooldown: 4, element: "fire", help: "Pillar of fire where you aim (4 blocks).", cast: burst(4, 22, "fire", { effect: FLAME }) },
   { key: "hell_flame", name: "Hell Flame", tier: 7, mana: 28, cooldown: 5, element: "fire", help: "A small black flame that consumes one mob.", cast: bolt(30, 42, "fire", FLAME, "mob.ghast.fireball") },
   { key: "holy_smite", name: "Holy Smite", tier: 7, mana: 28, cooldown: 5, element: "holy", help: "Pillar of holy light where you aim (4 blocks).", cast: burst(4, 30, "holy", { effect: TOTEM, sound: "beacon.activate" }) },

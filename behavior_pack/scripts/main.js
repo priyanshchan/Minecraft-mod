@@ -49,6 +49,7 @@ import "./races.js";
 import "./steeds.js";
 import "./court.js";
 import "./districts.js";
+import "./haunts.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -1761,6 +1762,9 @@ system.runInterval(() => {
         player.addEffect("jump_boost", 3 * TICKS, { amplifier: 0, showParticles: false });
       } else if (wearsFullSet(gear, "dragonscale")) {
         player.addEffect("fire_resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
+        player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
+      } else if (wearsFullSet(gear, "cavalier")) {
+        player.addEffect("strength", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
       } else if (wearsFullSet(gear, "dark_warrior")) {
         player.addEffect("strength", 3 * TICKS, { amplifier: 0, showParticles: false });

@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:heartwood_staff"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "C",
+      "H",
+      "H"
+    ],
+    "key": {
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "H": {
+        "item": "overlord:heartwood"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:heartwood"
+      }
+    ],
+    "result": {
+      "item": "overlord:heartwood_staff",
+      "count": 1
+    }
+  }
+}

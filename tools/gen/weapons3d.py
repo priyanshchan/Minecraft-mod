@@ -523,6 +523,51 @@ def golem_fist():
     return gauntlets("golem_fist", "#8a8478", "#6a645a", spikes="#a8a094", size=1.4, glow="#ffb84a")
 
 
+# ------------------------------------------------------------------ v8.6
+def cavalier_lance():
+    """The Death Cavalier's lance: a long black shaft, a vamplate, a barbed head lit with spectral green."""
+    w = Weapon("cavalier_lance", "polearm")
+    w.shaft(-10, 22, "#1d1b24", band="#59e0a0")
+    w.box(-2, 10, -2, 4, 2, 4, "#2a2833", inflate=0.2)  # the vamplate
+    w.box(-1.5, 12, -1.5, 3, 1, 3, "#3a3644")
+    w.box(-0.5, 12.5, -2.5, 1, 4, 1, "#3a3644", rotation=(-25, 0, 0), pivot=(0, 12.5, -2))  # barbs
+    w.box(-0.5, 12.5, 1.5, 1, 4, 1, "#3a3644", rotation=(25, 0, 0), pivot=(0, 12.5, 2))
+    for i, size in enumerate((2, 2, 1)):
+        w.box(-size / 2, 13 + i * 3, -size / 2, size, 3, size, "#5e5868", inflate=0.15)
+    w.box(-0.55, 13, -0.5, 1, 8, 1, "#59e0a0", glow=True, inflate=-0.2)
+    w.tip = (0.0, 22.0, 0.0)
+    w.pommel(-11, "#3a3644", size=1)
+    return w
+
+
+def ghoulfang_sickle():
+    """A sickle of bone set with ghoul fangs, its inner edge sickly green."""
+    w = Weapon("ghoulfang_sickle", "blade")
+    w.grip(-4, 7, "#3a2a1a", wrap="#1a1410")
+    w.pommel(-5, "#d8d0b4", size=1)
+    w.box(-0.5, 3, -1, 1, 6, 2, "#d8d0b4")  # the spine rising from the grip
+    w.box(-0.5, 8, -5, 1, 2, 5, "#d8d0b4")   # curving forward
+    w.box(-0.5, 6, -7, 1, 3, 2, "#d8d0b4")
+    w.box(-0.5, 4.5, -8, 1, 2, 1, "#e9e2cc")  # the point
+    for z in (-2, -4):
+        w.box(-0.5, 7, z, 1, 1, 1, "#f4f1e6", inflate=-0.1)  # fangs along the inner edge
+    w.box(-0.6, 7.6, -6.5, 1, 1, 5, "#9cff6a", glow=True, inflate=-0.2)
+    w.tip = (0.0, 4.5, -8.0)
+    return w
+
+
+def heartwood_staff():
+    def top(w):
+        w.box(-2, 15, -2, 4, 2, 4, "#4a3320")
+        for x, z in ((-2, -2), (1, -2), (-2, 1), (1, 1)):
+            w.box(x, 17, z, 1, 4, 1, "#5a3e24", rotation=(0, 0, 12 if x < 0 else -12), pivot=(x + 0.5, 17, z + 0.5))
+        w.box(-1, 17.5, -1, 2, 3, 2, "#9cff6a", glow=True)  # the living heart
+        for x, z in ((-2.5, 0), (2, -0.5)):
+            w.box(x, 20, z, 1, 1, 1, "#4f8a3a")  # leaves
+        w.tip = (0.0, 21.0, 0.0)
+    return staff("heartwood_staff", "#5a3e24", "#4f8a3a", top)
+
+
 ALL = {
     "staff_of_ainz_ooal_gown": staff_of_ainz, "spuit_lance": spuit_lance, "ginnungagap": ginnungagap,
     "god_slaying_emperor_blade": god_slaying_emperor_blade, "death_knight_sword": death_knight_sword,
@@ -535,6 +580,7 @@ ALL = {
     "holy_staff": holy_staff, "blade_bug": blade_bug, "martial_lord_club": martial_lord_club,
     "elf_kings_staff": elf_kings_staff, "giants_maul": giants_maul, "dragonbone_blade": dragonbone_blade,
     "six_arms_knuckles": six_arms_knuckles,
+    "cavalier_lance": cavalier_lance, "ghoulfang_sickle": ghoulfang_sickle, "heartwood_staff": heartwood_staff,
 }
 
 

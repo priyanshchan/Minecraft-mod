@@ -3408,6 +3408,74 @@ def frost_dragon():
                          "#f2c21b", "#8fe9ff")
 
 
+# ------------------------------------------------------------------ v8.6: the dead and the deep forest
+def ghoul():
+    """A grey-green eater of the dead: bare and gaunt, with long dark claws and a hungry yellow stare."""
+    m = _soldier("ghoul", "#7d8a6a", "#2a2a22", "#4a4438", "#5f5848", "#2f2a22", "#3a3a2e", "#26261e",
+                 helmet=False, weapon_kind="none")
+    for bname, x in (("rightArm", -8), ("leftArm", 6)):
+        bone = next(b for b in m.bones if b.name == bname)
+        for i in range(3):
+            claw = bone.cube((x + i * 0.9 - 0.2, 9.5, -2.5), (1, 3, 1))
+            claw.fill("#1a1612")
+    head = next(b for b in m.bones if b.name == "head")
+    for x in (-3, 2):
+        eye = head.cube((x, 28, -4.3), (1, 1, 1))
+        eye.fill("#f2e21b", noise=0)
+    return m
+
+
+def wraith():
+    """A shade of the Katze Plains: a hooded tatter of black and grave-teal with burning eyes."""
+    return _lich("wraith", robe="#16202a", robe_l="#24404a", robe_d="#0a1015", trim_c="#3fb8a0", eye="#9cffe8")
+
+
+def death_cavalier():
+    """An undead knight of the plains, in black plate lit with spectral green, lance in hand."""
+    return _soldier("death_cavalier", "#d8d0b4", "#1a1612", "#1d1b24", "#3a3644", "#0c0b10", "#1e5a44", "#0f3a2a",
+                    helmet=True, weapon_kind="spear", orb="#59e0a0")
+
+
+def _treant(name, bark, bark_l, bark_d, leaves, eye):
+    m = _brute(name, bark, bark_l, bark_d)
+    head = next(b for b in m.bones if b.name == "head")
+    for x, z, h in ((-5, -3, 4), (1, -4, 5), (-2, 1, 6), (3, 1, 4), (-4, 3, 3)):
+        crown = head.cube((x, 32, z), (4, h, 4))
+        crown.fill(leaves, noise=16)
+    for x, y in ((-6, 30), (5, 29)):
+        branch = head.cube((x, y, -1), (2, 1, 2))
+        branch.fill(bark_d)
+    for x in (-3, 1):
+        glow = head.cube((x, 28, -4.3), (2, 1, 1))
+        glow.fill(eye, noise=0)
+    body = next(b for b in m.bones if b.name == "body")
+    for f in (body.cubes[0].front, body.cubes[0].back):
+        for xx in range(0, f.w, 3):
+            f.vline(xx, bark_d)
+    return m
+
+
+def treant_sapling():
+    return _treant("treant_sapling", "#6b4a2a", "#8a6a42", "#3f2a16", "#4f8a3a", "#c8ff6a")
+
+
+def zytl_qae():
+    """Zy'tl Q'ae, the Destroyer Tree: a treant of the old world, blighted black and crowned with dead leaves."""
+    return _treant("zytl_qae", "#3a2a1e", "#5a4430", "#1e140c", "#4a5a28", "#ff7a2a")
+
+
+def pinison():
+    """Pinison Pole Perlia, the dryad of the forest: green-skinned, leaf-haired, in a dress of bark and moss."""
+    m, head, body, pal = _pleiades("pinison", "#c8d9a0", "#4f8a3a", "#2f5a22", "#ffd23d",
+                                   dress="#4a3320", accent="#7aa040", bun=False)
+    for x, z in ((-4, -1), (3, -2), (-1, 2)):
+        leaf = head.cube((x, 32, z), (2, 2, 2))
+        leaf.fill("#6aa84f", noise=10)
+    sash = body.cube((-4, 17, -2.3), (8, 1, 1))
+    sash.fill("#7aa040")
+    return m
+
+
 def wyrm_steed():
     """A young dragon of Nazarick, bred to be ridden (steeds.js): scaled in purple and black, horned in gold."""
     return _great_dragon("wyrm_steed", "plated", "#3a2452", "#6b4a8f", "#1d1029", "#c9a227", "#d9a92b", "#5a2a7a",
@@ -3435,5 +3503,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        climb, zesshi, eclair,
        skeletal_dragon, khajiit, gigant_basilisk, frost_giant, beastman, lakyus, enri, zero, dark_young, jaldabaoth,
        go_gin, elf_ranger, decem, behemoth, neia, remedios, paladin, bafolk, eight_edge_assassin, arena_master,
-       platinum_dragon_lord, rubedo, wyrm_steed,
+       platinum_dragon_lord, rubedo, wyrm_steed, ghoul, wraith, death_cavalier, treant_sapling, zytl_qae, pinison,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

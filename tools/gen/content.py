@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [8, 5, 0]
+VERSION = [8, 6, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.5.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.6.0"
 
 
 def oid(name):
@@ -329,6 +329,17 @@ ITEMS = {
     "royal_seal": ("Seal of the Sorcerer Kingdom", "equipment", {
         "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
         **_cooldown("overlord_royal_seal", 1.0)}),
+    # v8.6: the dead of the plains and the Destroyer Tree
+    "ghoul_fang": ("Ghoul Fang", "items", {"minecraft:max_stack_size": 64}),
+    "spectral_iron": ("Spectral Iron", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "uncommon"}),
+    "heartwood": ("Heartwood of the Destroyer", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "rare"}),
+    "cavalier_lance": ("Lance of the Death Cavalier", "equipment", _weapon(12, rarity="rare")),
+    "ghoulfang_sickle": ("Ghoulfang Sickle", "equipment", _weapon(9, rarity="rare")),
+    "heartwood_staff": ("Heartwood Staff", "equipment", _weapon(6)),
+    "cavalier_helmet": ("Death Cavalier Helm", "equipment", _armor("slot.armor.head", 3, 520, "armor_head")),
+    "cavalier_chestplate": ("Death Cavalier Cuirass", "equipment", _armor("slot.armor.chest", 8, 760, "armor_torso")),
+    "cavalier_leggings": ("Death Cavalier Greaves", "equipment", _armor("slot.armor.legs", 6, 700, "armor_legs")),
+    "cavalier_boots": ("Death Cavalier Sabatons", "equipment", _armor("slot.armor.feet", 3, 600, "armor_feet")),
     # v8.1 steeds (steeds.js): call your mount, and armour for it.
     "wyrm_whistle": ("Whistle of the Nazarick Wyrm", "equipment", {
         "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
@@ -393,6 +404,9 @@ WEAPON_ARTS = {
     "angel_mace": ("overlord_judgement", 10.0),
     "blade_bug": ("overlord_swarm", 9.0),
     "dragonbone_blade": ("overlord_dragon_cleave", 9.0),
+    "cavalier_lance": ("overlord_death_charge", 9.0),
+    "ghoulfang_sickle": ("overlord_rend", 7.0),
+    "heartwood_staff": ("overlord_roots", 8.0),
 }
 for _key, (_category, _seconds) in WEAPON_ARTS.items():
     ITEMS[_key][2].update(_cooldown(_category, _seconds))
@@ -643,6 +657,15 @@ def recipe_files():
                                   ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
         "tomb_key": _shaped("tomb_key", ["BCB", "CKC", "BCB"], {
             "B": oid("nazarick_bricks"), "C": cry, "K": oid("guardian_crest")}, oid("tomb_key"), unlock=oid("guardian_crest")),
+        "cavalier_lance": _shaped("cavalier_lance", ["  I", " I ", "S  "], {"I": oid("spectral_iron"), "S": "minecraft:stick"},
+                                  oid("cavalier_lance")),
+        "ghoulfang_sickle": _shaped("ghoulfang_sickle", ["FF", " I", " S"], {
+            "F": oid("ghoul_fang"), "I": oid("spectral_iron"), "S": "minecraft:stick"}, oid("ghoulfang_sickle")),
+        "heartwood_staff": _shaped("heartwood_staff", ["C", "H", "H"], {"C": cry, "H": oid("heartwood")}, oid("heartwood_staff"),
+                                   unlock=oid("heartwood")),
+        **{f"cavalier_{piece}": _shaped(f"cavalier_{piece}", pattern, {"A": oid("spectral_iron")}, oid(f"cavalier_{piece}"))
+           for piece, pattern in (("helmet", ["AAA", "A A"]), ("chestplate", ["A A", "AAA", "AAA"]),
+                                  ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
         "wyrm_whistle": _shaped("wyrm_whistle", ["BSB", "SKS", "BSB"], {
             "B": oid("dragon_bone"), "S": oid("frost_dragon_scale"), "K": oid("guardian_crest")}, oid("wyrm_whistle"),
             unlock=oid("frost_dragon_scale")),
@@ -846,6 +869,17 @@ def loot_files():
         "khajiit": [one(oid("orb_of_death")), _pool(_entry(oid("soul_fragment"), 2, 4)), _pool(_entry(coin, 6, 12))],
         "gigant_basilisk": [_pool(_entry(oid("basilisk_eye"), 1, 2, looting=False)),
                             _pool(_entry(oid("beast_hide"), 1, 3)), _pool(_entry(coin, 2, 5))],
+        "ghoul": [_pool(_entry(oid("ghoul_fang"), 0, 2)), _pool(_entry("minecraft:rotten_flesh", 0, 2))],
+        "wraith": [_pool(_entry(oid("soul_fragment"), 0, 2)), _pool(_entry(coin, 0, 2))],
+        "death_cavalier": [
+            _pool(_entry(oid("spectral_iron"), 1, 3)), _pool(_entry(coin, 3, 8)),
+            _pool(_entry(oid("cavalier_lance"), 1, 1, looting=False), conditions=[
+                {"condition": "killed_by_player"},
+                {"condition": "random_chance_with_looting", "chance": 0.1, "looting_multiplier": 0.03}]),
+        ],
+        "treant_sapling": [_pool(_entry("minecraft:stick", 1, 4)), _pool(_entry("minecraft:oak_sapling", 0, 1))],
+        "zytl_qae": [one(oid("codex_of_skills")), _pool(_entry(oid("heartwood"), 6, 10, looting=False)),
+                     one(oid("heartwood_staff")), _pool(_entry(coin, 30, 50)), _pool(_entry(oid("data_crystal"), 8, 14))],
         "frost_giant": [
             _pool(_entry("minecraft:packed_ice", 1, 3)), _pool(_entry(coin, 1, 4)),
             _pool(_entry(oid("giants_maul"), 1, 1, looting=False), conditions=[
@@ -1978,6 +2012,57 @@ def entity_files():
             "add": {"component_groups": [f"overlord:stance_{stance}"]}}
     out["retainer"] = _entity("retainer", c, groups, events, spawnable=False)
 
+    # v8.6: the dead of the Katze Plains, the forest's treants, its dryad, and the Destroyer Tree
+    undead_foes = _target_players(24, [ally, "human"])
+    c = _mob("ghoul", ["ghoul", "undead", "monster", "mob"], 34, 0.34, (0.6, 1.9), loot="ghoul", xp=10, undead=True)
+    c["minecraft:attack"] = {"damage": 5, "effect_name": "slowness", "effect_duration": 3}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:behavior.leap_at_target"] = {"priority": 2, "yd": 0.35, "must_be_on_ground": True}
+    c["minecraft:behavior.hurt_by_target"] = {"priority": 1, "alert_same_type": True}
+    c["minecraft:behavior.nearest_attackable_target"] = undead_foes
+    out["ghoul"] = _entity("ghoul", c)
+
+    c = _mob("wraith", ["wraith", "undead", "monster", "mob"], 30, 0.3, (0.6, 1.9), loot="wraith", xp=14, undead=True)
+    c["minecraft:attack"] = {"damage": 6, "effect_name": "wither", "effect_duration": 3}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:damage_sensor"] = _no_fall()
+    c["minecraft:behavior.nearest_attackable_target"] = undead_foes
+    out["wraith"] = _entity("wraith", c)
+
+    c = _mob("death_cavalier", ["death_cavalier", "undead", "monster", "mob"], 160, 0.3, (0.7, 2.0), loot="death_cavalier",
+             xp=60, kb=0.7, undead=True)
+    c["minecraft:attack"] = {"damage": 14}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:behavior.leap_at_target"] = {"priority": 2, "yd": 0.3, "must_be_on_ground": True}
+    c["minecraft:behavior.nearest_attackable_target"] = undead_foes
+    out["death_cavalier"] = _entity("death_cavalier", c)
+
+    c = _mob("treant_sapling", ["treant", "monster", "mob"], 50, 0.22, (0.9, 2.0), loot="treant_sapling", xp=16, kb=0.6)
+    c["minecraft:attack"] = {"damage": 7, "effect_name": "slowness", "effect_duration": 3}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.2, "track_target": True}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(20, [ally])
+    out["treant_sapling"] = _entity("treant_sapling", c)
+
+    c = _mob("zytl_qae", ["zytl_qae", "treant", "monster", "mob"], 1300, 0.2, (0.9, 2.0), loot="zytl_qae", xp=900,
+             kb=1.0, follow=48, persistent=True)
+    del c["minecraft:can_climb"]
+    c["minecraft:boss"] = {"hud_range": 55, "should_darken_sky": False}
+    c["minecraft:attack"] = {"damage": 22}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.1, "track_target": True}
+    c["minecraft:damage_sensor"] = _no_fall()
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(40, [ally])
+    out["zytl_qae"] = _entity("zytl_qae", c)
+
+    c = _mob("pinison", ["pinison", "merchant", "mob"], 40, 0.25, (0.6, 1.9), xp=0, persistent=True)
+    del c["minecraft:behavior.hurt_by_target"]
+    c["minecraft:economy_trade_table"] = {"display_name": f"entity.{oid('pinison')}.name",
+                                          "table": f"trading/{NS}/pinison.json", "new_screen": True}
+    c["minecraft:behavior.trade_with_player"] = {"priority": 1, "filters": {"all_of": [
+        {"test": "in_water", "value": False}, {"test": "on_ground", "value": True}]}}
+    c["minecraft:behavior.look_at_trading_player"] = {"priority": 2}
+    c["minecraft:behavior.panic"] = {"priority": 3, "speed_multiplier": 1.4}
+    out["pinison"] = _entity("pinison", c)
+
     # v8.1: steeds called with an item (steeds.js), which also flies the wyrm and drives the Soul Eater.
     for name, families, health, speed, box, scale, seat, flying in (
             ("wyrm_steed", ["wyrm_steed", "nazarick_ally", "mob"], 90, 0.3, (1.6, 1.3), 0.55, [0.0, 0.75, -0.1], True),
@@ -2067,7 +2152,7 @@ SIZES = {
     "evil_lord_wrath": 1.9, "jaldabaoth": 1.3, "dominion_authority": 2.0, "archangel_flame": 1.0,
     # beasts
     "hamsuke": 1.5, "soul_eater": 1.2, "hellhound": 1.1, "eight_edge_assassin": 1.2, "gigant_basilisk": 2.0,
-    "dark_young": 3.0,
+    "dark_young": 3.0, "treant_sapling": 1.25, "zytl_qae": 4.5, "death_cavalier": 1.05, "pinison": 0.86,
     # dragons
     # The dragons' own models are already more than eight blocks long before this is applied.
     "frost_dragon": 2.6, "skeletal_dragon": 2.8, "platinum_dragon_lord": 3.4,
@@ -2118,7 +2203,8 @@ def _apply_ai(out):
     # Creatures that tier magic can summon as allies get the same "summoned" form as Death Knights.
     for name, families in (("old_guarder", ["old_guarder", "nazarick_ally", "undead", "mob"]),
                            ("archangel_flame", ["archangel_flame", "nazarick_ally", "angel", "mob"]),
-                           ("behemoth", ["behemoth", "nazarick_ally", "elemental", "mob"])):
+                           ("behemoth", ["behemoth", "nazarick_ally", "elemental", "mob"]),
+                           ("ghoul", ["ghoul", "nazarick_ally", "undead", "mob"])):
         entity = out[name]["minecraft:entity"]
         entity["component_groups"]["overlord:summoned"] = {
             "minecraft:type_family": {"family": families},
@@ -2210,10 +2296,13 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
         "skeletal_dragon", "khajiit", "gigant_basilisk", "frost_giant", "beastman", "lakyus", "enri", "zero",
         "dark_young", "jaldabaoth",
         "go_gin", "elf_ranger", "decem", "behemoth", "neia", "remedios", "paladin", "bafolk",
-        "eight_edge_assassin", "arena_master", "platinum_dragon_lord", "rubedo"]
+        "eight_edge_assassin", "arena_master", "platinum_dragon_lord", "rubedo",
+        "ghoul", "wraith", "death_cavalier", "treant_sapling", "zytl_qae", "pinison"]
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard", "frost_breath"]
 
 ENTITY_NAMES = {
+    "ghoul": "Ghoul", "wraith": "Wraith", "death_cavalier": "Death Cavalier", "treant_sapling": "Treant",
+    "zytl_qae": "Zy'tl Q'ae, the Destroyer Tree", "pinison": "Pinison Pole Perlia",
     "guardian_albedo": "Albedo", "guardian_shalltear": "Shalltear Bloodfallen", "guardian_cocytus": "Cocytus",
     "guardian_demiurge": "Demiurge", "guardian_aura": "Aura Bella Fiora", "guardian_mare": "Mare Bello Fiore",
     "guardian_pandoras_actor": "Pandora's Actor",
@@ -2299,7 +2388,13 @@ def trade_files():
     return {f"trading/{NS}/nazarick_maid.json": table(trades),
             f"trading/{NS}/nfirea.json": table(herbs),
             f"trading/{NS}/dwarf.json": table(forge),
-            f"trading/{NS}/enri.json": table(village)}
+            f"trading/{NS}/enri.json": table(village),
+            f"trading/{NS}/pinison.json": table([
+                sell("minecraft:oak_sapling", 1, qty=4), sell("minecraft:golden_apple", 14), sell(oid("red_potion"), 3),
+                sell("minecraft:moss_block", 1, qty=8), sell("minecraft:flowering_azalea", 2, qty=2),
+                sell(oid("scroll_of_heavy_recover"), 6), buy(oid("ghoul_fang"), 4, 3), buy("minecraft:bone_meal", 16, 2),
+                buy(oid("heartwood"), 1, 12),
+            ])}
 
 
 # ============================================================ spawn rules
@@ -2389,6 +2484,10 @@ def spawn_rule_files():
         "spawn_rules/goblin.json": monster("goblin", 10, herd=(2, 4), biomes=["forest", "plains", "taiga"]),
         "spawn_rules/skeleton_mage.json": monster("skeleton_mage", 6),
         "spawn_rules/soul_eater.json": monster("soul_eater", 3),
+        "spawn_rules/ghoul.json": monster("ghoul", 6, (2, 3)),
+        "spawn_rules/wraith.json": monster("wraith", 3),
+        "spawn_rules/death_cavalier.json": monster("death_cavalier", 1, biomes=["plains", "savanna"]),
+        "spawn_rules/treant_sapling.json": monster("treant_sapling", 3, biomes=["forest", "taiga", "jungle"]),
         "spawn_rules/fluder.json": monster("fluder", 1),
         "spawn_rules/lizardman.json": day_creature("lizardman", "swamp", 4),
         "spawn_rules/evileye.json": day_creature("evileye", "extreme_hills"),
@@ -2569,7 +2668,9 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("neia", "archer"), ("remedios", "climb"), ("paladin", "soldier"), ("bafolk", "lizardman"),
                     ("eight_edge_assassin", "soul_eater"), ("arena_master", "nfirea"),
                     ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri"),
-                    ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater")):
+                    ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater"),
+                    ("ghoul", "bandit"), ("wraith", "elder_lich"), ("death_cavalier", "imperial_knight"),
+                    ("treant_sapling", "ogre"), ("zytl_qae", "ogre"), ("pinison", "nfirea")):
     SOUNDS[_new] = SOUNDS[_like]
 for _key in GUARDIAN_COMPANIONS:
     SOUNDS[f"guardian_{_key}"] = SOUNDS[_key]
@@ -2762,7 +2863,9 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("neia", "archer"), ("remedios", "climb"), ("paladin", "soldier"), ("bafolk", "lizardman"),
                     ("eight_edge_assassin", "soul_eater"), ("arena_master", "nfirea"),
                     ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri"),
-                    ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater")):
+                    ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater"),
+                    ("ghoul", "bandit"), ("wraith", "elder_lich"), ("death_cavalier", "imperial_knight"),
+                    ("treant_sapling", "ogre"), ("zytl_qae", "ogre"), ("pinison", "yuri")):
     ENTITY_ANIMS[_new] = ENTITY_ANIMS[_like]
 for _key in GUARDIAN_COMPANIONS:
     ENTITY_ANIMS[f"guardian_{_key}"] = ENTITY_ANIMS[_key]
@@ -3425,6 +3528,7 @@ WEARABLES = {
     **{f"beasthide_{piece}": (piece, f"{NS}_beasthide_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"platinum_{piece}": (piece, f"{NS}_platinum_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"crimson_{piece}": (piece, f"{NS}_crimson_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    **{f"cavalier_{piece}": (piece, f"{NS}_cavalier_{layer}") for piece, (layer, _s) in ARMOR.items()},
 }
 
 

@@ -1,0 +1,252 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.overlord.pinison",
+        "texture_width": 64,
+        "texture_height": 64,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 3.5,
+        "visible_bounds_offset": [
+          0,
+          1.25,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "body",
+          "pivot": [
+            0,
+            24,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4,
+                12,
+                -2
+              ],
+              "size": [
+                8,
+                12,
+                4
+              ],
+              "uv": [
+                32,
+                18
+              ]
+            },
+            {
+              "origin": [
+                -3,
+                13,
+                2
+              ],
+              "size": [
+                6,
+                4,
+                1
+              ],
+              "uv": [
+                32,
+                34
+              ]
+            },
+            {
+              "origin": [
+                -4,
+                17,
+                -2.3
+              ],
+              "size": [
+                8,
+                1,
+                1
+              ],
+              "uv": [
+                8,
+                50
+              ]
+            }
+          ]
+        },
+        {
+          "name": "robe",
+          "parent": "body",
+          "pivot": [
+            0,
+            12,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -5,
+                0,
+                -3
+              ],
+              "size": [
+                10,
+                12,
+                6
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "head",
+          "parent": "body",
+          "pivot": [
+            0,
+            24,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4,
+                24,
+                -4
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                32,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -4,
+                24,
+                -4
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                18
+              ],
+              "inflate": 0.45
+            },
+            {
+              "origin": [
+                -4,
+                32,
+                -1
+              ],
+              "size": [
+                2,
+                2,
+                2
+              ],
+              "uv": [
+                46,
+                34
+              ]
+            },
+            {
+              "origin": [
+                3,
+                32,
+                -2
+              ],
+              "size": [
+                2,
+                2,
+                2
+              ],
+              "uv": [
+                54,
+                34
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                32,
+                2
+              ],
+              "size": [
+                2,
+                2,
+                2
+              ],
+              "uv": [
+                0,
+                50
+              ]
+            }
+          ]
+        },
+        {
+          "name": "rightArm",
+          "parent": "body",
+          "pivot": [
+            -5,
+            22,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -8,
+                12,
+                -2
+              ],
+              "size": [
+                4,
+                12,
+                4
+              ],
+              "uv": [
+                0,
+                34
+              ]
+            }
+          ]
+        },
+        {
+          "name": "leftArm",
+          "parent": "body",
+          "pivot": [
+            5,
+            22,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                4,
+                12,
+                -2
+              ],
+              "size": [
+                4,
+                12,
+                4
+              ],
+              "uv": [
+                16,
+                34
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

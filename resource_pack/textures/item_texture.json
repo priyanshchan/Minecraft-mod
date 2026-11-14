@@ -71,6 +71,21 @@
     "overlord_brain_katana": {
       "textures": "textures/items/overlord/brain_katana"
     },
+    "overlord_cavalier_boots": {
+      "textures": "textures/items/overlord/cavalier_boots"
+    },
+    "overlord_cavalier_chestplate": {
+      "textures": "textures/items/overlord/cavalier_chestplate"
+    },
+    "overlord_cavalier_helmet": {
+      "textures": "textures/items/overlord/cavalier_helmet"
+    },
+    "overlord_cavalier_lance": {
+      "textures": "textures/items/overlord/cavalier_lance"
+    },
+    "overlord_cavalier_leggings": {
+      "textures": "textures/items/overlord/cavalier_leggings"
+    },
     "overlord_charons_guidance": {
       "textures": "textures/items/overlord/charons_guidance"
     },
@@ -188,6 +203,9 @@
     "overlord_egg_dark_young": {
       "textures": "textures/items/overlord/egg_dark_young"
     },
+    "overlord_egg_death_cavalier": {
+      "textures": "textures/items/overlord/egg_death_cavalier"
+    },
     "overlord_egg_death_knight": {
       "textures": "textures/items/overlord/egg_death_knight"
     },
@@ -241,6 +259,9 @@
     },
     "overlord_egg_gazef": {
       "textures": "textures/items/overlord/egg_gazef"
+    },
+    "overlord_egg_ghoul": {
+      "textures": "textures/items/overlord/egg_ghoul"
     },
     "overlord_egg_gigant_basilisk": {
       "textures": "textures/items/overlord/egg_gigant_basilisk"
@@ -308,6 +329,9 @@
     "overlord_egg_pandoras_actor": {
       "textures": "textures/items/overlord/egg_pandoras_actor"
     },
+    "overlord_egg_pinison": {
+      "textures": "textures/items/overlord/egg_pinison"
+    },
     "overlord_egg_platinum_dragon_lord": {
       "textures": "textures/items/overlord/egg_platinum_dragon_lord"
     },
@@ -347,11 +371,17 @@
     "overlord_egg_theocracy_priest": {
       "textures": "textures/items/overlord/egg_theocracy_priest"
     },
+    "overlord_egg_treant_sapling": {
+      "textures": "textures/items/overlord/egg_treant_sapling"
+    },
     "overlord_egg_vampire_bride": {
       "textures": "textures/items/overlord/egg_vampire_bride"
     },
     "overlord_egg_war_troll": {
       "textures": "textures/items/overlord/egg_war_troll"
+    },
+    "overlord_egg_wraith": {
+      "textures": "textures/items/overlord/egg_wraith"
     },
     "overlord_egg_yuri": {
       "textures": "textures/items/overlord/egg_yuri"
@@ -364,6 +394,9 @@
     },
     "overlord_egg_zesshi": {
       "textures": "textures/items/overlord/egg_zesshi"
+    },
+    "overlord_egg_zytl_qae": {
+      "textures": "textures/items/overlord/egg_zytl_qae"
     },
     "overlord_elf_kings_staff": {
       "textures": "textures/items/overlord/elf_kings_staff"
@@ -401,6 +434,12 @@
     "overlord_gem_topaz": {
       "textures": "textures/items/overlord/gem_topaz"
     },
+    "overlord_ghoul_fang": {
+      "textures": "textures/items/overlord/ghoul_fang"
+    },
+    "overlord_ghoulfang_sickle": {
+      "textures": "textures/items/overlord/ghoulfang_sickle"
+    },
     "overlord_giants_maul": {
       "textures": "textures/items/overlord/giants_maul"
     },
@@ -421,6 +460,12 @@
     },
     "overlord_guardian_crest": {
       "textures": "textures/items/overlord/guardian_crest"
+    },
+    "overlord_heartwood": {
+      "textures": "textures/items/overlord/heartwood"
+    },
+    "overlord_heartwood_staff": {
+      "textures": "textures/items/overlord/heartwood_staff"
     },
     "overlord_hellfire_blade": {
       "textures": "textures/items/overlord/hellfire_blade"
@@ -670,6 +715,9 @@
     },
     "overlord_soul_reins": {
       "textures": "textures/items/overlord/soul_reins"
+    },
+    "overlord_spectral_iron": {
+      "textures": "textures/items/overlord/spectral_iron"
     },
     "overlord_spuit_lance": {
       "textures": "textures/items/overlord/spuit_lance"

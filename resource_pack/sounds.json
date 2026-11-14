@@ -1028,6 +1028,85 @@
           "step": "mob.zombie.step"
         }
       },
+      "overlord:ghoul": {
+        "volume": 1.0,
+        "pitch": [
+          0.9,
+          1.0
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:wraith": {
+        "volume": 1.0,
+        "pitch": [
+          0.7,
+          0.9
+        ],
+        "events": {
+          "ambient": "mob.stray.ambient",
+          "hurt": "mob.stray.hurt",
+          "death": "mob.stray.death",
+          "step": "mob.stray.step",
+          "shoot": "mob.blaze.shoot"
+        }
+      },
+      "overlord:death_cavalier": {
+        "volume": 1.0,
+        "pitch": [
+          0.8,
+          0.9
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:treant_sapling": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.6
+        ],
+        "events": {
+          "ambient": "mob.zombie.say",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.irongolem.walk"
+        }
+      },
+      "overlord:zytl_qae": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.6
+        ],
+        "events": {
+          "ambient": "mob.zombie.say",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.irongolem.walk"
+        }
+      },
+      "overlord:pinison": {
+        "volume": 1.0,
+        "pitch": [
+          1.0,
+          1.1
+        ],
+        "events": {
+          "hurt": "mob.villager.hit",
+          "death": "mob.villager.death",
+          "step": "mob.zombie.step",
+          "haggle": "mob.villager.haggle",
+          "haggle.yes": "mob.villager.yes",
+          "haggle.no": "mob.villager.no"
+        }
+      },
       "overlord:guardian_albedo": {
         "volume": 1.0,
         "pitch": [

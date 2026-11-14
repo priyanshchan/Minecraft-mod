@@ -131,6 +131,8 @@ LOOKS = {
                      helm="great", shoulder="grand", legs="plate", feet="sabaton"),
     "bonedragon": dict(plate="#e3dcc2", light="#f6f2e4", dark="#a59c7e", trim="#6e664c", glow="#b6ff4a", cape=None,
                        helm="skull", shoulder="bone", legs="bone", feet="claw"),
+    "cavalier": dict(plate="#1d1b24", light="#3a3644", dark="#0c0b10", trim="#59e0a0", glow="#59e0a0", cape="#0f3a2a",
+                     helm="great", shoulder="spiked", legs="plate", feet="sabaton"),
     "beasthide": dict(plate="#a8743a", light="#d09a5a", dark="#6a4520", trim="#f1e0b8", glow="#ffd27a", cape="#7a5530",
                       helm="beast", shoulder="fur", legs="leather", feet="fur"),
 }
