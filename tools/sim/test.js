@@ -1262,6 +1262,94 @@ players.splice(0, players.length, ...everyone, zoe);
   g.dimension.mobs = []; players.splice(players.indexOf(g), 1);
 }
 
+// ---- v7.5.5: dragons take to the air ----
+{
+  const sky = mkPlayer("sky"); sky.dimension = makeLand(); sky.location = { x: 0, y: 64, z: 8 };
+  sky.dimension.getPlayers = (q) => (!q || !q.maxDistance || Math.hypot(sky.location.x - q.location.x, sky.location.z - q.location.z) <= q.maxDistance ? [sky] : []);
+  const others = players.splice(0, players.length, sky); const hits = []; sky.applyDamage = (n) => hits.push(n); sky.applyKnockback = () => {}; sky.runCommand = () => {};
+  const wyrm = sky.dimension.spawnEntity("overlord:frost_dragon", { x: 0, y: 64, z: -10 }); wyrm.health.effectiveMax = 700; wyrm.health.currentValue = 500;
+  const events = []; Object.assign(wyrm, { id: "sky-wyrm", matches: (q) => q.families.every((f) => ["dragon", "monster", "mob"].includes(f)), getViewDirection: () => ({ x: 0, y: 0, z: 1 }),
+    getVelocity: () => ({ x: 0, y: 0, z: 0 }), getEffect: () => undefined, triggerEvent: (e) => events.push(e), tryTeleport(to) { wyrm.location = { ...to }; return true; } });
+  const frost = dragons.DRAGONS["overlord:frost_dragon"];
+  // a dragon first seen is stood on its feet
+  const st = dragons.stateOf(wyrm); assert.deepEqual(events, ["overlord:land"]); st.roared = true; st.flyAt = 0; st.breathAt = 1e9; st.buffetAt = 1e9;
+  sky.msgs.length = 0; dragons.tend(wyrm); assert.ok(events.includes("overlord:take_off") && sky.msgs.some((m) => m.includes("takes to the sky")), "a wounded dragon takes off");
+  assert.ok(dragons.flights.has(wyrm.id));
+  advance(31); assert.ok(Math.abs(wyrm.location.y - (64 + 10 + 2.6 * 2)) < 1.3, `it climbs: ${wyrm.location.y}`);
+  // it circles high over its foe, and its breath rains down
+  advance(80); const gap = Math.hypot(wyrm.location.x - sky.location.x, wyrm.location.z - sky.location.z);
+  assert.ok(gap > 10 && gap < 18 && wyrm.location.y > 70, `circling at ${gap}, height ${wyrm.location.y}`); assert.ok(hits.length >= 1, "breath from the sky");
+  // while aloft the ground attacks wait
+  st.buffetAt = 0; const before = hits.length; dragons.tend(wyrm); advance(1); assert.ok(st.buffetAt === 0, "no buffet from the air"); hits.length = before;
+  // then it marks a spot, hangs over it, and dives
+  advance(150); assert.ok(sky.msgs.some((m) => m.includes("dives")), "the dive is announced"); hits.length = 0;
+  advance(30 + 15); assert.ok(events.filter((e) => e === "overlord:land").length === 2, "it lands"); assert.ok(!dragons.flights.has(wyrm.id) && st.flight === undefined);
+  assert.ok(hits.includes(16 + 2.6 * 2), `the landing strikes whoever stayed on the mark: ${hits}`); assert.ok(Math.abs(wyrm.location.y - 64) < 0.01);
+  assert.ok(st.flyAt > system.currentTick + 20 * 20, "and it waits before flying again");
+  // a dragon that is not yet wounded stays on the ground
+  const fresh = sky.dimension.spawnEntity("overlord:skeletal_dragon", { x: 30, y: 64, z: 0 }); fresh.health.effectiveMax = 550; fresh.health.currentValue = 550;
+  Object.assign(fresh, { id: "sky-bones", matches: wyrm.matches, getViewDirection: wyrm.getViewDirection, getVelocity: wyrm.getVelocity, getEffect: () => undefined, triggerEvent() {}, tryTeleport: () => true });
+  const fs = dragons.stateOf(fresh); fs.roared = true; fs.flyAt = 0; dragons.tend(fresh); assert.ok(!dragons.flights.has(fresh.id));
+  world.afterEvents.entityDie.fire({ deadEntity: wyrm, damageSource: {} }); world.afterEvents.entityDie.fire({ deadEntity: fresh, damageSource: {} }); advance(60);
+  players.splice(0, players.length, ...others);
+}
+
+// ---- v7.5.5: the Great Tomb of Nazarick ----
+{
+  const tomb = await import("./dungeon.js");
+  assert.equal(tomb.FLOORS.length, 5); assert.deepEqual(tomb.FLOORS[4].stages, [["overlord:albedo"], ["overlord:ainz"]]);
+  // an underground world that records blocks and knows who stands where
+  const placed = new Map(); const k = (l) => `${Math.floor(l.x)},${Math.floor(l.y)},${Math.floor(l.z)}`; const party = []; const spawned = [];
+  const deep = { id: "minecraft:overworld", spawnParticle() {}, playSound() {},
+    setBlockType: (l, t) => placed.set(k(l), t),
+    fillBlocks(v, t) { for (let x = v.from.x; x <= v.to.x; x++) for (let y = v.from.y; y <= v.to.y; y++) for (let z = v.from.z; z <= v.to.z; z++) placed.set(`${x},${y},${z}`, t); },
+    getBlock: (l) => ({ typeId: placed.get(k(l)) ?? "minecraft:stone", getComponent: () => ({ container: { addItem() {} } }) }),
+    getPlayers: (q) => party.filter((p) => !q || !q.maxDistance || Math.hypot(p.location.x - q.location.x, p.location.y - q.location.y, p.location.z - q.location.z) <= q.maxDistance),
+    getEntities: (q) => spawned.filter((m) => m.isValid && (q.tags ?? []).every((t) => m.tags.has(t))),
+    spawnEntity(type, at) { const m = { id: `t${spawned.length}`, typeId: type, location: at, isValid: true, tags: new Set(), addTag(t) { m.tags.add(t); }, remove() { m.isValid = false; },
+      health: { currentValue: 100, effectiveMax: 100 }, getComponent(c) { return c === "minecraft:health" ? m.health : undefined; } }; spawned.push(m); return m; } };
+  const realDimension = world.getDimension; world.getDimension = () => deep;
+  const adventurer = (name) => { const p = mkPlayer(name); p.dimension = deep; p.location = { x: 500.5, y: 64, z: 500.5 }; p.teleport = (to) => { p.location = { ...to }; }; p.taken = 0;
+    p.applyDamage = (n) => { p.taken += n; }; p.setOnFire = () => {}; p.camera = { fade() {} }; party.push(p); return p; };
+  const una = adventurer("una"), vex = adventurer("vex"); vex.location = { x: 502, y: 64, z: 501 };
+  world.props.delete("overlord:tomb");
+  // the first entrance opens the Tomb beneath the entrance and takes the party down
+  assert.ok(tomb.enter(una).includes("descend")); const t = tomb.tombOf(); assert.ok(t && t.x === 500 && t.top === 48);
+  assert.equal(placed.get(`500,${tomb.floorY(t, 0)},${500 - 11}`), "minecraft:iron_bars", "the gate starts barred");
+  assert.equal(placed.get(`500,${tomb.floorY(t, 4) - 1},500`), "overlord:gilded_nazarick_bricks", "five floors down: the Throne Room");
+  assert.deepEqual(una.location, tomb.arrival(t, 0)); assert.deepEqual(vex.location, tomb.arrival(t, 0), "whoever stands beside goes too");
+  assert.equal(tomb.floorAt(t, una.location), 0);
+  // arriving wakes the garrison; when it falls, the guardian comes; when she falls, the gate opens
+  let now = 100000; tomb.tick(now); assert.equal(tomb.floors[0].status, "wave"); assert.equal(spawned.filter((m) => m.tags.has("overlord_tomb_0")).length, 9);
+  for (const m of spawned) m.health.currentValue = 0; tomb.tick(now += 10); assert.equal(tomb.floors[0].status, "boss");
+  const shalltear = spawned[spawned.length - 1]; assert.equal(shalltear.typeId, "overlord:shalltear");
+  const coins = () => spells.countItem(una, "overlord:yggdrasil_gold_coin"); const purse = coins();
+  shalltear.health.currentValue = 0; tomb.tick(now += 10); assert.equal(tomb.floors[0].status, "cleared"); assert.equal(placed.get(`500,${tomb.floorY(t, 0)},${500 - 11}`), "minecraft:air", "the gate opens");
+  assert.equal(coins() - purse, 15);
+  // a trap on the next floor: standing on it is felt a moment later
+  una.location = { ...tomb.exitPad(t, 0) }; tomb.tick(now += 10); assert.equal(tomb.floorAt(t, una.location), 1, "the gate takes the party down");
+  const [tx, tz] = tomb.FLOORS[1].traps[0]; una.location = { x: t.x + tx + 0.5, y: tomb.floorY(t, 1), z: t.z + tz + 0.5 }; tomb.springTraps(deep, t, 1, [una], now); advance(9);
+  assert.equal(una.taken, 4); assert.ok(una.effects.has("slowness"));
+  // the Throne Room: Albedo first, then Ainz himself
+  for (let i = 1; i < 4; i++) tomb.floors[i].status = "cleared";
+  una.location = { ...tomb.arrival(t, 4) }; vex.location = { x: 0, y: 64, z: 0 }; tomb.tick(now += 10); for (const m of spawned) m.health.currentValue = 0; tomb.tick(now += 10);
+  assert.equal(spawned[spawned.length - 1].typeId, "overlord:albedo"); spawned[spawned.length - 1].health.currentValue = 0; tomb.tick(now += 10);
+  assert.equal(spawned[spawned.length - 1].typeId, "overlord:ainz", "the master of the Tomb rises"); assert.equal(tomb.floors[4].status, "boss");
+  spawned[spawned.length - 1].health.currentValue = 0; tomb.tick(now += 10); assert.equal(tomb.floors[4].status, "cleared");
+  // the last gate leads out with the Tomb's reward; a Codex pair only the first time
+  const pu = rpg.profileOf(una); pu.bosses = []; una.msgs.length = 0; una.location = { ...tomb.exitPad(t, 4) }; tomb.tick(now += 10);
+  assert.ok(una.msgs.some((m) => m.includes("conquered")) || pu.bosses.includes("great_tomb")); assert.equal(spells.countItem(una, "overlord:codex_of_skills") >= 2, true);
+  assert.equal(tomb.floorAt(t, una.location), undefined, "back on the surface"); assert.ok(Math.abs(una.location.x - 500.5) < 1e-9 && Math.abs(una.location.z - 503.5) < 1e-9, "where they came in");
+  // the Key: outside it leads in (to the same Tomb), inside it leads out
+  world.afterEvents.itemUse.fire({ source: una, itemStack: { typeId: "overlord:tomb_key" } }); assert.equal(tomb.floorAt(t, una.location), 0);
+  assert.deepEqual(tomb.tombOf(), t, "the same Tomb"); assert.equal(tomb.floors[0].status, "idle", "a fresh run");
+  world.afterEvents.itemUse.fire({ source: una, itemStack: { typeId: "overlord:tomb_key" } }); assert.equal(tomb.floorAt(t, una.location), undefined);
+  // a Mausoleum's crystal is a gate too
+  world.props.set(`overlord:site7:${Math.floor(9000 / sites.REGION)},${Math.floor(9000 / sites.REGION)}`, "great_tomb|9000|64|9000|1"); // a region no earlier test has looked at
+  una.location = { x: 9000.5, y: 65, z: 8992.5 }; tomb.tick(now += 400); assert.equal(tomb.floorAt(t, una.location), 0, "stepping on the crystal descends");
+  world.getDimension = realDimension; for (const p of party) players.splice(players.indexOf(p), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);

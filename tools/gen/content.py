@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [7, 5, 0]
+VERSION = [7, 5, 5]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v7.5.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v7.5.5"
 
 
 def oid(name):
@@ -318,6 +318,10 @@ ITEMS = {
         "minecraft:max_stack_size": 16, "minecraft:rarity": "rare"}) for kind in ("fire", "frost", "storm", "life")},
     # v7.5 gear upgrades: refining raises an item's quality, gems are set into its sockets (gear.js).
     "refining_stone": ("Refining Stone", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "uncommon"}),
+    # v7.5.5: opens (and leads back out of) the Great Tomb of Nazarick (dungeon.js).
+    "tomb_key": ("Key of the Great Tomb", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
+        **_cooldown("overlord_tomb_key", 3.0)}),
     **{f"gem_{gem}": (title, "items", {"minecraft:max_stack_size": 16, "minecraft:rarity": "rare"})
        for gem, title in (("ruby", "Ruby of Embers"), ("sapphire", "Sapphire of Frost"), ("topaz", "Topaz of Storms"),
                           ("jade", "Jade of Venom"), ("onyx", "Onyx of Night"), ("sunstone", "Sunstone"))},
@@ -621,6 +625,8 @@ def recipe_files():
                              ("platinum", "platinum_scale"))
            for piece, pattern in (("helmet", ["AAA", "A A"]), ("chestplate", ["A A", "AAA", "AAA"]),
                                   ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
+        "tomb_key": _shaped("tomb_key", ["BCB", "CKC", "BCB"], {
+            "B": oid("nazarick_bricks"), "C": cry, "K": oid("guardian_crest")}, oid("tomb_key"), unlock=oid("guardian_crest")),
         "refining_stone": _shapeless("refining_stone", [oid("adamantite_ingot"), cry, cry, "minecraft:stone"],
                                      oid("refining_stone"), count=2),
         **{f"gem_{gem}": _shapeless(f"gem_{gem}", [cry, cry, cry, cry, oid("refining_stone"), core], oid(f"gem_{gem}"))
@@ -1988,6 +1994,14 @@ DRAGON_BOX = (1.4, 2.0)
 
 def _resize(out):
     for name in ("frost_dragon", "skeletal_dragon", "platinum_dragon_lord"):
+        # v7.5.5: the dragons take to the air. dragons.js flies them; while aloft gravity is off and
+        # their own legs stand still.
+        e = out[name]["minecraft:entity"]
+        e["component_groups"]["overlord:airborne"] = {
+            "minecraft:physics": {"has_gravity": False, "has_collision": True},
+            "minecraft:movement": {"value": 0.0}}
+        e["events"]["overlord:take_off"] = {"add": {"component_groups": ["overlord:airborne"]}}
+        e["events"]["overlord:land"] = {"remove": {"component_groups": ["overlord:airborne"]}}
         # Creatures this large step over ledges that would stop anything smaller.
         out[name]["minecraft:entity"]["components"]["minecraft:variable_max_auto_step"] = {
             "base_value": 2.0625, "controlled_value": 2.0625, "jump_prevented_value": 1.0625}
@@ -2522,11 +2536,22 @@ def animations_json():
         # two-part wings: the arm beats and the tip follows a moment later, harder when on the move
         "animation.overlord.dragon.wings": {"loop": True, "bones": {
             "rightWing": {"rotation": [0.0, "math.sin(query.life_time * 110.0 + 90.0) * 4.0",
-                                       "math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0)"]},
+                                       "math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0"
+                                       " + (query.is_on_ground ? 0.0 : 26.0))"]},
             "leftWing": {"rotation": [0.0, "-math.sin(query.life_time * 110.0 + 90.0) * 4.0",
-                                      "-math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0)"]},
-            "rightWingTip": {"rotation": [0.0, 0.0, "math.sin(query.life_time * 110.0 - 60.0) * 16.0"]},
-            "leftWingTip": {"rotation": [0.0, 0.0, "-math.sin(query.life_time * 110.0 - 60.0) * 16.0"]}}},
+                                      "-math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0"
+                                      " + (query.is_on_ground ? 0.0 : 26.0))"]},
+            "rightWingTip": {"rotation": [0.0, 0.0, "math.sin(query.life_time * 110.0 - 60.0) * (16.0 + (query.is_on_ground ? 0.0 : 20.0))"]},
+            "leftWingTip": {"rotation": [0.0, 0.0, "-math.sin(query.life_time * 110.0 - 60.0) * (16.0 + (query.is_on_ground ? 0.0 : 20.0))"]}}},
+        # aloft: the legs fold back, the neck reaches forward and the tail streams out behind
+        "animation.overlord.dragon.soar": {"loop": True, "bones": {
+            "leg0": {"rotation": ["(query.is_on_ground ? 0.0 : 55.0)", 0.0, 0.0]},
+            "leg1": {"rotation": ["(query.is_on_ground ? 0.0 : 55.0)", 0.0, 0.0]},
+            "leg2": {"rotation": ["(query.is_on_ground ? 0.0 : 65.0)", 0.0, 0.0]},
+            "leg3": {"rotation": ["(query.is_on_ground ? 0.0 : 65.0)", 0.0, 0.0]},
+            "neck": {"rotation": ["(query.is_on_ground ? 0.0 : -12.0)", 0.0, 0.0]},
+            "tail": {"rotation": ["(query.is_on_ground ? 0.0 : -8.0)", 0.0, 0.0]},
+            "body": {"rotation": ["(query.is_on_ground ? 0.0 : math.sin(query.life_time * 110.0) * 2.5)", 0.0, 0.0]}}},
         # the neck weaves like a snake's
         "animation.overlord.dragon.neck": {"loop": True, "bones": {
             "neck": {"rotation": ["math.sin(query.life_time * 40.0) * 3.0", "math.sin(query.life_time * 27.0) * 6.0", 0.0]},
@@ -2630,7 +2655,7 @@ ENTITY_ANIMS = {
     "vampire_bride": ["look_at_target", "idle", "robe_walk", "attack"],
     "dwarf": ["look_at_target", "idle", "walk"],
     "frost_dragon": ["look_at_target", "hamsuke.walk", "dragon.wings", "dragon.neck", "dragon.jaw", "dragon.tail",
-                     "dragon.lunge"],
+                     "dragon.lunge", "dragon.soar"],
     "frost_breath": ["projectile.spin"],
     "retainer": ["look_at_target", "idle", "walk", "attack"],
     "crystal_shard": ["projectile.spin"],

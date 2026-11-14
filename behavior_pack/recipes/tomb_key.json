@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:tomb_key"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "BCB",
+      "CKC",
+      "BCB"
+    ],
+    "key": {
+      "B": {
+        "item": "overlord:nazarick_bricks"
+      },
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "K": {
+        "item": "overlord:guardian_crest"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:guardian_crest"
+      }
+    ],
+    "result": {
+      "item": "overlord:tomb_key",
+      "count": 1
+    }
+  }
+}

@@ -178,7 +178,8 @@ def main():
         picture.save(out / f"{key}.png")
         pictures.append(picture)
         maps.append(f"== {site['name']} ({key}), {len(site['blocks'])} blocks\n{text_map(site)}\n")
-        found += problems(key, site)
+        if not site.get("tomb"):
+            found += problems(key, site)
     (out / "maps.txt").write_text("\n".join(maps))
     # contact sheets of six
     for n in range(0, len(pictures), 6):

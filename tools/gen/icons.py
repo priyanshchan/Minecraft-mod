@@ -244,6 +244,28 @@ def gem(c, light, dark):
     ], {"C": c, "L": light, "W": "#ffffff", "D": dark})
 
 
+def tomb_key():
+    """A heavy gold key: a ring bow set with a purple gem, and a long bit with Nazarick's teeth."""
+    return sprite16([
+        "................",
+        "...GGGG.........",
+        "..GgPPgG........",
+        "..GPWPPG........",
+        "..GPPPpG........",
+        "..GgppgG........",
+        "...GGGGG........",
+        ".......GG.......",
+        "........GG......",
+        ".........GG.....",
+        "..........GG....",
+        "..........GgG...",
+        "...........GG.G.",
+        "............GGG.",
+        ".............G..",
+        "................",
+    ], {"G": GOLD, "g": GOLD_D, "P": "#7a2fc0", "p": "#4a1878", "W": "#e9d8ff"})
+
+
 def whetstone():
     """A grey refining stone with a seam of adamantite green and a glint of crystal."""
     return sprite16([
@@ -1783,6 +1805,7 @@ def all_item_icons():
         "dragonscale_boots": boots(DRAGON_PAL),
         "rune_of_fire": rune_stone("#ff7a1a"),
         "refining_stone": whetstone(),
+        "tomb_key": tomb_key(),
         "gem_ruby": gem("#d4202a", "#ff6a6a", "#7a0d14"),
         "gem_sapphire": gem("#2a62d8", "#7fb0ff", "#13306e"),
         "gem_topaz": gem("#e8b020", "#ffe27a", "#8a5e08"),

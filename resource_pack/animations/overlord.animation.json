@@ -269,28 +269,82 @@
           "rotation": [
             0.0,
             "math.sin(query.life_time * 110.0 + 90.0) * 4.0",
-            "math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0)"
+            "math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0 + (query.is_on_ground ? 0.0 : 26.0))"
           ]
         },
         "leftWing": {
           "rotation": [
             0.0,
             "-math.sin(query.life_time * 110.0 + 90.0) * 4.0",
-            "-math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0)"
+            "-math.sin(query.life_time * 110.0) * (9.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 9.0 + (query.is_on_ground ? 0.0 : 26.0))"
           ]
         },
         "rightWingTip": {
           "rotation": [
             0.0,
             0.0,
-            "math.sin(query.life_time * 110.0 - 60.0) * 16.0"
+            "math.sin(query.life_time * 110.0 - 60.0) * (16.0 + (query.is_on_ground ? 0.0 : 20.0))"
           ]
         },
         "leftWingTip": {
           "rotation": [
             0.0,
             0.0,
-            "-math.sin(query.life_time * 110.0 - 60.0) * 16.0"
+            "-math.sin(query.life_time * 110.0 - 60.0) * (16.0 + (query.is_on_ground ? 0.0 : 20.0))"
+          ]
+        }
+      }
+    },
+    "animation.overlord.dragon.soar": {
+      "loop": true,
+      "bones": {
+        "leg0": {
+          "rotation": [
+            "(query.is_on_ground ? 0.0 : 55.0)",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "(query.is_on_ground ? 0.0 : 55.0)",
+            0.0,
+            0.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "(query.is_on_ground ? 0.0 : 65.0)",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "(query.is_on_ground ? 0.0 : 65.0)",
+            0.0,
+            0.0
+          ]
+        },
+        "neck": {
+          "rotation": [
+            "(query.is_on_ground ? 0.0 : -12.0)",
+            0.0,
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "(query.is_on_ground ? 0.0 : -8.0)",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            "(query.is_on_ground ? 0.0 : math.sin(query.life_time * 110.0) * 2.5)",
+            0.0,
+            0.0
           ]
         }
       }

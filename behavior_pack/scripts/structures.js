@@ -816,7 +816,7 @@ export const SITES = [
       b.fill(-11, 0, -1, -11, 1, 1, id("cracked_nazarick_bricks"));
       b.path(-2, -2, 2, 11, id("gilded_nazarick_bricks"));
       for (const x of [-6, 6]) b.set(x, 0, 6, mc("soul_campfire"));
-      b.chest(0, 0, -9, [[id("data_crystal"), 4, 8], [COIN, 8, 16], [id("soul_fragment"), 1, 3], [id("guardian_crest"), 0, 1], [id("scroll_of_time_stop"), 0, 1]]);
+      b.chest(0, 0, -9, [[id("data_crystal"), 4, 8], [COIN, 8, 16], [id("soul_fragment"), 1, 3], [id("guardian_crest"), 0, 1], [id("scroll_of_time_stop"), 0, 1], [id("tomb_key"), 1, 1]]);
     },
     garrison: (tier) =>
       tier === 0
@@ -1137,9 +1137,17 @@ export function raise(dimension, at, type) {
     if (!isUnloaded(error)) console.warn(`[Overlord] could not build ${type.name}: ${error}`);
     return false;
   }
-  // Chest contents are added a moment later, once the chest blocks exist.
+  stockChests(dimension, b.chests);
+  return true;
+}
+
+/**
+ * Fills chests a moment after they were placed, once the chest blocks exist.
+ * @param {Dimension} dimension @param {{ at: Vector3, loot: Loot[] }[]} chests
+ */
+export function stockChests(dimension, chests) {
   system.runTimeout(() => {
-    for (const chest of b.chests) {
+    for (const chest of chests) {
       try {
         const container = dimension.getBlock(chest.at)?.getComponent("minecraft:inventory")?.container;
         if (!container) continue;
@@ -1148,11 +1156,15 @@ export function raise(dimension, at, type) {
           if (amount > 0) container.addItem(new ItemStack(item, amount));
         }
       } catch (error) {
-        console.warn(`[Overlord] could not stock a camp chest: ${error}`);
+        console.warn(`[Overlord] could not stock a chest: ${error}`);
       }
     }
   }, 2);
-  return true;
+}
+
+/** The built site whose region holds a spot, if any. @param {Vector3} at */
+export function campAt(at) {
+  return campIn(Math.floor(at.x / REGION), Math.floor(at.z / REGION)) ?? undefined;
 }
 
 /**

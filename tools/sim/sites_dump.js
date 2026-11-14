@@ -30,4 +30,31 @@ for (const type of sites.SITES) {
   }
   out[type.key] = { name: type.name, radius: type.radius, height: type.height ?? 12, muster: type.muster ?? sites.MUSTER, garrison: [0, 1, 2].map((tier) => type.garrison(tier)), blocks };
 }
+// The five floors of the Great Tomb, each relative to its own floor.
+const tomb = await import("./dungeon.js");
+tomb.FLOORS.forEach((floor, i) => {
+  const placed = new Map();
+  const key = (l) => `${Math.floor(l.x)},${l.y},${Math.floor(l.z)}`;
+  const land = {
+    id: "minecraft:overworld",
+    getBlock: () => undefined,
+    setBlockType: (l, t) => placed.set(key(l), t),
+    fillBlocks(v, t) {
+      for (let x = Math.min(v.from.x, v.to.x); x <= Math.max(v.from.x, v.to.x); x++)
+        for (let y = Math.min(v.from.y, v.to.y); y <= Math.max(v.from.y, v.to.y); y++)
+          for (let z = Math.min(v.from.z, v.to.z); z <= Math.max(v.from.z, v.to.z); z++) placed.set(`${x},${y},${z}`, t);
+    },
+  };
+  const at = { x: 0, y: 64, z: 0, top: 64 };
+  tomb.buildFloor(land, at, i);
+  const base = tomb.floorY(at, i);
+  const blocks = [];
+  for (const [k, block] of placed) {
+    const [x, y, z] = k.split(",").map(Number);
+    // the roof and the near walls are left out so the hall can be seen
+    if (block === "minecraft:air" || y - base < -1 || y - base > 8 || z > 16 || x > 16) continue;
+    blocks.push([x, y - base, z, block.replace("minecraft:", "")]);
+  }
+  out[`tomb_${floor.key}`] = { name: `Tomb ${i + 1}: ${floor.name}`, radius: 18, height: 12, muster: 0, garrison: [], blocks, tomb: true };
+});
 writeFileSync(process.argv[2], JSON.stringify(out));

@@ -2,12 +2,12 @@
   "format_version": 2,
   "header": {
     "name": "Overlord: Tomb of Nazarick [RP]",
-    "description": "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. \u00a77v7.5.0",
+    "description": "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. \u00a77v7.5.5",
     "uuid": "c0efa9f1-85eb-41e8-a663-b693b3f36197",
     "version": [
       7,
       5,
-      0
+      5
     ],
     "min_engine_version": [
       1,
@@ -22,7 +22,7 @@
       "version": [
         7,
         5,
-        0
+        5
       ]
     }
   ],
@@ -32,7 +32,7 @@
       "version": [
         7,
         5,
-        0
+        5
       ]
     }
   ],
