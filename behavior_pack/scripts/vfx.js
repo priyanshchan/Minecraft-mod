@@ -11,7 +11,7 @@ import { MolangVariableMap, system, world } from "@minecraft/server";
 /** @typedef {import("@minecraft/server").Dimension} Dimension */
 /** @typedef {import("@minecraft/server").Vector3} Vector3 */
 /** @typedef {import("@minecraft/server").Player} Player */
-/** @typedef {"point" | "raise" | "self" | "sweep" | "slam" | "channel" | "summon" | "super" | "scroll" | "tome" | "slash" | "smash" | "spin" | "thrust" | "uppercut" | "draw" | "awaken"} Pose */
+/** @typedef {"point" | "raise" | "self" | "sweep" | "slam" | "channel" | "summon" | "super" | "scroll" | "tome" | "slash" | "smash" | "spin" | "thrust" | "uppercut" | "draw" | "awaken" | "god"} Pose */
 
 /** Element colours (0-1 RGB). */
 /** @type {Record<string, { red: number, green: number, blue: number }>} */
@@ -45,6 +45,7 @@ const POSES = {
   uppercut: "animation.overlord.weapon_uppercut",
   draw: "animation.overlord.weapon_draw",
   awaken: "animation.overlord.weapon_awaken",
+  god: "animation.overlord.cast_god",
 };
 
 /** The particle each element adds to an impact. */
@@ -509,6 +510,7 @@ export function handOf(player, reach = 0.7) {
 export function castFx(player, element, tier, how) {
   const dimension = player.dimension;
   const feet = player.location;
+  if (tier >= 12) return; // god-tier magic stages its own invocation (godspells.js)
   if (tier >= 11) {
     dome(dimension, feet, element);
     system.runTimeout(() => {

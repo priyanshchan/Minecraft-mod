@@ -803,7 +803,8 @@ Every player also receives a **Grimoire** and a **Magic Wand** (recipes: book + 
 gold ingot / stick in a column).
 
 - **Learning:** open the Grimoire to learn spells. Each tier needs a level (tier 1 at level 1, then +6 levels
-  per tier; super-tier at level 70) and Data Crystals (2 per tier; tier 1 is free; super-tier costs 30).
+  per tier; super-tier at level 70; god-tier at level 80) and Data Crystals (2 per tier; tier 1 is free;
+  super-tier costs 30, god-tier 48). God-tier magic is taught only to those who have conquered the Great Tomb.
 - **Casting:** assign up to four spells to slots. Use the wand to cast the selected one; sneak + use switches
   slot. The selected spell is shown on the status bar.
 - **Mastery:** every spell gains mastery with use (levels at 10, 30, 70 and 150 casts), +8% power per level.
@@ -824,6 +825,25 @@ gold ingot / stick in a column).
 | 9 | Vermilion Nova, Call Greater Thunder, Grasp Heart |
 | 10 | Reality Slash, Time Stop, Meteor Fall, Nuclear Blast, Implosion |
 | Super | Fallen Down, Ia Shub-Niggurath, Sword of Damocles |
+| **God** | **The Goal of All Life Is Death**, **Pantheon**, **Cataclysm** (see below) |
+
+#### God-tier magic (v7.6)
+
+Three spells beyond super-tier, meant to be overkill. Each costs 180–200 mana, recharges for five minutes, and
+is staged over many seconds:
+- The caster kneels and rises with arms to the sky in a 3-second invocation.
+- Three magic circles spread from their feet, with a pillar of light and a dome of runes.
+- The camera pulls back to watch the whole spell.
+- Everyone within 72 blocks sees the spell's name in great letters, and the whole server is told who
+  invoked it.
+
+They strike only monsters: villagers, animals, companions and the friendly folk of the world are spared.
+
+| Spell | What happens |
+| --- | --- |
+| **The Goal of All Life Is Death** (dark) | Dread slows and weakens every monster within 40 blocks. A clock of twelve marks forms round you, ten blocks across; a mark lights every half second as a hand of shadow sweeps round, with a bell tolling lower each time. When it strikes, the world goes black for a moment. Every lesser monster within 40 blocks **dies**, and bosses lose a third of their health. Skulls rise from the dead, their souls stream into you (2 health and 5 mana each), and four **Death Knights** rise round you to serve for a minute. |
+| **Pantheon** (holy) | A halo of light opens 22 blocks up, with pillars falling round its rim. **Six Archangel Flames** descend to fight for you for a minute. Then, for ten seconds, a pillar of judgement strikes one of your foes within 32 blocks every half second (30 harm, twice that to the undead and demons), healing you and the players near you each time. At the end every foe in range is struck at once, under a dome of light. You gain Regeneration II and Absorption IV for 20 seconds. |
+| **Cataclysm** (fire) | The sky reddens and a 22-block circle marks the place you point at (up to 48 blocks). Thirty meteors fall across it over six seconds, each bursting for 40 harm and setting foes alight. Then one **colossal meteor** strikes the centre: three layers of explosion, eight pillars of flame, a shockwave out to 30 blocks and a heavy camera shake. It deals 150 harm within 12 blocks, throws back everything within 26, and leaves the ground burning for eight seconds. |
 
 Summoned creatures follow you and attack monsters. You can command four at a time between summoning spells
 and Sealing Crystals; Death Knights from the Tome: Create Undead are counted separately.

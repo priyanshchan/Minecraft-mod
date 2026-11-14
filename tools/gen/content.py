@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [7, 5, 5]
+VERSION = [7, 6, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v7.5.5"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v7.6.0"
 
 
 def oid(name):
@@ -3218,6 +3218,20 @@ def player_animations_json():
             leftArm=[(0, Z), (0.14, (-30, 30, -10)), (0.24, (14, 0, -16)), (0.55, Z)],
             body=[(0, Z), (0.14, (10, 30, 0)), (0.24, (4, -34, 0)), (0.36, (4, -28, 0)), (0.55, Z)],
             head=[(0, Z), (0.14, (8, -20, 0)), (0.24, (0, 20, 0)), (0.55, Z)]),
+        # god-tier: down on one knee gathering power, rising with both arms flung to the sky, held, then
+        # both hands driven down and forward as the spell is loosed
+        "animation.overlord.cast_god": anim(
+            3.2,
+            rightArm=[(0, Z), (0.5, (-40, 0, 30)), (1.0, (-30, 0, 40)), (1.5, (-176, 0, 30)), (2.2, (-170, 0, 26)),
+                      (2.6, (-176, 0, 30)), (2.85, (-70, -10, 0)), (3.0, (-64, -10, 0)), (3.2, Z)],
+            leftArm=[(0, Z), (0.5, (-40, 0, -30)), (1.0, (-30, 0, -40)), (1.5, (-176, 0, -30)), (2.2, (-170, 0, -26)),
+                     (2.6, (-176, 0, -30)), (2.85, (-70, 10, 0)), (3.0, (-64, 10, 0)), (3.2, Z)],
+            body=[(0, Z), (0.5, (28, 0, 0)), (1.0, (32, 0, 0)), (1.5, (-12, 0, 0)), (2.6, (-10, 0, 0)), (2.85, (16, 0, 0)),
+                  (3.2, Z)],
+            head=[(0, Z), (0.5, (30, 0, 0)), (1.0, (34, 0, 0)), (1.5, (-36, 0, 0)), (2.6, (-32, 0, 0)), (2.85, (8, 0, 0)),
+                  (3.2, Z)],
+            rightLeg=[(0, Z), (0.5, (-40, 0, 0)), (1.0, (-44, 0, 0)), (1.5, Z), (3.2, Z)],
+            leftLeg=[(0, Z), (0.5, (60, 0, 0)), (1.0, (64, 0, 0)), (1.5, Z), (3.2, Z)]),
         # the weapon raised high in both hands and held while it wakes
         "animation.overlord.weapon_awaken": anim(
             1.4,

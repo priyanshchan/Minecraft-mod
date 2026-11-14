@@ -7,6 +7,7 @@ import { world, system, EntityDamageCause, Direction } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { giveItem, notify, profileOf, setHudExtra, spellPower, spendMana, restoreMana, touch, hasAllies } from "./rpg.js";
 import * as skills from "./skills.js";
+import { cataclysm, goalOfAllLife, pantheon } from "./godspells.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -563,8 +564,9 @@ POSE.shock_wave = "slam";
 
 // -------------------------------------------------------------------- spells
 
-/** Tier 11 is super-tier magic. */
+/** Tier 11 is super-tier magic; tier 12 god-tier, taught only to those who have conquered the Great Tomb. */
 const SUPER = 11;
+export const GOD = 12;
 
 /** @type {Spell[]} */
 export const SPELLS = [
@@ -613,22 +615,25 @@ export const SPELLS = [
   { key: "implosion", name: "Implosion", tier: 10, mana: 60, cooldown: 12, element: "arcane", help: "Collapses one mob from within.", cast: bolt(30, 95, "arcane", CRIT, "random.explode") },
   { key: "fallen_down", name: "Fallen Down", tier: SUPER, mana: 120, cooldown: 120, element: "holy", help: "Super-tier: a pillar of light after 3 seconds (9 blocks).", cast: burst(9, 120, "holy", { delay: 3, sound: "ambient.weather.thunder" }) },
   { key: "ia_shub_niggurath", name: "Ia Shub-Niggurath", tier: SUPER, mana: 140, cooldown: 150, element: "dark", help: "Super-tier: a black wind of death after 4 seconds (10 blocks).", cast: burst(10, 140, "dark", { delay: 4, effect: SOUL, sound: "mob.wither.spawn" }) },
+  { key: "goal_of_all_life", name: "The Goal of All Life Is Death", tier: GOD, mana: 200, cooldown: 300, element: "dark", help: "God-tier (for those who have conquered the Great Tomb): a clock of twelve marks counts down for six seconds; then every lesser creature within 40 blocks dies, bosses lose a third of their health, the souls heal you and four Death Knights rise to serve you.", cast: goalOfAllLife },
+  { key: "pantheon", name: "Pantheon", tier: GOD, mana: 180, cooldown: 300, element: "holy", help: "God-tier (for those who have conquered the Great Tomb): the heavens open, six Archangel Flames descend to fight for you, and for ten seconds pillars of judgement fall on your foes within 32 blocks (twice as hard on the undead and demons) while your allies are healed; then all of them are struck at once.", cast: pantheon },
+  { key: "cataclysm", name: "Cataclysm", tier: GOD, mana: 200, cooldown: 300, element: "fire", help: "God-tier (for those who have conquered the Great Tomb): the sky darkens over the place you point at; thirty meteors rain down across 20 blocks, then a colossal meteor strikes its heart, leaving burning ground and a shockwave out to 26 blocks.", cast: cataclysm },
   { key: "sword_of_damocles", name: "Sword of Damocles", tier: SUPER, mana: 130, cooldown: 150, element: "arcane", help: "Super-tier: a colossal blade falls after 4 seconds (6 blocks).", cast: burst(6, 200, "arcane", { delay: 4, sound: "random.anvil_land" }) },
 ];
 
 /** Level needed to learn a tier. @param {number} tier */
 export function levelForTier(tier) {
-  return tier >= SUPER ? 70 : (tier - 1) * 6 + 1;
+  return tier >= GOD ? 80 : tier >= SUPER ? 70 : (tier - 1) * 6 + 1;
 }
 
 /** Data Crystals needed to learn a tier. @param {number} tier */
 export function costForTier(tier) {
-  return tier >= SUPER ? 30 : tier === 1 ? 0 : tier * 2;
+  return tier >= GOD ? 48 : tier >= SUPER ? 30 : tier === 1 ? 0 : tier * 2;
 }
 
 /** @param {number} tier */
 function tierName(tier) {
-  return tier >= SUPER ? "Super-tier" : `Tier ${tier}`;
+  return tier >= GOD ? "God-tier" : tier >= SUPER ? "Super-tier" : `Tier ${tier}`;
 }
 
 const MASTERY = [0, 10, 30, 70, 150]; // casts needed for mastery levels 1-5
@@ -861,6 +866,9 @@ export function learnSpell(player, key) {
   if (!spell) return "§7Unknown spell";
   if (p.spells.includes(key)) return `§7You already know ${spell.name}`;
   if (p.level < levelForTier(spell.tier)) return `§7${spell.name} needs level ${levelForTier(spell.tier)}`;
+  if (spell.tier >= GOD && !(Array.isArray(p.bosses) && p.bosses.includes("great_tomb"))) {
+    return "§7God-tier magic is taught only to those who have conquered the Great Tomb of Nazarick";
+  }
   const cost = costForTier(spell.tier);
   if (countItem(player, CRYSTAL) < cost) return `§7${spell.name} costs ${cost} Data Crystals`;
   takeItem(player, CRYSTAL, cost);
