@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:blade_bug.held",
-      "item": {
-        "overlord:blade_bug": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:blade_bug",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

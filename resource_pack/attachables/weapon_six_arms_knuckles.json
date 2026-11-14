@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:six_arms_knuckles.held",
-      "item": {
-        "overlord:six_arms_knuckles": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:six_arms_knuckles",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

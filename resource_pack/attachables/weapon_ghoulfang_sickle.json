@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:ghoulfang_sickle.held",
-      "item": {
-        "overlord:ghoulfang_sickle": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:ghoulfang_sickle",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

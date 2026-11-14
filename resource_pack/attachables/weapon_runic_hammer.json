@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:runic_hammer.held",
-      "item": {
-        "overlord:runic_hammer": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:runic_hammer",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

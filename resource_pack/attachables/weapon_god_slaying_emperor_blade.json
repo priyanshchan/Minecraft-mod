@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:god_slaying_emperor_blade.held",
-      "item": {
-        "overlord:god_slaying_emperor_blade": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:god_slaying_emperor_blade",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

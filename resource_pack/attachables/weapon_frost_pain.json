@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:frost_pain.held",
-      "item": {
-        "overlord:frost_pain": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:frost_pain",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

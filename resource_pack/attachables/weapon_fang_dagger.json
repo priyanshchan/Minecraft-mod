@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:fang_dagger.held",
-      "item": {
-        "overlord:fang_dagger": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:fang_dagger",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

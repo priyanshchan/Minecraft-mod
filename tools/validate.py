@@ -367,6 +367,10 @@ def main():
         for mat in d["materials"].values():
             check(mat in VANILLA["material"], f"{rel(f)}: unknown material {mat}")
         held = f.stem.startswith("weapon_")  # a 3D weapon (v7.7) rather than a piece of armour
+        if held:
+            # only an attachable named after the item replaces the flat item in the hand (v8.6.1)
+            check(d["identifier"] == f"{NS}:{f.stem[len('weapon_'):]}" and "item" not in d,
+                  f"{rel(f)}: a held weapon's attachable must be named after its item, or the flat item shows too")
         modeled = any("/armor3d/" in t for t in d["textures"].values())  # 3D armour on players (v8.1)
         for tex in d["textures"].values():
             used_textures.add(tex)

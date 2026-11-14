@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:martial_lord_club.held",
-      "item": {
-        "overlord:martial_lord_club": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:martial_lord_club",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

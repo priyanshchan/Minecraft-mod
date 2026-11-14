@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:razor_edge.held",
-      "item": {
-        "overlord:razor_edge": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:razor_edge",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"

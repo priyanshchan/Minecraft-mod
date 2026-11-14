@@ -2,10 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "overlord:kilineyram.held",
-      "item": {
-        "overlord:kilineyram": "query.owner_identifier == 'minecraft:player'"
-      },
+      "identifier": "overlord:kilineyram",
       "materials": {
         "default": "entity_emissive_alpha",
         "enchanted": "entity_alphatest_glint"
