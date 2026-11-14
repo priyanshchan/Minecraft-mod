@@ -15,6 +15,7 @@ import * as arena from "./arena.js";
 import * as ambience from "./ambience.js";
 import * as dragons from "./dragons.js";
 await import("./main.js"); // must load without touching the world
+(await import("./events.js")).setEnabled(false); // world events only where a test asks for one
 
 // Everything random in the add-on goes through Math.random. A seeded generator makes each run identical
 // on every machine, so a rare roll (an elite spawn, a far-off site) cannot fail the suite by chance.
@@ -1456,7 +1457,7 @@ players.splice(0, players.length, ...everyone, zoe);
   pq.mana = 0; q.health.currentValue = 3; await pick(5); assert.equal(pq.mana, rpg.maxMana(pq)); assert.equal(q.health.currentValue, 20);
   await pick(6); assert.equal(spells.countItem(q, "overlord:codex_of_skills"), 10); assert.equal(spells.countItem(q, "overlord:gem_onyx"), 4);
   await pick(7); assert.equal(pq.story.length, 10); assert.equal(spells.countItem(q, "overlord:royal_seal"), 1, "the campaign shortcut crowns and hands over the Seal");
-  pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(10); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
+  pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(11); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
   assert.ok(shown.some((f) => f.title === "Creative Tome of Ascension"));
   players.splice(players.indexOf(q), 1);
 }
@@ -1930,6 +1931,84 @@ players.splice(0, players.length, ...everyone, zoe);
   c.health.currentValue = 10; assert.equal(comforts.wear(c), "mend"); assert.equal(c.health.currentValue, 11);
   c.location = { x: 5, y: 64, z: 0 }; assert.equal(comforts.wear(c), "fed", "no mending on the move");
   players.splice(players.indexOf(c), 1);
+}
+
+// v9.0: necromancy and world events
+{
+  const necro = await import("./necromancy.js");
+  const events = await import("./events.js");
+  const all = []; let n = 0; const here = [];
+  const field = { id: "minecraft:overworld", spawnParticle() {}, playSound() {}, getTopmostBlock: ({ x, z }) => ({ location: { x, y: 63, z } }), getBlock: () => ({ isAir: true }),
+    getPlayers: (q) => here.filter((p) => !q || !q.maxDistance || Math.hypot(p.location.x - q.location.x, p.location.z - q.location.z) <= q.maxDistance),
+    getEntities: (q) => all.filter((m) => m.isValid && (q.tags ?? []).every((t) => m.tags.has(t)) && (!q.type || m.typeId === q.type)),
+    spawnEntity(type, at, opts) { const m = being(type, at, ["mob"], 100); m.event = opts?.spawnEvent; return m; } };
+  function being(typeId, at, families = ["monster", "mob"], hp = 30) {
+    const m = { id: `nv${n++}`, typeId, location: { ...at }, isValid: true, tags: new Set(), props: new Map(), effects: new Map(), events: [], families, nameTag: "", dimension: field,
+      health: { currentValue: hp, effectiveMax: hp, setCurrentValue(v) { this.currentValue = v; } }, getComponent(c) { return c === "minecraft:health" ? m.health : c === "minecraft:tameable" ? { tame() {} } : undefined; },
+      addTag(t) { m.tags.add(t); }, hasTag: (t) => m.tags.has(t), matches: (q) => (q.families ?? []).every((f) => m.families.includes(f)), remove() { m.isValid = false; },
+      getDynamicProperty: (k) => m.props.get(k), setDynamicProperty: (k, v) => m.props.set(k, v), addEffect(e, d, o = {}) { m.effects.set(e, o.amplifier ?? 0); },
+      triggerEvent(e) { m.events.push(e); }, teleport(to) { m.location = { ...to }; } };
+    all.push(m); return m;
+  }
+  const lord = mkPlayer("lord"); lord.dimension = field; lord.location = { x: 0, y: 64, z: 0 }; here.push(lord);
+  world.afterEvents.playerSpawn.fire({ player: lord, initialSpawn: true }); advance(60);
+  const pl = rpg.profileOf(lord); rpg.setLevel(lord, 1); pl.mana = 500; pl.race = "none";
+  const die = (dead, killer) => world.afterEvents.entityDie.fire({ deadEntity: dead, damageSource: { damagingEntity: killer } });
+  // the fallen leave corpses; the Book raises them as far as the raiser's level allows
+  assert.equal(necro.capacity(lord), 2); assert.ok(necro.raise(lord) === 0 && lord.bar.includes("no fresh corpses"));
+  die(being("minecraft:zombie", { x: 2, y: 64, z: 1 }, ["monster", "mob"], 300), lord);
+  assert.equal(necro.raise(lord), 1); const army = necro.armyOf(lord); const first = all.find((m) => m.id === army[0].id);
+  assert.ok(first.typeId === "overlord:old_guarder" && first.event === "overlord:become_raised" && first.tags.has("overlord_raised_lord"), "a level 1 raiser gets a Skeleton");
+  assert.ok(first.nameTag.includes("Skeleton") && pl.raisedTotal === 1 && pl.mana === 490);
+  rpg.setLevel(lord, 50); pl.mana = 500; die(being("minecraft:zombie", { x: 1, y: 64, z: 2 }, ["monster", "mob"], 300), lord);
+  necro.raise(lord); assert.equal(all.find((m) => m.id === army[1].id).typeId, "overlord:death_knight", "a mighty body rises as a Death Knight");
+  assert.equal(necro.kindFor(60, 50), 1); assert.equal(necro.kindFor(150, 20), 1, "a Soul Eater needs level 25"); assert.equal(necro.capacity(lord), 7);
+  // corpses fade, and are only raised near the raiser
+  die(being("minecraft:zombie", { x: 30, y: 64, z: 0 }), lord); assert.equal(necro.raise(lord), 0, "too far");
+  // the Undead command more, for half the mana, and their servants rise stronger
+  pl.race = "undead"; pl.raceLv = 10; assert.equal(necro.capacity(lord), 13); assert.equal(necro.rankOf(lord, army[0]), 1);
+  // kills make ranks; ranks make them stronger
+  for (let i = 0; i < 5; i++) die(being("minecraft:zombie", { x: 50, y: 64, z: 50 }), first);
+  assert.equal(army[0].kills, 5); assert.equal(necro.rankOf(lord, army[0]), 2); necro.strengthen(lord, army[0], first);
+  assert.ok(first.effects.get("health_boost") === 1 && first.effects.has("strength") && first.nameTag.includes("**"));
+  // orders
+  assert.equal(necro.command(lord, "hold"), 2); assert.ok(first.events.includes("overlord:order_hold"));
+  lord.location = { x: 40, y: 64, z: 40 }; necro.command(lord, "gather"); assert.ok(Math.hypot(first.location.x - 40, first.location.z - 40) < 3 && first.events.includes("overlord:order_follow"));
+  // a fallen servant leaves the army; raised and summoned dead leave no corpse
+  const dk = all.find((m) => m.id === army[1].id); die(dk, undefined); assert.equal(necro.armyOf(lord).length, 1);
+  assert.ok(!necro.leavesCorpse(first) && !necro.leavesCorpse(lord));
+  // a full army raises no more
+  pl.race = "none"; rpg.setLevel(lord, 1); pl.mana = 500; die(being("minecraft:zombie", { x: 40, y: 64, z: 41 }), lord); necro.raise(lord); pl.mana = 500;
+  die(being("minecraft:zombie", { x: 40, y: 64, z: 42 }), lord); assert.equal(necro.raise(lord), 0); assert.ok(lord.bar.includes("full"));
+  assert.equal(necro.command(lord, "release"), 2); assert.equal(necro.armyOf(lord).length, 0); assert.ok(!first.isValid);
+
+  // a world event: proclaimed, waited for, fought wave by wave, its boss slain, everyone paid
+  assert.equal(events.heading({ x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: -10 }), "north-east");
+  lord.location = { x: 0, y: 64, z: 0 }; let now = 2000000; const said = []; const realSend = world.sendMessage; world.sendMessage = (m) => said.push(m);
+  const ev = events.proclaim(lord, "katze", now, () => 0); assert.ok(ev && events.state.current === ev && said.some((m) => m.includes("Katze")));
+  assert.ok(lord.msgs.at(-1).includes("blocks to the"), lord.msgs.at(-1)); assert.equal(events.proclaim(lord, "crusade", now), undefined, "one at a time");
+  events.tick(now += 20); assert.equal(ev.phase, "warning"); events.tick(now += events.WARNING); assert.equal(ev.phase, "waiting");
+  events.tick(now += 20); assert.equal(ev.phase, "waiting", "nobody has come yet");
+  lord.location = { x: ev.at.x + 2, y: 64, z: ev.at.z }; events.tick(now += 20); assert.equal(ev.phase, "battle");
+  const allies = all.filter((m) => m.isValid && m.tags.has("overlord_event_ally")); assert.equal(allies.length, 4); assert.ok(allies.every((m) => m.typeId === "overlord:imperial_knight"));
+  const slayAll = () => { for (const m of events.foesOf(ev)) { die(m, lord); m.health.currentValue = 0; } };
+  assert.equal(events.foesOf(ev).length, 9); slayAll(); assert.ok(ev.scores.lord >= 9);
+  events.tick(now += 20); assert.equal(ev.wave, 1); slayAll(); events.tick(now += 20); assert.equal(ev.wave, 2); slayAll(); events.tick(now += 20);
+  assert.equal(ev.phase, "boss"); assert.ok(events.foesOf(ev).some((m) => m.typeId === "overlord:skeletal_dragon" && m.tags.has("overlord_event_boss")));
+  const before = spells.countItem(lord, events.MEDAL); slayAll(); const final = ev.scores.lord; events.tick(now += 20);
+  assert.equal(events.state.current, undefined); const pay = events.payFor(final + 5);
+  assert.equal(spells.countItem(lord, events.MEDAL) - before, pay.medals + 5, "the best fighter earns five more");
+  assert.ok(pl.events.includes("katze") && guild.checkTitles(lord).includes("Hero of Katze")); assert.ok(allies.every((m) => !m.isValid), "the allies go home");
+  // the medal shop
+  const medals = spells.countItem(lord, events.MEDAL); assert.ok(events.buy(lord, 0).includes("Data Crystals")); assert.equal(spells.countItem(lord, events.MEDAL), medals - 4);
+  assert.ok(events.buy(lord, events.SHOP.length - 1).includes("costs") || medals - 4 >= 20);
+  // an event nobody reaches passes
+  lord.location = { x: 0, y: 64, z: 0 }; const lonely = events.proclaim(lord, "plague", now, () => 0.5); lord.location = { x: -500, y: 64, z: -500 };
+  events.tick(now += events.WARNING + 20); events.tick(now += events.WAIT + 20); assert.equal(events.state.current, undefined); assert.ok(events.state.last.includes("nobody came"));
+  // the scheduler: off in these tests, and on it proclaims an event when its time comes
+  events.setEnabled(true); events.state.next = now; lord.location = { x: 0, y: 64, z: 0 }; events.tick(now + 1, () => 0); assert.ok(events.state.current); events.pass(events.state.current, "test over");
+  events.setEnabled(false); world.sendMessage = realSend;
+  all.forEach((m) => { m.isValid = false; }); here.length = 0; players.splice(players.indexOf(lord), 1);
 }
 
 // persistence: saved profile is restored after leaving

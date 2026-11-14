@@ -51,6 +51,8 @@ import "./court.js";
 import "./districts.js";
 import "./haunts.js";
 import "./comforts.js";
+import "./necromancy.js";
+import "./events.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;

@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:book_of_the_dead"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " S ",
+      "CBC",
+      " S "
+    ],
+    "key": {
+      "S": {
+        "item": "overlord:soul_fragment"
+      },
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "B": {
+        "item": "minecraft:book"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:soul_fragment"
+      }
+    ],
+    "result": {
+      "item": "overlord:book_of_the_dead",
+      "count": 1
+    }
+  }
+}

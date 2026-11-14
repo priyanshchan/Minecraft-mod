@@ -9,6 +9,7 @@ import { ADVANCE_LEVEL, creditedPlayer, giveItem, grantXp, notify, profileOf, qu
 import { partyOf } from "./party.js";
 import { STORY_TITLES } from "./campaign.js";
 import { RACES } from "./races.js";
+import { EVENTS } from "./events.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -140,6 +141,11 @@ export const TITLES = [
   // v8.0: titles of the campaign and of the Sorcerer Kingdom
   ...STORY_TITLES.map((t) => ({ key: t.key, name: t.name, how: t.how, earned: (/** @type {Profile} */ p) => Array.isArray(p.story) && p.story.includes(t.chapter) })),
   { key: "lord_of_many_lands", name: "Lord of Many Lands", how: "Rule a kingdom with 5 outposts", earned: (p) => Array.isArray(p.realm?.outposts) && p.realm.outposts.length >= 5 },
+  // v9.0: the raised dead and the world events
+  { key: "necromancer", name: "Necromancer", how: "Raise 50 undead", earned: (p) => Number(p.raisedTotal ?? 0) >= 50 },
+  { key: "lord_of_the_dead", name: "Lord of the Dead", how: "Command an army of 10 undead", earned: (p) => Array.isArray(p.army) && p.army.length >= 10 },
+  ...Object.entries(EVENTS).map(([kind, info]) => ({ key: `event_${kind}`, name: info.title, how: `Win ${info.name}`,
+    earned: (/** @type {Profile} */ p) => Array.isArray(p.events) && p.events.includes(kind) })),
   // v8.5: the court and the living kingdom
   { key: "master_of_guardians", name: "Master of the Guardians", how: "Swear all seven Floor Guardians to your court",
     earned: (p) => Object.keys(p.realm?.guardians ?? {}).length >= 7 },

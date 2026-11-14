@@ -575,6 +575,28 @@ def gem_ring(gem, gem_l):
     ], {"G": GOLD, "g": GOLD_D, "E": gem, "e": gem_l})
 
 
+def medal():
+    """A gold medal on a crimson ribbon, the sigil of Ainz Ooal Gown at its heart."""
+    return sprite16([
+        "................",
+        ".....RR..RR.....",
+        ".....RrR.RrR....",
+        "......RrRRr.....",
+        ".......RRR......",
+        "......GGGGG.....",
+        ".....GgGGGgG....",
+        "....GgGPPPGgG...",
+        "....GGPpGpPGG...",
+        "....GGPGpGPGG...",
+        "....GgGPPPGgG...",
+        ".....GgGGGgG....",
+        "......GGGGG.....",
+        "................",
+        "................",
+        "................",
+    ], {"R": "#a8263a", "r": "#7a1a2a", "G": GOLD, "g": GOLD_D, "P": "#5a1f8c", "p": "#c9a0ff"})
+
+
 CAVALIER_PAL = {"K": "#0c0b10", "k": "#3a3644", "l": "#5e5868", "G": "#59e0a0", "g": "#1e5a44", "R": "#59e0a0"}
 
 
@@ -2130,6 +2152,8 @@ def all_item_icons():
         "refining_stone": whetstone(),
         "tomb_key": tomb_key(),
         "royal_seal": royal_seal(),
+        "book_of_the_dead": tome(cover="#1a1622", cover_d="#0c0a10", glyph="#9cffd0", band="#5a1f8c"),
+        "medal_of_valor": medal(),
         "sebas_tea": sebas_tea(),
         "feast_pie": feast_pie(),
         "dragon_skewer": dragon_skewer(),

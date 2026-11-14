@@ -108,6 +108,8 @@ item.overlord.refining_stone.name=Refining Stone
 item.overlord.ascension_tome.name=Creative Tome of Ascension
 item.overlord.tomb_key.name=Key of the Great Tomb
 item.overlord.royal_seal.name=Seal of the Sorcerer Kingdom
+item.overlord.book_of_the_dead.name=Book of the Dead
+item.overlord.medal_of_valor.name=Medal of Valor
 item.overlord.sebas_tea.name=Sebas's Black Tea
 item.overlord.feast_pie.name=Nazarick Feast Pie
 item.overlord.dragon_skewer.name=Spicy Dragon Skewer
@@ -379,4 +381,4 @@ item.spawn_egg.entity.overlord:pinison.name=Pinison Pole Perlia Spawn Egg
 item.spawn_egg.entity.overlord:skeleton_archer.name=Skeleton Archer Spawn Egg
 
 pack.name=Overlord: Tomb of Nazarick
-pack.description=Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.9.0
+pack.description=Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v9.0.0
