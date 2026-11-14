@@ -177,8 +177,8 @@ assert.equal(spells.masteryOf(c, "magic_arrow"), 2);
 advance(20); dummy.damaged = []; spells.castSelected(c); assert.deepEqual(dummy.damaged, [8], "7 * 1.08 rounds to 8");
 // every spell is castable without throwing and has sane data
 assert.equal(new Set(spells.SPELLS.map((s) => s.key)).size, spells.SPELLS.length);
-assert.equal(spells.SPELLS.length, 46);
-for (let tier = 1; tier <= 11; tier++) assert.ok(spells.SPELLS.filter((s) => s.tier === tier).length >= 3, `tier ${tier}`);
+assert.equal(spells.SPELLS.length, 49);
+for (let tier = 1; tier <= 12; tier++) assert.ok(spells.SPELLS.filter((s) => s.tier === tier).length >= 3, `tier ${tier}`);
 // dark magic is weak against undead: Death (52) on an undead dummy deals a quarter
 pc.level = 100; c.inv.push(new ItemStack("overlord:data_crystal", 64)); assert.ok(spells.learnSpell(c, "death").includes("Learned"));
 pc.slots[3] = "death"; pc.slot = 3; rpg.restoreMana(c, 1e6); dummy.damaged = []; assert.equal(spells.castSelected(c), true);
@@ -721,7 +721,7 @@ advance(1); v.fx = []; v.anims = []; vfx.castFx(v, "fire", 2, "point"); const lo
 advance(1); v.fx = []; vfx.castFx(v, "fire", 9, "raise"); assert.ok(v.fx.length > low && drew("implode").length === 1 && drew("magic_circle").length === 2, "high tiers gather power under a second circle");
 advance(1); v.anims = []; vfx.castFx(v, "holy", 11, "point"); assert.deepEqual(v.anims, ["animation.overlord.cast_super"]);
 for (const pose of vfx.POSE_NAMES) { v.anims = []; vfx.pose(v, pose); assert.ok(v.anims[0].startsWith("animation.overlord."), pose); }
-assert.equal(vfx.POSE_NAMES.length, 17);
+assert.equal(vfx.POSE_NAMES.length, 18);
 // scrolls are read, tomes are held open and weapon skills are swung - each in the right colour
 pv.level = 100; rpg.restoreMana(v, 1e6); v.fx = []; v.anims = []; use(v, "overlord:scroll_of_fly");
 assert.deepEqual(v.anims, ["animation.overlord.use_scroll"]); assert.ok(drew("glyph").length >= 1 && drew("aura").length === 1, "the scroll's runes lift off and the wind takes hold");
@@ -1348,6 +1348,59 @@ players.splice(0, players.length, ...everyone, zoe);
   world.props.set(`overlord:site7:${Math.floor(9000 / sites.REGION)},${Math.floor(9000 / sites.REGION)}`, "great_tomb|9000|64|9000|1"); // a region no earlier test has looked at
   una.location = { x: 9000.5, y: 65, z: 8992.5 }; tomb.tick(now += 400); assert.equal(tomb.floorAt(t, una.location), 0, "stepping on the crystal descends");
   world.getDimension = realDimension; for (const p of party) players.splice(players.indexOf(p), 1);
+}
+
+// ---- v7.6: god-tier magic ----
+{
+  const god = await import("./godspells.js");
+  const keys = spells.SPELLS.filter((s) => s.tier === spells.GOD).map((s) => s.key);
+  assert.deepEqual(keys.sort(), ["cataclysm", "goal_of_all_life", "pantheon"]);
+  assert.equal(spells.levelForTier(spells.GOD), 80); assert.equal(spells.costForTier(spells.GOD), 48);
+  // a battlefield: creatures are found by distance
+  const field = []; const spawned = [];
+  const plain = { id: "minecraft:overworld", spawnParticle() {}, playSound() {},
+    getEntities: (q) => field.filter((e) => e.isValid && (!q.families || e.matches({ families: q.families })) && (!q.location || Math.hypot(e.location.x - q.location.x, e.location.z - q.location.z) <= (q.maxDistance ?? 1e9))),
+    getPlayers: (q) => [z].filter((p) => !q || Math.hypot(p.location.x - q.location.x, p.location.z - q.location.z) <= (q.maxDistance ?? 1e9)),
+    spawnEntity(type, at, opts) { const e = { typeId: type, location: at, event: opts?.spawnEvent, isValid: true, tags: new Set(), addTag(t) { e.tags.add(t); }, remove() { e.isValid = false; },
+      getComponent: (c) => (c === "minecraft:tameable" ? { tame() {} } : undefined) }; spawned.push(e); return e; } };
+  const creature = (type, hp, x, zz, fam = ["monster"]) => { const e = { id: `g${field.length}`, typeId: type, isValid: true, location: { x, y: 64, z: zz }, tags: new Set(), effects: [], knocked: 0, fire: 0,
+    health: { currentValue: hp, effectiveMax: hp, setCurrentValue(v) { this.currentValue = v; } }, getComponent(c) { return c === "minecraft:health" ? e.health : undefined; },
+    hasTag: (t) => e.tags.has(t), matches: (q) => q.families.every((f) => fam.includes(f)), addEffect(n) { e.effects.push(n); }, setOnFire(s) { e.fire = s; }, applyKnockback() { e.knocked += 1; },
+    applyDamage(n) { e.health.currentValue = Math.max(0, e.health.currentValue - n); } }; field.push(e); return e; };
+  const z = mkPlayer("zed"); const pz = rpg.profileOf(z); z.dimension = plain; z.location = { x: 0, y: 64, z: 0 }; z.camera = { shots: [], cleared: 0, setCamera(p, o) { this.shots.push([p, o]); }, clear() { this.cleared += 1; }, fade() {} };
+  z.getEntitiesFromViewDirection = () => []; z.getBlockFromViewDirection = () => undefined; z.titles = []; z.onScreenDisplay.setTitle = (t) => z.titles.push(t);
+  // learning: level 80, 48 crystals - and only after the Great Tomb has been conquered
+  pz.level = 80; pz.spells = []; pz.bosses = []; z.inv.push(new ItemStack("overlord:data_crystal", 64));
+  assert.ok(spells.learnSpell(z, "pantheon").includes("conquered the Great Tomb")); pz.bosses = ["great_tomb"];
+  assert.ok(spells.learnSpell(z, "pantheon").includes("Learned")); assert.equal(spells.countItem(z, "overlord:data_crystal"), 16);
+  // The Goal of All Life Is Death: nothing at first, then lesser things die, bosses bleed a third, allies are spared
+  const imp = creature("overlord:goblin", 40, 10, 0), ghoul = creature("overlord:old_guarder", 60, -20, 15, ["monster", "undead"]), titan = creature("overlord:gargantua", 600, 30, 0);
+  const pet = creature("overlord:retainer", 60, 3, 3), far = creature("overlord:goblin", 40, 60, 0), villager = creature("minecraft:villager_v2", 20, 5, 0, ["villager", "mob"]); field.forEach((e) => {}); z.health.currentValue = 10; pz.mana = 0;
+  const said = []; const realSend = world.sendMessage; world.sendMessage = (m) => said.push(m);
+  assert.equal(god.goalOfAllLife(z, 1), true); assert.ok(z.titles.some((t) => t.includes("Goal of All Life")) && said.some((m) => m.includes("invokes")));
+  assert.ok(z.camera.shots.length === 1 && z.camera.shots[0][0] === "minecraft:free", "the camera pulls back"); assert.ok(z.anims.includes("animation.overlord.cast_god"));
+  assert.ok(imp.effects.includes("slowness"), "dread falls first"); assert.equal(imp.health.currentValue, 40, "the clock has to strike first");
+  advance(12 * 10 + 1); assert.equal(imp.health.currentValue, 0); assert.equal(ghoul.health.currentValue, 0); assert.ok(Math.abs(titan.health.currentValue - 600 * 0.67) < 1e-6, `${titan.health.currentValue}`);
+  assert.equal(pet.health.currentValue, 60, "allies are spared"); assert.equal(villager.health.currentValue, 20, "and so are villagers and animals"); assert.equal(far.health.currentValue, 40, "beyond 40 blocks nothing happens");
+  advance(40); assert.equal(spawned.filter((e) => e.typeId === "overlord:death_knight" && e.event === "overlord:become_summoned").length, 4, "the slain rise as Death Knights");
+  assert.ok(z.health.currentValue > 10 && pz.mana >= 10, "the souls feed the caster"); advance(200); assert.ok(z.camera.cleared >= 1, "and the camera is given back");
+  // Pantheon: a host of six, then judgement - harder on the undead - and a final blow on all
+  field.length = 0; spawned.length = 0; const brute = creature("overlord:ogre", 1000, 8, 0), lich = creature("overlord:elder_lich", 1000, -8, 0, ["monster", "undead"]);
+  const realRandom = Math.random; let flip = 0; Math.random = () => ((flip++ % 2) * 0.99);
+  assert.equal(god.pantheon(z, 1), true); advance(31); assert.equal(spawned.filter((e) => e.typeId === "overlord:archangel_flame").length, 6);
+  advance(40 + 20 * 10 + 20); Math.random = realRandom;
+  const brutal = 1000 - brute.health.currentValue, lichen = 1000 - lich.health.currentValue;
+  assert.ok(brutal >= 30 * 10 + 40 - 1e-6 && lichen >= 60 * 10 + 40 - 1e-6, `judgement: ${brutal} ${lichen}`);
+  // Cataclysm: meteors across the field, then the great one - and everything within 26 blocks is thrown back
+  field.length = 0; const victim = creature("overlord:ogre", 2000, 20, 0), bystander = creature("overlord:ogre", 2000, 20, 22), scorchee = creature("overlord:ogre", 2000, 26, 0);
+  z.getEntitiesFromViewDirection = () => [{ entity: victim }];
+  assert.equal(god.cataclysm(z, 1), true); advance(60 + 120 + 20 + 1);
+  assert.ok(2000 - victim.health.currentValue >= 150, `the great meteor: ${victim.health.currentValue}`); assert.ok(victim.knocked >= 1 && bystander.knocked >= 1);
+  const afterImpact = scorchee.health.currentValue; advance(8 * 20); assert.ok(afterImpact - scorchee.health.currentValue >= 4 * 7 - 1e-6, `and the ground burns: ${afterImpact} -> ${scorchee.health.currentValue}`);
+  // god-tier casts through the wand like any spell, with the long recharge
+  pz.spells = ["cataclysm"]; pz.slots = ["cataclysm", "", "", ""]; pz.slot = 0; pz.mana = 1000; assert.equal(spells.castSelected(z), true); assert.ok(pz.mana <= 1000 - 200 + 1e-6);
+  assert.equal(spells.castSelected(z), false, "five minutes before it can be cast again");
+  world.sendMessage = realSend; advance(600); players.splice(players.indexOf(z), 1);
 }
 
 // persistence: saved profile is restored after leaving
