@@ -4,6 +4,7 @@
 // Uses only stable @minecraft/server 2.0.0 and @minecraft/server-ui 2.0.0 APIs.
 import { world, system, DisplaySlotId, EntityDamageCause, EquipmentSlot, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
+import * as skills from "./skills.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -29,6 +30,7 @@ const PARTY_SHARE = 0.5;
  *   spells: string[], slots: string[], slot: number, casts: Record<string, number>,
  *   party: any[], stance: string, kills: Record<string, number>, rep: Record<string, number>,
  *   daily: object, title: string, titles: string[], sites: string[], supply: boolean, bank: number,
+ *   skills: Record<string, number>, codex: number,
  * }} Profile
  */
 
@@ -289,12 +291,14 @@ export function addRep(player, faction, amount) {
 const extraMenus = [];
 
 /**
- * Adds a button to the Adventurer's Plate menu.
+ * Adds a button to the Adventurer's Plate menu, at the end or (with `first`) ahead of the others.
  * @param {(player: import("@minecraft/server").Player) => string} label
  * @param {(player: import("@minecraft/server").Player) => void} open
+ * @param {boolean} [first]
  */
-export function registerMenu(label, open) {
-  extraMenus.push({ label, open });
+export function registerMenu(label, open, first = false) {
+  if (first) extraMenus.unshift({ label, open });
+  else extraMenus.push({ label, open });
 }
 
 /**
@@ -323,7 +327,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0 };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0 };
 }
 
 /**
@@ -384,7 +388,7 @@ export function xpForNext(level) {
 
 /** @param {Profile} p */
 export function maxMana(p) {
-  const base = 50 + p.level * 2 + p.int * 5;
+  const base = 50 + p.level * 2 + p.int * 5 + skills.manaBonus(p);
   const factor = p.cls === "caster" ? 1.5 : p.cls === "warrior" ? 0.7 : 1;
   return Math.round(base * factor);
 }
@@ -411,7 +415,7 @@ const fonts = new Set();
  */
 function manaRegen(p, playerId) {
   // Standing on a Block of Data Crystal triples mana recovery.
-  return (1 + p.int * 0.1) * (p.cls === "caster" ? 1.5 : 1) * (regalia.has(playerId) ? 1.5 : 1) * (fonts.has(playerId) ? 3 : 1);
+  return (1 + p.int * 0.1) * (p.cls === "caster" ? 1.5 : 1) * (regalia.has(playerId) ? 1.5 : 1) * (fonts.has(playerId) ? 3 : 1) * skills.regenFactor(p);
 }
 
 /**
@@ -420,7 +424,7 @@ function manaRegen(p, playerId) {
  */
 export function spellPower(player) {
   const p = profileOf(player);
-  return 1 + p.int * 0.02 + (p.cls === "caster" ? (advanced(p) ? 0.45 : 0.3) : 0) + (regalia.has(player.id) ? 0.25 : 0);
+  return 1 + p.int * 0.02 + (p.cls === "caster" ? (advanced(p) ? 0.45 : 0.3) : 0) + (regalia.has(player.id) ? 0.25 : 0) + skills.spellBonus(p);
 }
 
 /** @param {Profile} p */
@@ -467,7 +471,8 @@ function drawHud(player) {
   const percent = p.level >= MAX_LEVEL ? "MAX" : `${Math.floor((p.xp / xpForNext(p.level)) * 100)}%`;
   const quest = p.quest ? QUESTS.find((q) => q.key === p.quest?.quest) : undefined;
   const questText = quest && p.quest ? ` §7| §e${quest.what} ${p.quest.progress}/${quest.count}` : "";
-  const points = p.points > 0 ? ` §7| §d+${p.points} pts` : "";
+  const free = skills.available(p);
+  const points = (p.points > 0 ? ` §7| §d+${p.points} pts` : "") + (free > 0 ? ` §7| §a+${free} SP` : "");
   try {
     player.onScreenDisplay.setActionBar(
       `§6Lv.${p.level} §f${className(p)} §7| §bMP ${Math.floor(p.mana)}/${maxMana(p)} §7| §aXP ${percent}${hudExtra.get(player.id) ?? ""}${questText}${points}`
@@ -525,6 +530,7 @@ function updateLevelTag(player) {
 export function grantXp(player, amount, reason) {
   const p = profileOf(player);
   if (amount <= 0) return;
+  amount *= skills.xpFactor(p); // Quick Study
   if (p.level >= MAX_LEVEL) {
     p.xp = 0;
     return;
@@ -544,7 +550,7 @@ export function grantXp(player, amount, reason) {
     updateLevelTag(player);
     try {
       player.sendMessage(
-        `§6[Overlord] §eLevel up! §fYou are now level §6${p.level}§f. §d+${gained * POINTS_PER_LEVEL} stat points §7(open your Adventurer's Plate)`
+        `§6[Overlord] §eLevel up! §fYou are now level §6${p.level}§f. §d+${gained * POINTS_PER_LEVEL} stat points§f, §a+${skills.pointsForLevel(p.level) - skills.pointsForLevel(p.level - gained)} skill point(s) §7(open your Adventurer's Plate)`
       );
       player.playSound("random.levelup", { volume: 1, pitch: 1 });
       player.dimension.spawnParticle("minecraft:totem_particle", {
@@ -585,7 +591,7 @@ export function loseLevels(player, count) {
 export function grantLevel(player) {
   const p = profileOf(player);
   if (p.level >= MAX_LEVEL) return false;
-  grantXp(player, xpForNext(p.level) - p.xp);
+  grantXp(player, Math.ceil((xpForNext(p.level) - p.xp) / skills.xpFactor(p)));
   return true;
 }
 
@@ -849,6 +855,7 @@ world.afterEvents.entityDie.subscribe((event) => {
     if (event.deadEntity.typeId !== "minecraft:player") return;
     const player = /** @type {import("@minecraft/server").Player} */ (event.deadEntity);
     const p = profileOf(player);
+    if (skills.rank(p, "deaths_bargain") > 0) return; // Death's Bargain
     const lost = Math.floor(p.xp * 0.1);
     if (lost <= 0) return;
     p.xp -= lost;
@@ -861,6 +868,51 @@ world.afterEvents.entityDie.subscribe((event) => {
 
 let applyingBonus = false;
 
+/** The last melee blow each player landed, with its bonus, for the skill tree's procs. */
+/** @type {Map<string, { damage: number, crit: boolean }>} */
+export const lastBlow = new Map();
+
+/** The player's health as a share of its maximum. @param {import("@minecraft/server").Entity} entity */
+export function healthShare(entity) {
+  try {
+    const health = entity.getComponent("minecraft:health");
+    return health && health.effectiveMax > 0 ? health.currentValue / health.effectiveMax : 1;
+  } catch {
+    return 1;
+  }
+}
+
+/**
+ * Whether a foe is looking away from the one attacking it (Backstab).
+ * @param {import("@minecraft/server").Entity} foe @param {import("@minecraft/server").Entity} attacker
+ */
+export function lookingAway(foe, attacker) {
+  try {
+    const view = foe.getViewDirection();
+    const dx = attacker.location.x - foe.location.x;
+    const dz = attacker.location.z - foe.location.z;
+    const length = Math.hypot(dx, dz) || 1;
+    return (view.x * dx + view.z * dz) / length < -0.2;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether one of the player's companions or summons is within 12 blocks (Overlord's Presence).
+ * @param {import("@minecraft/server").Player} player
+ */
+export function hasAllies(player) {
+  try {
+    if (player.dimension.getEntities({ tags: [`overlord_ally_${player.id}`], location: player.location, maxDistance: 12 }).length > 0) return true;
+    return player.dimension
+      .getEntities({ type: id("retainer"), location: player.location, maxDistance: 12 })
+      .some((e) => e.getDynamicProperty("overlord:owner") === player.id);
+  } catch {
+    return false;
+  }
+}
+
 world.afterEvents.entityHurt.subscribe((event) => {
   if (applyingBonus) return;
   try {
@@ -872,17 +924,26 @@ world.afterEvents.entityHurt.subscribe((event) => {
     const p = profileOf(player);
 
     const master = advanced(p);
+    const health = victim.getComponent("minecraft:health");
+    if (!health || health.currentValue <= 0) return;
+    const undead = victim.matches({ families: ["undead"] });
     let factor = p.str * 0.02 + (p.cls === "warrior" ? (master ? 0.3 : 0.2) : 0) + knowledgeOf(p, victim.typeId) * 0.05 + heldPlus(player) * 0.06;
-    if (p.cls === "cleric" && victim.matches({ families: ["undead"] })) factor += master ? 0.45 : 0.3;
+    if (p.cls === "cleric" && undead) factor += master ? 0.45 : 0.3;
+    factor += skills.meleeBonus(p, {
+      undead,
+      foeHealth: health.effectiveMax > 0 ? health.currentValue / health.effectiveMax : 1,
+      ownHealth: healthShare(player),
+      behind: lookingAway(victim, player),
+      allies: skills.rank(p, "presence") > 0 && hasAllies(player),
+    });
     let crit = false;
-    // Agility gives everyone a small critical chance; assassins add 25% on top.
-    if (Math.random() < p.agi * 0.004 + (p.cls === "assassin" ? (master ? 0.35 : 0.25) : 0)) {
-      factor += 0.5;
+    // Agility gives everyone a small critical chance; assassins add 25% on top, and the Path of Shadow more.
+    if (Math.random() < p.agi * 0.004 + (p.cls === "assassin" ? (master ? 0.35 : 0.25) : 0) + skills.critChance(p)) {
+      factor += 0.5 + skills.critBonus(p);
       crit = true;
     }
     const bonus = event.damage * factor;
-    const health = victim.getComponent("minecraft:health");
-    if (!health || health.currentValue <= 0) return;
+    lastBlow.set(player.id, { damage: event.damage + bonus, crit });
     if (bonus < 0.5) {
       showTarget(player, victim, health.currentValue, health.effectiveMax);
       return;
@@ -937,12 +998,14 @@ function holdEffect(player, effect, tier) {
 }
 
 /** @param {import("@minecraft/server").Player} player */
-function applyPassives(player) {
+export function applyPassives(player) {
   const p = profileOf(player);
-  const hearts = Math.floor(p.vit / 5) + (p.cls === "warrior" ? (advanced(p) ? 2 : 1) : 0);
+  const hearts = Math.floor(p.vit / 5) + (p.cls === "warrior" ? (advanced(p) ? 2 : 1) : 0) + skills.heartTiers(p);
   holdEffect(player, "health_boost", hearts);
-  const speed = (p.agi >= 45 ? 3 : p.agi >= 25 ? 2 : p.agi >= 10 ? 1 : 0) + (p.cls === "assassin" ? 1 : 0);
+  const speed = (p.agi >= 45 ? 3 : p.agi >= 25 ? 2 : p.agi >= 10 ? 1 : 0) + (p.cls === "assassin" ? 1 : 0) + skills.speedTiers(p);
   holdEffect(player, "speed", speed);
+  holdEffect(player, "night_vision", skills.rank(p, "night_eyes"));
+  holdEffect(player, "jump_boost", skills.rank(p, "fleet_foot") >= 2 ? 1 : 0);
 }
 
 // --------------------------------------------------------------------- menu

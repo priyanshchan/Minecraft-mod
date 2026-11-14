@@ -297,7 +297,8 @@ world.afterEvents.entityDie.subscribe((event) => {
       touch(hero);
       giveItem(hero, id("yggdrasil_gold_coin"), 30);
       giveItem(hero, id("data_crystal"), 6);
-      hero.sendMessage("§6[World Boss] §fThe world boss has fallen! Reward: §630 Gold Coins§f, §b6 Data Crystals§f, §a1500 XP§f.");
+      giveItem(hero, id("codex_of_skills"), 1);
+      hero.sendMessage("§6[World Boss] §fThe world boss has fallen! Reward: §630 Gold Coins§f, §b6 Data Crystals§f, a §5Codex of the Supreme Beings§f, §a1500 XP§f.");
       grantXp(hero, 1500, "world boss");
       questEvent(hero, "world_boss");
     }

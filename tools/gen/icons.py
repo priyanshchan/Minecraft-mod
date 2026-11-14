@@ -1689,6 +1689,7 @@ def all_item_icons():
         "god_slaying_emperor_blade": katana(),
         "death_knight_sword": flamberge(),
         "tome_create_undead": tome(),
+        "codex_of_skills": tome(cover="#7a5a14", cover_d="#5a400c", glyph="#fff1b8", band="#6a2fb0"),
         "red_potion": potion(),
         "data_crystal": crystal(),
         "yggdrasil_gold_coin": coin(),
