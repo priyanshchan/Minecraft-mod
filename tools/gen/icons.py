@@ -1818,3 +1818,105 @@ def all_item_icons():
     for who, (base, spots) in EGG_COLORS.items():
         icons[f"egg_{who}"] = egg(base, spots)
     return icons
+
+
+# ------------------------------------------------------------ HD weapons and armour (v7.2)
+ELEMENT_GLOW = {"fire": (255, 120, 40), "ice": (120, 205, 255), "lightning": (170, 160, 255), "holy": (255, 228, 120),
+                "dark": (175, 70, 230), "arcane": (120, 140, 255), "acid": (120, 235, 90)}
+
+
+def hd_sprite(img, element=None):
+    """A 16x16 item sprite redrawn at 32x32. The 16x16 design stays the design; on top of it come
+    light falling from the top right across the whole piece, a bevel along its edges, a bright cutting
+    edge on steel, a glint on gems and runes, softened diagonals and - for a weapon of an element - a
+    faint glow of that colour around it. The softening and the glow are half-transparent, so they show
+    in the inventory and drop away in the hand, where the game draws items without blending."""
+    src = np.asarray(img.convert("RGBA")).astype(np.float32)
+    n = src.shape[0]
+    out = np.repeat(np.repeat(src, 2, axis=0), 2, axis=1)
+    alpha = src[..., 3] > 0
+    rgb = src[..., :3]
+    lum = rgb.mean(axis=2)
+    top, low = rgb.max(axis=2), rgb.min(axis=2)
+    sat = np.where(top > 0, (top - low) / np.maximum(top, 1), 0)
+
+    def edge(dx, dy):
+        """Opaque texels whose neighbour in (dx, dy) is empty or a much darker rim."""
+        nb_a = np.zeros_like(alpha)
+        nb_l = np.zeros_like(lum)
+        ys, xs = slice(max(0, dy), n + min(0, dy)), slice(max(0, dx), n + min(0, dx))
+        yd, xd = slice(max(0, -dy), n + min(0, -dy)), slice(max(0, -dx), n + min(0, -dx))
+        nb_a[yd, xd] = alpha[ys, xs]
+        nb_l[yd, xd] = lum[ys, xs]
+        return alpha & (~nb_a | (nb_l < lum * 0.6))
+
+    big = lambda m: np.repeat(np.repeat(m, 2, axis=0), 2, axis=1)
+    yy, xx = np.mgrid[0:2 * n, 0:2 * n].astype(np.float32)
+    mult = 0.9 + 0.22 * ((xx + (2 * n - yy)) / (4 * n))  # brighter towards the top right, where blades point
+    for (dx, dy), factor, rows, cols in (((0, -1), 1.18, slice(0, None, 2), slice(None)), ((-1, 0), 1.08, slice(None), slice(0, None, 2)),
+                                         ((0, 1), 0.78, slice(1, None, 2), slice(None)), ((1, 0), 0.86, slice(None), slice(1, None, 2))):
+        mask = big(edge(dx, dy))
+        keep = np.zeros_like(mask)
+        keep[rows, cols] = True
+        mult[mask & keep] *= factor
+    steel = alpha & (sat < 0.2) & (lum > 100)
+    cutting = big(steel & (edge(0, -1) | edge(1, 0)))  # the edge facing up and right catches the light
+    first = np.zeros_like(cutting)
+    first[0::2, 1::2] = True
+    out[..., :3] *= mult[..., None]
+    out[cutting & first, :3] = out[cutting & first, :3] * 0.5 + 255 * 0.5
+    gem = big(alpha & (sat > 0.45) & (top > 185))
+    glint = np.zeros_like(gem)
+    glint[0::2, 0::2] = True
+    out[gem & glint, :3] = out[gem & glint, :3] * 0.55 + 255 * 0.45
+    a = out[..., 3] > 0
+    result = out.copy()
+    # Diagonal steps: an empty texel in the crook of two filled ones takes their colour, half seen.
+    for (ax, ay), (bx, by) in (((-1, 0), (0, -1)), ((1, 0), (0, -1)), ((-1, 0), (0, 1)), ((1, 0), (0, 1))):
+        for y in range(2 * n):
+            for x in range(2 * n):
+                if a[y, x] or result[y, x, 3] > 0:
+                    continue
+                y1, x1, y2, x2 = y + ay, x + ax, y + by, x + bx
+                if 0 <= y1 < 2 * n and 0 <= x1 < 2 * n and 0 <= y2 < 2 * n and 0 <= x2 < 2 * n and a[y1, x1] and a[y2, x2]:
+                    result[y, x, :3] = (out[y1, x1, :3] + out[y2, x2, :3]) / 2
+                    result[y, x, 3] = 110
+    glow = ELEMENT_GLOW.get(element or "")
+    if glow:
+        solid = result[..., 3] > 0
+        near = np.zeros_like(solid, dtype=np.float32)
+        for dy in range(-2, 3):
+            for dx in range(-2, 3):
+                if dx == 0 and dy == 0:
+                    continue
+                w = 1.0 if max(abs(dx), abs(dy)) == 1 else 0.45
+                shifted = np.zeros_like(solid)
+                shifted[max(0, dy):2 * n + min(0, dy), max(0, dx):2 * n + min(0, dx)] = solid[max(0, -dy):2 * n + min(0, -dy), max(0, -dx):2 * n + min(0, -dx)]
+                near = np.maximum(near, shifted * w)
+        halo = (~solid) & (near > 0)
+        result[halo, 0], result[halo, 1], result[halo, 2] = glow
+        result[halo, 3] = near[halo] * 95
+    return Image.fromarray(np.clip(result, 0, 255).astype(np.uint8), "RGBA")
+
+
+# The cubes painted on the vanilla armour sheets: (u, v, width, height, depth).
+ARMOR_CUBES = {
+    1: [(0, 0, 8, 8, 8), (16, 16, 8, 12, 4), (40, 16, 4, 12, 4), (0, 16, 4, 12, 4)],
+    2: [(16, 16, 8, 12, 4), (0, 16, 4, 12, 4)],
+}
+
+
+def hd_armor(img, layer):
+    """A 64x32 armour sheet at 128x64, every face shaded the way the creatures' textures are."""
+    from modelkit import _enhance
+    import zlib
+    src = np.asarray(img.convert("RGBA")).astype(np.float32)
+    k = 2
+    out = np.repeat(np.repeat(src, k, axis=0), k, axis=1)
+    rng = np.random.default_rng(zlib.crc32(src.tobytes()))
+    for u, v, w, h, d in ARMOR_CUBES[layer]:
+        faces = [(u + d, v, w, d, False), (u + d + w, v, w, d, False),
+                 (u, v + d, d, h, True), (u + d, v + d, w, h, True), (u + d + w, v + d, d, h, True), (u + 2 * d + w, v + d, w, h, True)]
+        for x0, y0, fw, fh, side in faces:
+            _enhance(out[y0 * k:(y0 + fh) * k, x0 * k:(x0 + fw) * k], src[y0:y0 + fh, x0:x0 + fw], k, rng, side)
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGBA")

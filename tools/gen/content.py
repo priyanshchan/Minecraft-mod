@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [7, 1, 0]
+VERSION = [7, 2, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v7.1.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps. §7v7.2.0"
 
 
 def oid(name):
@@ -354,6 +354,23 @@ ITEMS = {
     "sigil_of_ainz": ("Sigil of Ainz Ooal Gown", "items", {
         "minecraft:max_stack_size": 16, "minecraft:rarity": "epic", "minecraft:glint": True}),
 }
+
+# v7.2: weapons that had no art of their own now have one (see behavior_pack/scripts/arms.js).
+WEAPON_ARTS = {
+    "spuit_lance": ("overlord_blood_lance", 8.0),
+    "god_slaying_emperor_blade": ("overlord_azure_draw", 8.0),
+    "death_knight_sword": ("overlord_undead_wrath", 10.0),
+    "dark_warrior_greatsword": ("overlord_blade_storm", 9.0),
+    "razor_edge": ("overlord_fourfold", 7.0),
+    "stiletto": ("overlord_stored_spell", 8.0),
+    "iron_gauntlets": ("overlord_dragon_fist", 8.0),
+    "fang_dagger": ("overlord_pounce", 7.0),
+    "angel_mace": ("overlord_judgement", 10.0),
+    "blade_bug": ("overlord_swarm", 9.0),
+    "dragonbone_blade": ("overlord_dragon_cleave", 9.0),
+}
+for _key, (_category, _seconds) in WEAPON_ARTS.items():
+    ITEMS[_key][2].update(_cooldown(_category, _seconds))
 for _piece in ("helmet", "chestplate", "leggings", "boots"):
     ITEMS[f"world_champion_{_piece}"][2]["minecraft:rarity"] = "epic"
     ITEMS[f"infernal_{_piece}"][2]["minecraft:rarity"] = "epic"
@@ -3135,6 +3152,44 @@ def player_animations_json():
             leftArm=[(0, Z), (0.22, (-165, -14, 0)), (0.36, (-42, -12, 0)), (0.5, (-36, -12, 0)), (0.7, Z)],
             body=[(0, Z), (0.22, (-10, 0, 0)), (0.36, (26, 0, 0)), (0.5, (22, 0, 0)), (0.7, Z)],
             head=[(0, Z), (0.22, (-12, 0, 0)), (0.36, (14, 0, 0)), (0.7, Z)]),
+        # a full turn with the blade held out: the body twists all the way round and back
+        "animation.overlord.weapon_spin": anim(
+            0.75,
+            rightArm=[(0, Z), (0.12, (-80, 60, 0)), (0.3, (-86, -10, 70)), (0.48, (-82, -60, 74)), (0.6, (-40, -20, 20)),
+                      (0.75, Z)],
+            leftArm=[(0, Z), (0.12, (-20, 0, -40)), (0.48, (-20, 0, -50)), (0.75, Z)],
+            body=[(0, Z), (0.12, (0, -40, 0)), (0.3, (0, 60, 0)), (0.48, (0, 150, 0)), (0.6, (0, 40, 0)), (0.75, Z)],
+            head=[(0, Z), (0.3, (0, -30, 0)), (0.48, (0, -60, 0)), (0.75, Z)]),
+        # drawn back to the hip, then driven straight forward at the target
+        "animation.overlord.weapon_thrust": anim(
+            0.5,
+            rightArm=[(0, Z), (0.12, (-20, 0, 18)), (0.22, (-94, 0, 0)), (0.32, (-90, 0, 0)), (0.5, Z)],
+            leftArm=[(0, Z), (0.12, (-50, 0, -20)), (0.22, (20, 0, -10)), (0.5, Z)],
+            body=[(0, Z), (0.12, (0, 22, 0)), (0.22, (10, -18, 0)), (0.32, (8, -14, 0)), (0.5, Z)],
+            head=[(0, Z), (0.22, (6, 10, 0)), (0.5, Z)]),
+        # a fist dropped low and driven up past the head
+        "animation.overlord.weapon_uppercut": anim(
+            0.55,
+            rightArm=[(0, Z), (0.14, (34, 0, 12)), (0.28, (-176, 0, 6)), (0.38, (-168, 0, 8)), (0.55, Z)],
+            leftArm=[(0, Z), (0.14, (-60, 0, -14)), (0.28, (20, 0, -10)), (0.55, Z)],
+            body=[(0, Z), (0.14, (22, 10, 0)), (0.28, (-14, -12, 0)), (0.38, (-10, -8, 0)), (0.55, Z)],
+            head=[(0, Z), (0.14, (12, 0, 0)), (0.28, (-24, 0, 0)), (0.55, Z)]),
+        # a sheathed blade drawn across the body in one stroke (iaido)
+        "animation.overlord.weapon_draw": anim(
+            0.55,
+            rightArm=[(0, Z), (0.14, (-30, 40, -30)), (0.24, (-92, -70, 0)), (0.36, (-86, -62, 0)), (0.55, Z)],
+            leftArm=[(0, Z), (0.14, (-30, 30, -10)), (0.24, (14, 0, -16)), (0.55, Z)],
+            body=[(0, Z), (0.14, (10, 30, 0)), (0.24, (4, -34, 0)), (0.36, (4, -28, 0)), (0.55, Z)],
+            head=[(0, Z), (0.14, (8, -20, 0)), (0.24, (0, 20, 0)), (0.55, Z)]),
+        # the weapon raised high in both hands and held while it wakes
+        "animation.overlord.weapon_awaken": anim(
+            1.4,
+            rightArm=[(0, Z), (0.3, (-178, -6, 10)), (0.6, (-170, -6, 8)), (0.9, (-178, -6, 10)), (1.15, (-160, -6, 8)),
+                      (1.4, Z)],
+            leftArm=[(0, Z), (0.3, (-178, 6, -10)), (0.6, (-170, 6, -8)), (0.9, (-178, 6, -10)), (1.15, (-160, 6, -8)),
+                     (1.4, Z)],
+            body=[(0, Z), (0.3, (-10, 0, 0)), (1.15, (-8, 0, 0)), (1.4, Z)],
+            head=[(0, Z), (0.3, (-30, 0, 0)), (1.15, (-26, 0, 0)), (1.4, Z)]),
     }}
 
 

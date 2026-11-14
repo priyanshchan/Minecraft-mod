@@ -244,6 +244,80 @@ country; they also step over ledges two blocks high. They stay on the ground —
 Blocks: **Nazarick Bricks** (plus **Gilded** and **Cracked** variants), **Glacier Bricks**, **Nazarick Tiles**, **Nazarick Pillar**, **Nazarick Lamp** (full light),
 **Block of Adamantite** and **Block of Data Crystal** (glows).
 
+### Weapons and armour (v7.2)
+
+Every weapon of the add-on now belongs to a **kind** and an **element**, and fights in its style:
+
+- **Crescents:** each melee blow leaves a crescent of the weapon's colour on the target.
+- **Combos:** land three blows within about 1.5 seconds of each other and the third is your weapon kind's **finisher** (the action bar counts the chain).
+- **Awakening:** the harm you deal fills a gauge. When it is full your weapon sparks in your hand; **sneak + use** it to awaken it for 12 seconds — every blow hits 35% harder and bursts in its element on everything around the target, and the weapon blazes in your hand.
+- **Weapon arts:** using a weapon (right-click / hold) unleashes its art. Eleven weapons that had none now have one.
+- **Animations:** five new attack poses — a full spin, a thrust, an uppercut, an iaido draw and the two-handed awakening — alongside the slash and overhead slam.
+- **Look:** weapon and armour icons are now 32×32: lit from the top right, with bright cutting edges, glinting gems and a faint glow of the weapon's element. Armour as worn is 128×64 with bevelled, shaded plates.
+- The **Arsenal** entry of the Adventurer's Plate shows the weapon in your hand (kind, art, finisher, gauge) and the armour you wear (pieces, bonuses, art).
+
+| Kind | Finisher (third blow of a chain) |
+| --- | --- |
+| blade | **Crescent Cut** — a wide cut that strikes every foe in front of you for 70% of the blow |
+| greatsword | **Cleaving Arc** — a full spin that strikes every foe within 3.5 blocks for 80% of the blow |
+| heavy | **Earthbreaker** — a shockwave that strikes and lifts every foe within 4 blocks for 70% of the blow |
+| dagger | **Thousand Cuts** — four more cuts on the target, each for 30% of the blow, and it withers |
+| polearm | **Piercing Thrust** — a thrust that runs through everything in a 6-block line for 90% of the blow |
+| fist | **Rising Dragon** — an uppercut for the full blow again that throws the target into the air |
+| staff | **Arcane Burst** — a burst of magic around the target for 60% of the blow, and 6 mana back |
+| whip | **Chain Lash** — the lash leaps to three more foes within 5 blocks for 60% of the blow |
+
+| Weapon | Kind | Element | Use |
+| --- | --- | --- | --- |
+| Staff of Ainz Ooal Gown | staff | dark | Fireball; sneak: Grasp Heart |
+| Spuit Lance | polearm | dark | Blood Lance: an 8-block thrust of blood that heals you for half the harm *(new)* |
+| Ginnungagap | heavy | arcane | Shockwave |
+| God Slaying Emperor Blade | blade | ice | Azure Draw: a lunging draw-cut through everything in 6 blocks *(new)* |
+| Death Knight Flamberge | greatsword | dark | Undead Wrath: a cursed slam that withers everything within 4 blocks *(new)* |
+| Dark Warrior Greatsword | greatsword | dark | Twin Blade Storm: two whirling turns that cut everything within 4 blocks *(new)* |
+| Razor Edge | blade | steel | Fourfold Slash: four instant cuts on the foe before you *(new)* |
+| Clementine's Stiletto | dagger | fire | Stored Spell: releases a burst of fire on the foe you look at *(new)* |
+| Shadow of Yggdrasil | staff | acid | Earth Surge |
+| Beast Tamer's Whip | whip | acid | Lash |
+| Frost Pain | blade | ice | Icy Burst |
+| Brain's Katana | blade | steel | God Flash |
+| Sebas's Iron Gauntlets | fist | steel | Dragon Fist: a wave of force down a 6-block line that hurls foes away *(new)* |
+| CZ's Magic Rifle | heavy | lightning | Fires a magic bullet |
+| Dwarven Runic Hammer | heavy | lightning | Rune Burst |
+| Fang Dagger | dagger | dark | Feral Pounce: leap at the foe you look at and bite deep *(new)* |
+| Charon's Guidance | polearm | dark | Reap |
+| Angel's Mace | heavy | holy | Judgement: holy light falls on every foe within 4 blocks, twice as hard on the undead *(new)* |
+| Hellfire Blade | blade | fire | Hellfire Wall |
+| Demonic Sword Kilineyram | blade | dark | Dark Blade |
+| Holy Sword Safarlisia | blade | holy | Holy Strike |
+| Takemikazuchi Mk 8 | blade | lightning | Five Kings |
+| War Pick Fell Iron | heavy | steel | Fracture |
+| Fluder's Staff | staff | fire | Triple Fireball |
+| Gargantua's Fist | fist | steel | Ground Slam |
+| Lupusregina's Holy Staff | staff | holy | Holy Light |
+| Entoma's Blade Bug | dagger | acid | Swarm: a cloud of blade bugs poisons everything within 4 blocks *(new)* |
+| Martial Lord's Club | heavy | steel | Roar |
+| Staff of the Elf King | staff | acid | Call Elemental |
+| Frost Giant's Maul | heavy | ice | Quake |
+| Dragonbone Greatsword | greatsword | steel | Dragon's Cleave: a great cut through everything in a 5-block cone *(new)* |
+| Knuckles of the Six Arms | fist | steel | Flurry |
+
+**Armour sets.** Two pieces of a set give a small bonus; four give the full bonus, wrap the wearer in the set's own particles (embers, frost shards, dark wisps, holy rays...), and grant an **Armour Art**: tap **sneak twice quickly** to use it.
+
+| Set | 2 pieces | 4 pieces | Armour Art | Recharge |
+| --- | --- | --- | --- | --- |
+| Dark Warrior | Resistance I | Strength I and Resistance I | Dark Charge: you hurl yourself forward, striking everything in your path | 30 s |
+| World Champion | Speed I | Strength II, Resistance I and Speed I | Dimensional Cut: a cut through space along a 12-block line | 45 s |
+| Overlord's Regalia | a mana a second | +50% mana recovery and +25% spell power | Despair Aura: every foe within 10 blocks is weakened and slowed, and you regain 40 mana | 40 s |
+| Dragonscale | Fire Resistance | Fire Resistance, Resistance I; attackers are chilled | Frost Breath: a cone of freezing breath 7 blocks long | 30 s |
+| Infernal | Fire Resistance | Fire Resistance and Strength I; attackers burn | Hellfire Nova: a ring of fire bursts out 5 blocks around you | 30 s |
+| Scripture Vestment | a mana a second | Regeneration I | Sanctuary: you and your allies within 8 blocks are healed and regenerate | 40 s |
+| Ranger | Jump Boost I | Speed I and Jump Boost I | Arrow Rain: arrows fall around the spot you look at | 30 s |
+| Crimson Valkyrie | your blows drink 4% of their harm | your blows drink 10% of their harm | Blood Frenzy: Strength II and blows that drink 30% for 10 seconds | 40 s |
+| Platinum | Resistance I | Resistance II and Regeneration I | Platinum Bulwark: Absorption III, Resistance III, and half of every blow thrown back for 8 seconds | 45 s |
+| Bone Dragon | 15% of magical harm turned aside | 35% of magical harm turned aside | Bone Prison: bones bind every foe within 6 blocks | 35 s |
+| Beast Hide | Haste I | Haste I and Saturation | Hunter's Howl: Speed II, Strength I and Jump Boost II for 12 seconds; foes nearby falter | 35 s |
+
 ### Trading
 
 Ring a **Bell of Nazarick** to call a **Nazarick Maid**. She sells Healing Potions, Data Crystals, all four
@@ -774,7 +848,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules) and `skilltree.js` (skill tree menus and effects) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects) and `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

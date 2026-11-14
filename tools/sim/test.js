@@ -721,7 +721,7 @@ advance(1); v.fx = []; v.anims = []; vfx.castFx(v, "fire", 2, "point"); const lo
 advance(1); v.fx = []; vfx.castFx(v, "fire", 9, "raise"); assert.ok(v.fx.length > low && drew("implode").length === 1 && drew("magic_circle").length === 2, "high tiers gather power under a second circle");
 advance(1); v.anims = []; vfx.castFx(v, "holy", 11, "point"); assert.deepEqual(v.anims, ["animation.overlord.cast_super"]);
 for (const pose of vfx.POSE_NAMES) { v.anims = []; vfx.pose(v, pose); assert.ok(v.anims[0].startsWith("animation.overlord."), pose); }
-assert.equal(vfx.POSE_NAMES.length, 12);
+assert.equal(vfx.POSE_NAMES.length, 17);
 // scrolls are read, tomes are held open and weapon skills are swung - each in the right colour
 pv.level = 100; rpg.restoreMana(v, 1e6); v.fx = []; v.anims = []; use(v, "overlord:scroll_of_fly");
 assert.deepEqual(v.anims, ["animation.overlord.use_scroll"]); assert.ok(drew("glyph").length >= 1 && drew("aura").length === 1, "the scroll's runes lift off and the wind takes hold");
@@ -1073,6 +1073,82 @@ players.splice(0, players.length, ...everyone, zoe);
   ps.skills = { weapon_mastery: 2 }; ps.codex = 3; rpg.touch(s); advance(200);
   world.afterEvents.playerLeave.fire({ playerId: "sora" }); const back = rpg.profileOf(s); assert.equal(back.skills.weapon_mastery, 2); assert.equal(back.codex, 3);
   players.splice(players.indexOf(s), 1);
+}
+
+// ---- weapons and armour ----
+{
+  const arms = await import("./arms.js");
+  const k = mkPlayer("kai"); k.dimension.mobs = []; world.afterEvents.playerSpawn.fire({ player: k, initialSpawn: true }); advance(80);
+  let hand = "overlord:razor_edge"; let worn = {};
+  k.getComponent = ((base) => (c) => (c === "minecraft:equippable" ? { getEquipment: (slot) => (slot === "Mainhand" ? (hand ? { typeId: hand } : undefined) : worn[slot] ? { typeId: worn[slot] } : undefined) } : base(c)))(k.getComponent);
+  k.applyKnockback = () => {}; k.startItemCooldown = () => {}; k.isSneaking = false;
+  const foe = (x, z, hp = 200, fam = ["monster"]) => { const m = mob("minecraft:zombie", hp, fam); Object.assign(m, { id: `f${Math.random()}`, location: { x, y: 64, z }, tags: new Set(), afflicted: [], burning: 0, lifted: 0,
+    hasTag: (t) => m.tags.has(t), addEffect(e) { m.afflicted.push(e); }, setOnFire(n) { m.burning = n; }, applyKnockback(_h, v) { m.lifted = v; },
+    applyDamage(n) { m.health.currentValue = Math.max(0, m.health.currentValue - n); } }); return m; };
+  const blow = (victim, damage = 10) => world.afterEvents.entityHurt.fire({ hurtEntity: victim, damage, damageSource: { damagingEntity: k, cause: "entityAttack" } });
+  // what is held and worn
+  assert.equal(arms.heldWeapon(k), "razor_edge"); hand = "overlord:magic_wand"; assert.equal(arms.heldWeapon(k), undefined); hand = "overlord:razor_edge";
+  worn = { Head: "overlord:infernal_helmet", Chest: "overlord:infernal_chestplate" }; assert.deepEqual(arms.wornSets(k), { infernal: 2 }); assert.equal(arms.fullSet(k), undefined);
+  worn = {};
+  // every kind has a finisher, and every weapon a kind
+  for (const w of Object.values(arms.WEAPONS)) assert.ok(arms.FINISHERS[w.kind], w.kind);
+  for (const key of Object.keys(arms.NEW_ARTS)) assert.ok(arms.WEAPONS[key], key);
+  // a chain of three blows ends in the blade's Crescent Cut, which strikes every foe in front
+  const target = foe(0, 2), beside = foe(1, 2.5), behind = foe(0, -3); k.dimension.mobs = [target, beside, behind]; k.fx = [];
+  blow(target); assert.ok(k.bar.includes("Combo"), k.bar); blow(target); blow(target);
+  assert.ok(k.bar.includes("Crescent Cut"), k.bar); assert.ok(beside.health.currentValue < 200, "the cut reaches the foe beside"); assert.equal(behind.health.currentValue, 200, "but not the one behind");
+  assert.ok(k.fx.some((f) => f.effect === "overlord:slash"), "blows leave crescents"); assert.ok(k.anims.includes("animation.overlord.weapon_slash"));
+  // the chain breaks if the blows are too far apart
+  blow(target); advance(40); blow(target); advance(40); const before = beside.health.currentValue; blow(target); assert.equal(beside.health.currentValue, before, "no finisher after a broken chain");
+  // other kinds: a heavy weapon's Earthbreaker lifts, a fist's Rising Dragon throws, a polearm runs through a line
+  hand = "overlord:giants_maul"; advance(40); for (let i = 0; i < 3; i++) blow(target); assert.ok(beside.lifted > 0 && target.lifted > 0, "Earthbreaker");
+  hand = "overlord:six_arms_knuckles"; target.lifted = 0; beside.lifted = 0; advance(40); for (let i = 0; i < 3; i++) blow(target); assert.ok(target.lifted >= 0.9 && beside.lifted === 0, "Rising Dragon");
+  hand = "overlord:spuit_lance"; const far = foe(0, 5.5); k.dimension.mobs = [target, far]; advance(40); for (let i = 0; i < 3; i++) blow(target); assert.ok(far.health.currentValue < 200, "Piercing Thrust");
+  hand = "overlord:blade_bug"; advance(40); const victim3 = foe(0, 2, 500); k.dimension.mobs = [victim3]; for (let i = 0; i < 3; i++) blow(victim3); advance(12);
+  assert.ok(500 - victim3.health.currentValue >= 4 * 3 - 1e-9 && victim3.afflicted.includes("wither"), `Thousand Cuts: ${victim3.health.currentValue}, ${victim3.afflicted}`);
+  hand = "overlord:razor_edge";
+  // a finishing blow from elsewhere (many times the foe's health) is not a swing
+  advance(40); arms.gauges.set("kai", 0); world.afterEvents.entityHurt.fire({ hurtEntity: foe(0, 2), damage: 10000, damageSource: { damagingEntity: k, cause: "entityAttack" } }); assert.equal(arms.gauges.get("kai"), 0);
+  // Awakening: the gauge fills with harm dealt; sneak + use awakens; awake blows hit harder
+  arms.gauges.set("kai", 0); const tough = foe(0, 2, 100000); k.dimension.mobs = [tough];
+  for (let i = 0; i < 12; i++) { advance(40); blow(tough, 10); }
+  assert.equal(arms.gauges.get("kai"), 120); assert.ok(k.msgs.length >= 0);
+  k.isSneaking = true; world.afterEvents.itemUse.fire({ source: k, itemStack: { typeId: "overlord:razor_edge" } }); k.isSneaking = false;
+  assert.ok(arms.isAwake(k)); assert.equal(arms.gauges.get("kai"), 0); assert.ok(k.anims.includes("animation.overlord.weapon_awaken"));
+  advance(40); const hp1 = tough.health.currentValue; blow(tough, 10); assert.ok(hp1 - tough.health.currentValue >= 3.5 - 1e-9, `awake blows burn deeper: ${hp1} -> ${tough.health.currentValue} awake=${arms.isAwake(k)}`);
+  advance(12 * 20); assert.ok(!arms.isAwake(k), "and it wears off");
+  // the new arts: Fourfold Slash cuts the foe before you four times, then recharges
+  const duel = foe(0, 3); k.dimension.mobs = [duel]; assert.equal(arms.useWeaponArt(k, "overlord:razor_edge"), true); advance(12);
+  assert.equal(duel.health.currentValue, 200 - 24); arms.useWeaponArt(k, "overlord:razor_edge"); assert.ok(k.bar.includes("Recharging"), k.bar);
+  assert.equal(arms.useWeaponArt(k, "overlord:ginnungagap"), false, "weapons with their own art are left to it");
+  // with no foe in front, the art is not spent
+  k.dimension.mobs = []; advance(200); arms.useWeaponArt(k, "overlord:razor_edge"); k.dimension.mobs = [duel]; arms.useWeaponArt(k, "overlord:razor_edge"); advance(12); assert.equal(duel.health.currentValue, 200 - 48);
+  // Judgement burns the undead twice as hard
+  const ghoul = foe(2, 0, 200, ["monster", "undead"]), brute = foe(-2, 0); k.dimension.mobs = [ghoul, brute]; arms.useWeaponArt(k, "overlord:angel_mace");
+  assert.equal(ghoul.health.currentValue, 180); assert.equal(brute.health.currentValue, 190);
+  // armour: two pieces give their small bonus, four the aura; tapping sneak twice uses the art
+  worn = { Head: "overlord:infernal_helmet", Chest: "overlord:infernal_chestplate" }; k.effects.clear(); arms.step(k, 20 * 50); assert.ok(k.effects.has("fire_resistance"));
+  worn = { Head: "overlord:infernal_helmet", Chest: "overlord:infernal_chestplate", Legs: "overlord:infernal_leggings", Feet: "overlord:infernal_boots" }; assert.equal(arms.fullSet(k), "infernal");
+  k.fx = []; arms.step(k, 20 * 60); assert.ok(k.fx.some((f) => f.effect === "overlord:ember"), "a full set wraps its wearer in its particles");
+  const imp = foe(3, 0), imp2 = foe(-2, 2); k.dimension.mobs = [imp, imp2];
+  let t = 20 * 70 + 1; k.isSneaking = true; arms.step(k, t); k.isSneaking = false; arms.step(k, t + 2); k.isSneaking = true; arms.step(k, t + 4); k.isSneaking = false;
+  assert.ok(imp.health.currentValue === 188 && imp.burning === 6 && imp2.burning === 6, "Hellfire Nova"); assert.ok(arms.armourArtLeft(k, "infernal") > 0);
+  k.isSneaking = true; arms.step(k, t + 6); k.isSneaking = false; arms.step(k, t + 8); k.isSneaking = true; arms.step(k, t + 10); k.isSneaking = false; assert.equal(imp.health.currentValue, 188, "not again while it recharges");
+  // slow taps do not count
+  worn = { Head: "overlord:bonedragon_helmet", Chest: "overlord:bonedragon_chestplate", Legs: "overlord:bonedragon_leggings", Feet: "overlord:bonedragon_boots" }; const bound = foe(2, 2); k.dimension.mobs = [bound];
+  t += 1000; k.isSneaking = true; arms.step(k, t); k.isSneaking = false; arms.step(k, t + 2); k.isSneaking = true; arms.step(k, t + 30); assert.equal(bound.health.currentValue, 200, "two slow taps are not a double tap");
+  k.isSneaking = false; arms.step(k, t + 32); k.isSneaking = true; arms.step(k, t + 34); assert.ok(bound.health.currentValue < 200 && bound.afflicted.includes("slowness"), "Bone Prison");
+  k.isSneaking = false;
+  // Platinum Bulwark throws half a blow back at the attacker
+  worn = { Head: "overlord:platinum_helmet", Chest: "overlord:platinum_chestplate", Legs: "overlord:platinum_leggings", Feet: "overlord:platinum_boots" };
+  arms.armourArt(k, "platinum"); const brute2 = foe(1, 1); brute2.typeId = "overlord:war_troll"; brute2.isValid = true;
+  world.afterEvents.entityHurt.fire({ hurtEntity: k, damage: 8, damageSource: { damagingEntity: brute2, cause: "entityAttack" } }); assert.equal(brute2.health.currentValue, 196);
+  // Crimson, two pieces: blows drink a little
+  worn = { Head: "overlord:crimson_helmet", Chest: "overlord:crimson_chestplate" }; hand = undefined; k.health.currentValue = 10; blow(foe(0, 2), 10); assert.ok(Math.abs(k.health.currentValue - 10.4) < 1e-9, `${k.health.currentValue}`);
+  // the Arsenal page describes what is held and worn
+  hand = "overlord:dragonbone_blade"; worn = { Head: "overlord:ranger_helmet", Chest: "overlord:ranger_chestplate" }; arms.openArsenal(k);
+  const page = shown[shown.length - 1]; assert.equal(page.title, "Arsenal"); assert.ok(page.body.includes("Cleaving Arc") && page.body.includes("Ranger") && page.body.includes("Arrow Rain"), page.body);
+  k.dimension.mobs = []; players.splice(players.indexOf(k), 1);
 }
 
 // persistence: saved profile is restored after leaving
