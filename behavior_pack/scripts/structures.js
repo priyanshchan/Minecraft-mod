@@ -860,7 +860,7 @@ export const SITES = [
       for (const [x, z] of [[-4, 7], [4, 7]]) b.lamp(x, z, mc("cobblestone_wall"), mc("soul_lantern"));
       b.chest(0, 0, -6, [[id("spectral_iron"), 1, 3], [id("soul_fragment"), 1, 3], [COIN, 4, 10], [mc("bone"), 2, 6]]);
     },
-    garrison: (tier) => (tier === 0 ? [[id("ghoul"), 4], [id("wraith"), 1]] : tier === 1 ? [[id("ghoul"), 4], [id("wraith"), 2], [id("death_cavalier"), 1]]
+    garrison: (tier) => (tier === 0 ? [[id("ghoul"), 3], [id("skeleton_archer"), 2], [id("wraith"), 1]] : tier === 1 ? [[id("ghoul"), 4], [id("wraith"), 2], [id("death_cavalier"), 1]]
       : [[id("ghoul"), 5], [id("wraith"), 3], [id("death_cavalier"), 2]]),
   },
   {

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [8, 7, 0]
+VERSION = [8, 8, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.7.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v8.8.0"
 
 
 def oid(name):
@@ -82,6 +82,16 @@ def _armor(slot, protection, durability, ench):
             {"items": [oid("adamantite_ingot")], "repair_amount": "query.max_durability * 0.25"}]},
         "minecraft:rarity": "rare",
     }
+
+
+def _meal(nutrition, saturation, drink=False):
+    """A meal or drink whose effects main.js applies when it is finished (v8.8)."""
+    food = {"can_always_eat": True, "nutrition": nutrition, "saturation_modifier": saturation}
+    if drink:
+        food["using_converts_to"] = "minecraft:glass_bottle"
+    return {"minecraft:max_stack_size": 16, "minecraft:use_animation": "drink" if drink else "eat",
+            "minecraft:use_modifiers": {"use_duration": 1.6, "movement_modifier": 0.35},
+            "minecraft:food": food, "minecraft:rarity": "uncommon"}
 
 
 def _cooldown(category, seconds):
@@ -170,6 +180,7 @@ ITEMS = {
         **_cooldown("overlord_scroll", 1.5)}),
     "ring_of_sustenance": ("Ring of Sustenance", "equipment", {
         "minecraft:max_stack_size": 1, "minecraft:rarity": "rare", "minecraft:glint": True,
+        "minecraft:allow_off_hand": True,  # v8.8: worn in the off hand it keeps its wearer fed (comforts.js)
         **_cooldown("overlord_sustenance", 60.0)}),
     "razor_edge": ("Razor Edge", "equipment", _weapon(10)),
     "stiletto": ("Clementine's Stiletto", "equipment", _weapon(6, rarity="rare")),
@@ -329,6 +340,12 @@ ITEMS = {
     "royal_seal": ("Seal of the Sorcerer Kingdom", "equipment", {
         "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
         **_cooldown("overlord_royal_seal", 1.0)}),
+    # v8.8: comforts of Nazarick - meals with effects (main.js) and rings worn in the off hand (comforts.js)
+    "sebas_tea": ("Sebas's Black Tea", "items", _meal(2, 0.2, drink=True)),
+    "feast_pie": ("Nazarick Feast Pie", "items", _meal(10, 1.2)),
+    "dragon_skewer": ("Spicy Dragon Skewer", "items", _meal(6, 0.8)),
+    "ring_of_fleet_foot": ("Ring of the Fleet Foot", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "rare", "minecraft:allow_off_hand": True, "minecraft:glint": True}),
     # v8.6: the dead of the plains and the Destroyer Tree
     "ghoul_fang": ("Ghoul Fang", "items", {"minecraft:max_stack_size": 64}),
     "spectral_iron": ("Spectral Iron", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "uncommon"}),
@@ -657,6 +674,13 @@ def recipe_files():
                                   ("leggings", ["AAA", "A A", "A A"]), ("boots", ["A A", "A A"]))},
         "tomb_key": _shaped("tomb_key", ["BCB", "CKC", "BCB"], {
             "B": oid("nazarick_bricks"), "C": cry, "K": oid("guardian_crest")}, oid("tomb_key"), unlock=oid("guardian_crest")),
+        "sebas_tea": _shapeless("sebas_tea", ["minecraft:glass_bottle", "minecraft:sugar", "minecraft:cocoa_beans"], oid("sebas_tea"), count=2),
+        "feast_pie": _shapeless("feast_pie", ["minecraft:egg", "minecraft:sugar", "minecraft:wheat", "minecraft:cooked_beef", "minecraft:apple"],
+                                oid("feast_pie")),
+        "dragon_skewer": _shapeless("dragon_skewer", [oid("dragon_bone"), "minecraft:cooked_beef", "minecraft:cooked_beef", "minecraft:blaze_powder"],
+                                    oid("dragon_skewer"), count=2),
+        "ring_of_fleet_foot": _shaped("ring_of_fleet_foot", [" C ", "GXG", " G "], {
+            "C": cry, "G": "minecraft:gold_ingot", "X": "minecraft:rabbit_foot"}, oid("ring_of_fleet_foot")),
         "cavalier_lance": _shaped("cavalier_lance", ["  I", " I ", "S  "], {"I": oid("spectral_iron"), "S": "minecraft:stick"},
                                   oid("cavalier_lance")),
         "ghoulfang_sickle": _shaped("ghoulfang_sickle", ["FF", " I", " S"], {
@@ -869,6 +893,7 @@ def loot_files():
         "khajiit": [one(oid("orb_of_death")), _pool(_entry(oid("soul_fragment"), 2, 4)), _pool(_entry(coin, 6, 12))],
         "gigant_basilisk": [_pool(_entry(oid("basilisk_eye"), 1, 2, looting=False)),
                             _pool(_entry(oid("beast_hide"), 1, 3)), _pool(_entry(coin, 2, 5))],
+        "skeleton_archer": [_pool(_entry("minecraft:bone", 0, 2)), _pool(_entry("minecraft:arrow", 1, 4)), _pool(_entry(coin, 0, 1))],
         "ghoul": [_pool(_entry(oid("ghoul_fang"), 0, 2)), _pool(_entry("minecraft:rotten_flesh", 0, 2))],
         "wraith": [_pool(_entry(oid("soul_fragment"), 0, 2)), _pool(_entry(coin, 0, 2))],
         "death_cavalier": [
@@ -2012,6 +2037,16 @@ def entity_files():
             "add": {"component_groups": [f"overlord:stance_{stance}"]}}
     out["retainer"] = _entity("retainer", c, groups, events, spawnable=False)
 
+    # v8.8: the Skeleton Archer, the lowest rank of Nazarick's archers, burning by day like its kin
+    c = _mob("skeleton_archer", ["skeleton_archer", "nazarick", "undead", "skeleton", "monster", "mob"], 26, 0.27, (0.6, 1.9),
+             loot="skeleton_archer", xp=9, undead=True)
+    c["minecraft:shooter"] = {"def": "minecraft:arrow"}
+    c["minecraft:behavior.ranged_attack"] = {"priority": 3, "attack_interval_min": 1.6, "attack_interval_max": 2.6,
+                                             "attack_radius": 18.0, "speed_multiplier": 1.0}
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(24, [ally, "human"])
+    c["minecraft:burns_in_daylight"] = {}
+    out["skeleton_archer"] = _entity("skeleton_archer", c)
+
     # v8.6: the dead of the Katze Plains, the forest's treants, its dryad, and the Destroyer Tree
     undead_foes = _target_players(24, [ally, "human"])
     c = _mob("ghoul", ["ghoul", "undead", "monster", "mob"], 34, 0.34, (0.6, 1.9), loot="ghoul", xp=10, undead=True)
@@ -2297,10 +2332,11 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
         "dark_young", "jaldabaoth",
         "go_gin", "elf_ranger", "decem", "behemoth", "neia", "remedios", "paladin", "bafolk",
         "eight_edge_assassin", "arena_master", "platinum_dragon_lord", "rubedo",
-        "ghoul", "wraith", "death_cavalier", "treant_sapling", "zytl_qae", "pinison"]
+        "ghoul", "wraith", "death_cavalier", "treant_sapling", "zytl_qae", "pinison", "skeleton_archer"]
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard", "frost_breath"]
 
 ENTITY_NAMES = {
+    "skeleton_archer": "Skeleton Archer",
     "ghoul": "Ghoul", "wraith": "Wraith", "death_cavalier": "Death Cavalier", "treant_sapling": "Treant",
     "zytl_qae": "Zy'tl Q'ae, the Destroyer Tree", "pinison": "Pinison Pole Perlia",
     "guardian_albedo": "Albedo", "guardian_shalltear": "Shalltear Bloodfallen", "guardian_cocytus": "Cocytus",
@@ -2358,7 +2394,7 @@ def trade_files():
         sell(oid("nazarick_lamp"), 6, qty=4), sell("minecraft:golden_apple", 16),
         sell(oid("adamantite_ingot"), 24), sell(oid("scroll_of_explosion"), 10),
         sell(oid("scroll_of_time_stop"), 14), sell(oid("scroll_of_rebirth"), 20),
-        sell(oid("soul_fragment"), 5), sell(oid("sealing_crystal"), 30, uses=4), sell(oid("tome_create_undead"), 28, uses=4),
+        sell(oid("soul_fragment"), 5), sell(oid("sealing_crystal"), 30, uses=4), sell(oid("sebas_tea"), 3, qty=2), sell(oid("tome_create_undead"), 28, uses=4),
         buy("minecraft:diamond", 1, 6), buy("minecraft:gold_ingot", 4, 5), buy("minecraft:bone", 16, 2),
     ]
     herbs = [
@@ -2485,6 +2521,7 @@ def spawn_rule_files():
         "spawn_rules/skeleton_mage.json": monster("skeleton_mage", 6),
         "spawn_rules/soul_eater.json": monster("soul_eater", 3),
         "spawn_rules/ghoul.json": monster("ghoul", 6, (2, 3)),
+        "spawn_rules/skeleton_archer.json": monster("skeleton_archer", 6, (1, 2)),
         "spawn_rules/wraith.json": monster("wraith", 3),
         "spawn_rules/death_cavalier.json": monster("death_cavalier", 1, biomes=["plains", "savanna"]),
         "spawn_rules/treant_sapling.json": monster("treant_sapling", 3, biomes=["forest", "taiga", "jungle"]),
@@ -2670,7 +2707,7 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri"),
                     ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater"),
                     ("ghoul", "bandit"), ("wraith", "elder_lich"), ("death_cavalier", "imperial_knight"),
-                    ("treant_sapling", "ogre"), ("zytl_qae", "ogre"), ("pinison", "nfirea")):
+                    ("treant_sapling", "ogre"), ("zytl_qae", "ogre"), ("pinison", "nfirea"), ("skeleton_archer", "old_guarder")):
     SOUNDS[_new] = SOUNDS[_like]
 for _key in GUARDIAN_COMPANIONS:
     SOUNDS[f"guardian_{_key}"] = SOUNDS[_key]
@@ -2865,7 +2902,7 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("platinum_dragon_lord", "frost_dragon"), ("rubedo", "yuri"),
                     ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater"),
                     ("ghoul", "bandit"), ("wraith", "elder_lich"), ("death_cavalier", "imperial_knight"),
-                    ("treant_sapling", "ogre"), ("zytl_qae", "ogre"), ("pinison", "yuri")):
+                    ("treant_sapling", "ogre"), ("zytl_qae", "ogre"), ("pinison", "yuri"), ("skeleton_archer", "old_guarder")):
     ENTITY_ANIMS[_new] = ENTITY_ANIMS[_like]
 for _key in GUARDIAN_COMPANIONS:
     ENTITY_ANIMS[f"guardian_{_key}"] = ENTITY_ANIMS[_key]
@@ -3620,7 +3657,7 @@ VANILLA_REFS = {
     "render_controller": {"controller.render.armor", "controller.render.item_default"},
     "material": {"entity_alphatest", "armor", "armor_enchanted", "entity_emissive_alpha", "entity_alphatest_glint"},
     "texture": {"textures/misc/enchanted_actor_glint", "textures/misc/enchanted_item_glint"},
-    "entity": {"minecraft:small_fireball"},
+    "entity": {"minecraft:small_fireball", "minecraft:arrow"},
 }
 
 

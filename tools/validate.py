@@ -72,6 +72,8 @@ VANILLA = {
         "minecraft:carrot", "minecraft:golden_carrot", "minecraft:blaze_rod", "minecraft:grass_block",
         # Pinison's trades and the treants' loot (v8.6), verified against @minecraft/vanilla-data
         "minecraft:oak_sapling", "minecraft:flowering_azalea", "minecraft:bone_meal",
+        # the comforts of Nazarick (v8.8), verified against @minecraft/vanilla-data
+        "minecraft:sugar", "minecraft:cocoa_beans", "minecraft:rabbit_foot", "minecraft:egg",
         "minecraft:paper", "minecraft:stick", "minecraft:copper_ingot", "minecraft:feather",
         "minecraft:copper_block", "minecraft:gold_block", "minecraft:glowstone",
         "minecraft:gold_ingot", "minecraft:fermented_spider_eye", "minecraft:ender_pearl",

@@ -50,6 +50,7 @@ import "./steeds.js";
 import "./court.js";
 import "./districts.js";
 import "./haunts.js";
+import "./comforts.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;

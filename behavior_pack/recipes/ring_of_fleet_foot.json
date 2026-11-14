@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:ring_of_fleet_foot"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " C ",
+      "GXG",
+      " G "
+    ],
+    "key": {
+      "C": {
+        "item": "overlord:data_crystal"
+      },
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "X": {
+        "item": "minecraft:rabbit_foot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:data_crystal"
+      }
+    ],
+    "result": {
+      "item": "overlord:ring_of_fleet_foot",
+      "count": 1
+    }
+  }
+}

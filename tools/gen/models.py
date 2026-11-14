@@ -3796,6 +3796,27 @@ def pinison():
     return m
 
 
+def skeleton_archer():
+    """An Old Guarder's bones with a short bow in place of sword and shield, and a quiver on its back."""
+    m = old_guarder()
+    m.name = "skeleton_archer"
+    for b in m.bones:
+        if b.name in ("weapon", "shield"):
+            b.cubes.clear()
+    bow = _bone(m, "weapon")
+    grip = bow.cube((-5.5, 10, -3), (1, 5, 1))
+    grip.fill("#5a3a1e", noise=4)
+    for y0 in (5, 15):
+        limb = bow.cube((-5.5, y0, -2), (1, 5, 1))
+        limb.fill("#7a5230", noise=4)
+    string = bow.cube((-5.5, 6, -0.5), (1, 13, 1), inflate=-0.4)
+    string.fill("#e9e6dc", noise=0)
+    quiver = _bone(m, "body").cube((-2, 14, 1.5), (3, 9, 2))
+    quiver.fill("#4a321b", noise=5)
+    quiver.top.fill("#c9302c")
+    return m
+
+
 def wyrm_steed():
     """A young dragon of Nazarick, bred to be ridden (steeds.js): scaled in purple and black, horned in gold."""
     return _great_dragon("wyrm_steed", "plated", "#3a2452", "#6b4a8f", "#1d1029", "#c9a227", "#d9a92b", "#5a2a7a",
@@ -3824,4 +3845,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        skeletal_dragon, khajiit, gigant_basilisk, frost_giant, beastman, lakyus, enri, zero, dark_young, jaldabaoth,
        go_gin, elf_ranger, decem, behemoth, neia, remedios, paladin, bafolk, eight_edge_assassin, arena_master,
        platinum_dragon_lord, rubedo, wyrm_steed, ghoul, wraith, death_cavalier, treant_sapling, zytl_qae, pinison,
+       skeleton_archer,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

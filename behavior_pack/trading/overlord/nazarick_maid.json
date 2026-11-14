@@ -4,7 +4,7 @@
       "total_exp_required": 0,
       "groups": [
         {
-          "num_to_select": 20,
+          "num_to_select": 21,
           "trades": [
             {
               "wants": [
@@ -245,6 +245,21 @@
                 }
               ],
               "max_uses": 4
+            },
+            {
+              "wants": [
+                {
+                  "item": "overlord:yggdrasil_gold_coin",
+                  "quantity": 3
+                }
+              ],
+              "gives": [
+                {
+                  "item": "overlord:sebas_tea",
+                  "quantity": 2
+                }
+              ],
+              "max_uses": 32
             },
             {
               "wants": [
