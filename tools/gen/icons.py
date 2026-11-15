@@ -664,6 +664,94 @@ def blossom():
     ], {"P": "#e86aa8", "p": "#ffb0d8", "Y": "#ffe27a", "y": "#fff6c8", "L": "#3f8a3a", "l": "#6ac05a"})
 
 
+def wall_seal():
+    """The Seal of the Great Wall: white wax stamped with the Holy Kingdom's gold sun, on a blue ribbon (v9.6)."""
+    return sprite16([
+        "................",
+        ".....WWWWWW.....",
+        "...WWwwwwwWW....",
+        "..WwwGGGGwwWW...",
+        "..WwGgwwgGwW....",
+        ".WWwGwYYwGwWW...",
+        ".WwwGwYYwGwwW...",
+        ".WWwGgwwgGwWW...",
+        "..WwwGGGGwwW....",
+        "..WWwwwwwwwWW...",
+        "...WWWWWWWW.....",
+        ".....BB..BB.....",
+        "....BBb..bBB....",
+        "....Bb....bB....",
+        "...BB......BB...",
+        "................",
+    ], {"W": "#e8e4dc", "w": "#c8c2b4", "G": GOLD, "g": GOLD_D, "Y": "#fff4a0", "B": "#2a4a9a", "b": "#1a2e66"})
+
+
+def halberd():
+    """The Demonbane Halberd: a silver axe-head and spike on a white-and-gold haft, lit with holy gold (v9.6)."""
+    return sprite16([
+        "...........SS...",
+        "..........SsS...",
+        ".........SSYSS..",
+        "........SSsYsS..",
+        ".........SsYS...",
+        "........GGSS....",
+        ".......WG.......",
+        "......WW........",
+        ".....WG.........",
+        "....WW..........",
+        "...WG...........",
+        "..WW............",
+        ".WG.............",
+        ".G..............",
+        "................",
+        "................",
+    ], {"S": "#c9ced6", "s": "#f4f6fb", "Y": "#ffe27a", "G": GOLD, "W": "#f4f0e6"})
+
+
+def familiar_bell():
+    """The Familiar's Bell: a small silver bell on a purple ribbon (v9.6)."""
+    return sprite16([
+        "................",
+        "......PPPP......",
+        ".....PP..PP.....",
+        "......PSSP......",
+        "......SssS......",
+        ".....SssssS.....",
+        ".....SsSSsS.....",
+        "....SSsSSsSS....",
+        "....SSSSSSSS....",
+        "...SSSSSSSSSS...",
+        "...ssssssssss...",
+        "......SDDS......",
+        ".......DD.......",
+        "................",
+        "................",
+        "................",
+    ], {"P": "#7a35b5", "S": "#c9ced6", "s": "#f4f6fb", "D": "#6a6e78"})
+
+
+def cherub_halo():
+    """The Cherub's Halo: a ring of gold light between two small white wings (v9.6)."""
+    return sprite16([
+        "................",
+        "................",
+        ".....YYYYYY.....",
+        "....Y......Y....",
+        ".....YYYYYY.....",
+        "................",
+        "WW............WW",
+        "WwW..........WwW",
+        ".WwW...GG...WwW.",
+        "..WwW.GYYG.WwW..",
+        "...WWWGYYGWWW...",
+        "....WW.GG.WW....",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], {"Y": "#ffe27a", "G": GOLD, "W": "#f4f6fb", "w": "#c8d0dc"})
+
+
 def medal():
     """A gold medal on a crimson ribbon, the sigil of Ainz Ooal Gown at its heart."""
     return sprite16([
@@ -2094,6 +2182,9 @@ BLOCK_TEXTURES = {
 
 
 EGG_COLORS = {
+    "buser": ("#6a6058", "#4a4e58"),
+    "evil_lord_envy": ("#2f6a2a", "#b6ff4a"),
+    "evil_lord_greed": ("#8a6a1a", "#ffe27a"),
     "quagoa_warlord": ("#3a2a1e", "#4ac8ff"),
     "rune_golem": ("#7a6a52", "#4ac8ff"),
     "skeleton_archer": ("#d8d0b4", "#7a5230"),
@@ -2258,6 +2349,13 @@ def all_item_icons():
         "blue_rose_brooch": badge(GOLD, GOLD_D, "#3a6ad0", "#a8c8ff", "#1a2e66", "#0e1a3e"),
         "four_tribes_ring": gem_ring("#3fa86a", "#b8ffd0"),
         "dryad_blossom": blossom(),
+        "wall_seal": wall_seal(),
+        "demonbane_halberd": halberd(),
+        "familiar_bell": familiar_bell(),
+        "dragonling_egg": egg("#bfe8ff", "#4ac8ff"),
+        "hanzo_contract": scroll("#15131a"),
+        "shadow_contract": scroll("#6a1010"),
+        "cherub_halo": cherub_halo(),
         "ghoul_fang": ghoul_fang(),
         "spectral_iron": spectral_iron(),
         "heartwood": heartwood(),

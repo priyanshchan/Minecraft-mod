@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:cherub_halo"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "FGF",
+      "G G",
+      "FGF"
+    ],
+    "key": {
+      "F": {
+        "item": "overlord:angel_feather"
+      },
+      "G": {
+        "item": "minecraft:gold_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:angel_feather"
+      }
+    ],
+    "result": {
+      "item": "overlord:cherub_halo",
+      "count": 1
+    }
+  }
+}

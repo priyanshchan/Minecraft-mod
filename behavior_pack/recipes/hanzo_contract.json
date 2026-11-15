@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:hanzo_contract"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "FSF",
+      "SPS",
+      "FSF"
+    ],
+    "key": {
+      "F": {
+        "item": "minecraft:fermented_spider_eye"
+      },
+      "S": {
+        "item": "overlord:soul_fragment"
+      },
+      "P": {
+        "item": "minecraft:paper"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:soul_fragment"
+      }
+    ],
+    "result": {
+      "item": "overlord:hanzo_contract",
+      "count": 1
+    }
+  }
+}

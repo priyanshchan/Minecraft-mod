@@ -79,6 +79,7 @@ export const WEAPONS = {
   cavalier_lance: { kind: "polearm", element: "dark", trait: "-", art: "Death Charge: you ride down everything in a 9-block line, withering it" },
   ghoulfang_sickle: { kind: "blade", element: "acid", trait: "-", art: "Paralysing Rend: three quick cuts at the foe ahead; it can barely move afterwards" },
   heartwood_staff: { kind: "staff", element: "acid", trait: "-", art: "Grasping Roots: roots burst from the ground where you look, binding and crushing every foe within 4 blocks" },
+  demonbane_halberd: { kind: "polearm", element: "holy", trait: "demons take a third more from every blow", art: "Judgement of the Great Wall: a wall of holy light rises along the ground ahead, burning everything in it and hurling demons back" },
   runeblade: { kind: "greatsword", element: "lightning", trait: "the sweep carries half the blow to foes beside the target", art: "Rune Sovereign's Decree: three runes blaze out along the ground ahead - frost, storm, then fire - and a fourth wards you" },
 };
 
@@ -100,6 +101,7 @@ export const NEW_ARTS = {
   ghoulfang_sickle: ["overlord_rend", 7],
   heartwood_staff: ["overlord_roots", 8],
   runeblade: ["overlord_rune_sovereign", 10],
+  demonbane_halberd: ["overlord_wall_judgement", 10],
 };
 
 /**
@@ -353,6 +355,15 @@ world.afterEvents.entityHurt.subscribe((event) => {
   }
 });
 
+/** Whether a creature is a demon (the Demonbane Halberd's prey). @param {Entity} e */
+export function isDemon(e) {
+  try {
+    return e.matches({ families: ["demon"] });
+  } catch {
+    return false;
+  }
+}
+
 /**
  * A melee blow by a player: armour that drinks, then (with an add-on weapon) the crescent, the chain
  * and its finisher, the awakened burst and the gauge.
@@ -367,6 +378,7 @@ export function onBlow(player, victim, damage) {
   if (!key) return;
   const weapon = WEAPONS[key];
   const d = player.dimension;
+  if (key === "demonbane_halberd" && isDemon(victim)) strike(player, victim, damage / 3);
   fx.slash(d, above(victim), weapon.element, 1);
   techniques(player, victim, damage, weapon.element);
 
@@ -554,6 +566,23 @@ export function useWeaponArt(player, item) {
     fx.shake(d, at, 8, 0.25, 0.3);
     fx.pose(player, "slam");
     sound(player, "block.composter.ready", 0.6);
+  } else if (key === "demonbane_halberd") {
+    const line = foesInLine(player, 10);
+    for (const foe of line) {
+      const demon = isDemon(foe);
+      strike(player, foe, demon ? 20 : 12);
+      if (demon) {
+        try {
+          foe.applyKnockback({ x: dir.x * 1.6, z: dir.z * 1.6 }, 0.4);
+        } catch {
+          // too heavy to move
+        }
+      }
+      fx.pillar(d, foe.location, "holy", 3, 1);
+    }
+    for (let n = 2; n <= 10; n += 2) fx.pillar(d, add({ x: player.location.x, y: player.location.y, z: player.location.z }, dir, n), "holy", 4, 1.2);
+    fx.pose(player, "thrust");
+    sound(player, "beacon.activate", 1.4);
   } else if (key === "runeblade") {
     /** @type {[string, number][]} */
     const runes = [["ice", 3], ["lightning", 6], ["fire", 9]];

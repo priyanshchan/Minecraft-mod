@@ -58,8 +58,10 @@ tomb.FLOORS.forEach((floor, i) => {
   out[`tomb_${floor.key}`] = { name: `Tomb ${i + 1}: ${floor.name}`, radius: 18, height: 12, muster: 0, garrison: [], blocks, tomb: true };
 });
 // The three floors of the Dwarven Royal Capital (deeps.js), each relative to its own floor.
+// Since 9.6 the Great Wall too, built by the same engine (delve.js).
 const deeps = await import("./deeps.js");
-deeps.FLOORS.forEach((floor, i) => {
+const walls = await import("./wall.js");
+for (const [prefix, label, d] of [["capital", "Royal Capital", deeps.capital], ["wall", "Great Wall", walls.wall]]) d.FLOORS.forEach((floor, i) => {
   const placed = new Map();
   const key = (l) => `${Math.floor(l.x)},${l.y},${Math.floor(l.z)}`;
   const land = {
@@ -73,15 +75,15 @@ deeps.FLOORS.forEach((floor, i) => {
     },
   };
   const at = { x: 0, y: 64, z: 0, top: 64 };
-  deeps.buildFloor(land, at, i);
-  const base = deeps.floorY(at, i);
+  d.buildFloor(land, at, i);
+  const base = d.floorY(at, i);
   const blocks = [];
   for (const [k, block] of placed) {
     const [x, y, z] = k.split(",").map(Number);
     if (block === "minecraft:air" || y - base < -1 || y - base > floor.height || z > floor.half || x > floor.half) continue;
     blocks.push([x, y - base, z, block.replace("minecraft:", "")]);
   }
-  out[`capital_${floor.key}`] = { name: `Royal Capital ${i + 1}: ${floor.name}`, radius: floor.half + 2, height: floor.height + 4, muster: 0, garrison: [], blocks, tomb: true };
+  out[`${prefix}_${floor.key}`] = { name: `${label} ${i + 1}: ${floor.name}`, radius: floor.half + 2, height: floor.height + 4, muster: 0, garrison: [], blocks, tomb: true };
 });
 // The four tiers of a Sorcerer Kingdom's capital (kingdom.js).
 const kingdom = await import("./kingdom.js");

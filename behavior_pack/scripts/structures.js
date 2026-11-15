@@ -701,7 +701,7 @@ export const SITES = [
       b.flag(3, 8, mc("white_wool"));
       b.path(-1, -3, 1, 9, mc("stone_bricks"));
       b.campfire(0, 0);
-      b.chest(-5, 0, -6, [[id("blessed_cloth"), 1, 3], [id("red_potion"), 1, 3], [mc("iron_ingot"), 2, 5], [COIN, 3, 8]]);
+      b.chest(-5, 0, -6, [[id("blessed_cloth"), 1, 3], [id("red_potion"), 1, 3], [mc("iron_ingot"), 2, 5], [COIN, 3, 8], [id("wall_seal"), 0, 1]]);
     },
     garrison: (tier) => (tier === 0 ? [[id("paladin"), 4], [id("neia"), 1]] : [[id("paladin"), 4 + tier], [id("neia"), 1], [id("remedios"), 1]]),
   },
@@ -1000,7 +1000,8 @@ export const SITES = [
         b.spire(Math.round(Math.cos(a) * 9), Math.round(Math.sin(a) * 9), 4 + (i % 2) * 2, mc("blackstone"), mc("soul_lantern"));
       }
       for (const x of [-5, 5]) b.set(x, 0, -6, mc("soul_campfire"));
-      b.chest(0, 1, -9, [[mc("blaze_powder"), 2, 6], [mc("gold_ingot"), 1, 4], [id("data_crystal"), 2, 5], [COIN, 4, 10], [id("demon_heart"), 0, 1]]);
+      b.set(0, -1, 0, mc("crying_obsidian")); // the heart of the ritual: it leads down to the Great Wall (wall.js)
+      b.chest(0, 1, -9, [[mc("blaze_powder"), 2, 6], [mc("gold_ingot"), 1, 4], [id("data_crystal"), 2, 5], [COIN, 4, 10], [id("demon_heart"), 0, 1], [id("wall_seal"), 0, 1]]);
     },
     garrison: (tier) =>
       tier === 0 ? [[id("shadow_demon"), 3]] : tier === 1 ? [[id("hellhound"), 3], [id("shadow_demon"), 2]] : [[id("evil_lord_wrath"), 1], [id("hellhound"), 2]],

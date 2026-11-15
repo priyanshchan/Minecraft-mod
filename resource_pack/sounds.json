@@ -1146,6 +1146,98 @@
           "step": "mob.irongolem.walk"
         }
       },
+      "overlord:buser": {
+        "volume": 1.0,
+        "pitch": [
+          0.7,
+          0.8
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:evil_lord_envy": {
+        "volume": 1.0,
+        "pitch": [
+          0.4,
+          0.5
+        ],
+        "events": {
+          "ambient": "mob.ravager.ambient",
+          "hurt": "mob.irongolem.hit",
+          "death": "mob.wither.death",
+          "step": "mob.irongolem.walk",
+          "shoot": "mob.ghast.fireball"
+        }
+      },
+      "overlord:evil_lord_greed": {
+        "volume": 1.0,
+        "pitch": [
+          0.4,
+          0.5
+        ],
+        "events": {
+          "ambient": "mob.ravager.ambient",
+          "hurt": "mob.irongolem.hit",
+          "death": "mob.wither.death",
+          "step": "mob.irongolem.walk",
+          "shoot": "mob.ghast.fireball"
+        }
+      },
+      "overlord:familiar_dragonling": {
+        "volume": 1.0,
+        "pitch": [
+          0.7,
+          0.85
+        ],
+        "events": {
+          "ambient": "mob.enderdragon.growl",
+          "hurt": "mob.enderdragon.hit",
+          "death": "mob.enderdragon.death",
+          "step": "mob.irongolem.walk",
+          "shoot": "random.glass"
+        }
+      },
+      "overlord:familiar_hanzo": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.8
+        ],
+        "events": {
+          "ambient": "mob.wither.ambient",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:familiar_shadow": {
+        "volume": 1.0,
+        "pitch": [
+          1.4,
+          1.6
+        ],
+        "events": {
+          "ambient": "mob.zombie.say",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:familiar_cherub": {
+        "volume": 1.0,
+        "pitch": [
+          1.3,
+          1.45
+        ],
+        "events": {
+          "hurt": "mob.irongolem.hit",
+          "death": "random.glass",
+          "step": "mob.zombie.step"
+        }
+      },
       "overlord:guardian_albedo": {
         "volume": 1.0,
         "pitch": [

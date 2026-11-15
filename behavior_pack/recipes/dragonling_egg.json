@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:dragonling_egg"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "SSS",
+      "SES",
+      "SSS"
+    ],
+    "key": {
+      "S": {
+        "item": "overlord:frost_dragon_scale"
+      },
+      "E": {
+        "item": "minecraft:egg"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:frost_dragon_scale"
+      }
+    ],
+    "result": {
+      "item": "overlord:dragonling_egg",
+      "count": 1
+    }
+  }
+}

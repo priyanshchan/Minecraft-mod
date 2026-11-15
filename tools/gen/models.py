@@ -3879,6 +3879,77 @@ def rune_golem():
     return m
 
 
+# ------------------------------------------------------------------ v9.6: the Siege of the Great Wall
+def _evil_lord(name, body, body_l, body_d, horn, glow):
+    """One of Demiurge's Evil Lords: Wrath's brute frame in its own colours, its own horns and its own glow."""
+    m = _brute(name, body, body_l, body_d)
+    head = _bone(m, "head")
+    for sx in (-5, 3):
+        base = head.cube((sx, 29, -1), (2, 2, 2))
+        base.fill(shade(horn, 1.2))
+        up = head.cube((sx + (-1 if sx < 0 else 1), 31, -1), (2, 5, 2))
+        up.fill(horn)
+        up.band(0, 2, glow)
+    eyes = head.cube((-3, 27, -4.2), (6, 1, 0))
+    eyes.fill(glow)
+    _wings(m, shade(body_d, 0.8), body, span=12)
+    return m
+
+
+def evil_lord_envy():
+    """Evil Lord Envy: sickly green, thorned along the spine, with eyes that burn acid-bright (v9.6)."""
+    m = _evil_lord("evil_lord_envy", "#2f6a2a", "#4f9a40", "#173a14", "#0f240c", "#b6ff4a")
+    body = _bone(m, "body")
+    for y in (22, 19, 16, 13):  # thorns down the back
+        t = body.cube((-0.5, y, 3), (1, 2, 2))
+        t.fill("#b6ff4a")
+    return m
+
+
+def evil_lord_greed():
+    """Evil Lord Greed: tarnished gold, hung with chains of coins and crowned with a ring of gold spikes (v9.6)."""
+    m = _evil_lord("evil_lord_greed", "#8a6a1a", "#c9a227", "#4a3a0a", "#2a1e08", "#ffe27a")
+    head, body = _bone(m, "head"), _bone(m, "body")
+    for x in (-4, -2, 0, 2):  # a crown of spikes
+        c = head.cube((x, 32, -4), (1, 2, 1))
+        c.fill(GOLD)
+    chain = body.cube((-5, 18, -3.6), (10, 1, 1))  # chains of coins
+    chain.fill(GOLD)
+    for x in (-4, -1, 2):
+        coin = body.cube((x, 16, -3.8), (2, 2, 1))
+        coin.fill("#ffe27a")
+    return m
+
+
+def buser():
+    """Buser, the bafolk king of the Abelion Hills: grey-furred, crowned in iron, wrapped in a war-mantle and
+    swinging a great double axe (v9.6)."""
+    m = _lizard("buser", "#6a6058", "#8a7e72", "#3e3832", "#c8bca6", ("#6b4a32", "#8a6a4a"))
+    head, body = _bone(m, "head"), _bone(m, "body")
+    for sx, d in ((-6, -1), (4, 1)):  # great curled ram's horns
+        h1 = head.cube((sx, 29, -2), (2, 3, 3))
+        h1.fill("#d8ccb0")
+        h2 = head.cube((sx + d * 1, 27, 0), (2, 3, 2))
+        h2.fill("#b8ac90")
+    crown = head.cube((-4, 32, -4), (8, 1, 8), inflate=0.2)
+    crown.fill("#4a4e58")
+    for x in (-4, -1, 2):
+        spike = head.cube((x, 33, -4), (1, 2, 1))
+        spike.fill("#6a6e78")
+    mantle = body.cube((-5, 20, -2.5), (10, 4, 5), inflate=0.3)  # a war-mantle of furs
+    mantle.fill("#4a3a2a", noise=10)
+    mantle.top.fill("#6a5a46")
+    weapon = _bone(m, "weapon")
+    weapon.cubes.clear()
+    haft = weapon.cube((-6.5, 4, -3), (1, 16, 1))
+    haft.fill("#4a3323", noise=4)
+    for z, d in ((-6, 1), (-1, -1)):
+        blade = weapon.cube((-6.5, 14, z), (1, 5, 3))
+        blade.fill("#8a8e98", noise=6)
+        blade.right.vline(0 if d > 0 else 2, "#c9ced6")
+    return m
+
+
 def wyrm_steed():
     """A young dragon of Nazarick, bred to be ridden (steeds.js): scaled in purple and black, horned in gold."""
     return _great_dragon("wyrm_steed", "plated", "#3a2452", "#6b4a8f", "#1d1029", "#c9a227", "#d9a92b", "#5a2a7a",
@@ -3907,5 +3978,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        skeletal_dragon, khajiit, gigant_basilisk, frost_giant, beastman, lakyus, enri, zero, dark_young, jaldabaoth,
        go_gin, elf_ranger, decem, behemoth, neia, remedios, paladin, bafolk, eight_edge_assassin, arena_master,
        platinum_dragon_lord, rubedo, wyrm_steed, ghoul, wraith, death_cavalier, treant_sapling, zytl_qae, pinison,
-       skeleton_archer, quagoa_warlord, rune_golem,
+       skeleton_archer, quagoa_warlord, rune_golem, evil_lord_envy, evil_lord_greed, buser,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

@@ -1210,6 +1210,32 @@ from Royal Runes, gold ingots and an iron block); use the key inside to leave.
   King**: a 3D greatsword whose art, **Rune Sovereign's Decree**, blazes frost, storm and fire runes along the
   ground and wards you. Title: Liberator of the Royal Capital.
 
+### The Siege of the Great Wall (v9.6)
+
+A third dungeon, in the burning Holy Kingdom. Stand at the heart of a **Demon Gate's** ritual circle, or use a
+**Seal of the Great Wall** (Demon Gate and Holy Kingdom Fort chests, or crafted from a Demon's Heart, Angel
+Feathers and gold); use the Seal inside to leave.
+
+- **The Breached Wall:** bafolk and beastmen, then **Buser, King of the Bafolk**. Burning-pitch traps.
+- **The Burning City:** hellhounds and shadow demons, then **Evil Lord Envy and Evil Lord Greed** together.
+  Hellfire traps.
+- **Jaldabaoth's Pyre:** Evil Lord Wrath and hellhounds, then **Jaldabaoth**.
+- Breaking the siege pays 180 gold, Demon's Hearts, Data Crystals, Angel Feathers and a ruby, and the first time
+  the **Demonbane Halberd of the Holy Kingdom**: a 3D polearm that hits demons a third harder, whose art,
+  **Judgement of the Great Wall**, raises a wall of holy light ahead. Title: Saviour of the Holy Kingdom.
+
+### Familiars (v9.6)
+
+Bind a familiar by using its token: **Frost Dragonling** (Frost Dragonling Egg), **Hanzo** (Hanzo's Contract),
+**Shadow Demon** (Shadow Demon's Contract) or **Cherub** (Cherub's Halo). Tokens drop from Frost Dragons,
+Eight-Edge Assassins, Shadow Demons and Archangel Flames, and can be crafted. The **Familiar's Bell** calls the
+familiar or sends it home; sneak + use it (or open **Familiars** on the Plate) to choose, rename and inspect them.
+
+Familiars can't be hurt, follow you, and grow to level 10 from the foes you defeat while they're out, learning
+tricks at levels 1, 4 and 8: Frost Breath, Frost Ward and Winter Gale; Venom Fang, Pickpocket and Shadow Mark;
+Darkvision, Scout and Shadow Bind; Mending, Purify and Guardian Light. Titles: Beastmaster of Nazarick,
+Soul-Bonded.
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
@@ -1415,7 +1441,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink), `comforts.js` (meals and off-hand rings), `necromancy.js` (the Undead Army), `events.js` (world events), `sagas.js` (the sagas), `deeps.js` (the Dwarven Royal Capital) and `devtools.js` (the Creative Tome of Ascension) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink), `comforts.js` (meals and off-hand rings), `necromancy.js` (the Undead Army), `events.js` (world events), `sagas.js` (the sagas), `delve.js` (the dungeon engine), `deeps.js` (the Dwarven Royal Capital), `wall.js` (the Siege of the Great Wall), `familiars.js` (familiars) and `devtools.js` (the Creative Tome of Ascension) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

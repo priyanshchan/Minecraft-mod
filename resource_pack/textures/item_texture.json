@@ -101,6 +101,9 @@
     "overlord_charons_guidance": {
       "textures": "textures/items/overlord/charons_guidance"
     },
+    "overlord_cherub_halo": {
+      "textures": "textures/items/overlord/cherub_halo"
+    },
     "overlord_codex_of_skills": {
       "textures": "textures/items/overlord/codex_of_skills"
     },
@@ -143,6 +146,9 @@
     "overlord_demon_heart": {
       "textures": "textures/items/overlord/demon_heart"
     },
+    "overlord_demonbane_halberd": {
+      "textures": "textures/items/overlord/demonbane_halberd"
+    },
     "overlord_depiction_of_nature": {
       "textures": "textures/items/overlord/depiction_of_nature"
     },
@@ -154,6 +160,9 @@
     },
     "overlord_dragonbone_blade": {
       "textures": "textures/items/overlord/dragonbone_blade"
+    },
+    "overlord_dragonling_egg": {
+      "textures": "textures/items/overlord/dragonling_egg"
     },
     "overlord_dragonscale_boots": {
       "textures": "textures/items/overlord/dragonscale_boots"
@@ -206,6 +215,9 @@
     "overlord_egg_brain": {
       "textures": "textures/items/overlord/egg_brain"
     },
+    "overlord_egg_buser": {
+      "textures": "textures/items/overlord/egg_buser"
+    },
     "overlord_egg_clementine": {
       "textures": "textures/items/overlord/egg_clementine"
     },
@@ -256,6 +268,12 @@
     },
     "overlord_egg_entoma": {
       "textures": "textures/items/overlord/egg_entoma"
+    },
+    "overlord_egg_evil_lord_envy": {
+      "textures": "textures/items/overlord/egg_evil_lord_envy"
+    },
+    "overlord_egg_evil_lord_greed": {
+      "textures": "textures/items/overlord/egg_evil_lord_greed"
     },
     "overlord_egg_evil_lord_wrath": {
       "textures": "textures/items/overlord/egg_evil_lord_wrath"
@@ -428,6 +446,9 @@
     "overlord_elf_kings_staff": {
       "textures": "textures/items/overlord/elf_kings_staff"
     },
+    "overlord_familiar_bell": {
+      "textures": "textures/items/overlord/familiar_bell"
+    },
     "overlord_fang_dagger": {
       "textures": "textures/items/overlord/fang_dagger"
     },
@@ -493,6 +514,9 @@
     },
     "overlord_guardian_crest": {
       "textures": "textures/items/overlord/guardian_crest"
+    },
+    "overlord_hanzo_contract": {
+      "textures": "textures/items/overlord/hanzo_contract"
     },
     "overlord_heartwood": {
       "textures": "textures/items/overlord/heartwood"
@@ -674,6 +698,9 @@
     "overlord_sebas_tea": {
       "textures": "textures/items/overlord/sebas_tea"
     },
+    "overlord_shadow_contract": {
+      "textures": "textures/items/overlord/shadow_contract"
+    },
     "overlord_shadow_of_yggdrasil": {
       "textures": "textures/items/overlord/shadow_of_yggdrasil"
     },
@@ -817,6 +844,9 @@
     },
     "overlord_vestment_leggings": {
       "textures": "textures/items/overlord/vestment_leggings"
+    },
+    "overlord_wall_seal": {
+      "textures": "textures/items/overlord/wall_seal"
     },
     "overlord_warrior_captains_sigil": {
       "textures": "textures/items/overlord/warrior_captains_sigil"

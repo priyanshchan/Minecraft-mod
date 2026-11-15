@@ -586,6 +586,25 @@ def runeblade():
     return w
 
 
+def demonbane_halberd():
+    """The Demonbane Halberd of the Holy Kingdom: a white haft bound in gold, a broad silver axe-blade, a back
+    spike and a long point, its edge lit with holy gold (v9.6)."""
+    w = Weapon("demonbane_halberd", "polearm")
+    w.shaft(-10, 24, "#f4f0e6", band=GOLD)
+    w.box(-1, 12, -1, 2, 2, 2, GOLD, inflate=0.1)  # the socket
+    w.box(-0.5, 13, -6, 1, 6, 5, "#c9ced6")  # the axe-blade
+    w.box(-0.5, 12, -7, 1, 8, 1, "#f4f6fb")
+    w.box(-0.6, 13, -7.2, 1, 8, 1, "#ffe27a", glow=True, inflate=-0.25)
+    w.box(-0.5, 15, 1, 1, 2, 3, "#9aa0aa")  # the back spike
+    w.box(-0.5, 15.5, 4, 1, 1, 1, "#c9ced6")
+    for i, size in enumerate((2, 1)):  # the point
+        w.box(-size / 2, 19 + i * 3, -size / 2, size, 3, size, "#e4e8ee", inflate=0.1)
+    w.gem(0, 13, 0, "#ffe27a")
+    w.tip = (0.0, 25.0, 0.0)
+    w.pommel(-11, GOLD, size=1)
+    return w
+
+
 def magic_wand():
     """The casting staff: dark wood bound in gold, its head a gold claw closed round a floating Data Crystal."""
     w = Weapon("magic_wand", "staff")
@@ -617,7 +636,7 @@ ALL = {
     "elf_kings_staff": elf_kings_staff, "giants_maul": giants_maul, "dragonbone_blade": dragonbone_blade,
     "six_arms_knuckles": six_arms_knuckles,
     "cavalier_lance": cavalier_lance, "ghoulfang_sickle": ghoulfang_sickle, "heartwood_staff": heartwood_staff,
-    "runeblade": runeblade,
+    "runeblade": runeblade, "demonbane_halberd": demonbane_halberd,
     "magic_wand": magic_wand,
 }
 
