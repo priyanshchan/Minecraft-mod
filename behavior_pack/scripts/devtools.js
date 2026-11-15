@@ -48,7 +48,7 @@ export function testKit(player) {
   const kit = [
     [id("data_crystal"), 64], [id("yggdrasil_gold_coin"), 64], [id("refining_stone"), 32], [id("adamantite_ingot"), 16],
     [id("codex_of_skills"), 10], [id("tomb_key"), 1], [id("guardian_crest"), 4], [id("blue_potion"), 8],
-    ...["ruby", "sapphire", "topaz", "jade", "onyx", "sunstone"].map((g) => /** @type {[string, number]} */ ([id(`gem_${g}`), 4])),
+    ...["ruby", "sapphire", "topaz", "jade", "onyx", "sunstone", "moonstone"].map((g) => /** @type {[string, number]} */ ([id(`gem_${g}`), 4])),
   ];
   for (const [item, amount] of kit) giveItem(player, item, amount);
   return "§aTest kit given: crystals, coins, refining stones, ingots, codices, a Tomb key, crests, mana potions and gems";
@@ -102,7 +102,7 @@ export function openTome(player) {
     ["Count every Floor Guardian defeated\n(they may be sworn to your court)", () => {
       const p = profileOf(player);
       if (!Array.isArray(p.bosses)) p.bosses = [];
-      for (const key of ["albedo", "demiurge", "cocytus", "shalltear", "aura", "mare", "pandoras_actor"]) if (!p.bosses.includes(key)) p.bosses.push(key);
+      for (const key of ["albedo", "demiurge", "cocytus", "shalltear", "aura", "mare", "pandoras_actor", "sebas"]) if (!p.bosses.includes(key)) p.bosses.push(key);
       touch(player);
       return "§dEvery Floor Guardian counts as defeated: swear them in from the Kingdom page";
     }],
@@ -114,6 +114,13 @@ export function openTome(player) {
     ["Back to level 1\n(refunds stat points, forgets skills)", () => {
       profileOf(player).skills = {};
       return ascend(player, -MAX_LEVEL);
+    }],
+    ["Endgame kit (v10)\n(divine materials, keys and every familiar's token)", () => {
+      /** @type {[string, number][]} */
+      const kit = [[id("divine_ingot"), 16], [id("world_fragment"), 24], [id("rune_key"), 1], [id("wall_seal"), 1],
+        [id("dragonling_egg"), 1], [id("hanzo_contract"), 1], [id("shadow_contract"), 1], [id("cherub_halo"), 1], [id("wise_kings_acorn"), 1]];
+      for (const [item, amount] of kit) giveItem(player, item, amount);
+      return "§aEndgame kit given: divine ingots, World Item fragments, the dungeon keys and every familiar's token";
     }],
   ];
   const form = new ActionFormData()

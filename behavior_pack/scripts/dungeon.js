@@ -13,6 +13,7 @@
 // surface with the Tomb's rewards. Entering again later, with nobody inside, finds the Tomb restored.
 import { world, system, EntityDamageCause, GameMode } from "@minecraft/server";
 import { giveItem, grantXp, notify, profileOf, touch } from "./rpg.js";
+import { record } from "./delve.js";
 import { Builder, campAt, stockChests } from "./structures.js";
 import * as fx from "./vfx.js";
 
@@ -305,8 +306,12 @@ export function leave(player) {
   return "§5You climb back into the daylight.";
 }
 
+/** Tick the current run began, for the records (v10). */
+let started = 0;
+
 /** Forgets the state of the last run. */
 function resetRun() {
+  started = 0;
   for (const f of floors) {
     f.status = "idle";
     f.stage = 0;
@@ -379,6 +384,7 @@ export function advance(dimension, tomb, index, here) {
     }
     state.mobs = found.length > 0 ? found : spawnGroup(dimension, tomb, index, f.wave, 7);
     state.status = "wave";
+    if (index === 0 && started === 0) started = system.currentTick;
     title(here, `§5${f.name}`, `§7${f.sub}`);
     return;
   }
@@ -499,6 +505,8 @@ export function conquer(player) {
     world.sendMessage(`§5[Nazarick] §6${player.name}§f has conquered the Great Tomb of Nazarick!`);
   }
   touch(player);
+  const time = record(player, "tomb", started > 0 ? system.currentTick - started : 0);
+  if (time) player.sendMessage(time);
   player.sendMessage(`§5[Nazarick] §fThe Tomb is conquered. §6120 Gold Coins§f, §b16 Data Crystals§f, §b6 Refining Stones§f, §d2 gems§f, §5a World Item fragment§f${first ? ", §5two Codices of the Supreme Beings§f" : ""}.`);
   notify(player, leave(player));
 }

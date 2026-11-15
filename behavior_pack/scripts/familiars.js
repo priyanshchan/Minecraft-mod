@@ -12,6 +12,7 @@
 //   Hanzo             - Venom Fang, Pickpocket, Shadow Mark
 //   Shadow Demon      - Darkvision, Scout, Shadow Bind
 //   Cherub            - Mending, Purify, Guardian Light
+//   Wise King's Cub   - Tail Whip, Forager, Great Charge (v10)
 import { world, system } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { creditedPlayer, giveItem, notify, profileOf, registerMenu, touch } from "./rpg.js";
@@ -66,6 +67,14 @@ export const KINDS = [
       ["Mending", "slowly heals your wounds"],
       ["Purify", "lifts poison, wither, weakness and slowness from you"],
       ["Guardian Light", "when you fall below a quarter of your health, a burst of healing light (once every 90 seconds)"],
+    ],
+  },
+  {
+    key: "cub", type: id("familiar_cub"), token: id("wise_kings_acorn"), name: "Wise King's Cub", element: "acid", colour: "§6",
+    tricks: [
+      ["Tail Whip", "lashes the nearest foe with its long tail, knocking it back"],
+      ["Forager", "every so often it digs up something to eat - or something shiny"],
+      ["Great Charge", "rolls into the foes before you, bowling them over, and lends you its speed"],
     ],
   },
 ];
@@ -316,6 +325,46 @@ export function act(player, body, now) {
         notify(player, `§5${bond.name} whispers: §f${word}`);
         used.push("Scout");
       }
+    }
+  } else if (kind.key === "cub") {
+    if (known >= 1 && due(player, "whip", 4, now)) {
+      const foe = nearest();
+      if (foe) {
+        strike(player, foe, 3 + power);
+        try {
+          const dx = foe.location.x - body.location.x;
+          const dz = foe.location.z - body.location.z;
+          const n = Math.hypot(dx, dz) || 1;
+          foe.applyKnockback({ x: (dx / n) * 1.2, z: (dz / n) * 1.2 }, 0.3);
+        } catch {
+          // too heavy to move
+        }
+        fx.slash(d, { x: foe.location.x, y: foe.location.y + 0.8, z: foe.location.z }, "acid", 0.8);
+        used.push("Tail Whip");
+      } else ready.delete(`${player.id}|whip`);
+    }
+    if (known >= 2 && due(player, "forage", 120, now)) {
+      const finds = /** @type {[string, number][]} */ ([["minecraft:bread", 3], ["minecraft:golden_carrot", 2], [COIN, 4], [id("data_crystal"), 1]]);
+      const [item, n] = finds[Math.floor(Math.random() * finds.length) % finds.length];
+      giveItem(player, item, n);
+      notify(player, `§6${bond.name} digs up something for you!`);
+      used.push("Forager");
+    }
+    if (known >= 3 && due(player, "charge", 15, now)) {
+      const foes = foesNear(player, player.location, 6);
+      if (foes.length > 0) {
+        for (const foe of foes) {
+          strike(player, foe, 8 + power);
+          try {
+            foe.applyKnockback({ x: foe.location.x - player.location.x, z: foe.location.z - player.location.z }, 0.4);
+          } catch {
+            // too heavy to move
+          }
+        }
+        player.addEffect("speed", 6 * TICKS, { amplifier: 1, showParticles: false });
+        fx.ring(d, player.location, "acid", 6);
+        used.push("Great Charge");
+      } else ready.delete(`${player.id}|charge`);
     }
   } else if (kind.key === "cherub" && health) {
     if (known >= 1 && share < 1 && due(player, "mend", 4, now)) {

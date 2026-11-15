@@ -1603,6 +1603,10 @@ world.afterEvents.entityHurt.subscribe((event) => {
       if (rune === "fire") victim.setOnFire(4, true);
       else if (rune === "frost") victim.addEffect("slowness", 3 * TICKS, { amplifier: 1 });
       else if (rune === "life") heal(attacker, Math.max(1, event.damage * 0.08));
+      else if (rune === "shadow") {
+        victim.addEffect("wither", 3 * TICKS, { amplifier: 0 });
+        victim.addEffect("weakness", 3 * TICKS, { amplifier: 0 });
+      }
       else {
         system.runTimeout(() => {
           try {
@@ -1774,6 +1778,9 @@ system.runInterval(() => {
       } else if (wearsFullSet(gear, "cavalier")) {
         player.addEffect("strength", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });
+      } else if (wearsFullSet(gear, "maid")) {
+        player.addEffect("speed", 3 * TICKS, { amplifier: 1, showParticles: false });
+        player.addEffect("haste", 3 * TICKS, { amplifier: 0, showParticles: false });
       } else if (wearsFullSet(gear, "dark_warrior")) {
         player.addEffect("strength", 3 * TICKS, { amplifier: 0, showParticles: false });
         player.addEffect("resistance", 3 * TICKS, { amplifier: 0, showParticles: false });

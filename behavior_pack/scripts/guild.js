@@ -169,6 +169,11 @@ export const TITLES = [
     earned: (p) => Object.keys(p.familiars?.owned ?? {}).length >= 4 },
   { key: "bonded", name: "Soul-Bonded", how: "Raise a familiar to level 10",
     earned: (p) => Object.values(p.familiars?.owned ?? {}).some((b) => Number(b?.level ?? 0) >= 10) },
+  // v10: Climb's saga, the dungeons' records, all five familiars
+  { key: "knights_friend", name: "The Princess's Ally", how: "Complete Climb's saga", earned: (p) => sagaSteps(p, "climb") >= 3 },
+  { key: "speedrunner", name: "Swift as Death", how: "Clear any dungeon in under ten minutes",
+    earned: (p) => Object.values(p.records ?? {}).some((t) => Number(t) > 0 && Number(t) < 10 * 60 * 20) },
+  { key: "keeper_of_the_menagerie", name: "Keeper of the Menagerie", how: "Bind all five familiars", earned: (p) => Object.keys(p.familiars?.owned ?? {}).length >= 5 },
   { key: "liberator_of_the_capital", name: "Liberator of the Royal Capital", how: "Free the Dwarven Royal Capital",
     earned: (p) => Array.isArray(p.bosses) && p.bosses.includes("royal_capital") },
 ];

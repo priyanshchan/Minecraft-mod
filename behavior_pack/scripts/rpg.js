@@ -33,6 +33,7 @@ const PARTY_SHARE = 0.5;
  *   skills: Record<string, number>, codex: number, bosses: string[], story: string[], realm: Record<string, any>,
  *   race: string, raceLv: number, raceXp: number, reborn: number, army: any[], raisedTotal: number, events: string[], medalsEarned: number,
  *   sagas: Record<string, any>, capitalRuns: number, familiars: Record<string, any>, wallRuns: number,
+ *   records: Record<string, number>,
  * }} Profile
  */
 
@@ -238,6 +239,7 @@ export const TIPS = {
   [id("treant_sapling")]: "Treants are slow but their roots hold you fast. Fire eats through bark.",
   [id("zytl_qae")]: "The Destroyer Tree: watch the ground for its roots and seeds, keep moving, and burn it.",
   [id("quagoa_warlord")]: "The Quagoa Warlord: it burrows and charges - sidestep the line, then punish it. Its clan answers its call.",
+  [id("brain_eater")]: "The Brain Eater: its mind blasts ring outward and its tentacles drag you in. Break line of sight and strike between its spells.",
   [id("buser")]: "Buser, King of the Bafolk: his charges cut long lines - step aside, and cut down the bafolk he calls before they surround you.",
   [id("evil_lord_envy")]: "Evil Lord Envy: it drags you in and rains bile. Keep your distance from its halo and never stay in the green.",
   [id("evil_lord_greed")]: "Evil Lord Greed: gold falls where it points and molten rings spread from it. Run outward when it raises its arms.",
@@ -352,7 +354,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [], story: [], realm: {}, race: "none", raceLv: 1, raceXp: 0, reborn: 0, army: [], raisedTotal: 0, events: [], medalsEarned: 0, sagas: {}, capitalRuns: 0, familiars: { owned: {}, active: "" }, wallRuns: 0 };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [], story: [], realm: {}, race: "none", raceLv: 1, raceXp: 0, reborn: 0, army: [], raisedTotal: 0, events: [], medalsEarned: 0, sagas: {}, capitalRuns: 0, familiars: { owned: {}, active: "" }, wallRuns: 0, records: {} };
 }
 
 /**

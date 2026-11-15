@@ -29,7 +29,13 @@ const LONG = 20000000;
 export const STEEDS = {
   [id("wyrm_whistle")]: { kind: "wyrm", type: id("wyrm_steed"), name: "Nazarick Wyrm", flies: true },
   [id("soul_reins")]: { kind: "soul", type: id("soul_steed"), name: "Soul Eater", flies: false },
+  [id("hellfire_reins")]: { kind: "hell", type: id("hell_steed"), name: "Hellhound Steed", flies: false }, // v10
 };
+
+/** The kind of steed a creature is, if it is one. @param {string} typeId */
+export function kindOf(typeId) {
+  return Object.values(STEEDS).find((s) => s.type === typeId)?.kind;
+}
 /** Armour for mounts: tier, and what it grants. */
 export const BARDING = {
   [id("adamantite_barding")]: { tier: 1, name: "Adamantite Barding" },
@@ -281,6 +287,7 @@ export function charge(player, mount, now = system.currentTick) {
     // unloading
   }
   const level = profileOf(player).level;
+  const hellish = mount.typeId === id("hell_steed"); // the Hellhound's charge is a trail of fire
   let struck = 0;
   for (const foe of foesNear(player, { x: mount.location.x + dir.x * 4, y: mount.location.y, z: mount.location.z + dir.z * 4 }, 5)) {
     const dx = foe.location.x - mount.location.x;
@@ -290,12 +297,14 @@ export function charge(player, mount, now = system.currentTick) {
     strike(player, foe, 6 + level * 0.2);
     try {
       foe.applyKnockback({ x: dir.x * 1.6, z: dir.z * 1.6 }, 0.5);
+      if (hellish) foe.setOnFire(5, true);
     } catch {
       // gone
     }
     struck++;
   }
-  fx.slash(mount.dimension, { x: mount.location.x + dir.x * 2, y: mount.location.y + 1, z: mount.location.z + dir.z * 2 }, "acid", 1.6);
+  fx.slash(mount.dimension, { x: mount.location.x + dir.x * 2, y: mount.location.y + 1, z: mount.location.z + dir.z * 2 }, hellish ? "fire" : "acid", 1.6);
+  if (hellish) fx.beam(mount.dimension, { x: mount.location.x, y: mount.location.y + 0.5, z: mount.location.z }, { x: mount.location.x + dir.x * 8, y: mount.location.y + 0.5, z: mount.location.z + dir.z * 8 }, "fire", 1.2);
   return struck;
 }
 
@@ -303,11 +312,13 @@ export function charge(player, mount, now = system.currentTick) {
 export function trample(player, mount) {
   let struck = 0;
   const level = profileOf(player).level;
+  const hellish = mount.typeId === id("hell_steed");
   for (const foe of foesNear(player, mount.location, 1.8)) {
     strike(player, foe, 3 + level * 0.1);
+    if (hellish) foe.setOnFire(3, true);
     struck++;
   }
-  fx.rise(mount.dimension, mount.location, "acid", 0.6);
+  fx.rise(mount.dimension, mount.location, hellish ? "fire" : "acid", 0.6);
   return struck;
 }
 
@@ -417,7 +428,7 @@ world.afterEvents.itemUse.subscribe((event) => {
       if (steed.flies) {
         const caught = breathe(player, mount);
         if (caught < 0) notify(player, "§7The wyrm draws breath...");
-      } else if (charge(player, mount) < 0) notify(player, "§7The Soul Eater gathers itself...");
+      } else if (charge(player, mount) < 0) notify(player, `§7The ${steed.name} gathers itself...`);
       return;
     }
     notify(player, player.isSneaking ? dismiss(player, item) : call(player, item));
@@ -431,7 +442,7 @@ world.afterEvents.entityDie.subscribe((event) => {
     const dead = event.deadEntity;
     if (!dead.hasTag("overlord_steed")) return;
     const owner = String(dead.getDynamicProperty("overlord:owner") ?? "");
-    const kind = dead.typeId === id("wyrm_steed") ? "wyrm" : "soul";
+    const kind = kindOf(dead.typeId) ?? "soul";
     mourning.set(`${owner}|${kind}`, system.currentTick + MOURNING * TICKS);
     aloft.delete(dead.id);
   } catch {
@@ -451,7 +462,7 @@ system.runInterval(() => {
       if (!mount) continue;
       ridden.add(mount.id);
       if (mount.typeId === id("wyrm_steed")) fly(player, mount);
-      else if (second && mount.typeId === id("soul_steed")) trample(player, mount);
+      else if (second && (mount.typeId === id("soul_steed") || mount.typeId === id("hell_steed"))) trample(player, mount);
       if (second) tendBarding(mount);
     } catch {
       // the player is leaving
@@ -480,5 +491,5 @@ system.runInterval(() => {
 }, 1);
 
 /** The steeds' kinds and what calls them, for the help text. */
-export const HELP = "Whistle: call or send away your wyrm; while riding, jump to fly and use it to breathe fire. Reins: call your Soul Eater; while riding, use them to charge.";
+export const HELP = "Whistle: call or send away your wyrm; while riding, jump to fly and use it to breathe fire. Reins: call your Soul Eater or Hellhound Steed; while riding, use them to charge (the Hellhound's charge burns).";
 

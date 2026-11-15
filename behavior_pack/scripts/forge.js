@@ -33,6 +33,7 @@ export const RUNES = {
   frost: { name: "Rune of Frost", item: id("rune_of_frost"), help: "slows whatever it strikes" },
   storm: { name: "Rune of Storm", item: id("rune_of_storm"), help: "a second jolt of lightning after every blow" },
   life: { name: "Rune of Life", item: id("rune_of_life"), help: "heals you for 8% of the damage dealt" },
+  shadow: { name: "Rune of Shadow", item: id("rune_of_shadow"), help: "withers and weakens whatever it strikes" }, // v10
 };
 export const RUNE_KEY = "overlord:rune";
 

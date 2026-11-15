@@ -44,6 +44,8 @@ export const FINISHERS = {
  * @type {Record<string, { kind: Kind, element: string, trait: string, art: string }>}
  */
 export const WEAPONS = {
+  // v10: Neia's bow, the gift of the Sorcerer King
+  shooting_star_bow: { kind: "staff", element: "holy", trait: "a fifth of blows loose a star at another foe", art: "Shooting Star: a volley of five stars, each falling on a foe within 24 blocks" },
   // v9.7: the divine arms - super-tier (level 70) and god-tier (level 80); see DIVINE below
   twilight_greatsword: { kind: "greatsword", element: "dark", trait: "withers the target", art: "Twilight Cross: two vast crossing cuts through everything in a 7-block arc before you, withering it" },
   thunderlord_glaive: { kind: "polearm", element: "lightning", trait: "one blow in four calls down lightning", art: "Wrath of the Thunder Lord: lightning falls on up to six foes within 14 blocks" },
@@ -109,6 +111,7 @@ export const NEW_ARTS = {
   heartwood_staff: ["overlord_roots", 8],
   runeblade: ["overlord_rune_sovereign", 10],
   demonbane_halberd: ["overlord_wall_judgement", 10],
+  shooting_star_bow: ["overlord_shooting_star", 9],
   twilight_greatsword: ["overlord_twilight_cross", 12],
   thunderlord_glaive: ["overlord_thunder_lord", 14],
   eight_elements_staff: ["overlord_convergence", 16],
@@ -122,6 +125,7 @@ export const NEW_ARTS = {
  * @type {Record<string, { name: string, element: string, particle: string, two: string, full: string, art: string, cooldown: number }>}
  */
 export const SETS = {
+  maid: { name: "Pleiades Battle Maid", element: "arcane", particle: "glyph", two: "Speed I", full: "Speed II and Haste I", art: "Pleiades Formation: knives fly at up to six foes within 10 blocks, and you and your allies are quickened", cooldown: 30 }, // v10
   seraph: { name: "Seraph's Holy Plate", element: "holy", particle: "ray", two: "Regeneration I", full: "Resistance II, Regeneration I and Fire Resistance; sneak in the air to glide", art: "Seraphic Ascension: you rise on wings of light, smiting every foe within 7 blocks and healing yourself", cooldown: 45 },
   supreme: { name: "Raiment of the Supreme Beings", element: "dark", particle: "orbit", two: "Strength I", full: "Strength II, Resistance II, Regeneration I, Fire Resistance, +25% spell power, no poison or wither, and Last Stand", art: "Presence of the Supreme Being: every foe within 12 blocks is struck down, weakened and slowed while you are shielded", cooldown: 60 },
   dark_warrior: { name: "Dark Warrior", element: "dark", particle: "wisp", two: "Resistance I", full: "Strength I and Resistance I", art: "Dark Charge: you hurl yourself forward, striking everything in your path", cooldown: 30 },
@@ -421,6 +425,13 @@ export function onBlow(player, victim, damage) {
   const weapon = WEAPONS[key];
   const d = player.dimension;
   if (key === "demonbane_halberd" && isDemon(victim)) strike(player, victim, damage / 3);
+  if (key === "shooting_star_bow" && Math.random() < 0.2) {
+    const other = foesNear(player, victim.location, 10).find((f) => f.id !== victim.id);
+    if (other) {
+      strike(player, other, 6);
+      fx.beam(d, above(victim, 1.2), above(other, 1), "holy", 0.8);
+    }
+  }
   if (DIVINE[key] !== undefined && worthy(player, key)) divineTrait(player, victim, damage, key);
   fx.slash(d, above(victim), weapon.element, 1);
   techniques(player, victim, damage, weapon.element);
@@ -613,6 +624,28 @@ export function useWeaponArt(player, item) {
     fx.shake(d, at, 8, 0.25, 0.3);
     fx.pose(player, "slam");
     sound(player, "block.composter.ready", 0.6);
+  } else if (key === "shooting_star_bow") {
+    const foes = foesNear(player, player.location, 24).slice(0, 5);
+    if (foes.length === 0) {
+      cooldowns.delete(`${player.id}|${art[0]}`);
+      notify(player, "§7No foe in sight");
+      return true;
+    }
+    for (let i = 0; i < 5; i++) {
+      const foe = foes[i % foes.length];
+      system.runTimeout(() => {
+        try {
+          if (!foe.isValid) return;
+          strike(player, foe, 12);
+          fx.beam(d, above(player, 1.5), above(foe, 1), "holy", 1);
+          fx.flash(d, above(foe, 1), "holy", 0.8);
+        } catch {
+          // gone
+        }
+      }, i * 3);
+    }
+    fx.pose(player, "point");
+    sound(player, "random.bow", 1.4);
   } else if (key === "twilight_greatsword") {
     for (const foe of foesAhead(player, 7, 0.4)) {
       strike(player, foe, 24);
@@ -1024,6 +1057,18 @@ export function armourArt(player, set) {
     fx.skull(d, above(player, 2.3), 1.3);
     fx.pose(player, "summon");
     sound(player, "mob.skeleton.death", 0.6);
+  } else if (set === "maid") {
+    for (const foe of foesNear(player, player.location, 10).slice(0, 6)) {
+      strike(player, foe, 10);
+      fx.beam(d, above(player, 1.2), above(foe, 1), "arcane", 0.6);
+    }
+    for (const ally of player.dimension.getPlayers({ location: player.location, maxDistance: 8 })) {
+      ally.addEffect("speed", 8 * TICKS, { amplifier: 1, showParticles: false });
+      ally.addEffect("haste", 8 * TICKS, { amplifier: 1, showParticles: false });
+    }
+    fx.ring(d, player.location, "arcane", 4);
+    fx.pose(player, "sweep");
+    sound(player, "random.bow", 1.6);
   } else if (set === "seraph") {
     player.addEffect("levitation", 1 * TICKS, { amplifier: 3, showParticles: false });
     player.addEffect("slow_falling", 8 * TICKS, { amplifier: 0, showParticles: false });
@@ -1200,6 +1245,7 @@ const TWO_EFFECTS = {
   beasthide: ["haste", 0],
   cavalier: ["speed", 0],
   seraph: ["regeneration", 0],
+  maid: ["speed", 0],
   supreme: ["strength", 0],
 };
 

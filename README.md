@@ -1256,6 +1256,35 @@ below that their arts, on-hit powers and set bonuses do nothing (the Arsenal pag
   Regeneration, Fire Resistance, no poison or wither, +25% spell power, **Last Stand** (once every five minutes,
   near-death restores all your health), and the Presence of the Supreme Being art.
 
+### The Everything Update (v10.0)
+
+Something new for every part of the add-on:
+- **Spells:** Astral Smite (tier 8) and Black Hole (super-tier). **God-tier:** Absolute Zero.
+- **Weapon:** Neia's **Ultimate Shooting Star Super** (3D bow).
+- **Armour:** the **Pleiades Battle Maid** set.
+- **Boss:** the **Brain Eater**.
+- **Dungeons:** speed records for all three.
+- **Familiar:** the **Wise King's Cub**.
+- **Saga:** Climb's **"The Princess's Knight"**.
+- **Court:** **Sebas Tian** as Steward.
+- **District:** the **Grand Library** (spell power).
+- **Invader:** the **Eight Fingers**.
+- **Campaign:** the **Epilogue: The Holy Kingdom's Plea**.
+- **Race:** the **Dark Elf**.
+- **Steed:** the **Hellhound Steed**.
+- **Undead Army:** the **Death Cavalier** can be raised.
+- **World event:** the **Abelion Hills Uprising**.
+- **Site:** the **Ruins of the Eight Greed Kings**.
+- **Arena:** a **Champions' tier** (level 80).
+- **Raids:** Sebas and Pandora's Actor as bosses.
+- **Rune:** the **Rune of Shadow**.
+- **Gem:** the **Moonstone**.
+- **Meal:** **Pestonya's Healing Soup**.
+- **Party traits:** Lucky and Studious.
+- **Skill:** **Overlord's Wisdom**.
+- **Titles:** six new ones.
+- **Creative tome:** an endgame kit.
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it

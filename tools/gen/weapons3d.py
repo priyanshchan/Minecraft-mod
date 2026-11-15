@@ -605,6 +605,22 @@ def demonbane_halberd():
     return w
 
 
+def shooting_star_bow():
+    """The Ultimate Shooting Star Super (v10): Neia's bow, a broad white-and-gold recurve with a star at its grip."""
+    w = Weapon("shooting_star_bow", "staff")
+    w.grip(-3, 6, "#f4f0e6", wrap=GOLD)
+    w.box(-1, -1, -1.5, 2, 2, 3, GOLD)  # the star's setting
+    w.gem(0, 0, -1.6, "#ffe27a", size=2)
+    for y0, back in ((3, 1), (-15, 1)):  # the two limbs, swept back at the tips
+        w.box(-0.75, y0, -0.75, 1.5, 12, 1.5, "#f4f0e6")
+        w.box(-0.6, y0 + 2, -0.9, 1.2, 8, 0.4, GOLD, inflate=-0.05)  # gold inlay along each limb
+    w.box(-0.75, 15, 0.5, 1.5, 3, 1.5, GOLD, rotation=(-25, 0, 0), pivot=(0, 15, 0.75))
+    w.box(-0.75, -18, 0.5, 1.5, 3, 1.5, GOLD, rotation=(25, 0, 0), pivot=(0, -15, 0.75))
+    w.box(-0.15, -15, 2, 0.3, 30, 0.3, "#fff6c8", glow=True, inflate=-0.05)  # the string, faintly shining
+    w.tip = (0.0, 17.0, 0.0)
+    return w
+
+
 # ------------------------------------------------------------------ v9.7: the divine arms
 def twilight_greatsword():
     """Greatsword of the Twilight Hero (super-tier): Momon's black blade reforged - wider, with a winged
@@ -727,7 +743,7 @@ ALL = {
     "elf_kings_staff": elf_kings_staff, "giants_maul": giants_maul, "dragonbone_blade": dragonbone_blade,
     "six_arms_knuckles": six_arms_knuckles,
     "cavalier_lance": cavalier_lance, "ghoulfang_sickle": ghoulfang_sickle, "heartwood_staff": heartwood_staff,
-    "runeblade": runeblade, "demonbane_halberd": demonbane_halberd,
+    "runeblade": runeblade, "demonbane_halberd": demonbane_halberd, "shooting_star_bow": shooting_star_bow,
     "twilight_greatsword": twilight_greatsword, "thunderlord_glaive": thunderlord_glaive,
     "eight_elements_staff": eight_elements_staff, "longinus": longinus, "world_breaker": world_breaker,
     "nidhogg_fang": nidhogg_fang,

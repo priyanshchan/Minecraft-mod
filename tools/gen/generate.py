@@ -123,7 +123,7 @@ def main():
                        ("infernal", icons.infernal_layers), ("vestment", icons.vestment_layers),
                        ("bonedragon", icons.bonedragon_layers), ("beasthide", icons.beasthide_layers),
                        ("platinum", icons.platinum_layers), ("cavalier", icons.cavalier_layers),
-                       ("seraph", icons.seraph_layers), ("supreme", icons.supreme_layers)):
+                       ("seraph", icons.seraph_layers), ("supreme", icons.supreme_layers), ("maid", icons.maid_layers)):
         layer1, layer2 = make()
         save_png(RP / f"textures/models/armor/{content.NS}_{name}_1.png", icons.hd_armor(layer1, 1))
         save_png(RP / f"textures/models/armor/{content.NS}_{name}_2.png", icons.hd_armor(layer2, 2))

@@ -7,7 +7,7 @@ import { world, system, EntityDamageCause, Direction } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { giveItem, notify, profileOf, setHudExtra, spellPower, spendMana, restoreMana, touch, hasAllies } from "./rpg.js";
 import * as skills from "./skills.js";
-import { cataclysm, creation, goalOfAllLife, ouroboros, pantheon, requiemOfFortyOne, summonBehemoth } from "./godspells.js";
+import { absoluteZero, cataclysm, creation, goalOfAllLife, ouroboros, pantheon, requiemOfFortyOne, summonBehemoth } from "./godspells.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -120,6 +120,7 @@ export const AFFINITY = {
   [id("zytl_qae")]: { fire: 1.5, acid: 0.1, ice: 0.75 },
   [id("rune_golem")]: { lightning: 0.25, fire: 0.5, acid: 1.5 },
   [id("evil_lord_envy")]: { acid: 0.25, holy: 1.75 },
+  [id("brain_eater")]: { arcane: 0.25, holy: 1.75 },
   [id("evil_lord_greed")]: { fire: 0.25, holy: 1.75, ice: 1.25 },
   [id("dark_young")]: { dark: 0.25, fire: 1.5, holy: 1.25 },
   [id("jaldabaoth")]: { fire: 0.1, ice: 1.5, holy: 1.25 },
@@ -634,6 +635,10 @@ export const SPELLS = [
   { key: "summon_behemoth", name: "Summon Behemoth", tier: SUPER, mana: 120, cooldown: 180, element: "fire", help: "Super-tier: two Behemoths rise from pillars of fire to fight for you for a minute, beyond your usual summons.", cast: summonBehemoth },
   { key: "requiem_of_the_41", name: "Requiem of the Forty-One", tier: GOD, mana: 220, cooldown: 300, element: "dark", help: "God-tier (for those who have conquered the Great Tomb): the banners of Ainz Ooal Gown fill the sky and forty-one beams, one for each Supreme Being, fall on your foes within 36 blocks; then all of them are struck and weakened together. Allies near fight with Strength II and Resistance for 20 seconds.", cast: requiemOfFortyOne },
   { key: "ouroboros", name: "Ouroboros", tier: GOD, mana: 200, cooldown: 300, element: "arcane", help: "God-tier (for those who have conquered the Great Tomb): the world serpent coils round 32 blocks and turns time back for your side - every ally is fully healed and cleansed - while time all but stops for your foes, crushed by the tightening coils for ten seconds.", cast: ouroboros },
+  // v10.0
+  { key: "astral_smite", name: "Astral Smite", tier: 8, mana: 40, cooldown: 7, element: "holy", help: "A spear of starlight on a single mob.", cast: bolt(32, 70, "holy", CRIT, "beacon.activate") },
+  { key: "black_hole", name: "Black Hole", tier: SUPER, mana: 130, cooldown: 150, element: "dark", help: "Super-tier: a black hole opens where you aim, drags in everything within 9 blocks and crushes it after 3 seconds.", cast: burst(9, 150, "dark", { delay: 3, pull: true, effect: SOUL, sound: "mob.wither.spawn" }) },
+  { key: "absolute_zero", name: "Absolute Zero", tier: GOD, mana: 210, cooldown: 300, element: "ice", help: "God-tier (for those who have conquered the Great Tomb): the cold of Cocytus's own floor falls over 28 blocks - every foe is frozen solid for eight seconds, the ice biting each second, and when it shatters each takes a final blow; bosses are only slowed, but still take every bite.", cast: absoluteZero },
   { key: "sword_of_damocles", name: "Sword of Damocles", tier: SUPER, mana: 130, cooldown: 150, element: "arcane", help: "Super-tier: a colossal blade falls after 4 seconds (6 blocks).", cast: burst(6, 200, "arcane", { delay: 4, sound: "random.anvil_land" }) },
 ];
 
@@ -794,7 +799,7 @@ export function castSelected(player) {
     fx.nova(player.dimension, fx.handOf(player), spell.element, maximized ? 2.2 : 1.4);
   }
   if (spell.element === "holy") radiate(player, skills.value(prof, "radiance") * 2);
-  ready.set(key, system.currentTick + Math.round(spell.cooldown * skills.cooldownFactor(prof) * TICKS));
+  ready.set(key, system.currentTick + Math.round(spell.cooldown * skills.cooldownFactor(prof) * (spell.tier >= SUPER ? skills.greatRecharge(prof) : 1) * TICKS));
   const before = masteryOf(player, spell.key);
   // Scholar: now and then a cast counts twice towards mastery.
   const study = Math.random() < skills.value(prof, "scholar") / 100 ? 2 : 1;

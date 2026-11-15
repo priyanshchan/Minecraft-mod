@@ -640,6 +640,52 @@ export function ouroboros(caster, power) {
   return true;
 }
 
+const FREEZE = 8; // seconds Absolute Zero holds its foes
+
+/**
+ * Absolute Zero (god-tier, v10): the cold of the Fifth Floor falls over 28 blocks round the caster. Every lesser
+ * foe is frozen solid for eight seconds and every foe is bitten by the cold each second; when the ice shatters,
+ * each takes a final blow. Bosses are only slowed, but take every bite.
+ * @param {Player} caster @param {number} power
+ */
+export function absoluteZero(caster, power) {
+  const d = caster.dimension;
+  const centre = { ...caster.location };
+  invocation(caster, "ice");
+  proclaim(caster, "§b§lAbsolute Zero", "§7The cold of the Fifth Floor falls upon the world");
+  cinematic(caster, centre, FREEZE + 2, 12, 9);
+  const caught = foesNear(caster, centre, 28);
+  for (const foe of caught) {
+    try {
+      foe.addEffect("slowness", (FREEZE + 1) * TICKS, { amplifier: isBoss(foe) ? 2 : 255 });
+      foe.addEffect("weakness", (FREEZE + 1) * TICKS, { amplifier: 1 });
+      fx.puff(d, "shard", up(foe.location), "ice", 1.2);
+    } catch {
+      // gone
+    }
+  }
+  for (const r of [7, 14, 21, 28]) system.runTimeout(() => fx.circle(d, centre, "ice", r), r);
+  for (let beat = 1; beat <= FREEZE; beat++) {
+    system.runTimeout(() => {
+      if (!caster.isValid) return;
+      for (const foe of foesNear(caster, centre, 28)) smite(caster, foe, 8 * power);
+      fx.nova(d, up(centre, 0.3), "ice", 6 + beat * 2.5);
+      sound(d, "random.glass", centre, 0.5 + beat * 0.05, 2);
+    }, beat * TICKS);
+  }
+  system.runTimeout(() => {
+    if (!caster.isValid) return;
+    for (const foe of foesNear(caster, centre, 28)) {
+      smite(caster, foe, 40 * power);
+      fx.puff(d, "shard", up(foe.location), "ice", 1.6);
+    }
+    fx.nova(d, up(centre, 0.5), "ice", 28);
+    fx.shake(d, centre, 32, 0.6, 0.8);
+    sound(d, "random.glass", centre, 0.4, 4);
+  }, (FREEZE + 1) * TICKS);
+  return true;
+}
+
 /**
  * Creation (super-tier): reshapes the world where the caster points - the ground freezes over twelve
  * blocks and everything on it is locked in ice for eight seconds, the cold biting each second.

@@ -60,6 +60,8 @@ export const TRAITS = [
   { key: "devoted", name: "Devoted", help: "the bond grows twice as fast" },
   { key: "scavenger", name: "Scavenger", help: "one kill in ten turns up a Gold Coin" },
   { key: "resolute", name: "Resolute", help: "returns in half the time after falling" },
+  { key: "lucky", name: "Lucky", help: "one kill in twenty-five turns up a Data Crystal" }, // v10
+  { key: "studious", name: "Studious", help: "a hired member learns twice as fast" }, // v10
 ];
 export const GIFT_COST = 5; // Gold Coins for a gift, once a day per member
 const GIFT_BOND = 5;
@@ -1414,15 +1416,17 @@ export function shareKill(player, dead, random = Math.random) {
   const bond = isElite(dead) ? 3 : 1;
   let changed = false;
   let coins = 0;
+  let crystals = 0;
   party.forEach((member, index) => {
     if (!member.out || recovering(player, index) > 0) return;
     changed = true;
     const growth = bond * (hasTrait(player, member, "devoted") ? 2 : 1) * skills.bondFactor(profileOf(player)); // Bonds of Loyalty
     addBond(player, member, Math.floor(growth) + (random() < growth % 1 ? 1 : 0));
     if (hasTrait(player, member, "scavenger") && random() < 0.1) coins += 1;
+    if (hasTrait(player, member, "lucky") && random() < 0.04) crystals += 1;
     if (Math.floor(member.look / 2) === 4 && levelOf(player, member) >= CUTPURSE_LEVEL && random() < 0.2) coins += 1; // Cutpurse
     if (member.hired && member.level < MAX_LEVEL) {
-      member.xp += Math.round(xp * MERC_SHARE);
+      member.xp += Math.round(xp * MERC_SHARE * (hasTrait(player, member, "studious") ? 2 : 1));
       const start = member.level;
       while (member.level < MAX_LEVEL && member.xp >= xpForNext(member.level)) {
         member.xp -= xpForNext(member.level);
@@ -1432,6 +1436,10 @@ export function shareKill(player, dead, random = Math.random) {
       if (member.level > start) player.sendMessage(`§6[Party] §b${member.name}§f has reached level §6${member.level}§f.`);
     }
   });
+  if (crystals > 0) {
+    giveItem(player, id("data_crystal"), crystals);
+    notify(player, "§bYour lucky companion found a Data Crystal");
+  }
   if (coins > 0) {
     giveItem(player, COIN, coins);
     notify(player, `§6Your party turned up ${coins} Gold Coin${coins === 1 ? "" : "s"}`);

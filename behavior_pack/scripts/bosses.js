@@ -141,6 +141,22 @@ export const BOSSES = {
       [{ name: "Fall of the World Tree", shape: "slam", power: 2.0, radius: 11, delay: 50 }, { name: "Saplings Awaken", shape: "summon", power: 1.0, radius: 6, type: id("treant_sapling"), count: 3 }],
     ],
   },
+  sebas: { // v10: so that he may be sworn to the court
+    name: "Sebas Tian", element: "holy", damage: 12,
+    moves: [
+      [{ name: "Dragon's Fist", shape: "line", power: 1.2, length: 10 }, { name: "Iron Sweep", shape: "slam", power: 1.0, radius: 4 }],
+      [{ name: "Thousand Blows", shape: "barrage", power: 1.0, radius: 2.5, count: 5 }, { name: "Step of the Dragon", shape: "blink", power: 1.2, radius: 3 }],
+      [{ name: "Perfect Warrior's Strike", shape: "slam", power: 1.7, radius: 7, delay: 40 }],
+    ],
+  },
+  brain_eater: { // v10
+    name: "Brain Eater", element: "arcane", damage: 14, adds: [[id("shadow_demon"), 2]],
+    moves: [
+      [{ name: "Mind Blast", shape: "ring", power: 1.1, inner: 2, radius: 8 }, { name: "Psychic Lance", shape: "line", power: 1.2, length: 16 }],
+      [{ name: "Tentacle Grasp", shape: "pull", power: 1.1, radius: 12 }, { name: "Thought Storm", shape: "barrage", power: 1.0, radius: 3, count: 5 }],
+      [{ name: "Devour the Mind", shape: "slam", power: 1.8, radius: 8, delay: 45 }, { name: "Phase Step", shape: "blink", power: 1.3, radius: 3.5 }],
+    ],
+  },
   buser: {
     name: "Buser, King of the Bafolk", element: "none", damage: 15, adds: [[id("bafolk"), 2]],
     moves: [

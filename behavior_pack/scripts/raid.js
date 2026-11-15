@@ -16,7 +16,7 @@ const WAVE_TIME = 240; // seconds allowed per wave
 const BOSSES = [
   [id("death_knight")],
   [id("narberal"), id("lupusregina"), id("entoma"), id("solution"), id("yuri"), id("cz_delta")],
-  [id("shalltear"), id("cocytus"), id("albedo"), id("demiurge"), id("aura"), id("mare")],
+  [id("shalltear"), id("cocytus"), id("albedo"), id("demiurge"), id("aura"), id("mare"), id("sebas"), id("pandoras_actor")],
   [id("ainz")], // the Throne Room: the Overlord himself
 ];
 

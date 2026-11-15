@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:hellfire_reins"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "LLL",
+      "LHL",
+      " B "
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:leather"
+      },
+      "H": {
+        "item": "overlord:demon_heart"
+      },
+      "B": {
+        "item": "minecraft:blaze_rod"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:demon_heart"
+      }
+    ],
+    "result": {
+      "item": "overlord:hellfire_reins",
+      "count": 1
+    }
+  }
+}

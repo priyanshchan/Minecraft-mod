@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:shooting_star_bow"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " GS",
+      "F S",
+      " GS"
+    ],
+    "key": {
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "S": {
+        "item": "minecraft:string"
+      },
+      "F": {
+        "item": "overlord:angel_feather"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:angel_feather"
+      }
+    ],
+    "result": {
+      "item": "overlord:shooting_star_bow",
+      "count": 1
+    }
+  }
+}

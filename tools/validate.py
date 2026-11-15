@@ -86,7 +86,7 @@ VANILLA = {
         "minecraft:bone_block", "minecraft:string", "minecraft:slime_ball", "minecraft:leather",
         "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
         "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool", "minecraft:blue_ice",
-        "minecraft:raw_gold",  # the Dwarven Royal Capital (v9.5), verified against @minecraft/vanilla-data
+        "minecraft:raw_gold", "minecraft:bowl",  # v10, verified against @minecraft/vanilla-data  # the Dwarven Royal Capital (v9.5), verified against @minecraft/vanilla-data
         "minecraft:coal", "minecraft:netherrack", "minecraft:quartz_block", "minecraft:blaze_powder",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
