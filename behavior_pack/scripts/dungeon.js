@@ -488,6 +488,7 @@ export function conquer(player) {
   const first = !p.bosses.includes("great_tomb");
   giveItem(player, COIN, 120);
   giveItem(player, id("data_crystal"), 16);
+  giveItem(player, id("world_fragment"), 1);
   giveItem(player, id("refining_stone"), 6);
   const gems = ["ruby", "sapphire", "topaz", "jade", "onyx", "sunstone"];
   for (let i = 0; i < 2; i++) giveItem(player, id(`gem_${gems[Math.floor(Math.random() * gems.length)]}`), 1);
@@ -498,7 +499,7 @@ export function conquer(player) {
     world.sendMessage(`§5[Nazarick] §6${player.name}§f has conquered the Great Tomb of Nazarick!`);
   }
   touch(player);
-  player.sendMessage(`§5[Nazarick] §fThe Tomb is conquered. §6120 Gold Coins§f, §b16 Data Crystals§f, §b6 Refining Stones§f, §d2 gems§f${first ? ", §5two Codices of the Supreme Beings§f" : ""}.`);
+  player.sendMessage(`§5[Nazarick] §fThe Tomb is conquered. §6120 Gold Coins§f, §b16 Data Crystals§f, §b6 Refining Stones§f, §d2 gems§f, §5a World Item fragment§f${first ? ", §5two Codices of the Supreme Beings§f" : ""}.`);
   notify(player, leave(player));
 }
 

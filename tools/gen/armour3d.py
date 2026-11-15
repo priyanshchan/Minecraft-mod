@@ -133,6 +133,11 @@ LOOKS = {
                        helm="skull", shoulder="bone", legs="bone", feet="claw"),
     "cavalier": dict(plate="#1d1b24", light="#3a3644", dark="#0c0b10", trim="#59e0a0", glow="#59e0a0", cape="#0f3a2a",
                      helm="great", shoulder="spiked", legs="plate", feet="sabaton"),
+    # v9.7: the divine sets - super-tier and god-tier
+    "seraph": dict(plate="#e8ecf4", light="#ffffff", dark="#a8b0c0", trim=GOLD, glow="#fff0a0", cape="#f4f0e6",
+                   helm="winged", shoulder="grand", legs="tabard", feet="sabaton"),
+    "supreme": dict(plate="#14101c", light="#2e2440", dark="#07050c", trim=GOLD, glow="#c05bff", cape="#3a0e5a",
+                    helm="divine", shoulder="grand", legs="plate", feet="sabaton"),
     "beasthide": dict(plate="#a8743a", light="#d09a5a", dark="#6a4520", trim="#f1e0b8", glow="#ffd27a", cape="#7a5530",
                       helm="beast", shoulder="fur", legs="leather", feet="fur"),
 }
@@ -230,6 +235,14 @@ def helmet(L):
         horn = [(2, -10, 90), (3, -50, 130), (3, -85, 170), (2, -120, 175)]
         p.curve("head", (-5, 31, 0), 2, horn, "#1a0806")
         p.curve("head", (-5, 31, 0), 2, horn, "#1a0806", mirror=True)
+    elif style == "divine":
+        # a crown of golden rays above a closed helm, and a halo of light floating over it
+        for i, (x, h) in enumerate(((-3.5, 2), (-2, 3), (-0.5, 4), (1, 3), (2.5, 2))):
+            p.box("head", (x, 33, -4.5), (1, h, 1), L["trim"], inflate=0.05)
+        p.box("head", (-4, 32.5, -5), (8, 1, 1), L["trim"], inflate=0.1)
+        for (x, z, w, d) in ((-3, -3, 6, 1), (-3, 2, 6, 1), (-3, -3, 1, 6), (2, -3, 1, 6)):
+            p.box("head", (x, 37.5, z), (w, 1, d), glow, glow=True, inflate=-0.1)
+        p.box("head", (-0.5, 25, -5.45), (1, 3, 1), glow, glow=True, inflate=-0.3)
     elif style == "winged":
         p.box("head", (-0.5, 25, -5.45), (1, 3, 1), glow, glow=True, inflate=-0.3)  # a T of light
         for i, (y, length) in enumerate(((29, 5), (30.5, 6), (32, 4))):

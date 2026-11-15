@@ -1236,6 +1236,26 @@ tricks at levels 1, 4 and 8: Frost Breath, Frost Ward and Winter Gale; Venom Fan
 Darkvision, Scout and Shadow Bind; Mending, Purify and Guardian Light. Titles: Beastmaster of Nazarick,
 Soul-Bonded.
 
+### Divine Arms: super-tier and god-tier gear (v9.7)
+
+Gear to match super-tier and god-tier spells. **Super-tier** arms need **level 70**, **god-tier** arms **level 80**;
+below that their arts, on-hit powers and set bonuses do nothing (the Arsenal page shows each item's tier).
+
+- **Materials:** the **Divine Ingot** (crafted from Adamantite, Royal Runes, Demon's Hearts and a Guardian Crest)
+  and the **Fragment of a World Item** (from Ainz, the Platinum Dragon Lord, Jaldabaoth and Zy'tl Q'ae, and as
+  a reward for clearing the Great Tomb, the Royal Capital and the Great Wall).
+- **Super-tier weapons:** the **Greatsword of the Twilight Hero** (Twilight Cross), the **Glaive of the Thunder
+  Lord** (Wrath of the Thunder Lord) and the **Staff of the Eight Elements** (+30% spell power; Elemental
+  Convergence).
+- **God-tier weapons:** **Longinus** (Erasure: erases the foe you look at; a boss loses a quarter of its life),
+  **World Breaker** (World Severance: a 16-block cut and a rift) and the **Fang of Nidhogg** (World-Eater's Bite:
+  drains every foe near you).
+- **Seraph's Holy Plate** (super-tier, upgraded from Platinum): Resistance II, Regeneration and Fire
+  Resistance, gliding, and the Seraphic Ascension art.
+- **Raiment of the Supreme Beings** (god-tier, upgraded from the Overlord's Regalia): Strength II, Resistance II,
+  Regeneration, Fire Resistance, no poison or wither, +25% spell power, **Last Stand** (once every five minutes,
+  near-death restores all your health), and the Presence of the Supreme Being art.
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
@@ -1441,7 +1461,7 @@ docs/releases/     release notes, one file per version
 ```
 
 `behavior_pack/scripts/main.js` (spells and item abilities) and `rpg.js` (levels, mana, classes, quests), `spells.js` (tier magic), `vfx.js` (spell visuals), `raid.js` (Tomb Raid), `director.js` (mob levels, gated
-spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink), `comforts.js` (meals and off-hand rings), `necromancy.js` (the Undead Army), `events.js` (world events), `sagas.js` (the sagas), `delve.js` (the dungeon engine), `deeps.js` (the Dwarven Royal Capital), `wall.js` (the Siege of the Great Wall), `familiars.js` (familiars) and `devtools.js` (the Creative Tome of Ascension) are
+spawns, patrols, guards, reputation), `structures.js` (camps and outposts), `party.js` (retainers), `guild.js` (daily bounty, titles), `forge.js` (weapon reinforcement), `mount.js` (Hamsuke), `arena.js` (Imperial Arena), `skills.js` (skill tree data and rules), `skilltree.js` (skill tree menus and effects), `arms.js` (weapon kinds, combos, awakening and arts; armour bonuses, auras and arts), `bosses.js` (boss phases, telegraphed moves, hazards and rewards), `gear.js` (refining, gems and salvage), `dungeon.js` (the Great Tomb), `godspells.js` (god-tier magic), `campaign.js` (the story campaign), `kingdom.js` (the Sorcerer Kingdom), `races.js` (races of Yggdrasil), `steeds.js` (the wyrm, the Soul Eater and barding), `court.js` (the Court of Nazarick), `districts.js` (districts, citizens, trade and envoys), `haunts.js` (the Wraiths' blink), `comforts.js` (meals and off-hand rings), `necromancy.js` (the Undead Army), `events.js` (world events), `sagas.js` (the sagas), `delve.js` (the dungeon engine), `deeps.js` (the Dwarven Royal Capital), `wall.js` (the Siege of the Great Wall), `familiars.js` (familiars), `divine.js` (the divine armour sets) and `devtools.js` (the Creative Tome of Ascension) are
 written by hand; everything else inside the two pack
 folders is produced by `tools/gen/generate.py`, so change the generator rather than the output.
 

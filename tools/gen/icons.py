@@ -76,6 +76,41 @@ def staff():
     return s.outline().img
 
 
+def staff_of(shaft_l, shaft):
+    """The Staff of Ainz's shape on another shaft: the Staff of the Eight Elements (v9.7)."""
+    s = Sprite()
+    s.shaft(1, 14, 9, shaft_l, shaft)
+    for i in (2, 5):
+        s.px(1 + i, 14 - i, shade(shaft, 0.7)).px(2 + i, 14 - i, shade(shaft, 0.7))
+    s.stamp([
+        "..GLG..",
+        ".GLbLG.",
+        "GLRrRLG",
+        "LgRWrcL",
+        "GLRrRLG",
+        ".GLvLG.",
+        "..GLG..",
+    ], {"G": GOLD, "L": GOLD_L, "R": "#7a35b5", "r": "#c05bff", "W": "#ffffff", "b": "#3ed0ff",
+        "g": "#63ff6b", "c": "#ff5a4d", "v": "#ffe14d"}, 8, 0)
+    return s.outline().img
+
+
+def lance_of(shaft, shaft_d, head, head_l, head_d, tip, collar=GOLD):
+    """A spear or glaive: a long head on a shaft (v9.7)."""
+    s = Sprite()
+    s.shaft(1, 14, 3, shaft, shaft_d)
+    s.stamp(["GL", "gG"], {"G": collar, "L": shade(collar, 1.3), "g": shade(collar, 0.7)}, 3, 10)
+    for i in range(10):
+        x, y = 5 + i, 9 - i
+        w = 3 if i < 4 else 2 if i < 8 else 1
+        s.px(x, y, tip if i > 6 else head)
+        if w >= 2:
+            s.px(x + 1, y, head_d)
+        if w >= 3:
+            s.px(x, y + 1, shade(head_d, 0.7)).px(x - 1, y, head_l)
+    return s.outline().img
+
+
 def ring(gem="#c2171d"):
     return sprite16([
         "................",
@@ -774,6 +809,18 @@ def medal():
     ], {"R": "#a8263a", "r": "#7a1a2a", "G": GOLD, "g": GOLD_D, "P": "#5a1f8c", "p": "#c9a0ff"})
 
 
+SERAPH_PAL = {"K": "#c8d0dc", "k": "#f4f6fb", "l": "#ffffff", "G": GOLD, "g": GOLD_D, "R": "#fff0a0"}
+SUPREME_PAL = {"K": "#14101c", "k": "#2e2440", "l": "#4a3a66", "G": GOLD, "g": GOLD_D, "R": "#c05bff"}
+
+
+def seraph_layers():
+    return armor_layers("#e8ecf4", "#ffffff", "#a8b0c0", "#fff0a0")
+
+
+def supreme_layers():
+    return armor_layers("#14101c", "#2e2440", "#07050c", "#c05bff")
+
+
 CAVALIER_PAL = {"K": "#0c0b10", "k": "#3a3644", "l": "#5e5868", "G": "#59e0a0", "g": "#1e5a44", "R": "#59e0a0"}
 
 
@@ -843,6 +890,28 @@ def crest():
         ".......Gg.......",
         "................",
     ], {"G": GOLD, "L": GOLD_L, "g": GOLD_D, "P": "#3b2450", "p": "#5a3a80", "R": "#e0202c"})
+
+
+def divine_ingot():
+    """A Divine Ingot: white gold, faintly shining (v9.7)."""
+    return sprite16([
+        "................",
+        "................",
+        "................",
+        "...........W....",
+        ".......lllll....",
+        "......lLLLLLd...",
+        ".....lLLWLLLdd..",
+        "....lLLMMMMMdd..",
+        "...lLLMMMMMddd..",
+        "..lMMMMMMMdddd..",
+        "..MMMMMMMMddd...",
+        "..dddddddddd....",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], {"l": "#fff6c8", "L": "#f6d968", "M": "#d9a92b", "d": "#96701a", "W": "#ffffff"})
 
 
 def ingot():
@@ -2350,6 +2419,16 @@ def all_item_icons():
         "four_tribes_ring": gem_ring("#3fa86a", "#b8ffd0"),
         "dryad_blossom": blossom(),
         "wall_seal": wall_seal(),
+        "divine_ingot": divine_ingot(),
+        "world_fragment": crystal("#c05bff", "#e0b0ff", "#ffffff", "#5a1f8c"),
+        "twilight_greatsword": blade_icon("#1a1424", "#0c0a10", GOLD, "#c070ff", "#3a2a52", "#1a1424", length=11, glow="#e0b0ff"),
+        "thunderlord_glaive": lance_of("#2a2e36", "#14161a", "#ffe94a", "#fff6b0", "#b8a020", "#ffffff", collar="#3ed0ff"),
+        "eight_elements_staff": staff_of("#e8ecf4", "#a8b0c0"),
+        "longinus": lance_of("#f4f0e6", "#c8c2b4", "#ffffff", "#fff6c8", "#c9a227", "#fff0a0"),
+        "world_breaker": blade_icon("#f4f0e6", "#c8c2b4", "#3f7fe0", "#ffffff", "#9fd8ff", "#4a6aa8", length=11, glow="#d0f0ff"),
+        "nidhogg_fang": blade_icon("#2a1a10", "#140c08", "#5a1f8c", "#e9e2cc", "#9cff6a", "#3a2a1a", length=6, glow="#b6ff4a"),
+        **{f"seraph_{p}": fn(SERAPH_PAL) for p, fn in (("helmet", helmet), ("chestplate", chestplate), ("leggings", leggings), ("boots", boots))},
+        **{f"supreme_{p}": fn(SUPREME_PAL) for p, fn in (("helmet", helmet), ("chestplate", chestplate), ("leggings", leggings), ("boots", boots))},
         "demonbane_halberd": halberd(),
         "familiar_bell": familiar_bell(),
         "dragonling_egg": egg("#bfe8ff", "#4ac8ff"),

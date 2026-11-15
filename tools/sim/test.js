@@ -2265,6 +2265,74 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   script.length = 0; world.getDimension = realDimension; players.splice(players.indexOf(pet), 1);
 }
 
+// ---- v9.7: the divine arms ----
+{
+  const arms = await import("./arms.js");
+  const divine = await import("./divine.js");
+  const g = mkPlayer("godhand"); const pg2 = rpg.profileOf(g); g.dimension.mobs = [];
+  let hand = "overlord:longinus"; let worn = {};
+  g.getComponent = ((base) => (c) => (c === "minecraft:equippable" ? { getEquipment: (slot) => (slot === "Mainhand" ? (hand ? { typeId: hand } : undefined) : worn[slot] ? { typeId: worn[slot] } : undefined) } : base(c)))(g.getComponent);
+  g.applyKnockback = () => {}; g.startItemCooldown = () => {}; g.isSneaking = false;
+  const foe = (x, z, hp = 200, fam = ["monster"]) => { const m = mob("minecraft:zombie", hp, fam); Object.assign(m, { id: `d${Math.random()}`, location: { x, y: 64, z }, tags: new Set(), afflicted: [], burning: 0,
+    hasTag: (t) => m.tags.has(t), addEffect(e) { m.afflicted.push(e); }, setOnFire(n) { m.burning = n; }, applyKnockback() {},
+    applyDamage(n) { m.health.currentValue = Math.max(0, m.health.currentValue - n); } }); return m; };
+  const blow = (victim, damage = 10) => world.afterEvents.entityHurt.fire({ hurtEntity: victim, damage, damageSource: { damagingEntity: g, cause: "entityAttack" } });
+  // ranks and the levels they ask
+  assert.equal(arms.rankName("longinus"), "God-tier"); assert.equal(arms.rankName("seraph"), "Super-tier"); assert.equal(arms.rankName("razor_edge"), "");
+  for (const key of ["twilight_greatsword", "thunderlord_glaive", "eight_elements_staff", "longinus", "world_breaker", "nidhogg_fang"]) {
+    assert.ok(arms.WEAPONS[key] && arms.NEW_ARTS[key], key); assert.ok(arms.DIVINE[key] >= 70, key);
+  }
+  // below level 80, Longinus is only a spear
+  pg2.level = 60; const prey = foe(0, 3, 40); g.aimed = [prey]; g.dimension.mobs = [prey];
+  assert.equal(arms.useWeaponArt(g, "overlord:longinus"), true); assert.ok(g.bar.includes("level 80"), g.bar); assert.equal(prey.health.currentValue, 40);
+  const weak = foe(0, 2, 100); blow(weak, 10); assert.ok(!arms.worthy(g, "nidhogg_fang"));
+  // at level 80: Erasure ends a lesser foe, and takes a quarter from a great one
+  pg2.level = 80; arms.useWeaponArt(g, "overlord:longinus"); assert.equal(prey.health.currentValue, 0, "erased");
+  advance(1900); const titan = foe(0, 4, 800); g.aimed = [titan]; g.dimension.mobs = [titan]; arms.useWeaponArt(g, "overlord:longinus"); assert.equal(titan.health.currentValue, 600);
+  assert.ok(g.bar.includes("reels")); arms.useWeaponArt(g, "overlord:longinus"); assert.ok(g.bar.includes("Recharging"), "a long wait between erasures");
+  // Longinus's blows bite deeper into the undead
+  const ghoul = foe(0, 2, 200, ["monster", "undead"]); const man = foe(1, 2, 200); hand = "overlord:longinus";
+  arms.divineTrait(g, ghoul, 20, "longinus"); arms.divineTrait(g, man, 20, "longinus"); assert.equal(ghoul.health.currentValue, 195); assert.equal(man.health.currentValue, 200);
+  // World Breaker: a 16-block severance, and its rift cuts twice more
+  const line = [foe(0, 3), foe(0, 9), foe(0, 15)]; g.dimension.mobs = line; arms.useWeaponArt(g, "overlord:world_breaker"); assert.ok(line.every((m) => m.health.currentValue === 155));
+  advance(25); assert.ok(line.every((m) => m.health.currentValue === 135), String(line.map((m) => m.health.currentValue)));
+  const cut = foe(0, 2); arms.divineTrait(g, cut, 20, "world_breaker"); assert.equal(cut.health.currentValue, 196);
+  // the Fang of Nidhogg devours and heals
+  g.health.currentValue = 4; const ring = [foe(2, 0), foe(-2, 0), foe(0, 2)]; g.dimension.mobs = ring; arms.useWeaponArt(g, "overlord:nidhogg_fang");
+  assert.ok(ring.every((m) => m.health.currentValue === 182)); assert.ok(g.health.currentValue > 4 && g.effects.has("absorption"));
+  g.health.currentValue = 10; arms.divineTrait(g, foe(0, 2), 20, "nidhogg_fang"); assert.equal(g.health.currentValue, 14);
+  // super-tier at level 70: the Twilight Cross, the Thunder Lord, the Eight Elements
+  pg2.level = 70; assert.ok(!arms.worthy(g, "longinus") && arms.worthy(g, "twilight_greatsword"));
+  const front = foe(0, 3); g.dimension.mobs = [front]; arms.useWeaponArt(g, "overlord:twilight_greatsword"); assert.equal(front.health.currentValue, 176); assert.ok(front.afflicted.includes("wither"));
+  g.dimension.mobs = []; arms.useWeaponArt(g, "overlord:thunderlord_glaive"); assert.ok(g.bar.includes("No foe"));
+  const storm = [foe(5, 5), foe(-5, 5), foe(8, 0)]; g.dimension.mobs = storm; arms.useWeaponArt(g, "overlord:thunderlord_glaive"); advance(10); assert.ok(storm.every((m) => m.health.currentValue === 178));
+  const struck = foe(0, 2, 400); for (let i = 0; i < 4; i++) arms.divineTrait(g, struck, 10, "thunderlord_glaive"); assert.equal(struck.health.currentValue, 400 - 13, "every fourth blow calls lightning");
+  const spot = foe(0, 10); g.aimed = [spot]; g.dimension.mobs = [spot]; arms.useWeaponArt(g, "overlord:eight_elements_staff"); advance(25); assert.equal(spot.health.currentValue, 170);
+  hand = "overlord:razor_edge"; const plain = rpg.spellPower(g); hand = "overlord:eight_elements_staff"; assert.ok(Math.abs(rpg.spellPower(g) - plain - 0.3) < 1e-9, "the staff strengthens spells");
+  // Seraph's Holy Plate
+  const seraph = { Head: "overlord:seraph_helmet", Chest: "overlord:seraph_chestplate", Legs: "overlord:seraph_leggings", Feet: "overlord:seraph_boots" };
+  worn = seraph; assert.equal(arms.fullSet(g), "seraph"); g.effects.clear(); assert.deepEqual(divine.grace(g, 0), ["seraph"]); assert.ok(g.effects.get("resistance").amplifier === 1 && g.effects.has("fire_resistance"));
+  g.isOnGround = false; g.isSneaking = true; assert.ok(divine.grace(g, 0).includes("glide")); g.isSneaking = false; g.isOnGround = true;
+  const halo = [foe(3, 0), foe(-3, 3)]; g.dimension.mobs = halo; g.health.currentValue = 6; assert.ok(arms.armourArt(g, "seraph").includes("Seraphic"));
+  assert.ok(halo.every((m) => m.health.currentValue === 180) && g.effects.has("levitation") && g.health.currentValue === 14);
+  pg2.level = 60; g.effects.clear(); assert.deepEqual(divine.grace(g, 0), [], "the unworthy get nothing"); assert.ok(arms.armourArt(g, "seraph").includes("level 70"));
+  // the Raiment of the Supreme Beings, and Last Stand
+  pg2.level = 85; worn = { Head: "overlord:supreme_helmet", Chest: "overlord:supreme_chestplate", Legs: "overlord:supreme_leggings", Feet: "overlord:supreme_boots" };
+  g.effects.clear(); g.effects.set("wither", { duration: 100, amplifier: 1 }); g.health.currentValue = 20;
+  assert.deepEqual(divine.grace(g, 1000), ["supreme"]); assert.ok(!g.effects.has("wither") && g.effects.get("strength").amplifier === 1);
+  hand = "overlord:razor_edge"; worn = {}; const bare = rpg.spellPower(g); worn = { Head: "overlord:supreme_helmet", Chest: "overlord:supreme_chestplate", Legs: "overlord:supreme_leggings", Feet: "overlord:supreme_boots" };
+  assert.ok(Math.abs(rpg.spellPower(g) - bare - 0.25) < 1e-9);
+  g.health.currentValue = 3; assert.ok(divine.grace(g, 1000).includes("last_stand")); assert.equal(g.health.currentValue, 20); assert.ok(g.bar.includes("Last Stand"));
+  g.health.currentValue = 3; assert.ok(!divine.grace(g, 1000 + 100 * 20).includes("last_stand"), "once every five minutes"); assert.ok(divine.grace(g, 1000 + 301 * 20).includes("last_stand"));
+  const court = [foe(4, 0), foe(-8, 6)]; g.dimension.mobs = court; arms.armourArt(g, "supreme");
+  assert.ok(court.every((m) => m.health.currentValue === 175 && m.afflicted.includes("weakness"))); assert.ok(g.effects.get("absorption").amplifier === 3);
+  // two pieces at level 85, and the Arsenal names the rank
+  worn = { Head: "overlord:supreme_helmet", Chest: "overlord:supreme_chestplate" }; g.effects.clear(); arms.step(g, 20); assert.ok(g.effects.has("strength"));
+  const mark0 = shown.length; script.push(0); hand = "overlord:world_breaker"; arms.openArsenal(g); await new Promise((r) => setTimeout(r, 5));
+  assert.ok(shown[mark0].body.includes("God-tier")); assert.ok(shown[mark0].body.includes("Raiment of the Supreme Beings"));
+  script.length = 0; g.dimension.mobs = []; players.splice(players.indexOf(g), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);

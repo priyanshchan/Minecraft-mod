@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:world_breaker"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " W ",
+      "WGW",
+      "IWI"
+    ],
+    "key": {
+      "W": {
+        "item": "overlord:world_fragment"
+      },
+      "G": {
+        "item": "overlord:twilight_greatsword"
+      },
+      "I": {
+        "item": "overlord:divine_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:world_fragment"
+      }
+    ],
+    "result": {
+      "item": "overlord:world_breaker",
+      "count": 1
+    }
+  }
+}

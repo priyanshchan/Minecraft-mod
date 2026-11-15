@@ -104,6 +104,7 @@ function reward(player) {
   giveItem(player, COIN, 180);
   giveItem(player, id("demon_heart"), 6);
   giveItem(player, id("data_crystal"), 14);
+  giveItem(player, id("world_fragment"), 2);
   giveItem(player, id("angel_feather"), 6);
   giveItem(player, id("gem_ruby"), 1);
   grantXp(player, 8500, "the Great Wall");
@@ -114,7 +115,7 @@ function reward(player) {
     world.sendMessage(`§c[Great Wall] §6${player.name}§f has broken Jaldabaoth's siege and saved the Holy Kingdom!`);
   }
   p.wallRuns = (typeof p.wallRuns === "number" ? p.wallRuns : 0) + 1;
-  return `§c[Great Wall] §fThe siege is broken. §6180 Gold Coins§f, §c6 Demon's Hearts§f, §b14 Data Crystals§f, §f6 Angel Feathers§f, §da ruby§f${halberd ? ", §6the Demonbane Halberd§f" : ""}.`;
+  return `§c[Great Wall] §fThe siege is broken. §6180 Gold Coins§f, §c6 Demon's Hearts§f, §b14 Data Crystals§f, §f6 Angel Feathers§f, §da ruby§f, §52 World Item fragments§f${halberd ? ", §6the Demonbane Halberd§f" : ""}.`;
 }
 
 export const wall = new Dungeon({

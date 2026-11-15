@@ -111,6 +111,7 @@ function reward(player) {
   giveItem(player, COIN, 150);
   giveItem(player, RUNE, 4);
   giveItem(player, id("data_crystal"), 12);
+  giveItem(player, id("world_fragment"), 1);
   giveItem(player, id("frost_dragon_scale"), 6);
   giveItem(player, id("gem_sapphire"), 1);
   grantXp(player, 7000, "the Royal Capital");
@@ -121,7 +122,7 @@ function reward(player) {
     world.sendMessage(`§b[Royal Capital] §6${player.name}§f has freed the Dwarven Royal Capital and claimed the Runeblade of the Dwarf King!`);
   }
   p.capitalRuns = (typeof p.capitalRuns === "number" ? p.capitalRuns : 0) + 1;
-  return `§b[Royal Capital] §fThe Capital is free. §6150 Gold Coins§f, §b4 Royal Runes§f, §b12 Data Crystals§f, §b6 Frost Dragon Scales§f, §da sapphire§f${blade ? ", §6the Runeblade of the Dwarf King§f" : ""}.`;
+  return `§b[Royal Capital] §fThe Capital is free. §6150 Gold Coins§f, §b4 Royal Runes§f, §b12 Data Crystals§f, §b6 Frost Dragon Scales§f, §da sapphire§f, §5a World Item fragment§f${blade ? ", §6the Runeblade of the Dwarf King§f" : ""}.`;
 }
 
 export const capital = new Dungeon({
