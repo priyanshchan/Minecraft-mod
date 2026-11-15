@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:wall_seal"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "GFG",
+      "FHF",
+      "GFG"
+    ],
+    "key": {
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "F": {
+        "item": "overlord:angel_feather"
+      },
+      "H": {
+        "item": "overlord:demon_heart"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:demon_heart"
+      }
+    ],
+    "result": {
+      "item": "overlord:wall_seal",
+      "count": 1
+    }
+  }
+}

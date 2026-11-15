@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [9, 5, 0]
+VERSION = [9, 6, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v9.5.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v9.6.0"
 
 
 def oid(name):
@@ -350,6 +350,19 @@ ITEMS = {
         **_cooldown("overlord_rune_key", 3.0)}),
     "royal_rune": ("Royal Rune", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "rare"}),
     "runeblade": ("Runeblade of the Dwarf King", "equipment", _weapon(15, {"minecraft:glint": True})),
+    # v9.6: the Siege of the Great Wall (wall.js) and its halberd (arms.js)
+    "wall_seal": ("Seal of the Great Wall", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:glint": True,
+        **_cooldown("overlord_wall_seal", 3.0)}),
+    "demonbane_halberd": ("Demonbane Halberd of the Holy Kingdom", "equipment", _weapon(14, {"minecraft:glint": True})),
+    # v9.6: familiars (familiars.js) - the bell that calls them and the tokens that bind them
+    "familiar_bell": ("Familiar's Bell", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "rare", "minecraft:glint": True,
+        **_cooldown("overlord_familiar_bell", 1.0)}),
+    "dragonling_egg": ("Frost Dragonling Egg", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "epic"}),
+    "hanzo_contract": ("Hanzo's Contract", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "epic"}),
+    "shadow_contract": ("Shadow Demon's Contract", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "epic"}),
+    "cherub_halo": ("Cherub's Halo", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "epic"}),
     # v9.5: keepsakes of the sagas (sagas.js), worn in the off hand (comforts.js)
     "warrior_captains_sigil": ("Warrior-Captain's Sigil", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:allow_off_hand": True, "minecraft:glint": True}),
     "carne_charm": ("Charm of Carne Village", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:allow_off_hand": True, "minecraft:glint": True}),
@@ -442,6 +455,7 @@ WEAPON_ARTS = {
     "ghoulfang_sickle": ("overlord_rend", 7.0),
     "heartwood_staff": ("overlord_roots", 8.0),
     "runeblade": ("overlord_rune_sovereign", 10.0),
+    "demonbane_halberd": ("overlord_wall_judgement", 10.0),
 }
 for _key, (_category, _seconds) in WEAPON_ARTS.items():
     ITEMS[_key][2].update(_cooldown(_category, _seconds))
@@ -695,6 +709,21 @@ def recipe_files():
         "rune_key": _shaped("rune_key", ["RGR", "GIG", "RGR"], {
             "R": oid("royal_rune"), "G": "minecraft:gold_ingot", "I": "minecraft:iron_block"}, oid("rune_key"),
             unlock=oid("royal_rune")),
+        "wall_seal": _shaped("wall_seal", ["GFG", "FHF", "GFG"], {
+            "G": "minecraft:gold_ingot", "F": oid("angel_feather"), "H": oid("demon_heart")}, oid("wall_seal"),
+            unlock=oid("demon_heart")),
+        "familiar_bell": _shaped("familiar_bell", [" G ", "GCG", "G G"], {"G": "minecraft:gold_ingot", "C": cry},
+                                 oid("familiar_bell")),
+        "dragonling_egg": _shaped("dragonling_egg", ["SSS", "SES", "SSS"], {
+            "S": oid("frost_dragon_scale"), "E": "minecraft:egg"}, oid("dragonling_egg"), unlock=oid("frost_dragon_scale")),
+        "hanzo_contract": _shaped("hanzo_contract", ["FSF", "SPS", "FSF"], {
+            "F": "minecraft:fermented_spider_eye", "S": oid("soul_fragment"), "P": "minecraft:paper"}, oid("hanzo_contract"),
+            unlock=oid("soul_fragment")),
+        "shadow_contract": _shaped("shadow_contract", ["SHS", "SPS", "SSS"], {
+            "S": oid("soul_fragment"), "H": oid("demon_heart"), "P": "minecraft:paper"}, oid("shadow_contract"),
+            unlock=oid("demon_heart")),
+        "cherub_halo": _shaped("cherub_halo", ["FGF", "G G", "FGF"], {
+            "F": oid("angel_feather"), "G": "minecraft:gold_ingot"}, oid("cherub_halo"), unlock=oid("angel_feather")),
         "book_of_the_dead": _shaped("book_of_the_dead", [" S ", "CBC", " S "], {
             "S": oid("soul_fragment"), "C": cry, "B": "minecraft:book"}, oid("book_of_the_dead"), unlock=oid("soul_fragment")),
         "sebas_tea": _shapeless("sebas_tea", ["minecraft:glass_bottle", "minecraft:sugar", "minecraft:cocoa_beans"], oid("sebas_tea"), count=2),
@@ -882,10 +911,14 @@ def loot_files():
         "goblin": [_pool(_entry(coin, 0, 1)), _pool(_entry("minecraft:rotten_flesh", 0, 1))],
         "ogre": [_pool(_entry(coin, 1, 3)), _pool(_entry("minecraft:leather", 0, 2))],
         "hellhound": [_pool(_entry(coin, 0, 2)), _pool(_entry("minecraft:blaze_powder", 0, 1))],
-        "shadow_demon": [_pool(_entry(coin, 0, 2)), _pool(_entry(cry, 0, 1))],
+        "shadow_demon": [_pool(_entry(coin, 0, 2)), _pool(_entry(cry, 0, 1)),
+                         _pool(_entry(oid("shadow_contract"), 1, 1, looting=False), conditions=[
+                {"condition": "killed_by_player"}, {"condition": "random_chance_with_looting", "chance": 0.04, "looting_multiplier": 0.02}])],
         "evil_lord_wrath": [_pool(_entry(oid("demon_heart"), 3, 5, looting=False)), one(oid("hellfire_blade")),
                             one(crest), _pool(_entry(cry, 6, 10)), _pool(_entry(coin, 30, 48))],
-        "archangel_flame": [_pool(_entry(oid("angel_feather"), 0, 2))],
+        "archangel_flame": [_pool(_entry(oid("angel_feather"), 0, 2)),
+                            _pool(_entry(oid("cherub_halo"), 1, 1, looting=False), conditions=[
+                {"condition": "killed_by_player"}, {"condition": "random_chance_with_looting", "chance": 0.06, "looting_multiplier": 0.02}])],
         "dominion_authority": [_pool(_entry(oid("angel_feather"), 6, 10, looting=False)), one(crest),
                                _pool(_entry(cry, 6, 10)), _pool(_entry(coin, 30, 48))],
         "theocracy_priest": [_pool(_entry(oid("blessed_cloth"), 0, 2)), _pool(_entry(coin, 1, 3))],
@@ -902,7 +935,9 @@ def loot_files():
         "remedios": [_pool(_entry("minecraft:gold_ingot", 1, 3))],
         "paladin": [_pool(_entry("minecraft:iron_ingot", 0, 2))],
         "bafolk": [_pool(_entry(oid("beast_hide"), 0, 2)), _pool(_entry(coin, 0, 2))],
-        "eight_edge_assassin": [_pool(_entry(oid("soul_fragment"), 0, 2)), _pool(_entry(cry, 1, 2))],
+        "eight_edge_assassin": [_pool(_entry(oid("soul_fragment"), 0, 2)), _pool(_entry(cry, 1, 2)),
+                                _pool(_entry(oid("hanzo_contract"), 1, 1, looting=False), conditions=[
+                {"condition": "killed_by_player"}, {"condition": "random_chance_with_looting", "chance": 0.12, "looting_multiplier": 0.02}])],
         "platinum_dragon_lord": [_pool(_entry(oid("codex_of_skills"), 2, 2, looting=False)),
                                  _pool(_entry(oid("platinum_scale"), 10, 14, looting=False)),
                                  one(oid("avarice_and_generosity")), _pool(_entry(crest, 4, 4, looting=False)),
@@ -926,6 +961,12 @@ def loot_files():
                 {"condition": "random_chance_with_looting", "chance": 0.1, "looting_multiplier": 0.03}]),
         ],
         "treant_sapling": [_pool(_entry("minecraft:stick", 1, 4)), _pool(_entry("minecraft:oak_sapling", 0, 1))],
+        "buser": [_pool(_entry(oid("beast_hide"), 3, 6, looting=False)), _pool(_entry(coin, 12, 20)),
+                  _pool(_entry(oid("refining_stone"), 1, 3))],
+        "evil_lord_envy": [_pool(_entry(oid("demon_heart"), 2, 3, looting=False)), _pool(_entry(coin, 14, 22)),
+                           _pool(_entry(cry, 3, 6))],
+        "evil_lord_greed": [_pool(_entry(oid("demon_heart"), 2, 3, looting=False)), _pool(_entry(coin, 24, 40)),
+                            _pool(_entry("minecraft:gold_ingot", 3, 8))],
         "quagoa_warlord": [_pool(_entry(oid("royal_rune"), 2, 4, looting=False)), _pool(_entry("minecraft:raw_gold", 2, 5)),
                            _pool(_entry(coin, 10, 18)), _pool(_entry(oid("refining_stone"), 1, 2))],
         "rune_golem": [_pool(_entry(oid("royal_rune"), 3, 6, looting=False)), _pool(_entry(oid("adamantite_ingot"), 1, 3)),
@@ -951,7 +992,9 @@ def loot_files():
         "frost_dragon": [_pool(_entry(oid("codex_of_skills"), 1, 1, looting=False)),
                          _pool(_entry(oid("frost_dragon_scale"), 8, 12, looting=False)),
                          _pool(_entry(crest, 2, 2, looting=False)), _pool(_entry(cry, 8, 14)),
-                         _pool(_entry(coin, 40, 64)), _pool(_entry("minecraft:diamond", 2, 5))],
+                         _pool(_entry(coin, 40, 64)), _pool(_entry("minecraft:diamond", 2, 5)),
+                         _pool(_entry(oid("dragonling_egg"), 1, 1, looting=False), conditions=[
+                {"condition": "killed_by_player"}, {"condition": "random_chance_with_looting", "chance": 0.35, "looting_multiplier": 0.02}])],
         "war_troll": [_pool(_entry(oid("troll_blood"), 1, 2)), _pool(_entry(coin, 2, 5)),
                       _pool(_entry("minecraft:leather", 0, 2))],
         "vampire_bride": [_pool(_entry(oid("vampire_fang"), 0, 2)), _pool(_entry(coin, 1, 3))],
@@ -978,6 +1021,12 @@ def _is_family(value, subject="other"):
 
 # The undead a necromancer can raise from corpses (necromancy.js)
 RAISABLE = ["old_guarder", "elder_lich", "soul_eater", "death_knight"]
+
+# v9.6: familiars (familiars.js) -> collision box; each is drawn as a small copy of another creature
+FAMILIARS = {"familiar_dragonling": (0.6, 0.6), "familiar_hanzo": (0.6, 0.5), "familiar_shadow": (0.5, 0.9),
+             "familiar_cherub": (0.5, 0.8)}
+FAMILIAR_LOOKS = {"familiar_dragonling": "frost_dragon", "familiar_hanzo": "eight_edge_assassin",
+                  "familiar_shadow": "shadow_demon", "familiar_cherub": "archangel_flame"}
 
 # Floor Guardians who can serve a crowned player (court.js), with the harm of their blows
 GUARDIAN_COMPANIONS = {"albedo": 16, "shalltear": 15, "cocytus": 16, "demiurge": 12, "aura": 11, "mare": 11, "pandoras_actor": 13}
@@ -1490,6 +1539,39 @@ def entity_files():
         "overlord:switch_to_ranged": {"remove": {"component_groups": ["overlord:melee_mode"]},
                                       "add": {"component_groups": ["overlord:ranged_mode"]}},
     })
+
+    # v9.6: Evil Lords Envy and Greed, made as Wrath is (wall.js, bosses.js), and Buser the bafolk king
+    import json as _json
+    for name, health, melee in (("evil_lord_envy", 560, 18), ("evil_lord_greed", 600, 18)):
+        e = _json.loads(_json.dumps(out["evil_lord_wrath"]))
+        d = e["minecraft:entity"]
+        d["description"]["identifier"] = oid(name)
+        comps = d["components"]
+        comps["minecraft:type_family"] = {"family": [name, *demon]}
+        comps["minecraft:health"] = {"value": health, "max": health}
+        comps["minecraft:loot"] = {"table": loot_path(name)}
+        d["component_groups"]["overlord:melee_mode"]["minecraft:attack"] = {"damage": melee}
+        out[name] = e
+
+    c = _mob("buser", ["buser", "bafolk", "monster", "mob"], 480, 0.32, (0.8, 2.0), loot="buser", xp=320, kb=0.8,
+             follow=40, persistent=True)
+    c["minecraft:boss"] = {"hud_range": 40, "should_darken_sky": False}
+    c["minecraft:attack"] = {"damage": 15, "effect_name": "slowness", "effect_duration": 2}
+    c["minecraft:behavior.melee_box_attack"] = {"priority": 3, "speed_multiplier": 1.3, "track_target": True}
+    c["minecraft:damage_sensor"] = _no_fall()
+    c["minecraft:behavior.nearest_attackable_target"] = _target_players(32, [ally, "human"])
+    out["buser"] = _entity("buser", c)
+
+    # v9.6: familiars (familiars.js) - small, bound to their master, and never harmed
+    for name, box in FAMILIARS.items():
+        c = _mob(name, [name, "familiar", "mob"], 40, 0.34, box, xp=0, persistent=True, fire_immune=True)
+        del c["minecraft:experience_reward"], c["minecraft:behavior.hurt_by_target"]
+        c["minecraft:damage_sensor"] = {"triggers": [{"cause": "all", "deals_damage": False}]}
+        c["minecraft:tameable"] = {"probability": 1.0, "tame_items": [oid("ascension_tome")]}
+        c["minecraft:behavior.follow_owner"] = {"priority": 3, "speed_multiplier": 1.3, "start_distance": 5, "stop_distance": 2}
+        c["minecraft:behavior.random_stroll"] = {"priority": 8, "speed_multiplier": 0.6}
+        c["minecraft:navigation.walk"] = {"can_path_over_water": True, "avoid_damage_blocks": True}
+        out[name] = _entity(name, c, spawnable=False)
 
     # ------------------------------------------------- Zesshi, Climb, Eclair
     c = _mob("zesshi", ["zesshi", "theocracy", "human", "monster", "mob"], 600, 0.4, (0.7, 2.0), loot="zesshi",
@@ -2239,6 +2321,8 @@ SIZES = {
     "hamsuke": 1.5, "soul_eater": 1.2, "hellhound": 1.1, "eight_edge_assassin": 1.2, "gigant_basilisk": 2.0,
     "dark_young": 3.0, "treant_sapling": 1.25, "zytl_qae": 4.5, "death_cavalier": 1.05, "pinison": 0.86,
     "quagoa_warlord": 1.5, "rune_golem": 2.0,
+    "buser": 1.35, "evil_lord_envy": 1.8, "evil_lord_greed": 1.8,
+    "familiar_dragonling": 0.12, "familiar_hanzo": 0.5, "familiar_shadow": 0.45, "familiar_cherub": 0.42,
     # dragons
     # The dragons' own models are already more than eight blocks long before this is applied.
     "frost_dragon": 2.6, "skeletal_dragon": 2.8, "platinum_dragon_lord": 3.4,
@@ -2407,7 +2491,7 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
         "go_gin", "elf_ranger", "decem", "behemoth", "neia", "remedios", "paladin", "bafolk",
         "eight_edge_assassin", "arena_master", "platinum_dragon_lord", "rubedo",
         "ghoul", "wraith", "death_cavalier", "treant_sapling", "zytl_qae", "pinison", "skeleton_archer",
-        "quagoa_warlord", "rune_golem"]
+        "quagoa_warlord", "rune_golem", "buser", "evil_lord_envy", "evil_lord_greed"]
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard", "frost_breath"]
 
 ENTITY_NAMES = {
@@ -2415,6 +2499,9 @@ ENTITY_NAMES = {
     "ghoul": "Ghoul", "wraith": "Wraith", "death_cavalier": "Death Cavalier", "treant_sapling": "Treant",
     "zytl_qae": "Zy'tl Q'ae, the Destroyer Tree", "pinison": "Pinison Pole Perlia",
     "quagoa_warlord": "Quagoa Warlord", "rune_golem": "Rune Golem of the Royal Forge",
+    "buser": "Buser, King of the Bafolk", "evil_lord_envy": "Evil Lord Envy", "evil_lord_greed": "Evil Lord Greed",
+    "familiar_dragonling": "Frost Dragonling", "familiar_hanzo": "Hanzo", "familiar_shadow": "Shadow Demon Familiar",
+    "familiar_cherub": "Cherub",
     "guardian_albedo": "Albedo", "guardian_shalltear": "Shalltear Bloodfallen", "guardian_cocytus": "Cocytus",
     "guardian_demiurge": "Demiurge", "guardian_aura": "Aura Bella Fiora", "guardian_mare": "Mare Bello Fiore",
     "guardian_pandoras_actor": "Pandora's Actor",
@@ -2785,7 +2872,9 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater"),
                     ("ghoul", "bandit"), ("wraith", "elder_lich"), ("death_cavalier", "imperial_knight"),
                     ("treant_sapling", "ogre"), ("zytl_qae", "ogre"), ("pinison", "nfirea"), ("skeleton_archer", "old_guarder"),
-                    ("quagoa_warlord", "quagoa"), ("rune_golem", "gargantua")):
+                    ("quagoa_warlord", "quagoa"), ("rune_golem", "gargantua"), ("buser", "bafolk"),
+                    ("evil_lord_envy", "evil_lord_wrath"), ("evil_lord_greed", "evil_lord_wrath"),
+                    *FAMILIAR_LOOKS.items()):
     SOUNDS[_new] = SOUNDS[_like]
 for _key in GUARDIAN_COMPANIONS:
     SOUNDS[f"guardian_{_key}"] = SOUNDS[_key]
@@ -2981,7 +3070,9 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("wyrm_steed", "frost_dragon"), ("soul_steed", "soul_eater"),
                     ("ghoul", "bandit"), ("wraith", "elder_lich"), ("death_cavalier", "imperial_knight"),
                     ("treant_sapling", "ogre"), ("zytl_qae", "ogre"), ("pinison", "yuri"), ("skeleton_archer", "old_guarder"),
-                    ("quagoa_warlord", "quagoa"), ("rune_golem", "gargantua")):
+                    ("quagoa_warlord", "quagoa"), ("rune_golem", "gargantua"), ("buser", "bafolk"),
+                    ("evil_lord_envy", "evil_lord_wrath"), ("evil_lord_greed", "evil_lord_wrath"),
+                    *FAMILIAR_LOOKS.items()):
     ENTITY_ANIMS[_new] = ENTITY_ANIMS[_like]
 for _key in GUARDIAN_COMPANIONS:
     ENTITY_ANIMS[f"guardian_{_key}"] = ENTITY_ANIMS[_key]
@@ -3636,7 +3727,7 @@ def render_controllers_json():
 
 
 # creatures drawn with another one's model and skin
-MODEL_ALIASES = {"soul_steed": "soul_eater", **{f"guardian_{k}": k for k in GUARDIAN_COMPANIONS}}
+MODEL_ALIASES = {"soul_steed": "soul_eater", **{f"guardian_{k}": k for k in GUARDIAN_COMPANIONS}, **FAMILIAR_LOOKS}
 
 
 def client_entity_files():

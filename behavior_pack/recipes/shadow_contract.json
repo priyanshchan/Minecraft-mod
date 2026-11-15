@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:shadow_contract"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "SHS",
+      "SPS",
+      "SSS"
+    ],
+    "key": {
+      "S": {
+        "item": "overlord:soul_fragment"
+      },
+      "H": {
+        "item": "overlord:demon_heart"
+      },
+      "P": {
+        "item": "minecraft:paper"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:demon_heart"
+      }
+    ],
+    "result": {
+      "item": "overlord:shadow_contract",
+      "count": 1
+    }
+  }
+}

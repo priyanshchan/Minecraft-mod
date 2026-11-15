@@ -162,6 +162,13 @@ export const TITLES = [
   { key: "hero_of_the_new_world", name: "Hero of the New World", how: "Complete all six sagas",
     earned: (p) => ["gazef", "enri", "nfirea", "lakyus", "zaryusu", "pinison"].every((k) => sagaSteps(p, k) >= 3) },
   { key: "beloved_of_many", name: "Beloved of Many", how: "Become a Sworn Ally of three people", earned: (p) => Object.values(p.sagas ?? {}).filter((r) => Number(r?.affinity ?? 0) >= 75).length >= 3 },
+  // v9.6: the Great Wall and the familiars
+  { key: "saviour_of_the_holy_kingdom", name: "Saviour of the Holy Kingdom", how: "Break the siege of the Great Wall",
+    earned: (p) => Array.isArray(p.bosses) && p.bosses.includes("great_wall") },
+  { key: "beastmaster_of_nazarick", name: "Beastmaster of Nazarick", how: "Bind all four familiars",
+    earned: (p) => Object.keys(p.familiars?.owned ?? {}).length >= 4 },
+  { key: "bonded", name: "Soul-Bonded", how: "Raise a familiar to level 10",
+    earned: (p) => Object.values(p.familiars?.owned ?? {}).some((b) => Number(b?.level ?? 0) >= 10) },
   { key: "liberator_of_the_capital", name: "Liberator of the Royal Capital", how: "Free the Dwarven Royal Capital",
     earned: (p) => Array.isArray(p.bosses) && p.bosses.includes("royal_capital") },
 ];

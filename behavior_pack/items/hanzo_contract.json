@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:hanzo_contract",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_hanzo_contract"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.hanzo_contract.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "epic"
+    }
+  }
+}

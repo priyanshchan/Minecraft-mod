@@ -2032,7 +2032,7 @@ players.splice(0, players.length, ...everyone, zoe);
   const kili = delver("kili"), fili = delver("fili"); fili.location = { x: 802, y: 64, z: 801 };
   // a Capital never cuts into the Great Tomb
   const t = tombs.tombOf(); assert.ok(t); kili.location = { x: t.x + 10.5, y: 64, z: t.z + 0.5 }; assert.equal(deeps.siteFor(kili).x, t.x + 64);
-  kili.location = { ...tombs.arrival(t, 0) }; assert.ok(deeps.enter(kili).includes("Leave the Great Tomb"));
+  kili.location = { ...tombs.arrival(t, 0) }; assert.ok(deeps.enter(kili).includes("Leave the dungeon"));
   kili.location = { x: 800.5, y: 64, z: 800.5 };
   world.props.delete("overlord:deeps");
   // the first entrance opens the Capital beneath it and takes the party down
@@ -2137,6 +2137,132 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   const arms = await import("./arms.js"); sam.effects.clear(); sam.dimension.mobs = [];
   assert.equal(arms.useWeaponArt(sam, "overlord:runeblade"), true); assert.ok(sam.effects.has("resistance")); advance(30);
   script.length = 0; players.splice(players.indexOf(sam), 1);
+}
+
+// ---- v9.6: the Siege of the Great Wall ----
+{
+  const walls = await import("./wall.js");
+  const deeps = await import("./deeps.js");
+  const delve = await import("./delve.js");
+  assert.equal(walls.FLOORS.length, 3); assert.deepEqual(walls.FLOORS[1].stages, [["overlord:evil_lord_envy", "overlord:evil_lord_greed"]]);
+  assert.equal(delve.DUNGEONS.length, 2, "the Capital and the Wall share one engine");
+  const placed = new Map(); const k = (l) => `${Math.floor(l.x)},${Math.floor(l.y)},${Math.floor(l.z)}`; const party = []; const spawned = []; let biggest = 0;
+  const deep = { id: "minecraft:overworld", spawnParticle() {}, playSound() {},
+    setBlockType: (l, t) => placed.set(k(l), t),
+    fillBlocks(v, t) { biggest = Math.max(biggest, (v.to.x - v.from.x + 1) * (v.to.y - v.from.y + 1) * (v.to.z - v.from.z + 1));
+      for (let x = v.from.x; x <= v.to.x; x++) for (let y = v.from.y; y <= v.to.y; y++) for (let z = v.from.z; z <= v.to.z; z++) placed.set(`${x},${y},${z}`, t); },
+    getBlock: (l) => ({ typeId: placed.get(k(l)) ?? "minecraft:stone", getComponent: () => ({ container: { addItem() {} } }) }),
+    getPlayers: (q) => party.filter((p) => !q || !q.maxDistance || Math.hypot(p.location.x - q.location.x, p.location.y - q.location.y, p.location.z - q.location.z) <= q.maxDistance),
+    getEntities: (q) => spawned.filter((m) => m.isValid && (q.tags ?? []).every((t) => m.tags.has(t))),
+    spawnEntity(type, at) { const m = { id: `w${spawned.length}`, typeId: type, location: at, isValid: true, tags: new Set(), addTag(t) { m.tags.add(t); }, remove() { m.isValid = false; },
+      health: { currentValue: 100, effectiveMax: 100 }, getComponent(c) { return c === "minecraft:health" ? m.health : undefined; } }; spawned.push(m); return m; } };
+  const realDimension = world.getDimension; world.getDimension = () => deep;
+  const hero = (name) => { const p = mkPlayer(name); p.dimension = deep; p.location = { x: 1200.5, y: 70, z: 1200.5 }; p.teleport = (to) => { p.location = { ...to }; }; p.taken = 0;
+    p.applyDamage = (n) => { p.taken += n; }; p.setOnFire = (n) => { p.burning = n; }; party.push(p); return p; };
+  const neia = hero("neia2");
+  // never built over the Royal Capital
+  const cap = deeps.capitalOf(); assert.ok(cap); neia.location = { x: cap.x + 5.5, y: 70, z: cap.z + 0.5 }; assert.ok(Math.abs(walls.wall.siteFor(neia).x - cap.x) >= 60);
+  neia.location = { ...deeps.arrival(cap, 0) }; assert.ok(walls.wall.enter(neia).includes("Leave the dungeon"), "not from inside another dungeon");
+  neia.location = { x: 1200.5, y: 70, z: 1200.5 }; world.props.delete("overlord:wall");
+  assert.ok(walls.wall.enter(neia).includes("descend")); const w = walls.wall.place(); assert.ok(w && w.x === 1200 && w.top === 50);
+  assert.ok(biggest <= 32768); assert.equal(placed.get(`1200,${walls.wall.floorY(w, 0)},${1200 - 11}`), "minecraft:iron_bars");
+  assert.equal(placed.get(`1215,${walls.wall.floorY(w, 0)},1200`), "minecraft:chest", "the treasure by the broken rampart");
+  assert.equal(placed.get(`1200,${walls.wall.floorY(w, 0) + 1},1200`) ?? "minecraft:air", "minecraft:air");
+  // the breach: bafolk, then Buser
+  let now = system.currentTick + 5000; const st = walls.wall.state; const W = walls.wall;
+  W.tick(now); assert.equal(st[0].status, "wave"); assert.equal(spawned.filter((m) => m.tags.has("overlord_wall_0")).length, 7);
+  for (const m of spawned) m.health.currentValue = 0; W.tick(now += 10); assert.equal(spawned[spawned.length - 1].typeId, "overlord:buser");
+  spawned[spawned.length - 1].health.currentValue = 0; W.tick(now += 10); assert.equal(st[0].status, "cleared");
+  // burning pitch on the wall
+  const [tx, tz] = walls.FLOORS[0].traps[0]; neia.location = { x: w.x + tx + 0.5, y: W.floorY(w, 0), z: w.z + tz + 0.5 }; W.springTraps(deep, w, 0, [neia], now); advance(9);
+  assert.ok(neia.taken >= 4 && neia.burning > 0, "the pitch burns");
+  // the city: two Evil Lords at once
+  neia.location = { ...W.exitPad(w, 0) }; W.tick(now += 10); assert.equal(W.floorAt(w, neia.location), 1);
+  W.tick(now += 10); for (const m of spawned) m.health.currentValue = 0; W.tick(now += 10);
+  const lords = spawned.filter((m) => m.isValid && m.health.currentValue > 0).map((m) => m.typeId).sort(); assert.deepEqual(lords, ["overlord:evil_lord_envy", "overlord:evil_lord_greed"]);
+  spawned.find((m) => m.typeId === "overlord:evil_lord_envy").health.currentValue = 0; W.tick(now += 10); assert.equal(st[1].status, "boss", "one lord still stands");
+  for (const m of spawned) m.health.currentValue = 0; W.tick(now += 10); assert.equal(st[1].status, "cleared");
+  // the pyre: Wrath and the hounds, then Jaldabaoth
+  neia.location = { ...W.exitPad(w, 1) }; W.tick(now += 10); W.tick(now += 10); assert.equal(st[2].status, "wave");
+  for (const m of spawned) m.health.currentValue = 0; W.tick(now += 10); assert.equal(spawned[spawned.length - 1].typeId, "overlord:jaldabaoth");
+  spawned[spawned.length - 1].health.currentValue = 0; W.tick(now += 10); assert.equal(st[2].status, "cleared");
+  const pn = rpg.profileOf(neia); pn.bosses = []; neia.location = { ...W.exitPad(w, 2) }; W.tick(now += 10);
+  assert.ok(pn.bosses.includes("great_wall")); assert.equal(spells.countItem(neia, walls.HALBERD), 1, "the Demonbane Halberd");
+  assert.equal(W.floorAt(w, neia.location), undefined); assert.ok(guild.checkTitles(neia).includes("Saviour of the Holy Kingdom"));
+  // the Seal leads down and back
+  world.afterEvents.itemUse.fire({ source: neia, itemStack: { typeId: walls.KEY } }); assert.equal(W.floorAt(w, neia.location), 0);
+  world.afterEvents.itemUse.fire({ source: neia, itemStack: { typeId: walls.KEY } }); assert.equal(W.floorAt(w, neia.location), undefined);
+  // the heart of a Demon Gate's ritual circle
+  world.props.set(`overlord:site7:${Math.floor(10500 / sites.REGION)},${Math.floor(10500 / sites.REGION)}`, "demon_gate|10500|70|10500|1");
+  const remi = hero("remi"); remi.location = { x: 10500.5, y: 70, z: 10500.5 }; W.tick(system.currentTick + 2000); assert.equal(W.floorAt(w, remi.location), 0, "the ritual circle leads down");
+  W.leave(remi);
+  // the halberd's art: demons take more, and are thrown back
+  const arms = await import("./arms.js"); assert.equal(arms.WEAPONS.demonbane_halberd.kind, "polearm");
+  world.getDimension = realDimension; party.length = 0; spawned.forEach((m) => { m.isValid = false; });
+  players.splice(players.indexOf(neia), 1); players.splice(players.indexOf(remi), 1);
+}
+
+// ---- v9.6: familiars ----
+{
+  const fam = await import("./familiars.js");
+  const flush = async () => { for (let i = 0; i < 6; i++) await new Promise((r) => setTimeout(r, 0)); };
+  const zoo = []; let n = 0;
+  const pet = mkPlayer("tamer"); const pp = rpg.profileOf(pet);
+  const dim = { id: "minecraft:overworld", spawnParticle() {}, playSound() {}, getPlayers: () => [pet], getBlock: () => undefined,
+    getEntities: (q) => zoo.filter((m) => m.isValid && (q.tags ?? []).every((t) => m.tags.has(t)) && (q.families ?? []).every((f) => m.families.includes(f)) &&
+      (!q.maxDistance || Math.hypot(m.location.x - q.location.x, m.location.z - q.location.z) <= q.maxDistance)),
+    spawnEntity(type, at) { const m = being(type, at, ["familiar"]); m.tame = { tame(p) { m.owner = p.id; }, isTamed: true }; return m; } };
+  const being = (typeId, at, families = ["monster"], hp = 40) => { const m = { id: `z${n++}`, typeId, location: { ...at }, isValid: true, tags: new Set(), props: new Map(), effects: new Map(), families, nameTag: "",
+    health: { currentValue: hp, effectiveMax: hp, setCurrentValue(v) { this.currentValue = v; } }, dimension: dim,
+    getComponent(c) { return c === "minecraft:health" ? m.health : c === "minecraft:tameable" ? m.tame : undefined; }, addTag(t) { m.tags.add(t); }, hasTag: (t) => m.tags.has(t),
+    matches: (q) => (q.families ?? []).every((f) => m.families.includes(f)), remove() { m.isValid = false; }, teleport(to) { m.location = { ...to }; },
+    setDynamicProperty: (k2, v) => m.props.set(k2, v), getDynamicProperty: (k2) => m.props.get(k2), addEffect(e, d, o = {}) { m.effects.set(e, { duration: d, amplifier: o.amplifier ?? 0 }); },
+    applyKnockback() { m.knocked = true; }, applyDamage(x) { m.health.currentValue = Math.max(0, m.health.currentValue - x); } }; zoo.push(m); return m; };
+  pet.dimension = dim; pet.location = { x: 0, y: 64, z: 0 };
+  const realDimension = world.getDimension; world.getDimension = () => dim;
+  const use = (typeId) => world.afterEvents.itemUse.fire({ source: pet, itemStack: { typeId } });
+  // binding: the token is spent, and the first familiar brings the Bell
+  rpg.giveItem(pet, "overlord:dragonling_egg", 1); use("overlord:dragonling_egg");
+  const f = fam.familiarsOf(pet); assert.equal(f.owned.dragonling.level, 1); assert.equal(spells.countItem(pet, "overlord:dragonling_egg"), 0); assert.equal(spells.countItem(pet, fam.BELL), 1);
+  assert.ok(fam.bind(pet, "dragonling").includes("already"));
+  // the Bell calls it out, tamed to its master
+  use(fam.BELL); advance(2); let body = fam.bodyOf(pet); assert.ok(body && body.typeId === "overlord:familiar_dragonling" && body.owner === "tamer"); assert.equal(f.active, "dragonling");
+  // Frost Breath at the nearest foe
+  const wolf = being("overlord:goblin", { x: 3, y: 64, z: 0 }); let now = system.currentTick + 10000;
+  assert.deepEqual(fam.act(pet, body, now), ["Frost Breath"]); assert.ok(wolf.health.currentValue < 40 && wolf.effects.has("slowness"));
+  assert.deepEqual(fam.act(pet, body, now + 1), [], "it waits between breaths");
+  // left far behind, it comes to its master
+  body.location = { x: 80, y: 64, z: 80 }; fam.tend(pet, now += 200); assert.ok(Math.hypot(body.location.x, body.location.z) < 3);
+  // it grows with the foes its master fells, and learns its tricks
+  for (let i = 0; i < 12; i++) kill(pet, being("overlord:ogre", { x: 50, y: 64, z: 50 }, ["monster"], 120));
+  assert.ok(f.owned.dragonling.level >= 4, `level ${f.owned.dragonling.level}`); assert.ok(fam.knows(pet, 1));
+  pet.health.currentValue = 6; pet.effects.clear(); const used = fam.act(pet, body, now += 200); assert.ok(used.includes("Frost Ward") && pet.effects.has("resistance"));
+  f.owned.dragonling.level = 8; const near = being("overlord:goblin", { x: 2, y: 64, z: 1 }); assert.ok(fam.act(pet, body, now += 400).includes("Winter Gale")); assert.ok(near.knocked);
+  for (let i = 0; i < 400; i++) fam.feed(pet, 60); assert.equal(f.owned.dragonling.level, fam.MAX_LEVEL);
+  // the Bell sends it home
+  use(fam.BELL); assert.equal(f.active, ""); assert.equal(fam.bodyOf(pet), undefined);
+  // the Cherub mends and purifies
+  fam.bind(pet, "cherub"); fam.summon(pet, "cherub"); body = fam.bodyOf(pet); f.owned.cherub.level = 4;
+  pet.health.currentValue = 10; pet.effects.set("poison", { duration: 100, amplifier: 0 }); const healed = fam.act(pet, body, now += 400);
+  assert.ok(healed.includes("Mending") && healed.includes("Purify")); assert.equal(pet.health.currentValue, 11); assert.ok(!pet.effects.has("poison"));
+  f.owned.cherub.level = 8; pet.health.currentValue = 3; assert.ok(fam.act(pet, body, now += 400).includes("Guardian Light")); assert.ok(pet.health.currentValue >= 13);
+  // Hanzo poisons and picks pockets; the Shadow Demon sees in the dark and binds attackers
+  fam.bind(pet, "hanzo"); fam.summon(pet, "hanzo"); body = fam.bodyOf(pet); f.owned.hanzo.level = 8;
+  const mark = being("overlord:ogre", { x: 4, y: 64, z: 0 }, ["monster"], 300); const hanzoUsed = fam.act(pet, body, now += 400);
+  assert.ok(hanzoUsed.includes("Venom Fang") && hanzoUsed.includes("Shadow Mark")); assert.ok(mark.effects.has("weakness"));
+  const roll = Math.random; Math.random = () => 0; const gold = spells.countItem(pet, "overlord:yggdrasil_gold_coin"); kill(pet, being("overlord:goblin", { x: 40, y: 64, z: 40 }));
+  Math.random = roll; assert.ok(spells.countItem(pet, "overlord:yggdrasil_gold_coin") > gold, "Hanzo lifts some gold");
+  fam.bind(pet, "shadow"); fam.summon(pet, "shadow"); body = fam.bodyOf(pet); f.owned.shadow.level = 8; pet.effects.clear();
+  assert.ok(fam.act(pet, body, now += 400).includes("Darkvision")); assert.ok(pet.effects.has("night_vision"));
+  const brute = being("overlord:ogre", { x: 1, y: 64, z: 0 }, ["monster"], 100); world.afterEvents.entityHurt.fire({ hurtEntity: pet, damage: 4, damageSource: { damagingEntity: brute, cause: "entityAttack" } });
+  assert.ok(brute.effects.has("slowness") && brute.health.currentValue < 100, "Shadow Bind");
+  assert.equal(zoo.filter((m) => m.isValid && m.tags.has("overlord_familiar_tamer")).length, 1, "only one familiar out at a time");
+  // the page, renaming, and titles
+  const mark0 = shown.length; script.push(99); fam.openFamiliars(pet); await flush(); assert.equal(shown[mark0].title, "Familiars"); assert.ok(shown[mark0].body.includes("Hanzo"));
+  assert.ok(fam.rename(pet, "shadow", "§cNight Whisper")); assert.equal(f.owned.shadow.name, "Night Whisper"); assert.ok(body.nameTag.includes("Night Whisper"));
+  fam.bind(pet, "cherub"); assert.ok(guild.checkTitles(pet).includes("Beastmaster of Nazarick"));
+  world.afterEvents.playerLeave.fire({ playerId: "tamer" }); assert.equal(zoo.filter((m) => m.isValid && m.tags.has("overlord_familiar_tamer")).length, 0, "it goes home when its master leaves");
+  script.length = 0; world.getDimension = realDimension; players.splice(players.indexOf(pet), 1);
 }
 
 // persistence: saved profile is restored after leaving

@@ -141,6 +141,30 @@ export const BOSSES = {
       [{ name: "Fall of the World Tree", shape: "slam", power: 2.0, radius: 11, delay: 50 }, { name: "Saplings Awaken", shape: "summon", power: 1.0, radius: 6, type: id("treant_sapling"), count: 3 }],
     ],
   },
+  buser: {
+    name: "Buser, King of the Bafolk", element: "none", damage: 15, adds: [[id("bafolk"), 2]],
+    moves: [
+      [{ name: "Cleaving Charge", shape: "line", power: 1.2, length: 12 }, { name: "Axe Whirl", shape: "slam", power: 1.1, radius: 5 }],
+      [{ name: "War Horn of the Hills", shape: "summon", power: 1, radius: 5, type: id("bafolk"), count: 3 }, { name: "Stampede", shape: "line", power: 1.2, length: 14, lines: 3 }],
+      [{ name: "Skull-Splitter", shape: "slam", power: 1.8, radius: 7, delay: 45 }, { name: "Hurled Axes", shape: "barrage", power: 1.0, radius: 2.5, count: 5 }],
+    ],
+  },
+  evil_lord_envy: {
+    name: "Evil Lord Envy", element: "acid", damage: 16,
+    moves: [
+      [{ name: "Covetous Grasp", shape: "pull", power: 1.1, radius: 10 }, { name: "Bile Spray", shape: "line", power: 1.1, length: 14, lines: 3 }],
+      [{ name: "Green-Eyed Rain", shape: "barrage", power: 1.0, radius: 3, count: 5, hazard: 6 }],
+      [{ name: "Envy's Shadow", shape: "blink", power: 1.4, radius: 4 }, { name: "Poisoned Halo", shape: "ring", power: 1.4, inner: 3, radius: 10 }],
+    ],
+  },
+  evil_lord_greed: {
+    name: "Evil Lord Greed", element: "fire", damage: 16,
+    moves: [
+      [{ name: "Golden Hail", shape: "barrage", power: 1.0, radius: 2.5, count: 4 }, { name: "Grasping Chains", shape: "pull", power: 1.0, radius: 11 }],
+      [{ name: "Molten Hoard", shape: "ring", power: 1.3, inner: 2.5, radius: 9, hazard: 6 }],
+      [{ name: "Avarice Unbound", shape: "slam", power: 1.8, radius: 9, delay: 50 }, { name: "Tithe of Fire", shape: "line", power: 1.2, length: 16, lines: 4 }],
+    ],
+  },
   quagoa_warlord: {
     name: "Quagoa Warlord", element: "none", damage: 14, adds: [[id("quagoa"), 2]],
     moves: [
