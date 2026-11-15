@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:maid_chestplate"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "A A",
+      "AIA",
+      "AAA"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:blessed_cloth"
+      },
+      "I": {
+        "item": "minecraft:iron_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:blessed_cloth"
+      }
+    ],
+    "result": {
+      "item": "overlord:maid_chestplate",
+      "count": 1
+    }
+  }
+}

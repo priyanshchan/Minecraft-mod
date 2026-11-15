@@ -23,6 +23,7 @@ const TICKS = 20;
 export const MEALS = {
   [id("sebas_tea")]: { effects: /** @type {[string, number, number][]} */ ([["haste", 90, 1], ["speed", 90, 0]]), mana: 30, text: "§6A perfect cup. Your hands and feet feel quick." },
   [id("feast_pie")]: { effects: /** @type {[string, number, number][]} */ ([["regeneration", 30, 0], ["health_boost", 300, 0]]), mana: 0, text: "§6A feast fit for the Supreme Beings. +2 hearts for 5 minutes." },
+  [id("pestonya_soup")]: { effects: /** @type {[string, number, number][]} */ ([["regeneration", 20, 1], ["resistance", 60, 0]]), mana: 20, text: "§6Pestonya's soup, wan. Your wounds close and your ills fade.", cleanse: true }, // v10
   [id("dragon_skewer")]: { effects: /** @type {[string, number, number][]} */ ([["fire_resistance", 180, 0], ["strength", 60, 0]]), mana: 0, text: "§6Fiery! Flames cannot touch you for a while." },
 };
 
@@ -38,13 +39,22 @@ export function eat(player, item) {
     }
   }
   if (meal.mana > 0) restoreMana(player, meal.mana);
+  if ("cleanse" in meal && meal.cleanse) {
+    for (const bad of ["poison", "wither", "weakness", "slowness", "hunger", "nausea"]) {
+      try {
+        if (player.getEffect(bad)) player.removeEffect(bad);
+      } catch {
+        // no such effect
+      }
+    }
+  }
   fx.rise(player.dimension, player.location, item === id("dragon_skewer") ? "fire" : "holy", 0.6);
   notify(player, meal.text);
   return true;
 }
 
 /** The keepsakes of the sagas, worn in the off hand. */
-export const KEEPSAKES = new Set(["warrior_captains_sigil", "carne_charm", "bareare_ring", "blue_rose_brooch", "four_tribes_ring", "dryad_blossom"].map(id));
+export const KEEPSAKES = new Set(["warrior_captains_sigil", "carne_charm", "bareare_ring", "blue_rose_brooch", "four_tribes_ring", "dryad_blossom", "renner_ribbon"].map(id));
 /** Blocks the Dryad's Blossom draws strength from. */
 const GREEN = new Set(["minecraft:grass_block", "minecraft:moss_block", "minecraft:podzol", "minecraft:moss_carpet"]);
 
@@ -66,6 +76,15 @@ function keepsake(player, item) {
   if (item === id("blue_rose_brooch")) {
     lend("resistance");
     return "resistance";
+  }
+  if (item === id("renner_ribbon")) { // v10: Climb's stubbornness - he never gives up
+    const health = player.getComponent("minecraft:health");
+    if (health && health.currentValue < health.effectiveMax * 0.3) {
+      lend("strength");
+      lend("speed");
+      return "resolve";
+    }
+    return "";
   }
   if (item === id("four_tribes_ring")) {
     lend("water_breathing");

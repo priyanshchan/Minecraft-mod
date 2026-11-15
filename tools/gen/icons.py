@@ -345,6 +345,26 @@ def wyrm_whistle():
     ], {"G": GOLD, "g": GOLD_D, "R": "#ff3040", "P": "#7a35b5"})
 
 
+REINS = [
+    "................",
+    "....LLLLLL......",
+    "...LllllllL.....",
+    "..Ll......lL....",
+    "..L........L....",
+    "..L........L....",
+    "..L........L....",
+    "..Ll......lL....",
+    "...LllllllL.....",
+    "....LLMMLL......",
+    "......MSSM......",
+    ".....MSssSM.....",
+    ".....MSssSM.....",
+    "......MSSM......",
+    ".......MM.......",
+    "................",
+]
+
+
 def soul_reins():
     """Black leather reins in a loop, with a green soul gem on the bit."""
     return sprite16([
@@ -542,6 +562,28 @@ def sebas_tea():
         "................",
         "................",
     ], {"W": "#f4f1ea", "T": "#3a1a0a", "t": "#5a2a10", "w": "#d8d8e8", "S": "#d9a92b", "s": "#96701a"})
+
+
+def pestonya_soup():
+    """Pestonya's Healing Soup: a wooden bowl of golden broth with a leaf of green, steam rising (v10)."""
+    return sprite16([
+        "................",
+        "......w..w......",
+        ".......w..w.....",
+        "......w..w......",
+        "................",
+        "..BBBBBBBBBBBB..",
+        "..BYYYYGYYYYYB..",
+        "..BYyYYYYoYyYB..",
+        "...BYYYYYYYYB...",
+        "...bBBBBBBBBb...",
+        "....bBBBBBBb....",
+        ".....bbbbbb.....",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], {"B": "#8a5a30", "b": "#5a3a1a", "Y": "#e8b84a", "y": "#ffd27a", "G": "#5aa040", "o": "#e86a2a", "w": "#d8d8e8"})
 
 
 def feast_pie():
@@ -787,6 +829,50 @@ def cherub_halo():
     ], {"Y": "#ffe27a", "G": GOLD, "W": "#f4f6fb", "w": "#c8d0dc"})
 
 
+def star_bow():
+    """The Ultimate Shooting Star Super: a white-and-gold bow, a star set at its grip (v10)."""
+    return sprite16([
+        "............GW..",
+        "...........WW.s.",
+        "..........WG..s.",
+        ".........WW...s.",
+        "........GW....s.",
+        ".......WW.....s.",
+        "......WG......s.",
+        ".....YYY......s.",
+        "....YyY.......s.",
+        "....GW........s.",
+        "...WW.........s.",
+        "..WG..........s.",
+        ".WW...........s.",
+        "GW.............s",
+        "W.............s.",
+        "................",
+    ], {"W": "#f4f0e6", "G": GOLD, "Y": "#ffe27a", "y": "#ffffff", "s": "#d8d8e8"})
+
+
+def acorn():
+    """The Wise King's Golden Acorn (v10)."""
+    return sprite16([
+        "................",
+        ".......bb.......",
+        "......bb........",
+        "....CCCCCC......",
+        "...CcCcCcCC.....",
+        "...CCCCCCCC.....",
+        "....GGGGGG......",
+        "....GgGGGG......",
+        "....GgGGGG......",
+        ".....GGGGg......",
+        ".....GGGgg......",
+        "......GGg.......",
+        ".......g........",
+        "................",
+        "................",
+        "................",
+    ], {"C": "#8a5a30", "c": "#a87440", "b": "#5a3a1a", "G": GOLD, "g": GOLD_D})
+
+
 def medal():
     """A gold medal on a crimson ribbon, the sigil of Ainz Ooal Gown at its heart."""
     return sprite16([
@@ -807,6 +893,13 @@ def medal():
         "................",
         "................",
     ], {"R": "#a8263a", "r": "#7a1a2a", "G": GOLD, "g": GOLD_D, "P": "#5a1f8c", "p": "#c9a0ff"})
+
+
+MAID_PAL = {"K": "#1a1a22", "k": "#f4f0e6", "l": "#ffffff", "G": "#c9302c", "g": "#8a1a1a", "R": "#c9302c"}
+
+
+def maid_layers():
+    return armor_layers("#1a1a22", "#2e2e3a", "#f4f0e6", "#c9302c")
 
 
 SERAPH_PAL = {"K": "#c8d0dc", "k": "#f4f6fb", "l": "#ffffff", "G": GOLD, "g": GOLD_D, "R": "#fff0a0"}
@@ -2251,6 +2344,7 @@ BLOCK_TEXTURES = {
 
 
 EGG_COLORS = {
+    "brain_eater": ("#3a1a4a", "#ff4ad0"),
     "buser": ("#6a6058", "#4a4e58"),
     "evil_lord_envy": ("#2f6a2a", "#b6ff4a"),
     "evil_lord_greed": ("#8a6a1a", "#ffe27a"),
@@ -2459,6 +2553,14 @@ def all_item_icons():
         "rune_of_frost": rune_stone("#8fe0ff"),
         "rune_of_storm": rune_stone("#ffe94a"),
         "rune_of_life": rune_stone("#63ff6b"),
+        "rune_of_shadow": rune_stone("#9a4aff"),
+        "gem_moonstone": gem("#b8c8ff", "#eef2ff", "#5a6aa8"),
+        "pestonya_soup": pestonya_soup(),
+        "shooting_star_bow": star_bow(),
+        **{f"maid_{p}": fn(MAID_PAL) for p, fn in (("helmet", helmet), ("chestplate", chestplate), ("leggings", leggings), ("boots", boots))},
+        "wise_kings_acorn": acorn(),
+        "hellfire_reins": sprite16([r.replace("S", "F").replace("s", "f") for r in REINS], {"L": "#2a1210", "l": "#4a1f18", "M": "#8a93a0", "F": "#ff7a1a", "f": "#ffd27a"}),
+        "renner_ribbon": badge(GOLD, GOLD_D, "#f4f0e6", "#ffffff", "#c9a227", "#96701a"),
         "platinum_scale": crystal("#d9dde6", "#ffffff", "#ffffff", "#9aa2b0"),
         "platinum_helmet": helmet(PLATINUM_PAL),
         "platinum_chestplate": chestplate(PLATINUM_PAL),

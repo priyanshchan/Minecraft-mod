@@ -133,6 +133,9 @@ LOOKS = {
                        helm="skull", shoulder="bone", legs="bone", feet="claw"),
     "cavalier": dict(plate="#1d1b24", light="#3a3644", dark="#0c0b10", trim="#59e0a0", glow="#59e0a0", cape="#0f3a2a",
                      helm="great", shoulder="spiked", legs="plate", feet="sabaton"),
+    # v10: the Pleiades' battle dress
+    "maid": dict(plate="#1a1a22", light="#f4f0e6", dark="#0c0c12", trim="#f4f0e6", glow="#c9302c", cape=None,
+                 helm="crown", shoulder="round", legs="robe", feet="boot"),
     # v9.7: the divine sets - super-tier and god-tier
     "seraph": dict(plate="#e8ecf4", light="#ffffff", dark="#a8b0c0", trim=GOLD, glow="#fff0a0", cape="#f4f0e6",
                    helm="winged", shoulder="grand", legs="tabard", feet="sabaton"),

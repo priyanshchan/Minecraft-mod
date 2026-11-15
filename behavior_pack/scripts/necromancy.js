@@ -35,6 +35,8 @@ export const KINDS = [
   { type: id("elder_lich"), name: "Elder Lich", body: 40, level: 10, mana: 20 },
   { type: id("soul_eater"), name: "Soul Eater", body: 100, level: 25, mana: 35 },
   { type: id("death_knight"), name: "Death Knight", body: 250, level: 45, mana: 50 },
+  // v10, added at the end so that saved armies keep their kinds
+  { type: id("death_cavalier"), name: "Death Cavalier", body: 160, level: 35, mana: 42 },
 ];
 const NAMES = ["Grim", "Hollow", "Marrow", "Ash", "Rattle", "Gloom", "Dirge", "Shade", "Vesper", "Mort", "Knell", "Pale"];
 
@@ -83,7 +85,7 @@ export function rankOf(player, s) {
 export function kindFor(body, level) {
   let best = 0;
   KINDS.forEach((k, i) => {
-    if (body >= k.body && level >= k.level) best = i;
+    if (body >= k.body && level >= k.level && k.body >= KINDS[best].body) best = i;
   });
   return best;
 }

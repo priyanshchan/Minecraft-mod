@@ -9,7 +9,7 @@
 // dungeon's own reward and leads back up. Entering again later, with nobody inside, finds it restored. No
 // two dungeons are ever built over one another, and none can be entered from inside another.
 import { world, system, EntityDamageCause, GameMode } from "@minecraft/server";
-import { giveItem, grantXp, notify, touch } from "./rpg.js";
+import { giveItem, grantXp, notify, profileOf, touch } from "./rpg.js";
 import { Builder, campAt, stockChests } from "./structures.js";
 import { tombOf, floorAt as tombFloorAt } from "./dungeon.js";
 import * as fx from "./vfx.js";
@@ -100,6 +100,23 @@ export const TRAPS = {
   },
 };
 
+/**
+ * Records a finished run's time against a player's best (v10). Returns the line to show.
+ * @param {Player} player @param {string} key @param {number} ticks
+ */
+export function record(player, key, ticks) {
+  if (ticks <= 0) return "";
+  const p = profileOf(player);
+  if (!p.records || typeof p.records !== "object") p.records = {};
+  const best = /** @type {Record<string, number>} */ (p.records)[key];
+  const clock = (/** @type {number} */ t) => `${Math.floor(t / TICKS / 60)}:${String(Math.floor(t / TICKS) % 60).padStart(2, "0")}`;
+  if (best === undefined || ticks < best) {
+    /** @type {Record<string, number>} */ (p.records)[key] = ticks;
+    return `§6Cleared in ${clock(ticks)} - a new best!`;
+  }
+  return `§7Cleared in ${clock(ticks)} (best ${clock(best)})`;
+}
+
 /** Every dungeon run by this engine. @type {Dungeon[]} */
 export const DUNGEONS = [];
 
@@ -141,6 +158,8 @@ export class Dungeon {
     this.state = cfg.floors.map(() => ({ status: "idle", stage: 0, mobs: [] }));
     this.lastInside = 0;
     this.restore = false;
+    /** Tick the current run began (the first floor's garrison woke), for the records. */
+    this.started = 0;
     /** @type {Map<string, number>} trap cooldowns: `${floor}|${x}|${z}` -> tick */
     this.traps = new Map();
     /** @type {Map<string, number>} players who just left, and cannot step straight back onto the stone */
@@ -349,6 +368,7 @@ export class Dungeon {
   }
 
   resetRun() {
+    this.started = 0;
     for (const f of this.state) {
       f.status = "idle";
       f.stage = 0;
@@ -405,6 +425,7 @@ export class Dungeon {
       }
       state.mobs = found.length > 0 ? found : this.spawnGroup(dimension, at, index, f.wave, 7);
       state.status = "wave";
+      if (index === 0 && this.started === 0) this.started = system.currentTick;
       title(here, `${c.colour}${f.name}`, `§7${f.sub}`);
       return;
     }
@@ -492,6 +513,8 @@ export class Dungeon {
   /** The dungeon's reward, and the way out. @param {Player} player */
   conquer(player) {
     const line = this.cfg.reward(player);
+    const time = record(player, this.cfg.key, this.started > 0 ? system.currentTick - this.started : 0);
+    if (time) player.sendMessage(time);
     touch(player);
     player.sendMessage(line);
     notify(player, this.leave(player));

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [9, 7, 0]
+VERSION = [10, 0, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v9.7.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v10.0.0"
 
 
 def oid(name):
@@ -326,7 +326,7 @@ ITEMS = {
         "minecraft:rarity": "uncommon",
     }),
     **{f"rune_of_{kind}": (f"Rune of {kind.capitalize()}", "items", {
-        "minecraft:max_stack_size": 16, "minecraft:rarity": "rare"}) for kind in ("fire", "frost", "storm", "life")},
+        "minecraft:max_stack_size": 16, "minecraft:rarity": "rare"}) for kind in ("fire", "frost", "storm", "life", "shadow")},
     # v7.5 gear upgrades: refining raises an item's quality, gems are set into its sockets (gear.js).
     "refining_stone": ("Refining Stone", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "uncommon"}),
     # v7.6.1: a testing aid that only works in creative mode (devtools.js); not craftable.
@@ -350,6 +350,17 @@ ITEMS = {
         **_cooldown("overlord_rune_key", 3.0)}),
     "royal_rune": ("Royal Rune", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "rare"}),
     "runeblade": ("Runeblade of the Dwarf King", "equipment", _weapon(15, {"minecraft:glint": True})),
+    # v10: Neia's bow, the Battle Maid armour, the Wise King's Cub, the Hellhound Steed and Climb's keepsake
+    "shooting_star_bow": ("Ultimate Shooting Star Super", "equipment", _weapon(13, {"minecraft:glint": True})),
+    "maid_helmet": ("Battle Maid Headdress", "equipment", _armor("slot.armor.head", 3, 600, "armor_head")),
+    "maid_chestplate": ("Battle Maid Uniform", "equipment", _armor("slot.armor.chest", 7, 800, "armor_torso")),
+    "maid_leggings": ("Battle Maid Skirt", "equipment", _armor("slot.armor.legs", 5, 740, "armor_legs")),
+    "maid_boots": ("Battle Maid Shoes", "equipment", _armor("slot.armor.feet", 3, 640, "armor_feet")),
+    "wise_kings_acorn": ("Wise King's Golden Acorn", "equipment", {"minecraft:max_stack_size": 1, "minecraft:rarity": "epic"}),
+    "hellfire_reins": ("Hellfire Reins", "equipment", {
+        "minecraft:max_stack_size": 1, "minecraft:rarity": "rare", **_cooldown("overlord_hellfire_reins", 1.0)}),
+    "renner_ribbon": ("Golden Princess's Ribbon", "equipment",
+                      {"minecraft:max_stack_size": 1, "minecraft:rarity": "epic", "minecraft:allow_off_hand": True, "minecraft:glint": True}),
     # v9.7: the divine arms - super-tier (level 70) and god-tier (level 80) weapons and armour (arms.js, divine.js)
     "divine_ingot": ("Divine Ingot", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "epic", "minecraft:glint": True}),
     "world_fragment": ("Fragment of a World Item", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "epic", "minecraft:glint": True}),
@@ -391,6 +402,7 @@ ITEMS = {
     "sebas_tea": ("Sebas's Black Tea", "items", _meal(2, 0.2, drink=True)),
     "feast_pie": ("Nazarick Feast Pie", "items", _meal(10, 1.2)),
     "dragon_skewer": ("Spicy Dragon Skewer", "items", _meal(6, 0.8)),
+    "pestonya_soup": ("Pestonya's Healing Soup", "items", _meal(8, 1.0)),  # v10
     "ring_of_fleet_foot": ("Ring of the Fleet Foot", "equipment", {
         "minecraft:max_stack_size": 1, "minecraft:rarity": "rare", "minecraft:allow_off_hand": True, "minecraft:glint": True}),
     # v8.6: the dead of the plains and the Destroyer Tree
@@ -415,7 +427,8 @@ ITEMS = {
                                                               "minecraft:glint": True}),
     **{f"gem_{gem}": (title, "items", {"minecraft:max_stack_size": 16, "minecraft:rarity": "rare"})
        for gem, title in (("ruby", "Ruby of Embers"), ("sapphire", "Sapphire of Frost"), ("topaz", "Topaz of Storms"),
-                          ("jade", "Jade of Venom"), ("onyx", "Onyx of Night"), ("sunstone", "Sunstone"))},
+                          ("jade", "Jade of Venom"), ("onyx", "Onyx of Night"), ("sunstone", "Sunstone"),
+                          ("moonstone", "Moonstone of Tides"))},
     "platinum_scale": ("Platinum Dragon Scale", "items", {"minecraft:max_stack_size": 64, "minecraft:rarity": "rare"}),
     "platinum_helmet": ("Platinum Helm", "equipment", _armor("slot.armor.head", 3, 520, "armor_head")),
     "platinum_chestplate": ("Platinum Cuirass", "equipment", _armor("slot.armor.chest", 8, 760, "armor_torso")),
@@ -473,6 +486,7 @@ WEAPON_ARTS = {
     "heartwood_staff": ("overlord_roots", 8.0),
     "runeblade": ("overlord_rune_sovereign", 10.0),
     "demonbane_halberd": ("overlord_wall_judgement", 10.0),
+    "shooting_star_bow": ("overlord_shooting_star", 9.0),
     "twilight_greatsword": ("overlord_twilight_cross", 12.0),
     "thunderlord_glaive": ("overlord_thunder_lord", 14.0),
     "eight_elements_staff": ("overlord_convergence", 16.0),
@@ -732,6 +746,17 @@ def recipe_files():
         "rune_key": _shaped("rune_key", ["RGR", "GIG", "RGR"], {
             "R": oid("royal_rune"), "G": "minecraft:gold_ingot", "I": "minecraft:iron_block"}, oid("rune_key"),
             unlock=oid("royal_rune")),
+        "shooting_star_bow": _shaped("shooting_star_bow", [" GS", "F S", " GS"], {
+            "G": "minecraft:gold_ingot", "S": "minecraft:string", "F": oid("angel_feather")}, oid("shooting_star_bow"),
+            unlock=oid("angel_feather")),
+        **{f"maid_{piece}": _shaped(f"maid_{piece}", pattern, {"A": oid("blessed_cloth"), "I": "minecraft:iron_ingot"}, oid(f"maid_{piece}"))
+           for piece, pattern in (("helmet", ["AIA", "A A"]), ("chestplate", ["A A", "AIA", "AAA"]),
+                                  ("leggings", ["AIA", "A A", "A A"]), ("boots", ["A A", "I I"]))},
+        "wise_kings_acorn": _shaped("wise_kings_acorn", ["GSG", "SAS", "GSG"], {
+            "G": "minecraft:gold_ingot", "S": "minecraft:wheat_seeds", "A": "minecraft:golden_apple"}, oid("wise_kings_acorn")),
+        "hellfire_reins": _shaped("hellfire_reins", ["LLL", "LHL", " B "], {
+            "L": "minecraft:leather", "H": oid("demon_heart"), "B": "minecraft:blaze_rod"}, oid("hellfire_reins"),
+            unlock=oid("demon_heart")),
         "divine_ingot": _shaped("divine_ingot", ["ARA", "DCD", "ARA"], {
             "A": oid("adamantite_ingot"), "R": oid("royal_rune"), "D": oid("demon_heart"), "C": oid("guardian_crest")},
             oid("divine_ingot"), count=2, unlock=oid("guardian_crest")),
@@ -775,6 +800,8 @@ def recipe_files():
             "F": oid("angel_feather"), "G": "minecraft:gold_ingot"}, oid("cherub_halo"), unlock=oid("angel_feather")),
         "book_of_the_dead": _shaped("book_of_the_dead", [" S ", "CBC", " S "], {
             "S": oid("soul_fragment"), "C": cry, "B": "minecraft:book"}, oid("book_of_the_dead"), unlock=oid("soul_fragment")),
+        "pestonya_soup": _shapeless("pestonya_soup", ["minecraft:bowl", "minecraft:carrot", "minecraft:cooked_beef", oid("red_potion")],
+                                    oid("pestonya_soup")),
         "sebas_tea": _shapeless("sebas_tea", ["minecraft:glass_bottle", "minecraft:sugar", "minecraft:cocoa_beans"], oid("sebas_tea"), count=2),
         "feast_pie": _shapeless("feast_pie", ["minecraft:egg", "minecraft:sugar", "minecraft:wheat", "minecraft:cooked_beef", "minecraft:apple"],
                                 oid("feast_pie")),
@@ -806,11 +833,13 @@ def recipe_files():
         **{f"gem_{gem}": _shapeless(f"gem_{gem}", [cry, cry, cry, cry, oid("refining_stone"), core], oid(f"gem_{gem}"))
            for gem, core in (("ruby", "minecraft:redstone_block"), ("sapphire", "minecraft:lapis_lazuli"),
                              ("topaz", "minecraft:gold_ingot"), ("jade", "minecraft:emerald"),
-                             ("onyx", "minecraft:obsidian"), ("sunstone", "minecraft:glowstone"))},
+                             ("onyx", "minecraft:obsidian"), ("sunstone", "minecraft:glowstone"),
+                             ("moonstone", "minecraft:amethyst_shard"))},
         **{f"rune_of_{kind}": _shaped(f"rune_of_{kind}", [" C ", "CXC", " C "], {"C": cry, "X": core},
                                       oid(f"rune_of_{kind}"))
            for kind, core in (("fire", "minecraft:blaze_powder"), ("frost", "minecraft:packed_ice"),
-                              ("storm", "minecraft:copper_ingot"), ("life", "minecraft:golden_apple"))},
+                              ("storm", "minecraft:copper_ingot"), ("life", "minecraft:golden_apple"),
+                              ("shadow", oid("soul_fragment")))},
         "dragonbone_blade": _shaped("dragonbone_blade", ["B", "B", "S"], {
             "B": oid("dragon_bone"), "S": "minecraft:stick"}, oid("dragonbone_blade")),
         **{f"infernal_{piece}": _shapeless(f"infernal_{piece}", [
@@ -1010,6 +1039,8 @@ def loot_files():
                 {"condition": "random_chance_with_looting", "chance": 0.1, "looting_multiplier": 0.03}]),
         ],
         "treant_sapling": [_pool(_entry("minecraft:stick", 1, 4)), _pool(_entry("minecraft:oak_sapling", 0, 1))],
+        "brain_eater": [_pool(_entry(oid("demon_heart"), 2, 3, looting=False)), _pool(_entry(oid("codex_of_skills"), 1, 1, looting=False)),
+                        _pool(_entry(coin, 16, 26)), _pool(_entry(cry, 4, 8))],
         "buser": [_pool(_entry(oid("beast_hide"), 3, 6, looting=False)), _pool(_entry(coin, 12, 20)),
                   _pool(_entry(oid("refining_stone"), 1, 3))],
         "evil_lord_envy": [_pool(_entry(oid("demon_heart"), 2, 3, looting=False)), _pool(_entry(coin, 14, 22)),
@@ -1069,16 +1100,17 @@ def _is_family(value, subject="other"):
 
 
 # The undead a necromancer can raise from corpses (necromancy.js)
-RAISABLE = ["old_guarder", "elder_lich", "soul_eater", "death_knight"]
+RAISABLE = ["old_guarder", "elder_lich", "soul_eater", "death_cavalier", "death_knight"]
 
 # v9.6: familiars (familiars.js) -> collision box; each is drawn as a small copy of another creature
 FAMILIARS = {"familiar_dragonling": (0.6, 0.6), "familiar_hanzo": (0.6, 0.5), "familiar_shadow": (0.5, 0.9),
-             "familiar_cherub": (0.5, 0.8)}
+             "familiar_cherub": (0.5, 0.8), "familiar_cub": (0.6, 0.6)}
 FAMILIAR_LOOKS = {"familiar_dragonling": "frost_dragon", "familiar_hanzo": "eight_edge_assassin",
-                  "familiar_shadow": "shadow_demon", "familiar_cherub": "archangel_flame"}
+                  "familiar_shadow": "shadow_demon", "familiar_cherub": "archangel_flame", "familiar_cub": "hamsuke"}
 
 # Floor Guardians who can serve a crowned player (court.js), with the harm of their blows
-GUARDIAN_COMPANIONS = {"albedo": 16, "shalltear": 15, "cocytus": 16, "demiurge": 12, "aura": 11, "mare": 11, "pandoras_actor": 13}
+GUARDIAN_COMPANIONS = {"albedo": 16, "shalltear": 15, "cocytus": 16, "demiurge": 12, "aura": 11, "mare": 11, "pandoras_actor": 13,
+                       "sebas": 14}
 
 
 def _mob(name, families, health, speed, box, loot=None, xp=10, scale=None, kb=None, follow=32,
@@ -1936,6 +1968,13 @@ def entity_files():
                       "size": 2.0, "sound_event": "prepare.summon"}]}]}
     out["khajiit"] = _entity("khajiit", c)
 
+    # v10: the Brain Eater, a mind-devouring demon of Jaldabaoth's legions (bosses.js)
+    c = caster("brain_eater", ["brain_eater", "demon", "monster", "mob"], 520, oid("negative_burst"), 1.4, 2.4, 22.0,
+               xp=360, kb=0.6, follow=40, persistent=True)
+    c["minecraft:boss"] = {"hud_range": 40, "should_darken_sky": False}
+    c["minecraft:damage_sensor"] = _no_fall()
+    out["brain_eater"] = _entity("brain_eater", c)
+
     c = _mob("gigant_basilisk", ["gigant_basilisk", "beast", "monster", "mob"], 160, 0.3, (1.4, 1.5),
              loot="gigant_basilisk", xp=60, scale=1.5, kb=0.8)
     del c["minecraft:can_climb"]
@@ -2282,7 +2321,8 @@ def entity_files():
     # v8.1: steeds called with an item (steeds.js), which also flies the wyrm and drives the Soul Eater.
     for name, families, health, speed, box, scale, seat, flying in (
             ("wyrm_steed", ["wyrm_steed", "nazarick_ally", "mob"], 90, 0.3, (1.6, 1.3), 0.55, [0.0, 0.75, -0.1], True),
-            ("soul_steed", ["soul_steed", "nazarick_ally", "undead", "mob"], 70, 0.34, (1.1, 1.3), 1.1, [0.0, 0.8, 0.1], False)):
+            ("soul_steed", ["soul_steed", "nazarick_ally", "undead", "mob"], 70, 0.34, (1.1, 1.3), 1.1, [0.0, 0.8, 0.1], False),
+            ("hell_steed", ["hell_steed", "nazarick_ally", "mob"], 80, 0.36, (1.0, 1.2), 1.15, [0.0, 0.85, 0.0], False)):
         c = _mob(name, families, health, speed, box, xp=0, scale=scale, kb=0.6, persistent=True, fire_immune=True, undead=not flying)
         del c["minecraft:can_climb"]
         del c["minecraft:experience_reward"]
@@ -2371,7 +2411,8 @@ SIZES = {
     "dark_young": 3.0, "treant_sapling": 1.25, "zytl_qae": 4.5, "death_cavalier": 1.05, "pinison": 0.86,
     "quagoa_warlord": 1.5, "rune_golem": 2.0,
     "buser": 1.35, "evil_lord_envy": 1.8, "evil_lord_greed": 1.8,
-    "familiar_dragonling": 0.12, "familiar_hanzo": 0.5, "familiar_shadow": 0.45, "familiar_cherub": 0.42,
+    "familiar_dragonling": 0.12, "familiar_hanzo": 0.5, "familiar_shadow": 0.45, "familiar_cherub": 0.42, "familiar_cub": 0.45,
+    "brain_eater": 1.25,
     # dragons
     # The dragons' own models are already more than eight blocks long before this is applied.
     "frost_dragon": 2.6, "skeletal_dragon": 2.8, "platinum_dragon_lord": 3.4,
@@ -2540,7 +2581,7 @@ MOBS = ["ainz", "albedo", "shalltear", "cocytus", "demiurge", "sebas", "death_kn
         "go_gin", "elf_ranger", "decem", "behemoth", "neia", "remedios", "paladin", "bafolk",
         "eight_edge_assassin", "arena_master", "platinum_dragon_lord", "rubedo",
         "ghoul", "wraith", "death_cavalier", "treant_sapling", "zytl_qae", "pinison", "skeleton_archer",
-        "quagoa_warlord", "rune_golem", "buser", "evil_lord_envy", "evil_lord_greed"]
+        "quagoa_warlord", "rune_golem", "buser", "evil_lord_envy", "evil_lord_greed", "brain_eater"]
 PROJECTILES = ["fireball", "negative_burst", "lightning_bolt", "magic_bullet", "crystal_shard", "frost_breath"]
 
 ENTITY_NAMES = {
@@ -2549,11 +2590,12 @@ ENTITY_NAMES = {
     "zytl_qae": "Zy'tl Q'ae, the Destroyer Tree", "pinison": "Pinison Pole Perlia",
     "quagoa_warlord": "Quagoa Warlord", "rune_golem": "Rune Golem of the Royal Forge",
     "buser": "Buser, King of the Bafolk", "evil_lord_envy": "Evil Lord Envy", "evil_lord_greed": "Evil Lord Greed",
+    "brain_eater": "Brain Eater", "hell_steed": "Hellhound Steed", "familiar_cub": "Wise King's Cub",
     "familiar_dragonling": "Frost Dragonling", "familiar_hanzo": "Hanzo", "familiar_shadow": "Shadow Demon Familiar",
     "familiar_cherub": "Cherub",
     "guardian_albedo": "Albedo", "guardian_shalltear": "Shalltear Bloodfallen", "guardian_cocytus": "Cocytus",
     "guardian_demiurge": "Demiurge", "guardian_aura": "Aura Bella Fiora", "guardian_mare": "Mare Bello Fiore",
-    "guardian_pandoras_actor": "Pandora's Actor",
+    "guardian_pandoras_actor": "Pandora's Actor", "guardian_sebas": "Sebas Tian",
     "wyrm_steed": "Nazarick Wyrm", "soul_steed": "Soul Eater Steed",
     "ainz": "Ainz Ooal Gown", "albedo": "Albedo", "shalltear": "Shalltear Bloodfallen",
     "cocytus": "Cocytus", "demiurge": "Demiurge", "sebas": "Sebas Tian",
@@ -2622,7 +2664,7 @@ def trade_files():
         buy("minecraft:raw_iron", 8, 3), buy("minecraft:coal", 16, 2), buy("minecraft:diamond", 1, 7),
         buy("minecraft:gold_ingot", 4, 5), buy(oid("dragon_bone"), 2, 5), buy(oid("frost_dragon_scale"), 2, 6),
         sell(oid("rune_of_fire"), 26, uses=4), sell(oid("rune_of_frost"), 26, uses=4),
-        sell(oid("rune_of_storm"), 26, uses=4), sell(oid("rune_of_life"), 32, uses=4),
+        sell(oid("rune_of_storm"), 26, uses=4), sell(oid("rune_of_life"), 32, uses=4), sell(oid("rune_of_shadow"), 30, uses=4),
         sell(oid("refining_stone"), 8, qty=2, uses=8),
         sell(oid("rune_key"), 45, uses=2), buy(oid("royal_rune"), 1, 9, uses=16),
     ]
@@ -2923,6 +2965,7 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("treant_sapling", "ogre"), ("zytl_qae", "ogre"), ("pinison", "nfirea"), ("skeleton_archer", "old_guarder"),
                     ("quagoa_warlord", "quagoa"), ("rune_golem", "gargantua"), ("buser", "bafolk"),
                     ("evil_lord_envy", "evil_lord_wrath"), ("evil_lord_greed", "evil_lord_wrath"),
+                    ("brain_eater", "elder_lich"), ("hell_steed", "hellhound"),
                     *FAMILIAR_LOOKS.items()):
     SOUNDS[_new] = SOUNDS[_like]
 for _key in GUARDIAN_COMPANIONS:
@@ -3121,6 +3164,7 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("treant_sapling", "ogre"), ("zytl_qae", "ogre"), ("pinison", "yuri"), ("skeleton_archer", "old_guarder"),
                     ("quagoa_warlord", "quagoa"), ("rune_golem", "gargantua"), ("buser", "bafolk"),
                     ("evil_lord_envy", "evil_lord_wrath"), ("evil_lord_greed", "evil_lord_wrath"),
+                    ("brain_eater", "elder_lich"), ("hell_steed", "hellhound"),
                     *FAMILIAR_LOOKS.items()):
     ENTITY_ANIMS[_new] = ENTITY_ANIMS[_like]
 for _key in GUARDIAN_COMPANIONS:
@@ -3776,7 +3820,7 @@ def render_controllers_json():
 
 
 # creatures drawn with another one's model and skin
-MODEL_ALIASES = {"soul_steed": "soul_eater", **{f"guardian_{k}": k for k in GUARDIAN_COMPANIONS}, **FAMILIAR_LOOKS}
+MODEL_ALIASES = {"soul_steed": "soul_eater", "hell_steed": "hellhound", **{f"guardian_{k}": k for k in GUARDIAN_COMPANIONS}, **FAMILIAR_LOOKS}
 
 
 def client_entity_files():
@@ -3831,6 +3875,7 @@ WEARABLES = {
     **{f"crimson_{piece}": (piece, f"{NS}_crimson_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"cavalier_{piece}": (piece, f"{NS}_cavalier_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"seraph_{piece}": (piece, f"{NS}_seraph_{layer}") for piece, (layer, _s) in ARMOR.items()},
+    **{f"maid_{piece}": (piece, f"{NS}_maid_{layer}") for piece, (layer, _s) in ARMOR.items()},
     **{f"supreme_{piece}": (piece, f"{NS}_supreme_{layer}") for piece, (layer, _s) in ARMOR.items()},
 }
 

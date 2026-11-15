@@ -62,6 +62,7 @@ export const NODES = [
   { key: "spell_surge", tree: "arcane", tier: 3, name: "Spell Surge", max: 3, per: 6, text: "{v}% chance a spell is cast at +60% power" },
   { key: "mana_shield", tree: "arcane", tier: 3, name: "Mana Shield", max: 2, per: 15, text: "{v}% of the damage you take is paid in mana instead (3 mana a heart)" },
   { key: "maximize_magic", tree: "arcane", tier: 4, name: "Maximize Magic", max: 1, per: 1, text: "Every fourth spell you cast is maximized: +80% power and no mana", needs: "arcane_study" },
+  { key: "overlords_wisdom", tree: "arcane", tier: 3, name: "Overlord's Wisdom", max: 2, per: 10, text: "+{v}% spell power, and super-tier and god-tier spells recharge that much faster", needs: "quick_chant" }, // v10
   // ====================================================================== Shadow
   { key: "keen_edge", tree: "shadow", tier: 0, name: "Keen Edge", max: 5, per: 2, text: "+{v}% critical hit chance" },
   { key: "fleet_foot", tree: "shadow", tier: 0, name: "Fleet of Foot", max: 2, per: 1, text: "One more tier of Speed{jump}" },
@@ -260,7 +261,12 @@ export function regenFactor(p) {
 
 /** Extra spell power for every spell. @param {SkillHolder} p */
 export function spellBonus(p) {
-  return value(p, "arcane_study") / 100;
+  return (value(p, "arcane_study") + value(p, "overlords_wisdom")) / 100;
+}
+
+/** How much shorter super-tier and god-tier recharges are (v10). @param {SkillHolder} p */
+export function greatRecharge(p) {
+  return 1 - value(p, "overlords_wisdom") / 100;
 }
 
 /** Extra spell power for one element. @param {SkillHolder} p @param {string} element */

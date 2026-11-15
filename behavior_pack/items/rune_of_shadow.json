@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:rune_of_shadow",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_rune_of_shadow"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.rune_of_shadow.name"
+      },
+      "minecraft:max_stack_size": 16,
+      "minecraft:rarity": "rare"
+    }
+  }
+}

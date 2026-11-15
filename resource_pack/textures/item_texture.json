@@ -218,6 +218,9 @@
     "overlord_egg_brain": {
       "textures": "textures/items/overlord/egg_brain"
     },
+    "overlord_egg_brain_eater": {
+      "textures": "textures/items/overlord/egg_brain_eater"
+    },
     "overlord_egg_buser": {
       "textures": "textures/items/overlord/egg_buser"
     },
@@ -479,6 +482,9 @@
     "overlord_gem_jade": {
       "textures": "textures/items/overlord/gem_jade"
     },
+    "overlord_gem_moonstone": {
+      "textures": "textures/items/overlord/gem_moonstone"
+    },
     "overlord_gem_onyx": {
       "textures": "textures/items/overlord/gem_onyx"
     },
@@ -533,6 +539,9 @@
     "overlord_hellfire_blade": {
       "textures": "textures/items/overlord/hellfire_blade"
     },
+    "overlord_hellfire_reins": {
+      "textures": "textures/items/overlord/hellfire_reins"
+    },
     "overlord_holy_staff": {
       "textures": "textures/items/overlord/holy_staff"
     },
@@ -566,6 +575,18 @@
     "overlord_maid_bell": {
       "textures": "textures/items/overlord/maid_bell"
     },
+    "overlord_maid_boots": {
+      "textures": "textures/items/overlord/maid_boots"
+    },
+    "overlord_maid_chestplate": {
+      "textures": "textures/items/overlord/maid_chestplate"
+    },
+    "overlord_maid_helmet": {
+      "textures": "textures/items/overlord/maid_helmet"
+    },
+    "overlord_maid_leggings": {
+      "textures": "textures/items/overlord/maid_leggings"
+    },
     "overlord_martial_lord_club": {
       "textures": "textures/items/overlord/martial_lord_club"
     },
@@ -583,6 +604,9 @@
     },
     "overlord_orb_of_death": {
       "textures": "textures/items/overlord/orb_of_death"
+    },
+    "overlord_pestonya_soup": {
+      "textures": "textures/items/overlord/pestonya_soup"
     },
     "overlord_platinum_boots": {
       "textures": "textures/items/overlord/platinum_boots"
@@ -638,6 +662,9 @@
     "overlord_regalia_leggings": {
       "textures": "textures/items/overlord/regalia_leggings"
     },
+    "overlord_renner_ribbon": {
+      "textures": "textures/items/overlord/renner_ribbon"
+    },
     "overlord_ring_of_ainz_ooal_gown": {
       "textures": "textures/items/overlord/ring_of_ainz_ooal_gown"
     },
@@ -664,6 +691,9 @@
     },
     "overlord_rune_of_life": {
       "textures": "textures/items/overlord/rune_of_life"
+    },
+    "overlord_rune_of_shadow": {
+      "textures": "textures/items/overlord/rune_of_shadow"
     },
     "overlord_rune_of_storm": {
       "textures": "textures/items/overlord/rune_of_storm"
@@ -727,6 +757,9 @@
     },
     "overlord_shooting_star": {
       "textures": "textures/items/overlord/shooting_star"
+    },
+    "overlord_shooting_star_bow": {
+      "textures": "textures/items/overlord/shooting_star_bow"
     },
     "overlord_sigil_of_ainz": {
       "textures": "textures/items/overlord/sigil_of_ainz"
@@ -889,6 +922,9 @@
     },
     "overlord_warrior_captains_sigil": {
       "textures": "textures/items/overlord/warrior_captains_sigil"
+    },
+    "overlord_wise_kings_acorn": {
+      "textures": "textures/items/overlord/wise_kings_acorn"
     },
     "overlord_world_breaker": {
       "textures": "textures/items/overlord/world_breaker"

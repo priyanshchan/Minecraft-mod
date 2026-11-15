@@ -47,6 +47,7 @@ export const GEMS = {
   topaz: { name: "Topaz of Storms", element: "lightning", weapon: "a fifth of blows jolt the nearest other foe for 4", armour: "with two, Speed I" },
   jade: { name: "Jade of Venom", element: "acid", weapon: "a quarter of blows poison the foe", armour: "half a heart every 4 seconds each" },
   onyx: { name: "Onyx of Night", element: "dark", weapon: "blows drink 5% of their harm", armour: "turns aside 5% of magical harm each" },
+  moonstone: { name: "Moonstone of Tides", element: "arcane", weapon: "a fifth of blows restore 5 mana", armour: "Night Vision; with two, Water Breathing" }, // v10
   sunstone: { name: "Sunstone", element: "holy", weapon: "+20% harm to the undead and demons", armour: "a kill heals you a heart each" },
 };
 
@@ -390,6 +391,9 @@ export function gemBlow(player, victim, damage, gems, random = Math.random) {
       fx.puff(d, "droplet", at, "acid", 0.7);
     } else if (g === "onyx") {
       heal(player, damage * 0.05);
+    } else if (g === "moonstone" && random() < 0.2) {
+      restoreMana(player, 5);
+      fx.spark(d, at, "arcane", 0.6);
     } else if (g === "sunstone" && (victim.matches({ families: ["undead"] }) || victim.matches({ families: ["demon"] }))) {
       strike(player, victim, damage * 0.2);
       fx.flash(d, at, "holy", 0.7);
@@ -450,6 +454,8 @@ export function tickGear(player, second) {
   if ((gems.topaz ?? 0) >= 2) player.addEffect("speed", 3 * TICKS, { amplifier: 0, showParticles: false });
   if (gems.sapphire) restoreMana(player, 0.5 * gems.sapphire);
   if (gems.jade && second % 4 === 0) heal(player, gems.jade);
+  if (gems.moonstone) player.addEffect("night_vision", 15 * TICKS, { amplifier: 0, showParticles: false });
+  if ((gems.moonstone ?? 0) >= 2) player.addEffect("water_breathing", 3 * TICKS, { amplifier: 0, showParticles: false });
 }
 
 let second = 0;

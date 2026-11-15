@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:wise_kings_acorn"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "GSG",
+      "SAS",
+      "GSG"
+    ],
+    "key": {
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "S": {
+        "item": "minecraft:wheat_seeds"
+      },
+      "A": {
+        "item": "minecraft:golden_apple"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:gold_ingot"
+      }
+    ],
+    "result": {
+      "item": "overlord:wise_kings_acorn",
+      "count": 1
+    }
+  }
+}

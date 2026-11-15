@@ -3950,6 +3950,21 @@ def buser():
     return m
 
 
+def brain_eater():
+    """The Brain Eater (v10): a gaunt demon in violet robes, a pale bulbous head and a beard of writhing tentacles."""
+    m = _lich("brain_eater", "#3a1a4a", "#5a2a6e", "#1e0c28", "#7a5a9a", "#ff4ad0")
+    head = _bone(m, "head")
+    dome = head.cube((-4.5, 30, -4.5), (9, 4, 9))  # the swollen cranium
+    dome.fill("#c8b0c8", noise=8)
+    dome.top.fill("#e0c8e0")
+    for i, x in enumerate((-3, -1, 1, 3)):  # the tentacles round its mouth
+        length = 4 if i in (1, 2) else 3
+        t = head.cube((x - 0.5, 24 - length, -4.5), (1, length, 1))
+        t.fill("#9a6aa8")
+        t.band(0, 1, "#ff4ad0")
+    return m
+
+
 def wyrm_steed():
     """A young dragon of Nazarick, bred to be ridden (steeds.js): scaled in purple and black, horned in gold."""
     return _great_dragon("wyrm_steed", "plated", "#3a2452", "#6b4a8f", "#1d1029", "#c9a227", "#d9a92b", "#5a2a7a",
@@ -3978,5 +3993,5 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        skeletal_dragon, khajiit, gigant_basilisk, frost_giant, beastman, lakyus, enri, zero, dark_young, jaldabaoth,
        go_gin, elf_ranger, decem, behemoth, neia, remedios, paladin, bafolk, eight_edge_assassin, arena_master,
        platinum_dragon_lord, rubedo, wyrm_steed, ghoul, wraith, death_cavalier, treant_sapling, zytl_qae, pinison,
-       skeleton_archer, quagoa_warlord, rune_golem, evil_lord_envy, evil_lord_greed, buser,
+       skeleton_archer, quagoa_warlord, rune_golem, evil_lord_envy, evil_lord_greed, buser, brain_eater,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]

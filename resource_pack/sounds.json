@@ -1186,6 +1186,33 @@
           "shoot": "mob.ghast.fireball"
         }
       },
+      "overlord:brain_eater": {
+        "volume": 1.0,
+        "pitch": [
+          0.7,
+          0.9
+        ],
+        "events": {
+          "ambient": "mob.stray.ambient",
+          "hurt": "mob.stray.hurt",
+          "death": "mob.stray.death",
+          "step": "mob.stray.step",
+          "shoot": "mob.blaze.shoot"
+        }
+      },
+      "overlord:hell_steed": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.75
+        ],
+        "events": {
+          "ambient": "mob.wither.ambient",
+          "hurt": "mob.husk.hurt",
+          "death": "mob.husk.death",
+          "step": "mob.zombie.step"
+        }
+      },
       "overlord:familiar_dragonling": {
         "volume": 1.0,
         "pitch": [
@@ -1236,6 +1263,19 @@
           "hurt": "mob.irongolem.hit",
           "death": "random.glass",
           "step": "mob.zombie.step"
+        }
+      },
+      "overlord:familiar_cub": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.8
+        ],
+        "events": {
+          "ambient": "mob.rabbit.idle",
+          "hurt": "mob.rabbit.hurt",
+          "death": "mob.rabbit.death",
+          "step": "mob.polarbear.step"
         }
       },
       "overlord:guardian_albedo": {
@@ -1320,6 +1360,18 @@
         "pitch": [
           0.95,
           1.05
+        ],
+        "events": {
+          "hurt": "game.player.hurt",
+          "death": "game.player.die",
+          "step": "mob.zombie.step"
+        }
+      },
+      "overlord:guardian_sebas": {
+        "volume": 1.0,
+        "pitch": [
+          0.7,
+          0.8
         ],
         "events": {
           "hurt": "game.player.hurt",

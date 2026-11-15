@@ -60,6 +60,7 @@ export const BUILDINGS = {
   temple: { name: "Temple of the Supreme Beings", plot: [-31, -31], help: (l) => `${2 * l} more Data Crystals a day` },
   farms: { name: "Farms", plot: [31, 31], help: (l) => `room for ${10 * l} more citizens; they settle ${25 * l}% faster` },
   houses: { name: "Houses", plot: [-31, 31], help: (l) => `room for ${15 * l} more citizens` },
+  library: { name: "Grand Library of Ashurbanipal", plot: [16, 33], help: (l) => `your spells strike ${5 * l}% harder` }, // v10
 };
 
 /** What raising a building to a level costs. @param {number} level */
@@ -221,6 +222,13 @@ const DESIGNS = {
     }
     b.set(5 - 1, 0, 4, mc("composter"));
     if (level >= 3) b.set(-4, 0, 4, mc("melon_block"));
+  },
+  library(b, level) {
+    b.house(-4, -4, 9, 9, { wall: mc("stone_bricks"), roof: id("gilded_nazarick_bricks"), floor: mc("oak_planks"), height: 4 + level, door: "s" });
+    for (const x of [-3, -2, 2, 3]) b.fill(x, 0, -3, x, 1 + level, -3, mc("bookshelf"));
+    b.set(0, 0, -2, mc("lectern"));
+    if (level >= 2) b.set(0, 0, 1, mc("enchanting_table"));
+    if (level >= 3) b.set(0, 6 + level, 0, id("data_crystal_block")); // a crystal crowning the roof
   },
   houses(b, level) {
     const look = { wall: mc("oak_planks"), roof: mc("spruce_planks"), floor: mc("oak_planks") };
@@ -406,6 +414,12 @@ realmHooks.day.push((player, realm) => {
   day(player, realm);
 });
 realmHooks.guards.push((realm, capital) => (capital ? levelOf(realm, "barracks") : 0));
+
+// v10: the Grand Library strengthens its ruler's spells.
+hooks.power.push((player) => {
+  const realm = realmOf(player);
+  return realm ? 0.05 * levelOf(realm, "library") : 0;
+});
 realmHooks.invader.push((realm, pick) => {
   const theocracy = INVADERS.findIndex((i) => i.name.includes("Theocracy"));
   if (theocracy < 0) return undefined;

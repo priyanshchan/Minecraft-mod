@@ -256,6 +256,28 @@ export const CHAPTERS = [
     ],
     reward: { xp: 60000, coins: 400, crystals: 80, items: [[id("royal_seal"), 1], [id("codex_of_skills"), 2]] },
   },
+  { // v10: the epilogue - the Holy Kingdom calls on the Sorcerer King
+    key: "holy_kingdom", name: "Epilogue: The Holy Kingdom's Plea", level: 92, element: "holy",
+    blurb: "The Holy Kingdom burns. Its people beg the Sorcerer King for aid against the Demon Emperor Jaldabaoth.",
+    intro: [
+      [NARRATOR, "A rider in torn white armour reaches the throne of the Sorcerous Kingdom."],
+      ["§eNeia", "Your Majesty... the Great Wall has fallen. Jaldabaoth's legions are burning our cities."],
+      ["§cRemedios", "We do not need the help of the undead! ...But the people do."],
+      [AINZ, "Then the Sorcerer King will answer. Show me this Demon Emperor."],
+    ],
+    allies: [[id("paladin"), 3]],
+    stages: [
+      { name: "The Mind-Eaters", foes: [[id("brain_eater"), 1], [id("shadow_demon"), 3]] },
+      { name: "The Evil Lords Envy and Greed", foes: [[id("evil_lord_envy"), 1], [id("evil_lord_greed"), 1]] },
+      { name: "Jaldabaoth, the Demon Emperor", foes: [[id("jaldabaoth"), 1]], boss: true },
+    ],
+    outro: [
+      ["§eNeia", "You did it... You truly are justice itself, Your Majesty."],
+      [NARRATOR, "The demons are gone. In the Holy Kingdom, a new faith begins to grow - in the Sorcerer King."],
+      [AINZ, "(...Why is she looking at me like that?)"],
+    ],
+    reward: { xp: 70000, coins: 450, crystals: 90, items: [[id("world_fragment"), 2], [id("shooting_star_bow"), 1]] },
+  },
 ];
 
 /** Story-earned titles, granted by guild.js once the chapter is done. */
@@ -265,6 +287,7 @@ export const STORY_TITLES = [
   { key: "hero_of_gehenna", name: "Hero of Gehenna", how: "Finish Chapter 6 of the campaign", chapter: "gehenna" },
   { key: "dragon_lords_equal", name: "Equal of the Dragon Lord", how: "Finish Chapter 9 of the campaign", chapter: "dragon_lord" },
   { key: "sorcerer_king", name: "Sorcerer King", how: "Finish the campaign and be crowned", chapter: "coronation" },
+  { key: "god_of_justice", name: "God of Justice", how: "Finish the Epilogue of the campaign", chapter: "holy_kingdom" },
 ];
 
 // ---------------------------------------------------------------- progress

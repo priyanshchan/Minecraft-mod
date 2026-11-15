@@ -93,6 +93,10 @@ export const INVADERS = [
     name: "The Quagoa and the Giants", element: "ice",
     waves: [[[id("quagoa"), 8]], [[id("frost_giant"), 2], [id("quagoa"), 4]], [[id("frost_dragon"), 1]]],
   },
+  { // v10
+    name: "The Eight Fingers", element: "dark",
+    waves: [[[id("bandit"), 8]], [[id("bandit"), 5], [id("clementine"), 1]], [[id("zero"), 1], [id("bandit"), 4]]],
+  },
 ];
 
 // ------------------------------------------------------------------ the realm

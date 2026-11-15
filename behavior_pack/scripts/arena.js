@@ -25,17 +25,20 @@ export const ROUNDS = [
   [[[id("goblin"), 3]], [[id("bandit"), 2]], [[id("ogre"), 1]], [[id("beastman"), 2]], [[id("war_troll"), 1]]],
   [[[id("ogre"), 2]], [[id("bafolk"), 3]], [[id("war_troll"), 1], [id("ogre"), 1]], [[id("gigant_basilisk"), 1]], [[id("frost_giant"), 1], [id("war_troll"), 1]]],
   [[[id("war_troll"), 2]], [[id("gigant_basilisk"), 1], [id("bafolk"), 2]], [[id("frost_giant"), 2]], [[id("zero"), 1]], [[id("go_gin"), 1]]],
+  // v10: the Champions' tier, from level 80
+  [[[id("frost_giant"), 2], [id("war_troll"), 1]], [[id("buser"), 1]], [[id("quagoa_warlord"), 1], [id("quagoa"), 2]], [[id("evil_lord_envy"), 1]], [[id("rune_golem"), 1]]],
 ];
 /** Purse per tier. */
 export const PURSES = [
   { coins: 20, xp: 500, crests: 0 },
   { coins: 45, xp: 1800, crests: 0 },
   { coins: 90, xp: 5000, crests: 1 },
+  { coins: 180, xp: 12000, crests: 2 },
 ];
 
 /** @param {number} level */
 export function tierFor(level) {
-  return level >= 50 ? 2 : level >= 20 ? 1 : 0;
+  return level >= 80 ? 3 : level >= 50 ? 2 : level >= 20 ? 1 : 0;
 }
 
 /**
@@ -217,7 +220,7 @@ export function openArena(player) {
     .title("Imperial Arena")
     .body(
       `§e<Arena Master>§r Five rounds on the sand, challenger. Win them all and the purse is yours; fall, flee or dawdle and you get nothing.\n\n` +
-        `Your tier: §6${tier + 1}§r (tiers follow your level: 1-19, 20-49, 50+)\n` +
+        `Your tier: §6${tier + 1}§r (tiers follow your level: 1-19, 20-49, 50-79, 80+)\n` +
         `Last round: §c${last}§r\n` +
         `Purse: §6${purse.coins} Gold Coins§r, §a${purse.xp} XP§r${purse.crests ? ", a Guardian Crest" : ""}` +
         (tier === 2 ? "\nWhoever fells the Martial Lord also receives a World Item from the Emperor, once." : "")

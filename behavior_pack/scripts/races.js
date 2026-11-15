@@ -82,6 +82,13 @@ export const RACES = {
     weakness: "Heavy as a dragon: slowed in water",
     form: "Dragon Form", formHelp: "Strength II, Resistance II, Fire Resistance, and fire breath every 3 seconds at what you face",
   },
+  darkelf: { // v10: the race of Aura and Mare
+    name: "Dark Elf", ranks: ["Dark Elf", "Beast Tamer", "Heir of the Forest"], element: "acid", color: "§2",
+    blurb: "Children of the great forests, swift on their feet and at home among beasts.",
+    passives: "Speed I; Night Vision; melee +1% a race level; at rank 2, Jump Boost I",
+    weakness: "Grows hungry quickly while sprinting",
+    form: "Forest Lord", formHelp: "Speed III, Jump Boost II and Strength I; every monster within 8 blocks is snared by roots",
+  },
 };
 
 // ---------------------------------------------------------------- progress
@@ -284,6 +291,14 @@ export function tick(player, now) {
       keep(player, "slowness", 0);
       weak = "the Nether";
     }
+  } else if (race === "darkelf") {
+    keep(player, "speed", 0);
+    keep(player, "night_vision", 0, 16);
+    if (rank >= 1) keep(player, "jump_boost", 0);
+    if (player.isSprinting) {
+      keep(player, "hunger", 0);
+      weak = "hunger";
+    }
   } else if (race === "dragonkin") {
     keep(player, "health_boost", Math.floor(r / 5), 4);
     if (rank >= 1) keep(player, "resistance", 0);
@@ -315,7 +330,7 @@ export function meleeBonus(player, p, victim) {
   if (race === "none") return 0;
   const r = p.raceLv;
   let bonus = 0;
-  if (race === "human" || race === "demon" || race === "dragonkin") bonus += r * 0.01;
+  if (race === "human" || race === "demon" || race === "dragonkin" || race === "darkelf") bonus += r * 0.01;
   try {
     if (race === "undead" && !victim.matches({ families: ["undead"] })) bonus += 0.2;
     if (race === "angel" && (victim.matches({ families: ["undead"] }) || victim.matches({ families: ["demon"] }))) bonus += 0.25;
@@ -430,6 +445,18 @@ function pulseForm(player, race, now) {
       // alone
     }
     fx.circle(player.dimension, at, "holy", 8);
+  } else if (race === "darkelf") {
+    keep(player, "speed", 2);
+    keep(player, "jump_boost", 1);
+    keep(player, "strength", 0);
+    for (const foe of foesNear(player, at, 8)) {
+      try {
+        foe.addEffect("slowness", 40, { amplifier: 3 });
+      } catch {
+        // gone
+      }
+    }
+    fx.circle(player.dimension, at, "acid", 8);
   } else if (race === "dragonkin") {
     keep(player, "strength", 1);
     keep(player, "resistance", 1);

@@ -1,7 +1,7 @@
 // Overlord: Tomb of Nazarick - sagas: the named people of the New World talk with you and ask for your help.
 //
-// Six of them have a saga, a chain of three tasks that tells a small story: Gazef Stronoff, Enri Emmot,
-// Nfirea Bareare, Lakyus Alvein Dale Aindra, Zaryusu Shasha and Pinison Pole Perlia. Talking to them opens a
+// Seven of them have a saga, a chain of three tasks that tells a small story: Gazef Stronoff, Enri Emmot,
+// Nfirea Bareare, Lakyus Alvein Dale Aindra, Zaryusu Shasha, Pinison Pole Perlia and (since 10.0) Climb. Talking to them opens a
 // conversation: ask about the things they care about, offer a gift they like, and take up or report on
 // their task. Gazef, Lakyus and Zaryusu are spoken to directly; Enri, Nfirea and Pinison trade when spoken to,
 // so to talk to them you sneak as you do.
@@ -221,6 +221,35 @@ export const SAGAS = [
         done: "The forest is safe... I promised I'd give my blossom to whoever saved it. Here. Stand on grass and it'll heal you, the way it heals me.",
         goal: { kind: "kill", types: [id("zytl_qae")], count: 1 }, label: "Defeat Zy'tl Q'ae",
         coins: 80, xp: 3000, items: [[id("heartwood"), 4]] },
+    ],
+  },
+  {
+    key: "climb", type: id("climb"), name: "Climb", saga: "The Princess's Knight", sneak: false, element: "holy",
+    greet: [
+      "I am Climb, the Princess's soldier. I am... not very important. Please don't mind me.",
+      "Ah, it's you. Sir Gazef says you are worth learning from.",
+      "Thank you for the training. I am still slow, but slower than before. Wait, that came out wrong.",
+      "I would give my life for Princess Renner. And now, I think, for you as well.",
+    ],
+    topics: [
+      ["Ask about Princess Renner", "Lady Renner found me in the gutter and gave me a name. Everything I am is hers."],
+      ["Ask about his training", "I have no talent. So I swing my sword a thousand times a day. Then a thousand more."],
+      ["Ask about the Eight Fingers", "They sell poison and people in the capital. The Princess has a plan to stop them. I have a sword."],
+    ],
+    likes: [mc("apple"), 4, "4 Apples"], daily: [mc("bread"), 3, "3 Bread"],
+    blessing: ["speed", 300, 0, "Climb lends you his stubbornness: §bSpeed§f for 5 minutes"],
+    keepsake: id("renner_ribbon"),
+    steps: [
+      { title: "Thugs of the Eight Fingers", ask: "Eight Fingers thugs are smuggling through the countryside. Ten of them, and the Princess's plan can move.",
+        done: "Ten! I only managed four last time. Thank you - I'll tell Lady Renner.", goal: { kind: "kill", types: [id("bandit")], count: 10 }, label: "Eight Fingers thugs defeated",
+        coins: 20, xp: 900, items: [[id("red_potion"), 3]] },
+      { title: "A Better Blade", ask: "My sword won't survive a real fight with the Six Arms. If you could find two adamantite ingots, a smith could make me something worthy.",
+        done: "Adamantite... I don't know how I'll ever repay you. I'll train twice as hard.", goal: { kind: "bring", item: id("adamantite_ingot"), count: 2 }, label: "Adamantite for Climb",
+        coins: 25, xp: 1200, items: [[id("refining_stone"), 2]] },
+      { title: "Zero of the Six Arms", ask: "Zero, the leader of the Six Arms, guards the Eight Fingers' secrets. I can't beat him. Not yet. Will you?",
+        done: "Zero has fallen! The Princess... she asked me to give you this ribbon. She said you would understand. I don't, but I'm glad.",
+        goal: { kind: "kill", types: [id("zero")], count: 1 }, label: "Defeat Zero of the Six Arms",
+        coins: 60, xp: 2600, items: [[id("guardian_crest"), 1]] },
     ],
   },
 ];
@@ -568,4 +597,4 @@ system.runInterval(() => {
   }
 }, 2 * TICKS);
 
-registerMenu((player) => `Sagas (${finished(player)}/${SAGAS.length} complete)\n§8Gazef, Enri, Nfirea, Lakyus, Zaryusu, Pinison`, openSagas);
+registerMenu((player) => `Sagas (${finished(player)}/${SAGAS.length} complete)\n§8Gazef, Enri, Nfirea, Lakyus, Zaryusu, Pinison, Climb`, openSagas);

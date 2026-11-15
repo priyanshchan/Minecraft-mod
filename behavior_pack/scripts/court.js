@@ -9,7 +9,7 @@
 // together and every invasion repelled, and makes a companion's move stronger.
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { notify, profileOf, touch } from "./rpg.js";
+import { giveItem, notify, profileOf, touch } from "./rpg.js";
 import { realmHooks, realmOf } from "./kingdom.js";
 import { foesNear, strike } from "./arms.js";
 import * as fx from "./vfx.js";
@@ -77,6 +77,12 @@ export const GUARDIANS = {
     role: "Treasurer", roleHelp: "trade routes pay half again as much, and every workshop makes one more ware a day",
     move: "Doppelganger", moveHelp: "takes the shape of another Guardian and uses their move",
     oath: "Wenn es meines Gottes Wille ist! Your treasurer stands ready!",
+  },
+  sebas: { // v10: not a Floor Guardian, but the Head Butler, and as loyal as any of them
+    name: "Sebas Tian", title: "Head Butler of the Great Tomb", element: "holy", post: [0, -1],
+    role: "Steward", roleHelp: "taxes come in 10% fuller, and each kingdom day the household serves you a Feast Pie and two cups of Sebas's Black Tea",
+    move: "Touch of Iron", moveHelp: "one blow of overwhelming force on the strongest foe nearby; the others are thrown back",
+    oath: "It would be my honour to serve, Your Majesty. The household will be in perfect order.",
   },
 };
 export const KEYS = Object.keys(GUARDIANS);
@@ -324,6 +330,22 @@ export function signature(player, guardian, key, now, random = Math.random) {
     }
     fx.shake(d, at, 10, 0.4, 0.6);
     fx.ring(d, at, "acid", 6);
+  } else if (move === "sebas") {
+    // Touch of Iron: one blow of overwhelming force on the strongest foe, and a wave that throws the rest back
+    const strongest = foes.reduce((best, f) => ((f.getComponent("minecraft:health")?.currentValue ?? 0) > (best.getComponent("minecraft:health")?.currentValue ?? 0) ? f : best), foes[0]);
+    strike(player, strongest, 30 * power);
+    touched++;
+    for (const f of within(5)) {
+      if (f.id === strongest.id) continue;
+      try {
+        f.applyKnockback({ x: f.location.x - at.x, z: f.location.z - at.z }, 0.5);
+      } catch {
+        // gone
+      }
+      touched++;
+    }
+    fx.slash(d, { x: strongest.location.x, y: strongest.location.y + 1, z: strongest.location.z }, "holy", 2);
+    fx.shake(d, at, 8, 0.3, 0.3);
   }
   notify(player, `§d${GUARDIANS[key].name}: §f${g.move}!${key === "pandoras_actor" ? ` §7(as ${g.name})` : ""}`);
   return touched;
@@ -412,6 +434,15 @@ realmHooks.income.push((realm, pay) => {
   }
 });
 realmHooks.capDays.push((realm) => (atCourt(realm, "albedo") ? 2 : 0));
+realmHooks.income.push((realm, pay) => {
+  if (atCourt(realm, "sebas")) pay.coins *= 1.1;
+});
+realmHooks.day.push((player, realm) => {
+  if (!atCourt(realm, "sebas")) return;
+  giveItem(player, id("feast_pie"), 1);
+  giveItem(player, id("sebas_tea"), 2);
+  player.sendMessage("§6[Court] §fSebas has the household serve you a Feast Pie and Black Tea.");
+});
 realmHooks.guards.push((realm) => (atCourt(realm, "cocytus") ? 2 : 0));
 realmHooks.guardPosted.push((realm, guard) => {
   if (!atCourt(realm, "cocytus")) return;

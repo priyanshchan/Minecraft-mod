@@ -178,7 +178,7 @@ assert.equal(spells.masteryOf(c, "magic_arrow"), 2);
 advance(20); dummy.damaged = []; spells.castSelected(c); assert.deepEqual(dummy.damaged, [8], "7 * 1.08 rounds to 8");
 // every spell is castable without throwing and has sane data
 assert.equal(new Set(spells.SPELLS.map((s) => s.key)).size, spells.SPELLS.length);
-assert.equal(spells.SPELLS.length, 57);
+assert.equal(spells.SPELLS.length, 60);
 for (let tier = 1; tier <= 12; tier++) assert.ok(spells.SPELLS.filter((s) => s.tier === tier).length >= 3, `tier ${tier}`);
 // dark magic is weak against undead: Death (52) on an undead dummy deals a quarter
 pc.level = 100; c.inv.push(new ItemStack("overlord:data_crystal", 64)); assert.ok(spells.learnSpell(c, "death").includes("Learned"));
@@ -937,17 +937,17 @@ players.splice(0, players.length, ...everyone, zoe);
 {
   const skills = await import("./skills.js");
   const tree = await import("./skilltree.js");
-  // the data: six paths of eleven nodes, five tiers each, a single capstone at the top, and every prerequisite in its own path
-  assert.equal(skills.TREES.length, 6); assert.equal(skills.NODES.length, 66);
+  // the data: six paths of eleven nodes (twelve for Tier Magic since v10), five tiers each, a single capstone at the top, and every prerequisite in its own path
+  assert.equal(skills.TREES.length, 6); assert.equal(skills.NODES.length, 67);
   for (const t of skills.TREES) {
     const nodes = skills.NODES.filter((n) => n.tree === t.key);
-    assert.equal(nodes.length, 11, t.key); assert.equal(nodes.filter((n) => n.tier === 4).length, 1, `${t.key} capstone`);
+    assert.equal(nodes.length, t.key === "arcane" ? 12 : 11, t.key); assert.equal(nodes.filter((n) => n.tier === 4).length, 1, `${t.key} capstone`);
     for (let tier = 0; tier < 4; tier++) assert.ok(nodes.some((n) => n.tier === tier), `${t.key} tier ${tier}`);
     const below = nodes.filter((n) => n.tier < 4).reduce((sum, n) => sum + n.max, 0); assert.ok(below >= skills.TIER_POINTS[4], `${t.key}: the capstone can be reached`);
     for (const n of nodes) if (n.needs) { const need = skills.BY_KEY.get(n.needs); assert.ok(need && need.tree === n.tree && need.tier < n.tier, n.key); }
     for (const n of nodes) for (let r = 1; r <= n.max; r++) assert.ok(!/[{}]/.test(skills.describe(n, r)), `${n.key} ${r}: ${skills.describe(n, r)}`);
   }
-  assert.equal(new Set(skills.NODES.map((n) => n.key)).size, 66, "keys are unique");
+  assert.equal(new Set(skills.NODES.map((n) => n.key)).size, 67, "keys are unique");
   // points: one a level from 2, one more every tenth level, plus codices up to ten
   assert.equal(skills.pointsForLevel(1), 0); assert.equal(skills.pointsForLevel(10), 10); assert.equal(skills.pointsForLevel(100), 109);
   const total = skills.NODES.reduce((sum, n) => sum + n.max, 0); assert.ok(total > 109 + skills.MAX_CODEX, `not everything can be learned (${total})`);
@@ -1369,7 +1369,7 @@ players.splice(0, players.length, ...everyone, zoe);
 {
   const god = await import("./godspells.js");
   const keys = spells.SPELLS.filter((s) => s.tier === spells.GOD).map((s) => s.key);
-  assert.deepEqual(keys.sort(), ["cataclysm", "goal_of_all_life", "ouroboros", "pantheon", "requiem_of_the_41"]);
+  assert.deepEqual(keys.sort(), ["absolute_zero", "cataclysm", "goal_of_all_life", "ouroboros", "pantheon", "requiem_of_the_41"]);
   assert.equal(spells.levelForTier(spells.GOD), 80); assert.equal(spells.costForTier(spells.GOD), 48);
   // a battlefield: creatures are found by distance
   const field = []; const spawned = [];
@@ -1423,6 +1423,10 @@ players.splice(0, players.length, ...everyone, zoe);
   field.length = 0; const coiled = creature("overlord:ogre", 1000, 10, 5); z.health.currentValue = 3; z.effects.set("poison", { duration: 100, amplifier: 0 });
   assert.equal(god.ouroboros(z, 1), true); assert.equal(z.health.currentValue, 20); assert.ok(!z.effects.has("poison")); assert.ok(coiled.effects.includes("slowness"));
   advance(20 + 10 * 20 + 1); assert.ok(1000 - coiled.health.currentValue >= 150 - 1e-6, `${coiled.health.currentValue}`);
+  // v10: Absolute Zero - lesser foes frozen solid, every foe bitten each second, and a final blow when the ice shatters
+  field.length = 0; const iced = creature("overlord:ogre", 300, 10, 0), titanIce = creature("overlord:ogre", 3000, 14, 4);
+  assert.equal(god.absoluteZero(z, 1), true); assert.ok(iced.effects.includes("slowness") && titanIce.effects.includes("slowness"));
+  advance(9 * 20 + 2); assert.ok(3000 - titanIce.health.currentValue >= 8 * 8 + 40 - 1e-6, `${titanIce.health.currentValue}`); assert.ok(iced.health.currentValue < 300 - 100);
   // Creation (super-tier) - the aimed ground freezes; everything on it is locked and bitten by the cold
   field.length = 0; const frozen = creature("overlord:ogre", 500, 20, 0), clear = creature("overlord:ogre", 500, 40, 0); z.getEntitiesFromViewDirection = () => [{ entity: frozen }];
   assert.equal(god.creation(z, 1), true); advance(30 + 8 * 20 + 1);
@@ -1435,7 +1439,7 @@ players.splice(0, players.length, ...everyone, zoe);
   pz.slot = 1; assert.equal(spells.castSelected(z), false, "cataclysm is still recharging");
   pz.slot = 0; assert.equal(spells.castSelected(z), true); assert.equal(z.health.currentValue, 20); assert.ok(z.effects.has("absorption") && z.effects.has("resistance"));
   pz.slot = 1; assert.equal(spells.castSelected(z), true, "the wish made cataclysm ready"); pz.slot = 0; assert.equal(spells.castSelected(z), false, "but not the wish itself");
-  assert.equal(spells.SPELLS.filter((sp) => sp.tier === spells.SUPER).length, 6);
+  assert.equal(spells.SPELLS.filter((sp) => sp.tier === spells.SUPER).length, 7);
   world.sendMessage = realSend; advance(600); players.splice(players.indexOf(z), 1);
 }
 
@@ -1456,7 +1460,7 @@ players.splice(0, players.length, ...everyone, zoe);
   await pick(4); assert.ok(pq.bosses.includes("great_tomb"));
   pq.mana = 0; q.health.currentValue = 3; await pick(5); assert.equal(pq.mana, rpg.maxMana(pq)); assert.equal(q.health.currentValue, 20);
   await pick(6); assert.equal(spells.countItem(q, "overlord:codex_of_skills"), 10); assert.equal(spells.countItem(q, "overlord:gem_onyx"), 4);
-  await pick(7); assert.equal(pq.story.length, 10); assert.equal(spells.countItem(q, "overlord:royal_seal"), 1, "the campaign shortcut crowns and hands over the Seal");
+  await pick(7); assert.equal(pq.story.length, 11); assert.equal(spells.countItem(q, "overlord:royal_seal"), 1, "the campaign shortcut crowns and hands over the Seal");
   pq.str = 10; pq.skills = { weapon_mastery: 3 }; await pick(11); assert.equal(pq.level, 1); assert.equal(pq.str, 0); assert.equal(pq.points, 0); assert.deepEqual(pq.skills, {});
   assert.ok(shown.some((f) => f.title === "Creative Tome of Ascension"));
   players.splice(players.indexOf(q), 1);
@@ -1498,7 +1502,7 @@ players.splice(0, players.length, ...everyone, zoe);
 {
   const story = await import("./campaign.js");
   const king = await import("./kingdom.js");
-  assert.equal(story.CHAPTERS.length, 10); assert.equal(story.CHAPTERS[9].key, "coronation");
+  assert.equal(story.CHAPTERS.length, 11); assert.equal(story.CHAPTERS[9].key, "coronation"); assert.equal(story.CHAPTERS[10].key, "holy_kingdom");
   assert.ok(story.CHAPTERS.every((c, i) => i === 0 || c.level > story.CHAPTERS[i - 1].level), "chapters ask for rising levels");
   assert.ok(story.CHAPTERS.every((c) => c.stages.at(-1).boss && c.intro.length > 0 && c.outro.length > 0), "every chapter ends with a boss and is told");
   // a field that records blocks and the people on it
@@ -1558,7 +1562,7 @@ players.splice(0, players.length, ...everyone, zoe);
 
   // the kingdom waits for the crown
   assert.ok(king.found(w).includes("crowned")); assert.ok(!story.crowned(w));
-  story.completeStory(w); assert.ok(story.crowned(w)); assert.equal(pw.story.length, 10);
+  story.completeStory(w); assert.ok(story.crowned(w)); assert.equal(pw.story.length, 11);
   assert.ok(guild.checkTitles(w).includes("Sorcerer King"));
   assert.ok(king.found(w, "Nazarick Reborn").includes("founded")); const realm = king.realmOf(w);
   assert.ok(realm && realm.name === "Nazarick Reborn" && realm.tier === 1 && realm.x === 20000 && realm.y === 64);
@@ -2085,7 +2089,7 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   const sagas = await import("./sagas.js");
   const comforts = await import("./comforts.js");
   const { EquipmentSlot } = await import("@minecraft/server");
-  assert.equal(sagas.SAGAS.length, 6); assert.ok(sagas.SAGAS.every((s) => s.steps.length === 3 && s.topics.length >= 3));
+  assert.equal(sagas.SAGAS.length, 7); assert.ok(sagas.SAGAS.every((s) => s.steps.length === 3 && s.topics.length >= 3));
   assert.deepEqual(sagas.SAGAS.map((s) => s.keepsake).sort(), [...comforts.KEEPSAKES].sort(), "every keepsake can be worn");
   const flush = async () => { for (let i = 0; i < 6; i++) await new Promise((r) => setTimeout(r, 0)); };
   const sam = mkPlayer("sam"); const ps = rpg.profileOf(sam);
@@ -2132,7 +2136,7 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   // finishing all six sagas
   for (const s of sagas.SAGAS) { const rec = sagas.recordOf(sam, s.key); rec.step = 3; rec.affinity = 80; }
   const titles = guild.checkTitles(sam); assert.ok(titles.includes("Hero of the New World") && titles.includes("Beloved of Many"));
-  assert.equal(sagas.finished(sam), 6); assert.equal(sagas.sworn(sam), 6);
+  assert.equal(sagas.finished(sam), 7); assert.equal(sagas.sworn(sam), 7);
   // the Runeblade's art: three runes along the ground, and a ward on the wielder
   const arms = await import("./arms.js"); sam.effects.clear(); sam.dimension.mobs = [];
   assert.equal(arms.useWeaponArt(sam, "overlord:runeblade"), true); assert.ok(sam.effects.has("resistance")); advance(30);
@@ -2331,6 +2335,89 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   const mark0 = shown.length; script.push(0); hand = "overlord:world_breaker"; arms.openArsenal(g); await new Promise((r) => setTimeout(r, 5));
   assert.ok(shown[mark0].body.includes("God-tier")); assert.ok(shown[mark0].body.includes("Raiment of the Supreme Beings"));
   script.length = 0; g.dimension.mobs = []; players.splice(players.indexOf(g), 1);
+}
+
+// ---- v10: one or more new things for everything ----
+{
+  const arms = await import("./arms.js");
+  const forge = await import("./forge.js");
+  const gear = await import("./gear.js");
+  const comforts = await import("./comforts.js");
+  const necro = await import("./necromancy.js");
+  const events = await import("./events.js");
+  const arena = await import("./arena.js");
+  const king = await import("./kingdom.js");
+  const districts = await import("./districts.js");
+  const court = await import("./court.js");
+  const races = await import("./races.js");
+  const steeds = await import("./steeds.js");
+  const sagas = await import("./sagas.js");
+  const fam = await import("./familiars.js");
+  const bosses = await import("./bosses.js");
+  const delve = await import("./delve.js");
+  const skills = await import("./skills.js");
+  const story = await import("./campaign.js");
+  const v = mkPlayer("tenth"); const pv = rpg.profileOf(v); v.dimension.mobs = [];
+  let hand = "overlord:shooting_star_bow"; let worn = {};
+  v.getComponent = ((base) => (c) => (c === "minecraft:equippable" ? { getEquipment: (slot) => (slot === "Mainhand" ? (hand ? { typeId: hand } : undefined) : worn[slot] ? { typeId: worn[slot] } : undefined) } : base(c)))(v.getComponent);
+  v.applyKnockback = () => {}; v.startItemCooldown = () => {}; v.isSneaking = false;
+  const foe = (x, z, hp = 200, fam2 = ["monster"]) => { const m = mob("overlord:ogre", hp, fam2); Object.assign(m, { id: `t${Math.random()}`, location: { x, y: 64, z }, tags: new Set(), afflicted: [], burning: 0, knocked: 0,
+    hasTag: (t) => m.tags.has(t), addEffect(e) { m.afflicted.push(e); }, setOnFire(n) { m.burning = n; }, applyKnockback() { m.knocked += 1; },
+    applyDamage(n) { m.health.currentValue = Math.max(0, m.health.currentValue - n); } }); return m; };
+  // spells: a new tier-8 spell and a new super-tier one
+  assert.equal(spells.SPELLS.find((x) => x.key === "astral_smite").tier, 8); assert.equal(spells.SPELLS.find((x) => x.key === "black_hole").tier, spells.SUPER);
+  // the Rune of Shadow, the Moonstone, Pestonya's soup
+  assert.equal(forge.RUNES.shadow.item, "overlord:rune_of_shadow"); assert.ok(gear.GEMS.moonstone);
+  pv.mana = 0; gear.gemBlow(v, foe(0, 2), 10, ["moonstone"], () => 0); assert.equal(pv.mana, 5, "a Moonstone blow restores mana");
+  v.effects.set("poison", { duration: 100, amplifier: 0 }); assert.equal(comforts.eat(v, "overlord:pestonya_soup"), true); assert.ok(!v.effects.has("poison") && v.effects.has("regeneration"));
+  // party, necromancy, events, arena, kingdom
+  assert.ok(party.TRAITS.some((t) => t.key === "lucky") && party.TRAITS.some((t) => t.key === "studious"));
+  const cav = necro.KINDS.findIndex((k) => k.type === "overlord:death_cavalier"); assert.equal(cav, necro.KINDS.length - 1, "added at the end, so saved armies keep their kinds");
+  assert.equal(necro.kindFor(200, 40), cav); assert.equal(necro.KINDS[necro.kindFor(300, 60)].type, "overlord:death_knight"); assert.equal(necro.KINDS[necro.kindFor(120, 30)].type, "overlord:soul_eater");
+  assert.equal(events.EVENTS.uprising.boss[0][0], "overlord:buser"); assert.ok(events.KINDS.includes("uprising"));
+  assert.equal(arena.tierFor(85), 3); assert.equal(arena.tierFor(60), 2); assert.equal(arena.ROUNDS[3].length, 5); assert.ok(arena.PURSES[3].coins > arena.PURSES[2].coins);
+  assert.equal(king.INVADERS.at(-1).name, "The Eight Fingers");
+  // the Grand Library strengthens the ruler's spells
+  const before = rpg.spellPower(v); pv.realm = { x: 0, y: 64, z: 0, tier: 1, outposts: [], buildings: { library: 2 } };
+  assert.ok(Math.abs(rpg.spellPower(v) - before - 0.1) < 1e-9); assert.ok(districts.BUILDINGS.library.help(1).includes("5%")); pv.realm = {};
+  // Sebas at court: his Touch of Iron falls on the strongest foe
+  assert.ok(court.GUARDIANS.sebas && court.KEYS.includes("sebas")); assert.ok(bosses.BOSSES.sebas, "Sebas can be fought, and so sworn");
+  const weakling = foe(2, 0, 100), strongest = foe(-2, 0, 400); v.dimension.mobs = [weakling, strongest];
+  assert.ok(court.signature(v, { location: { x: 0, y: 64, z: 0 }, dimension: v.dimension }, "sebas", 999999) >= 1); assert.ok(strongest.health.currentValue < 400 - 29); assert.ok(weakling.knocked >= 1);
+  // the epilogue of the campaign
+  const epilogue = story.CHAPTERS.at(-1); assert.equal(epilogue.key, "holy_kingdom"); assert.equal(epilogue.stages.at(-1).foes[0][0], "overlord:jaldabaoth");
+  // the Dark Elves
+  pv.race = "darkelf"; pv.raceLv = 10; v.effects.clear(); v.isSprinting = true; assert.equal(races.tick(v, 0), "hunger"); assert.ok(v.effects.has("speed") && v.effects.has("night_vision") && v.effects.has("jump_boost"));
+  assert.ok(Math.abs(races.meleeBonus(v, pv, foe(0, 1)) - 0.1) < 1e-9); pv.race = "none"; v.isSprinting = false;
+  // the Hellhound Steed: its trample and charge burn
+  assert.equal(steeds.kindOf("overlord:hell_steed"), "hell"); assert.ok(steeds.STEEDS["overlord:hellfire_reins"]);
+  const hound = { typeId: "overlord:hell_steed", location: { x: 0, y: 64, z: 0 }, dimension: v.dimension, applyImpulse() {} }; const burnt = foe(0.5, 0.5); v.dimension.mobs = [burnt];
+  assert.equal(steeds.trample(v, hound), 1); assert.ok(burnt.burning > 0);
+  // Climb's saga and the Princess's Ribbon
+  const climb = sagas.BY_KEY.climb; assert.equal(climb.steps[2].goal.types[0], "overlord:zero"); assert.ok(comforts.KEEPSAKES.has(climb.keepsake));
+  hand = undefined; worn = { Offhand: "overlord:renner_ribbon" }; v.effects.clear(); v.health.currentValue = 20; assert.equal(comforts.wear(v), "");
+  v.health.currentValue = 4; assert.equal(comforts.wear(v), "resolve"); assert.ok(v.effects.has("strength") && v.effects.has("speed")); v.health.currentValue = 20; worn = {};
+  // the Wise King's Cub
+  const cub = fam.BY_KEY.cub; assert.equal(cub.token, "overlord:wise_kings_acorn"); fam.bind(v, "cub"); const fv = fam.familiarsOf(v); fv.active = "cub"; fv.owned.cub.level = 8;
+  const pest = foe(3, 0), mob2 = foe(1, 1); v.dimension.mobs = [pest, mob2]; const crystalsBefore = spells.countItem(v, "overlord:data_crystal") + spells.countItem(v, "minecraft:bread") + spells.countItem(v, "minecraft:golden_carrot") + spells.countItem(v, "overlord:yggdrasil_gold_coin");
+  const tricks = fam.act(v, { location: { x: 0, y: 64, z: 0 } }, 5000000); assert.ok(tricks.includes("Tail Whip") && tricks.includes("Forager") && tricks.includes("Great Charge"), String(tricks));
+  assert.ok(pest.knocked >= 1 && v.effects.has("speed")); assert.ok(spells.countItem(v, "overlord:data_crystal") + spells.countItem(v, "minecraft:bread") + spells.countItem(v, "minecraft:golden_carrot") + spells.countItem(v, "overlord:yggdrasil_gold_coin") > crystalsBefore);
+  // the Ultimate Shooting Star Super and the Battle Maid set
+  hand = "overlord:shooting_star_bow"; const stars = [foe(5, 5, 300), foe(-6, 2, 300)]; v.dimension.mobs = stars; assert.equal(arms.useWeaponArt(v, "overlord:shooting_star_bow"), true); advance(15);
+  assert.equal(stars[0].health.currentValue + stars[1].health.currentValue, 600 - 5 * 12, "five stars of 12");
+  const maids = [foe(3, 0), foe(-3, 2)]; v.dimension.mobs = maids; v.effects.clear(); assert.ok(arms.armourArt(v, "maid").length > 0); assert.ok(maids.every((m) => m.health.currentValue === 190));
+  // the Brain Eater
+  assert.equal(bosses.BOSSES.brain_eater.moves.length, 3);
+  // records of the dungeons
+  assert.ok(delve.record(v, "deeps", 9000).includes("new best")); assert.ok(delve.record(v, "deeps", 12000).includes("best 7:30")); assert.ok(delve.record(v, "deeps", 6000).includes("new best"));
+  assert.ok(guild.checkTitles(v).includes("Swift as Death"));
+  // Overlord's Wisdom
+  pv.skills = { overlords_wisdom: 2 }; assert.ok(Math.abs(skills.spellBonus(pv) - 0.2) < 1e-9); assert.ok(Math.abs(skills.greatRecharge(pv) - 0.8) < 1e-9); pv.skills = {};
+  // the Ruins of the Eight Greed Kings
+  assert.ok(sites.SITES.some((t) => t.key === "greed_kings_ruins")); assert.ok(sites.isHostile(sites.SITES.find((t) => t.key === "greed_kings_ruins")));
+  // titles: all five familiars
+  for (const k of ["dragonling", "hanzo", "shadow", "cherub"]) fam.bind(v, k); assert.ok(guild.checkTitles(v).includes("Keeper of the Menagerie"));
+  v.dimension.mobs = []; players.splice(players.indexOf(v), 1);
 }
 
 // persistence: saved profile is restored after leaving

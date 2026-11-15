@@ -864,6 +864,31 @@ export const SITES = [
     garrison: (tier) => (tier === 0 ? [[id("ghoul"), 3], [id("skeleton_archer"), 2], [id("wraith"), 1]] : tier === 1 ? [[id("ghoul"), 4], [id("wraith"), 2], [id("death_cavalier"), 1]]
       : [[id("ghoul"), 5], [id("wraith"), 3], [id("death_cavalier"), 2]]),
   },
+  // ================================================ v10: the Eight Greed Kings
+  {
+    key: "greed_kings_ruins", name: "Ruins of the Eight Greed Kings", weight: 4, radius: 12, pad: mc("sandstone"), height: 15, muster: 6,
+    build(b) {
+      b.rubble(10, 11, [mc("sandstone"), mc("chiseled_quartz_block"), mc("gold_block")]);
+      for (let slot = 0; slot < 8; slot++) { // keep the garrison's posts clear of the rubble
+        const a = (slot / 8) * Math.PI * 2;
+        b.set(Math.floor(0.5 + Math.cos(a) * 6), 0, Math.floor(0.5 + Math.sin(a) * 6), mc("air"));
+      }
+      for (const [x, z] of [[-9, -9], [9, -9], [-9, 9], [9, 9], [-10, 0], [10, 0]]) { // broken colonnades of the floating city
+        b.column(x, z, 3 + ((x + z) & 3), mc("quartz_pillar"));
+      }
+      b.ruin(-6, -10, 6, -10, 4, [mc("smooth_quartz"), mc("sandstone"), mc("chiseled_quartz_block")]);
+      b.disc(0, -1, 0, 5, mc("smooth_quartz"), true); // the throne dais of the eight kings
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        b.set(Math.round(Math.cos(a) * 4), 0, Math.round(Math.sin(a) * 4), i % 2 ? mc("gold_block") : mc("smooth_quartz"));
+      }
+      b.fill(-1, 0, -1, 1, 0, 1, mc("gold_block"));
+      b.set(0, 1, 0, id("data_crystal_block"));
+      b.chest(0, 0, -8, [[COIN, 10, 22], [mc("gold_ingot"), 2, 6], [id("data_crystal"), 2, 5], [id("gem_sunstone"), 0, 1], [id("world_fragment"), 0, 1]]);
+    },
+    garrison: (tier) => (tier === 0 ? [[id("skeleton_archer"), 3], [id("old_guarder"), 3]] : tier === 1 ? [[id("elder_lich"), 2], [id("skeleton_archer"), 3], [id("old_guarder"), 2]]
+      : [[id("brain_eater"), 1], [id("elder_lich"), 2], [id("shadow_demon"), 2]]),
+  },
   {
     key: "dryad_spring", name: "Dryad's Spring", weight: 4, radius: 10, pad: mc("moss_block"), height: 14,
     build(b) {
@@ -1243,7 +1268,7 @@ const manned = new Map();
 /** @type {Map<string, { size: number, tier: number, slain: number }>} */
 const sieges = new Map();
 /** Sites whose garrison is hostile: clearing them out is rewarded. */
-const HOSTILE_SITES = new Set(["goblin_camp", "bandit_camp", "nazarick_outpost", "troll_den", "dragon_hoard", "theocracy_camp", "demon_gate",
+const HOSTILE_SITES = new Set(["greed_kings_ruins", "goblin_camp", "bandit_camp", "nazarick_outpost", "troll_den", "dragon_hoard", "theocracy_camp", "demon_gate",
   "graveyard", "great_tomb", "zurrernorn_shrine", "beastman_camp", "bafolk_camp", "frost_giant_hold", "mage_tower", "besieged_mine",
   "ruined_keep", "angel_sanctum", "destroyer_grove", "katze_barrow"]);
 /** Sites a player can travel back to once discovered. */

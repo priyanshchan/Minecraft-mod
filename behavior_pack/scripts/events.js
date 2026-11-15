@@ -63,6 +63,13 @@ export const EVENTS = {
     waves: [[[id("hellhound"), 6]], [[id("shadow_demon"), 4], [id("hellhound"), 3]], [[id("evil_lord_wrath"), 1], [id("shadow_demon"), 3]]],
     boss: [[id("jaldabaoth"), 1]],
   },
+  uprising: { // v10
+    name: "The Abelion Hills Uprising", element: "none", title: "Bane of the Hills",
+    tale: "The demi-human tribes of the Abelion Hills have united under Buser, and their warbands pour down from the hills.",
+    allies: [[id("paladin"), 3]],
+    waves: [[[id("bafolk"), 6]], [[id("beastman"), 4], [id("bafolk"), 3]], [[id("war_troll"), 2], [id("bafolk"), 4]]],
+    boss: [[id("buser"), 1], [id("bafolk"), 2]],
+  },
   dragons: {
     name: "The Dragon Descent", element: "ice", title: "Dragonwatch",
     tale: "Frost dragons descend from the mountains with the quagoa clans and the giants in their wake.",
