@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:twilight_greatsword"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " I ",
+      "SIS",
+      " B "
+    ],
+    "key": {
+      "I": {
+        "item": "overlord:divine_ingot"
+      },
+      "S": {
+        "item": "overlord:soul_fragment"
+      },
+      "B": {
+        "item": "overlord:dark_warrior_greatsword"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:divine_ingot"
+      }
+    ],
+    "result": {
+      "item": "overlord:twilight_greatsword",
+      "count": 1
+    }
+  }
+}

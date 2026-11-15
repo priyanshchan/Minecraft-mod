@@ -1,0 +1,39 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:divine_ingot"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "ARA",
+      "DCD",
+      "ARA"
+    ],
+    "key": {
+      "A": {
+        "item": "overlord:adamantite_ingot"
+      },
+      "R": {
+        "item": "overlord:royal_rune"
+      },
+      "D": {
+        "item": "overlord:demon_heart"
+      },
+      "C": {
+        "item": "overlord:guardian_crest"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:guardian_crest"
+      }
+    ],
+    "result": {
+      "item": "overlord:divine_ingot",
+      "count": 2
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:world_fragment",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_world_fragment"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.world_fragment.name"
+      },
+      "minecraft:max_stack_size": 64,
+      "minecraft:rarity": "epic",
+      "minecraft:glint": true
+    }
+  }
+}

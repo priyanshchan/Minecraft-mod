@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:thunderlord_glaive"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "IRI",
+      " S ",
+      " S "
+    ],
+    "key": {
+      "I": {
+        "item": "overlord:divine_ingot"
+      },
+      "R": {
+        "item": "overlord:rune_of_storm"
+      },
+      "S": {
+        "item": "minecraft:blaze_rod"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:divine_ingot"
+      }
+    ],
+    "result": {
+      "item": "overlord:thunderlord_glaive",
+      "count": 1
+    }
+  }
+}

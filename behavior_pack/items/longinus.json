@@ -20,8 +20,8 @@
       "minecraft:rarity": "epic",
       "minecraft:glint": true,
       "minecraft:cooldown": {
-        "category": "overlord_scroll",
-        "duration": 1.5
+        "category": "overlord_erasure",
+        "duration": 90.0
       }
     }
   }

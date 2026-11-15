@@ -152,6 +152,9 @@
     "overlord_depiction_of_nature": {
       "textures": "textures/items/overlord/depiction_of_nature"
     },
+    "overlord_divine_ingot": {
+      "textures": "textures/items/overlord/divine_ingot"
+    },
     "overlord_dragon_bone": {
       "textures": "textures/items/overlord/dragon_bone"
     },
@@ -443,6 +446,9 @@
     "overlord_egg_zytl_qae": {
       "textures": "textures/items/overlord/egg_zytl_qae"
     },
+    "overlord_eight_elements_staff": {
+      "textures": "textures/items/overlord/eight_elements_staff"
+    },
     "overlord_elf_kings_staff": {
       "textures": "textures/items/overlord/elf_kings_staff"
     },
@@ -572,6 +578,9 @@
     "overlord_nazarick_barding": {
       "textures": "textures/items/overlord/nazarick_barding"
     },
+    "overlord_nidhogg_fang": {
+      "textures": "textures/items/overlord/nidhogg_fang"
+    },
     "overlord_orb_of_death": {
       "textures": "textures/items/overlord/orb_of_death"
     },
@@ -698,6 +707,18 @@
     "overlord_sebas_tea": {
       "textures": "textures/items/overlord/sebas_tea"
     },
+    "overlord_seraph_boots": {
+      "textures": "textures/items/overlord/seraph_boots"
+    },
+    "overlord_seraph_chestplate": {
+      "textures": "textures/items/overlord/seraph_chestplate"
+    },
+    "overlord_seraph_helmet": {
+      "textures": "textures/items/overlord/seraph_helmet"
+    },
+    "overlord_seraph_leggings": {
+      "textures": "textures/items/overlord/seraph_leggings"
+    },
     "overlord_shadow_contract": {
       "textures": "textures/items/overlord/shadow_contract"
     },
@@ -806,8 +827,23 @@
     "overlord_stiletto": {
       "textures": "textures/items/overlord/stiletto"
     },
+    "overlord_supreme_boots": {
+      "textures": "textures/items/overlord/supreme_boots"
+    },
+    "overlord_supreme_chestplate": {
+      "textures": "textures/items/overlord/supreme_chestplate"
+    },
+    "overlord_supreme_helmet": {
+      "textures": "textures/items/overlord/supreme_helmet"
+    },
+    "overlord_supreme_leggings": {
+      "textures": "textures/items/overlord/supreme_leggings"
+    },
     "overlord_takemikazuchi": {
       "textures": "textures/items/overlord/takemikazuchi"
+    },
+    "overlord_thunderlord_glaive": {
+      "textures": "textures/items/overlord/thunderlord_glaive"
     },
     "overlord_tomb_key": {
       "textures": "textures/items/overlord/tomb_key"
@@ -830,6 +866,9 @@
     "overlord_troll_elixir": {
       "textures": "textures/items/overlord/troll_elixir"
     },
+    "overlord_twilight_greatsword": {
+      "textures": "textures/items/overlord/twilight_greatsword"
+    },
     "overlord_vampire_fang": {
       "textures": "textures/items/overlord/vampire_fang"
     },
@@ -851,6 +890,9 @@
     "overlord_warrior_captains_sigil": {
       "textures": "textures/items/overlord/warrior_captains_sigil"
     },
+    "overlord_world_breaker": {
+      "textures": "textures/items/overlord/world_breaker"
+    },
     "overlord_world_champion_boots": {
       "textures": "textures/items/overlord/world_champion_boots"
     },
@@ -862,6 +904,9 @@
     },
     "overlord_world_champion_leggings": {
       "textures": "textures/items/overlord/world_champion_leggings"
+    },
+    "overlord_world_fragment": {
+      "textures": "textures/items/overlord/world_fragment"
     },
     "overlord_wyrm_whistle": {
       "textures": "textures/items/overlord/wyrm_whistle"

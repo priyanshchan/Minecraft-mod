@@ -605,6 +605,97 @@ def demonbane_halberd():
     return w
 
 
+# ------------------------------------------------------------------ v9.7: the divine arms
+def twilight_greatsword():
+    """Greatsword of the Twilight Hero (super-tier): Momon's black blade reforged - wider, with a winged
+    crossguard of gold and a seam of violet light down its length."""
+    w = Weapon("twilight_greatsword", "greatsword")
+    w.grip(-6, 9, "#1a1424", wrap=GOLD)
+    w.pommel(-8, GOLD, size=2, gem="#c070ff")
+    w.box(-1, 3, -5, 2, 2, 10, "#1a1424")  # the crossguard
+    for z, r in ((-5.5, 25), (4.5, -25)):
+        w.box(-0.5, 4, z, 1, 3, 1, GOLD, rotation=(r, 0, 0), pivot=(0, 4, z + 0.5))  # its wings
+    w.blade(5, 22, 6, "#1d1b24", "#3a3644", glow_edge=True, taper=6, fuller="#7a3ac0",
+            runes=[(2, "#c070ff"), (6, "#c070ff"), (10, "#c070ff"), (14, "#c070ff")])
+    w.gem(0, 4, 0, "#c070ff")
+    return w
+
+
+def thunderlord_glaive():
+    """Glaive of the Thunder Lord (super-tier): a dark iron haft and a long curved blade of storm-gold that
+    crackles with light."""
+    w = Weapon("thunderlord_glaive", "polearm")
+    w.shaft(-10, 24, "#2a2e36", band="#3ed0ff")
+    w.box(-1, 12, -1, 2, 2, 2, "#3ed0ff", glow=True)
+    w.box(-0.5, 14, -2, 1, 8, 3, "#c9a227")  # the blade
+    w.box(-0.5, 22, -1.5, 1, 3, 2, "#e8c95a")
+    w.box(-0.5, 25, -1, 1, 2, 1, "#fff6b0")
+    w.box(-0.6, 14, -2.4, 1, 10, 1, "#fff04a", glow=True, inflate=-0.25)  # the lightning edge
+    w.box(-0.5, 15, 1, 1, 3, 2, "#3a3e46")  # a back hook
+    w.tip = (0.0, 27.0, -0.5)
+    w.pommel(-11, "#3ed0ff", size=1)
+    return w
+
+
+def eight_elements_staff():
+    """Staff of the Eight Elements (super-tier): a white staff crowned with a ring of eight gems, one for each
+    element, round a core of pure light."""
+    def top(w):
+        w.box(-1.5, 15, -1.5, 3, 2, 3, GOLD)
+        gems = ["#ff5a3a", "#3ed0ff", "#fff04a", "#63ff6b", "#ffe27a", "#9a4aff", "#ffffff", "#c05bff"]
+        for i, col in enumerate(gems):
+            a = math.radians(i * 45)
+            x, z = math.cos(a) * 3, math.sin(a) * 3
+            w.box(x - 0.5, 17, z - 0.5, 1, 2, 1, GOLD_D)
+            w.gem(x, 19.5, z, col)
+        w.gem(0, 19, 0, "#ffffff", size=2)
+        w.tip = (0.0, 21.0, 0.0)
+    return staff("eight_elements_staff", "#e8ecf4", GOLD, top)
+
+
+def longinus():
+    """Longinus (god-tier), the World Item that erases: a slender white spear, its head a long blade of light
+    held in a gold crown."""
+    w = Weapon("longinus", "polearm")
+    w.shaft(-12, 26, "#f4f0e6", band=GOLD)
+    w.box(-1.5, 13, -1.5, 3, 1, 3, GOLD)
+    for x, z in ((-1.5, -1.5), (1, -1.5), (-1.5, 1), (1, 1)):  # the crown that holds the head
+        w.box(x, 14, z, 0.5, 3, 0.5, GOLD)
+    for i, (size, h) in enumerate(((2, 4), (1.5, 4), (1, 4), (0.5, 3))):
+        w.box(-size / 2, 14 + i * 4, -size / 2, size, h, size, "#ffffff" if i % 2 == 0 else "#fff6c8", glow=True)
+    w.tip = (0.0, 29.0, 0.0)
+    w.pommel(-13, GOLD, size=1)
+    return w
+
+
+def world_breaker():
+    """World Breaker (god-tier), blade of the World Champion: a vast silver-blue sword whose blade is split by a
+    seam of starlight, with a guard of interlocking rings."""
+    w = Weapon("world_breaker", "greatsword")
+    w.grip(-6, 9, "#f4f0e6", wrap="#3f7fe0")
+    w.pommel(-8, "#3f7fe0", size=2, gem="#d0f0ff")
+    w.box(-1, 3, -6, 2, 2, 12, "#d6dce6")  # the guard
+    for z in (-6, 5):
+        w.box(-1.5, 2.5, z, 3, 3, 1, "#3f7fe0")
+    w.blade(5, 24, 6, "#d6dce6", "#ffffff", taper=6, fuller="#9fd8ff")
+    for y in range(7, 25, 3):
+        w.box(-0.6, y, -0.5, 1, 2, 1, "#d0f0ff", glow=True, inflate=-0.1)  # the seam of starlight
+    w.gem(0, 4, 0, "#d0f0ff")
+    return w
+
+
+def nidhogg_fang():
+    """The Fang of Nidhogg (god-tier): a fang of the World-Eater set in black wood, its edge dripping green venom
+    light."""
+    w = Weapon("nidhogg_fang", "dagger")
+    w.grip(-2, 4, "#2a1a10", wrap="#5a1f8c")
+    w.pommel(-3, "#5a1f8c", size=1, gem="#b6ff4a")
+    w.box(-1, 2, -2, 2, 1, 4, "#1a1410")
+    w.blade(3, 11, 3, "#e9e2cc", "#fffaf0", taper=6, curve=2.0)
+    w.box(-0.6, 4, -1.2, 1, 6, 1, "#b6ff4a", glow=True, inflate=-0.2)
+    return w
+
+
 def magic_wand():
     """The casting staff: dark wood bound in gold, its head a gold claw closed round a floating Data Crystal."""
     w = Weapon("magic_wand", "staff")
@@ -637,6 +728,9 @@ ALL = {
     "six_arms_knuckles": six_arms_knuckles,
     "cavalier_lance": cavalier_lance, "ghoulfang_sickle": ghoulfang_sickle, "heartwood_staff": heartwood_staff,
     "runeblade": runeblade, "demonbane_halberd": demonbane_halberd,
+    "twilight_greatsword": twilight_greatsword, "thunderlord_glaive": thunderlord_glaive,
+    "eight_elements_staff": eight_elements_staff, "longinus": longinus, "world_breaker": world_breaker,
+    "nidhogg_fang": nidhogg_fang,
     "magic_wand": magic_wand,
 }
 

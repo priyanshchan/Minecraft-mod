@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:longinus"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " W ",
+      "WLW",
+      "IWI"
+    ],
+    "key": {
+      "W": {
+        "item": "overlord:world_fragment"
+      },
+      "L": {
+        "item": "overlord:spuit_lance"
+      },
+      "I": {
+        "item": "overlord:divine_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:world_fragment"
+      }
+    ],
+    "result": {
+      "item": "overlord:longinus",
+      "count": 1
+    }
+  }
+}

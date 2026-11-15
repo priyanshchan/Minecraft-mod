@@ -1,0 +1,35 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:world_breaker",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_world_breaker"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.world_breaker.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:damage": 26,
+      "minecraft:can_destroy_in_creative": false,
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 15
+      },
+      "minecraft:rarity": "epic",
+      "minecraft:glint": true,
+      "minecraft:cooldown": {
+        "category": "overlord_severance",
+        "duration": 25.0
+      }
+    }
+  }
+}

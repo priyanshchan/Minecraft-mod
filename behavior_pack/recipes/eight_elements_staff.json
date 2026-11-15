@@ -1,0 +1,48 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:eight_elements_staff"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "FIC",
+      "WSL",
+      " T "
+    ],
+    "key": {
+      "F": {
+        "item": "overlord:rune_of_fire"
+      },
+      "I": {
+        "item": "overlord:divine_ingot"
+      },
+      "C": {
+        "item": "overlord:rune_of_frost"
+      },
+      "W": {
+        "item": "overlord:rune_of_storm"
+      },
+      "L": {
+        "item": "overlord:rune_of_life"
+      },
+      "S": {
+        "item": "overlord:fluder_staff"
+      },
+      "T": {
+        "item": "minecraft:blaze_rod"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:divine_ingot"
+      }
+    ],
+    "result": {
+      "item": "overlord:eight_elements_staff",
+      "count": 1
+    }
+  }
+}

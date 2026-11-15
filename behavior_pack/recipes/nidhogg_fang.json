@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "overlord:nidhogg_fang"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " W ",
+      "WFW",
+      "IWI"
+    ],
+    "key": {
+      "W": {
+        "item": "overlord:world_fragment"
+      },
+      "F": {
+        "item": "overlord:fang_dagger"
+      },
+      "I": {
+        "item": "overlord:divine_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "overlord:world_fragment"
+      }
+    ],
+    "result": {
+      "item": "overlord:nidhogg_fang",
+      "count": 1
+    }
+  }
+}

@@ -310,9 +310,10 @@ const extraMenus = [];
  *   melee: ((player: import("@minecraft/server").Player, p: Profile, victim: import("@minecraft/server").Entity) => number)[],
  *   xpFactor: ((p: Profile) => number)[],
  *   xp: ((player: import("@minecraft/server").Player, amount: number) => void)[],
+ *   power: ((player: import("@minecraft/server").Player) => number)[],
  * }}
  */
-export const hooks = { melee: [], xpFactor: [], xp: [] };
+export const hooks = { melee: [], xpFactor: [], xp: [], power: [] };
 
 /**
  * Adds a button to the Adventurer's Plate menu, at the end or (with `first`) ahead of the others.
@@ -448,7 +449,15 @@ function manaRegen(p, playerId) {
  */
 export function spellPower(player) {
   const p = profileOf(player);
-  return 1 + p.int * 0.02 + (p.cls === "caster" ? (advanced(p) ? 0.45 : 0.3) : 0) + (regalia.has(player.id) ? 0.25 : 0) + skills.spellBonus(p);
+  let extra = 0;
+  for (const hook of hooks.power) {
+    try {
+      extra += hook(player);
+    } catch {
+      // that bonus is unavailable
+    }
+  }
+  return 1 + p.int * 0.02 + (p.cls === "caster" ? (advanced(p) ? 0.45 : 0.3) : 0) + (regalia.has(player.id) ? 0.25 : 0) + skills.spellBonus(p) + extra;
 }
 
 /** @param {Profile} p */

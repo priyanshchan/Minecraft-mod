@@ -11,7 +11,7 @@
 // used by tapping sneak twice.
 import { world, system, EntityDamageCause, EquipmentSlot } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { notify, registerMenu, restoreMana } from "./rpg.js";
+import { notify, profileOf, registerMenu, restoreMana } from "./rpg.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -44,6 +44,13 @@ export const FINISHERS = {
  * @type {Record<string, { kind: Kind, element: string, trait: string, art: string }>}
  */
 export const WEAPONS = {
+  // v9.7: the divine arms - super-tier (level 70) and god-tier (level 80); see DIVINE below
+  twilight_greatsword: { kind: "greatsword", element: "dark", trait: "withers the target", art: "Twilight Cross: two vast crossing cuts through everything in a 7-block arc before you, withering it" },
+  thunderlord_glaive: { kind: "polearm", element: "lightning", trait: "one blow in four calls down lightning", art: "Wrath of the Thunder Lord: lightning falls on up to six foes within 14 blocks" },
+  eight_elements_staff: { kind: "staff", element: "arcane", trait: "+30% spell power while held", art: "Elemental Convergence: six elements gather where you aim and burst through everything within 5 blocks" },
+  longinus: { kind: "polearm", element: "holy", trait: "undead and demons take a quarter more", art: "Erasure: the foe you look at is erased from the world - a great foe loses a quarter of its life instead" },
+  world_breaker: { kind: "greatsword", element: "arcane", trait: "a fifth of every blow cuts again, through anything", art: "World Severance: a 16-block cut through the world itself, and the rift it leaves cuts twice more" },
+  nidhogg_fang: { kind: "dagger", element: "dark", trait: "drinks a fifth of every blow", art: "World-Eater's Bite: devours the life of every foe within 7 blocks, healing you and shielding you" },
   staff_of_ainz_ooal_gown: { kind: "staff", element: "dark", trait: "-", art: "Fireball; sneak: Grasp Heart" },
   spuit_lance: { kind: "polearm", element: "dark", trait: "drinks a quarter of every blow", art: "Blood Lance: an 8-block thrust of blood that heals you for half the harm" },
   ginnungagap: { kind: "heavy", element: "arcane", trait: "-", art: "Shockwave" },
@@ -102,6 +109,12 @@ export const NEW_ARTS = {
   heartwood_staff: ["overlord_roots", 8],
   runeblade: ["overlord_rune_sovereign", 10],
   demonbane_halberd: ["overlord_wall_judgement", 10],
+  twilight_greatsword: ["overlord_twilight_cross", 12],
+  thunderlord_glaive: ["overlord_thunder_lord", 14],
+  eight_elements_staff: ["overlord_convergence", 16],
+  longinus: ["overlord_erasure", 90],
+  world_breaker: ["overlord_severance", 25],
+  nidhogg_fang: ["overlord_world_eater", 20],
 };
 
 /**
@@ -109,6 +122,8 @@ export const NEW_ARTS = {
  * @type {Record<string, { name: string, element: string, particle: string, two: string, full: string, art: string, cooldown: number }>}
  */
 export const SETS = {
+  seraph: { name: "Seraph's Holy Plate", element: "holy", particle: "ray", two: "Regeneration I", full: "Resistance II, Regeneration I and Fire Resistance; sneak in the air to glide", art: "Seraphic Ascension: you rise on wings of light, smiting every foe within 7 blocks and healing yourself", cooldown: 45 },
+  supreme: { name: "Raiment of the Supreme Beings", element: "dark", particle: "orbit", two: "Strength I", full: "Strength II, Resistance II, Regeneration I, Fire Resistance, +25% spell power, no poison or wither, and Last Stand", art: "Presence of the Supreme Being: every foe within 12 blocks is struck down, weakened and slowed while you are shielded", cooldown: 60 },
   dark_warrior: { name: "Dark Warrior", element: "dark", particle: "wisp", two: "Resistance I", full: "Strength I and Resistance I", art: "Dark Charge: you hurl yourself forward, striking everything in your path", cooldown: 30 },
   world_champion: { name: "World Champion", element: "holy", particle: "glyph", two: "Speed I", full: "Strength II, Resistance I and Speed I", art: "Dimensional Cut: a cut through space along a 12-block line", cooldown: 45 },
   regalia: { name: "Overlord's Regalia", element: "dark", particle: "orbit", two: "a mana a second", full: "+50% mana recovery and +25% spell power", art: "Despair Aura: every foe within 10 blocks is weakened and slowed, and you regain 40 mana", cooldown: 40 },
@@ -355,6 +370,33 @@ world.afterEvents.entityHurt.subscribe((event) => {
   }
 });
 
+/** Blows struck by the bearer of a divine weapon. @type {Map<string, number>} */
+const divineBlows = new Map();
+
+/** What each blow of a divine weapon does. @param {Player} player @param {Entity} victim @param {number} damage @param {string} key */
+export function divineTrait(player, victim, damage, key) {
+  const d = player.dimension;
+  if (key === "twilight_greatsword") victim.addEffect("wither", 3 * TICKS, { amplifier: 1 });
+  else if (key === "thunderlord_glaive") {
+    const n = (divineBlows.get(player.id) ?? 0) + 1;
+    divineBlows.set(player.id, n % 4);
+    if (n % 4 === 0) {
+      strike(player, victim, 8 + damage * 0.5);
+      fx.pillar(d, victim.location, "lightning", 6, 1);
+      sound(player, "ambient.weather.lightning.impact", 1.2);
+    }
+  } else if (key === "longinus") {
+    let unholy = isDemon(victim);
+    try {
+      unholy ||= victim.matches({ families: ["undead"] });
+    } catch {
+      // neither
+    }
+    if (unholy) strike(player, victim, damage / 4);
+  } else if (key === "world_breaker") strike(player, victim, damage / 5);
+  else if (key === "nidhogg_fang") heal(player, damage / 5);
+}
+
 /** Whether a creature is a demon (the Demonbane Halberd's prey). @param {Entity} e */
 export function isDemon(e) {
   try {
@@ -379,6 +421,7 @@ export function onBlow(player, victim, damage) {
   const weapon = WEAPONS[key];
   const d = player.dimension;
   if (key === "demonbane_halberd" && isDemon(victim)) strike(player, victim, damage / 3);
+  if (DIVINE[key] !== undefined && worthy(player, key)) divineTrait(player, victim, damage, key);
   fx.slash(d, above(victim), weapon.element, 1);
   techniques(player, victim, damage, weapon.element);
 
@@ -518,6 +561,10 @@ export function useWeaponArt(player, item) {
   const key = item.startsWith(`${NS}:`) ? item.slice(NS.length + 1) : item;
   const art = NEW_ARTS[key];
   if (!art) return false;
+  if (!worthy(player, key)) {
+    notify(player, `§7${rankName(key)} arms answer only to level ${DIVINE[key]}`);
+    return true;
+  }
   if (!ready(player, art[0], art[1])) return true;
   const d = player.dimension;
   const element = WEAPONS[key].element;
@@ -566,6 +613,107 @@ export function useWeaponArt(player, item) {
     fx.shake(d, at, 8, 0.25, 0.3);
     fx.pose(player, "slam");
     sound(player, "block.composter.ready", 0.6);
+  } else if (key === "twilight_greatsword") {
+    for (const foe of foesAhead(player, 7, 0.4)) {
+      strike(player, foe, 24);
+      foe.addEffect("wither", 4 * TICKS, { amplifier: 1 });
+    }
+    fx.slash(d, ahead(3), "dark", 2.4);
+    system.runTimeout(() => {
+      try {
+        fx.slash(d, ahead(3), "dark", 2.4);
+      } catch {
+        // the wielder left
+      }
+    }, 4);
+    fx.pose(player, "sweep");
+    sound(player, "mob.wither.shoot", 0.6);
+  } else if (key === "thunderlord_glaive") {
+    const foes = foesNear(player, player.location, 14).slice(0, 6);
+    if (foes.length === 0) {
+      cooldowns.delete(`${player.id}|${art[0]}`);
+      notify(player, "§7No foe within reach of the storm");
+      return true;
+    }
+    foes.forEach((foe, i) => {
+      system.runTimeout(() => {
+        try {
+          strike(player, foe, 22);
+          if (foe.isValid) fx.pillar(d, foe.location, "lightning", 12, 1.4);
+        } catch {
+          // gone
+        }
+      }, i * 3);
+    });
+    fx.pose(player, "raise");
+    sound(player, "ambient.weather.thunder", 1);
+  } else if (key === "eight_elements_staff") {
+    const foe = aimed(player, 24);
+    const at = foe ? { ...foe.location } : ahead(10);
+    const ring = ["fire", "ice", "lightning", "acid", "holy", "dark"];
+    ring.forEach((e, i) => fx.pillar(d, { x: at.x + Math.cos((i / 6) * Math.PI * 2) * 4, y: at.y, z: at.z + Math.sin((i / 6) * Math.PI * 2) * 4 }, e, 5, 1));
+    system.runTimeout(() => {
+      try {
+        for (const other of foesNear(player, at, 5)) {
+          strike(player, other, 30);
+          other.setOnFire(3, true);
+          other.addEffect("slowness", 3 * TICKS, { amplifier: 2 });
+        }
+        fx.nova(d, at, "arcane", 5);
+        fx.shake(d, at, 10, 0.4, 0.4);
+      } catch {
+        // the wielder left
+      }
+    }, 20);
+    fx.pose(player, "channel");
+    sound(player, "beacon.activate", 0.8);
+  } else if (key === "longinus") {
+    const foe = aimed(player, 24);
+    if (!foe) {
+      cooldowns.delete(`${player.id}|${art[0]}`);
+      notify(player, "§7Look at the foe you would erase");
+      return true;
+    }
+    const health = foe.getComponent("minecraft:health");
+    const max = health?.effectiveMax ?? 20;
+    const great = max >= 250;
+    strike(player, foe, great ? Math.max(60, max * 0.25) : max * 4);
+    fx.beam(d, above(player, 1.3), above(foe, 1), "holy", 2);
+    fx.implode(d, above(foe, 1), "holy", 2);
+    fx.pose(player, "thrust");
+    sound(player, "random.totem", 0.6);
+    notify(player, great ? "§eErasure: §fthe great foe reels" : "§eErasure: §fit is gone");
+  } else if (key === "world_breaker") {
+    const cut = () => foesInLine(player, 16);
+    for (const foe of cut()) strike(player, foe, 45);
+    const from = above(player, 1.1);
+    const to = ahead(16);
+    fx.beam(d, from, to, "arcane", 2.2);
+    fx.shake(d, player.location, 16, 0.6, 0.5);
+    for (const delay of [10, 20]) {
+      system.runTimeout(() => {
+        try {
+          for (const foe of foesNear(player, player.location, 18).filter((f) => cut().includes(f))) strike(player, foe, 10);
+          fx.beam(d, from, to, "arcane", 1.2);
+        } catch {
+          // the wielder left
+        }
+      }, delay);
+    }
+    fx.pose(player, "sweep");
+    sound(player, "item.trident.riptide_1", 0.5);
+  } else if (key === "nidhogg_fang") {
+    let drawn = 0;
+    for (const foe of foesNear(player, player.location, 7)) {
+      strike(player, foe, 18);
+      drawn += 18;
+      fx.beam(d, above(foe, 1), above(player, 1), "dark", 0.8);
+    }
+    heal(player, drawn / 2);
+    player.addEffect("absorption", 10 * TICKS, { amplifier: 1, showParticles: false });
+    fx.implode(d, above(player, 1), "dark", 7);
+    fx.pose(player, "summon");
+    sound(player, "mob.wither.ambient", 0.7);
   } else if (key === "demonbane_halberd") {
     const line = foesInLine(player, 10);
     for (const foe of line) {
@@ -769,6 +917,7 @@ function aimed(player, reach) {
 export function armourArt(player, set) {
   const info = SETS[set];
   if (!info) return "";
+  if (!worthy(player, set)) return `§7The ${info.name} answers only to level ${DIVINE[set]}`;
   const key = `${player.id}|armour_${set}`;
   const left = armourArtLeft(player, set);
   if (left > 0) return `§7${info.name} art ready in ${left}s`;
@@ -875,6 +1024,30 @@ export function armourArt(player, set) {
     fx.skull(d, above(player, 2.3), 1.3);
     fx.pose(player, "summon");
     sound(player, "mob.skeleton.death", 0.6);
+  } else if (set === "seraph") {
+    player.addEffect("levitation", 1 * TICKS, { amplifier: 3, showParticles: false });
+    player.addEffect("slow_falling", 8 * TICKS, { amplifier: 0, showParticles: false });
+    for (const foe of foesNear(player, player.location, 7)) {
+      strike(player, foe, 20);
+      fx.pillar(d, foe.location, "holy", 5, 1);
+    }
+    heal(player, 8);
+    fx.nova(d, player.location, "holy", 7);
+    fx.pose(player, "raise");
+    sound(player, "beacon.activate", 1.5);
+  } else if (set === "supreme") {
+    for (const foe of foesNear(player, player.location, 12)) {
+      strike(player, foe, 25);
+      foe.addEffect("weakness", 6 * TICKS, { amplifier: 1 });
+      foe.addEffect("slowness", 6 * TICKS, { amplifier: 1 });
+    }
+    player.addEffect("absorption", 20 * TICKS, { amplifier: 3, showParticles: false });
+    player.addEffect("strength", 10 * TICKS, { amplifier: 1, showParticles: false });
+    fx.dome(d, player.location, "dark");
+    fx.ring(d, player.location, "dark", 12);
+    fx.skull(d, above(player, 2.6), 1.6);
+    fx.pose(player, "raise");
+    sound(player, "mob.wither.spawn", 0.8);
   } else if (set === "cavalier") {
     for (const foe of foesInLine(player, 8)) {
       strike(player, foe, 11);
@@ -1026,7 +1199,36 @@ const TWO_EFFECTS = {
   platinum: ["resistance", 0],
   beasthide: ["haste", 0],
   cavalier: ["speed", 0],
+  seraph: ["regeneration", 0],
+  supreme: ["strength", 0],
 };
+
+/**
+ * The divine arms (v9.7): the level each super-tier (70) or god-tier (80) weapon or armour set asks of its
+ * bearer. Below it, the arms are only metal: no art, no trait and no set bonus.
+ * @type {Record<string, number>}
+ */
+export const DIVINE = {
+  twilight_greatsword: 70, thunderlord_glaive: 70, eight_elements_staff: 70, seraph: 70,
+  longinus: 80, world_breaker: 80, nidhogg_fang: 80, supreme: 80,
+};
+
+/** "Super-tier", "God-tier" or "" for a weapon or set key. @param {string} key */
+export function rankName(key) {
+  const need = DIVINE[key];
+  return need === undefined ? "" : need >= 80 ? "God-tier" : "Super-tier";
+}
+
+/** Whether a player may wield a weapon or wear a set to the full. @param {Player} player @param {string} key */
+export function worthy(player, key) {
+  const need = DIVINE[key];
+  if (need === undefined) return true;
+  try {
+    return profileOf(player).level >= need;
+  } catch {
+    return false;
+  }
+}
 
 /** Armour Art input: sneak tapped twice within half a second; and when sneak was last pressed (Perfect Parry). */
 /** @type {Map<string, { was: boolean, taps: number[], at: number }>} */
@@ -1057,6 +1259,7 @@ export function step(player, tick) {
   const d = player.dimension;
   const sets = wornSets(player);
   for (const [set, pieces] of Object.entries(sets)) {
+    if (!worthy(player, set)) continue;
     if (pieces >= 2 && pieces < 4) {
       const effect = TWO_EFFECTS[set];
       if (effect) player.addEffect(effect[0], 3 * TICKS, { amplifier: effect[1], showParticles: false });
@@ -1102,7 +1305,7 @@ export function openArsenal(player) {
     const w = WEAPONS[key];
     const gauge = gauges.get(player.id) ?? 0;
     lines.push(
-      `§e§lIn hand§r: ${w.kind} of ${w.element === "none" ? "steel" : w.element}`,
+      `§e§lIn hand§r: ${rankName(key) ? `§d${rankName(key)}§r ` : ""}${w.kind} of ${w.element === "none" ? "steel" : w.element}${worthy(player, key) ? "" : ` §c(needs level ${DIVINE[key]})§r`}`,
       `Each blow: ${w.trait === "-" ? "a crescent of its colour" : w.trait}`,
       `Use: ${w.art}`,
       `Third blow of a chain: §6${FINISHERS[w.kind].name}§r - ${FINISHERS[w.kind].help}`,
@@ -1115,7 +1318,7 @@ export function openArsenal(player) {
   for (const [set, pieces] of sets) {
     const info = SETS[set];
     lines.push(
-      `§e§l${info.name}§r ${pieces}/4`,
+      `§e§l${info.name}§r ${pieces}/4${rankName(set) ? ` §d${rankName(set)}§r` : ""}${worthy(player, set) ? "" : ` §c(needs level ${DIVINE[set]})§r`}`,
       ` 2 pieces: ${pieces >= 2 ? "§a" : "§8"}${info.two}§r`,
       ` 4 pieces: ${pieces >= 4 ? "§a" : "§8"}${info.full}§r`,
       ` Armour Art (tap sneak twice): ${pieces >= 4 ? "§a" : "§8"}${info.art}§r${pieces >= 4 && armourArtLeft(player, set) > 0 ? ` §7(${armourArtLeft(player, set)}s)` : ""}`
