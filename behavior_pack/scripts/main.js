@@ -308,7 +308,7 @@ const FACE_OFFSET = {
 function castFireball(player) {
   if (!tryCooldown(player, "overlord_staff", 1.0, 6)) return;
   const dir = player.getViewDirection();
-  const origin = add(player.getHeadLocation(), dir, 1.4);
+  const origin = add(fx.handOf(player), dir, 0.6); // from the staff in the hand, not the eyes (10.0.2)
   const fireball = player.dimension.spawnEntity(id("fireball"), origin);
   const projectile = fireball.getComponent("minecraft:projectile");
   if (projectile) {
@@ -401,7 +401,7 @@ function castShockwave(player) {
       // entity died or left the world while we were iterating
     }
   }
-  particle(player.dimension, "minecraft:knockback_roar_particle", add(center, { x: 0, y: 1, z: 0 }));
+  particle(player.dimension, "minecraft:knockback_roar_particle", add(center, { x: 0, y: 0.2, z: 0 })); // from the feet, not the face
   playSound(player.dimension, "random.explode", center, 0.7);
   actionBar(player, count > 0 ? `§2Ginnungagap struck ${count} foe${count === 1 ? "" : "s"}!` : "§2Ginnungagap!");
 }
@@ -481,7 +481,7 @@ function castFly(player) {
   consumeHeldItem(player);
   fx.spiral(player.dimension, () => (player.isValid ? player.location : undefined), "none", 1.0, 3);
   fx.ring(player.dimension, player.location, "none", 2.2);
-  particle(player.dimension, "minecraft:totem_particle", add(player.location, { x: 0, y: 1, z: 0 }));
+  particle(player.dimension, "minecraft:totem_particle", add(player.location, { x: 0, y: 0.3, z: 0 }));
   playSound(player.dimension, "mob.bat.takeoff", player.location, 0.8);
   actionBar(player, "§bFly!");
 }
@@ -500,7 +500,7 @@ function castInvisibility(player) {
   if (!tryCooldown(player, "overlord_scroll", 1.5, 0, "dark")) return;
   player.addEffect("invisibility", 45 * TICKS, { showParticles: false });
   consumeHeldItem(player);
-  fx.implode(player.dimension, add(player.location, { x: 0, y: 1, z: 0 }), "dark", 1.6);
+  fx.implode(player.dimension, add(player.location, { x: 0, y: 0.4, z: 0 }), "dark", 1.6);
   fx.rise(player.dimension, player.location, "dark", 0.9);
   playSound(player.dimension, "random.fizz", player.location, 1.4);
   actionBar(player, "§7Invisibility!");
@@ -642,7 +642,7 @@ function strikeLine(player, origin, dir, length, damage, cause, trail) {
   const struck = new Set();
   for (let step = 1; step <= length; step += 1.5) {
     const point = add(origin, dir, step);
-    particle(player.dimension, trail, point);
+    if (step >= 2.5) particle(player.dimension, trail, point); // none in the face (10.0.2)
     for (const victim of foesNear(player.dimension, point, 1.8)) {
       if (struck.has(victim.id)) continue;
       struck.add(victim.id);
@@ -729,14 +729,14 @@ function castHeavyRecover(player) {
     try {
       if (ally.getComponent("minecraft:is_tamed")) {
         heal(ally, 30);
-        particle(player.dimension, "minecraft:heart_particle", add(ally.location, { x: 0, y: 1.5, z: 0 }));
+        particle(player.dimension, "minecraft:heart_particle", add(ally.location, { x: 0, y: 2.7, z: 0 }));
       }
     } catch {
       // entity left the world
     }
   }
   consumeHeldItem(player);
-  particle(player.dimension, "minecraft:heart_particle", add(player.location, { x: 0, y: 2, z: 0 }));
+  particle(player.dimension, "minecraft:heart_particle", add(player.location, { x: 0, y: 2.7, z: 0 }));
   playSound(player.dimension, "random.levelup", player.location, 1.4);
   actionBar(player, "§aHeavy Recover!");
 }
@@ -750,8 +750,8 @@ function castRealitySlash(player) {
   // The cut itself: a white line through the air with crescents along it.
   const eye = player.getHeadLocation();
   const view = player.getViewDirection();
-  fx.beam(player.dimension, eye, add(eye, view, 18), "none", 2);
-  for (let d = 3; d <= 18; d += 5) fx.slash(player.dimension, add(eye, view, d), "arcane", 2.2);
+  fx.beam(player.dimension, fx.handOf(player), add(eye, view, 18), "none", 2);
+  for (const d of [5, 9.5, 14, 18]) fx.slash(player.dimension, add(eye, view, d), "arcane", 2.2);
   playSound(player.dimension, "item.trident.riptide_1", player.location, 1.4);
   actionBar(player, hits > 0 ? `§bReality Slash cut ${hits}!` : "§bReality Slash!");
 }
@@ -849,7 +849,7 @@ function castGodFlash(player) {
 function fireRifle(player) {
   if (!tryCooldown(player, "overlord_rifle", 0.6, 3)) return;
   const dir = player.getViewDirection();
-  const origin = add(player.getHeadLocation(), dir, 1.2);
+  const origin = add(fx.handOf(player), dir, 0.8);
   const bullet = player.dimension.spawnEntity(id("magic_bullet"), origin);
   const projectile = bullet.getComponent("minecraft:projectile");
   if (projectile) {
@@ -867,7 +867,7 @@ function castHolyLight(player) {
   for (const ally of player.dimension.getPlayers({ location: player.location, maxDistance: 8 })) {
     ally.addEffect("instant_health", 1, { amplifier: 1 });
     ally.addEffect("regeneration", 8 * TICKS, { amplifier: 1 });
-    particle(player.dimension, "minecraft:heart_particle", add(ally.location, { x: 0, y: 2, z: 0 }));
+    particle(player.dimension, "minecraft:heart_particle", add(ally.location, { x: 0, y: 2.7, z: 0 }));
   }
   playSound(player.dimension, "random.levelup", player.location, 1.6);
   actionBar(player, "§eHoly Light!");
@@ -882,7 +882,7 @@ function useShootingStar(player) {
   }
   consumeHeldItem(player);
   player.addEffect("instant_health", 1, { amplifier: 5 });
-  particle(player.dimension, "minecraft:totem_particle", add(player.location, { x: 0, y: 1, z: 0 }));
+  particle(player.dimension, "minecraft:totem_particle", add(player.location, { x: 0, y: 0.3, z: 0 }));
   playSound(player.dimension, "beacon.activate", player.location, 1.6);
 }
 
@@ -894,7 +894,7 @@ function useShootingStar(player) {
  * @param {number} speed
  */
 function launch(player, type, dir, speed) {
-  const origin = add(player.getHeadLocation(), dir, 1.3);
+  const origin = add(fx.handOf(player), dir, 0.6);
   const shot = player.dimension.spawnEntity(type, origin);
   const velocity = { x: dir.x * speed, y: dir.y * speed, z: dir.z * speed };
   const projectile = shot.getComponent("minecraft:projectile");
@@ -969,7 +969,7 @@ function castReap(player) {
       // already dead
     }
   }
-  fx.ring(player.dimension, add(player.location, { x: 0, y: 0.8, z: 0 }), "dark", 5);
+  fx.ring(player.dimension, player.location, "dark", 5); // along the ground, not at the face
   playSound(player.dimension, "item.trident.riptide_1", player.location, 0.7);
   actionBar(player, count > 0 ? `§5Reap struck ${count}${reaped > 0 ? `, ${reaped} reaped` : ""}!` : "§5Reap!");
 }
@@ -1241,7 +1241,7 @@ function castDarkBlade(player) {
     }
   }
   fx.ring(player.dimension, player.location, "dark", 6);
-  fx.pillar(player.dimension, player.location, "dark", 4, 1.4);
+  fx.crown(player.dimension, player.location, "dark", 4, 1.4);
   playSound(player.dimension, "mob.wither.shoot", player.location, 0.7);
   actionBar(player, count > 0 ? `§5Dark Blade Mega Impact hit ${count}!` : "§5Dark Blade Mega Impact!");
 }
@@ -1251,7 +1251,7 @@ function castHolyStrike(player) {
   if (!tryCooldown(player, "overlord_safarlisia", 8.0, 22)) return;
   const origin = player.getHeadLocation();
   const dir = player.getViewDirection();
-  fx.beam(player.dimension, add(origin, dir, 1), add(origin, dir, 14), "holy", 1.8);
+  fx.beam(player.dimension, fx.handOf(player), add(origin, dir, 14), "holy", 1.8);
   const struck = new Set();
   for (let step = 1; step <= 14; step += 1.5) {
     for (const foe of foesNear(player.dimension, add(origin, dir, step), 1.8)) {
@@ -1326,7 +1326,7 @@ function fireSunArrow(player) {
     .map((h) => h.entity)
     .find((e) => e.isValid && e.typeId !== "minecraft:player" && e.getComponent("minecraft:health"));
   if (!tryCooldown(player, "overlord_houyi", 0.8, 4)) return;
-  const from = add(player.getHeadLocation(), player.getViewDirection(), 0.8);
+  const from = fx.handOf(player);
   if (!target) {
     fx.beam(player.dimension, from, add(from, player.getViewDirection(), 24), "fire", 0.8);
   } else {
@@ -1621,7 +1621,7 @@ world.afterEvents.entityHurt.subscribe((event) => {
     }
     if (held === id("spuit_lance")) {
       heal(attacker, Math.max(1, event.damage * 0.25));
-      if (victim.isValid) particle(victim.dimension, "minecraft:heart_particle", add(attacker.location, { x: 0, y: 2, z: 0 }));
+      if (victim.isValid) particle(victim.dimension, "minecraft:heart_particle", add(attacker.location, { x: 0, y: 2.7, z: 0 }));
     } else if (held === id("god_slaying_emperor_blade") && victim.isValid) {
       victim.addEffect("slowness", 4 * TICKS, { amplifier: 2 });
       particle(victim.dimension, "minecraft:blue_flame_particle", add(victim.location, { x: 0, y: 1, z: 0 }));

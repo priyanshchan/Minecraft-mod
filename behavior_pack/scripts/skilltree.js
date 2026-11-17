@@ -252,7 +252,7 @@ world.afterEvents.entityHurt.subscribe((event) => {
       health.setCurrentValue(Math.max(health.currentValue, health.effectiveMax * 0.5));
       player.addEffect("absorption", 10 * TICKS, { amplifier: 1, showParticles: false });
       fx.dome(player.dimension, player.location, "holy");
-      fx.pillar(player.dimension, player.location, "holy", 4);
+      fx.crown(player.dimension, player.location, "holy", 4);
       player.sendMessage("§e[Divine Grace] §fThe Six Great Gods will not let you fall today.");
     } else if (share < 0.3 && skills.rank(p, "second_wind") > 0 && ready(player, "second_wind", 60)) {
       player.addEffect("regeneration", 5 * TICKS, { amplifier: 2, showParticles: false });
@@ -438,7 +438,7 @@ export function learnSkill(player, key) {
     fx.rise(player.dimension, player.location, element, 1);
     fx.spiral(player.dimension, () => (player.isValid ? player.location : undefined), element);
     if (node.tier === 4) {
-      fx.pillar(player.dimension, player.location, element, 6);
+      fx.crown(player.dimension, player.location, element, 6);
       fx.nova(player.dimension, above(player), element, 3);
     }
     player.playSound("random.levelup", { volume: 0.8, pitch: node.tier === 4 ? 0.8 : 1.6 });

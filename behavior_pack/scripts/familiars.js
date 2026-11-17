@@ -390,7 +390,7 @@ export function act(player, body, now) {
     if (known >= 3 && share < 0.25 && due(player, "light", 90, now)) {
       health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + 10));
       player.addEffect("regeneration", 5 * TICKS, { amplifier: 1, showParticles: false });
-      fx.pillar(d, player.location, "holy", 5);
+      fx.crown(d, player.location, "holy", 5);
       used.push("Guardian Light");
     }
   }

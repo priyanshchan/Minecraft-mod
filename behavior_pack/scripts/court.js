@@ -126,7 +126,7 @@ export function swear(player, key) {
   } catch {
     // the player left
   }
-  fx.pillar(player.dimension, player.location, g.element, 7);
+  fx.crown(player.dimension, player.location, g.element, 7);
   return `§d${g.name} swears fealty`;
 }
 

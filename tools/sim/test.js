@@ -2420,6 +2420,44 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   v.dimension.mobs = []; players.splice(players.indexOf(v), 1);
 }
 
+// ---- v10.0.2: no weapon effect forms in the wielder's face ----
+{
+  const arms = await import("./arms.js");
+  const weapons3d = Object.keys(arms.WEAPONS);
+  const e = mkPlayer("eyes"); const pe2 = rpg.profileOf(e); pe2.level = 100; pe2.cls = "caster"; rpg.restoreMana(e, 1e6);
+  let hand = "overlord:razor_edge"; let worn = {};
+  e.getComponent = ((base) => (c) => (c === "minecraft:equippable" ? { getEquipment: (slot) => (slot === "Mainhand" ? { typeId: hand } : worn[slot] ? { typeId: worn[slot] } : undefined) } : base(c)))(e.getComponent);
+  e.applyKnockback = () => {}; e.startItemCooldown = () => {}; e.isSneaking = false; e.teleport = () => {}; e.inv.length = 0;
+  const foe = (x, z) => { const m = mob("overlord:ogre", 400, ["monster"]); Object.assign(m, { id: `eye${Math.random()}`, location: { x, y: 64, z }, tags: new Set(), hasTag: (t) => m.tags.has(t),
+    addEffect() {}, setOnFire() {}, applyKnockback() {}, applyImpulse() {}, applyDamage(n) { m.health.currentValue = Math.max(1, m.health.currentValue - n); } }); return m; };
+  const eye = { x: 0, y: 65.62, z: 0 };
+  const tooClose = () => e.fx.filter((f) => f.loc && Math.hypot(f.loc.x - eye.x, f.loc.y - eye.y, f.loc.z - eye.z) < 1.0);
+  const check = (what) => { const near = tooClose(); assert.equal(near.length, 0, `${what} drew ${near.map((f) => `${f.effect} at ${JSON.stringify(f.loc)}`).join(", ")} in the wielder's face (eyes at ${JSON.stringify(eye)}, standing at ${JSON.stringify(e.location)})`); e.fx = []; };
+  const ring = () => { const ms = [foe(0, 3), foe(2, 5), foe(-2, 6), foe(3, 0), foe(0, -3)]; e.dimension.mobs = ms; e.aimed = [ms[0]]; return ms; };
+  // every weapon's art, every weapon's own ability, and every blow
+  for (const key of weapons3d) {
+    hand = `overlord:${key}`; ring(); e.fx = [];
+    arms.useWeaponArt(e, hand); advance(45); check(`${key}'s art`);
+    advance(400); ring(); use(e, hand); advance(45); check(`using ${key}`);
+    world.afterEvents.entityHurt.fire({ hurtEntity: e.dimension.mobs[0], damage: 8, damageSource: { damagingEntity: e, cause: "entityAttack" } }); advance(5); check(`a blow of ${key}`);
+  }
+  // awakening, and the glow of an awakened weapon
+  hand = "overlord:runeblade"; arms.gauges.set(e.id, 1e6); assert.equal(arms.tryAwaken(e), true); advance(30); check("awakening");
+  for (let t = 0; t < 60; t += 20) arms.step(e, 40000 + t); check("an awakened weapon's glow");
+  // every armour set's art
+  for (const set of Object.keys(arms.SETS)) {
+    worn = { Head: `overlord:${set}_helmet`, Chest: `overlord:${set}_chestplate`, Legs: `overlord:${set}_leggings`, Feet: `overlord:${set}_boots` };
+    ring(); arms.armourArt(e, set); advance(30); check(`the ${set} armour art`);
+  }
+  // every spell short of god-tier (those pull the camera far back and stage their own show)
+  worn = {}; hand = "overlord:magic_wand";
+  for (const spell of spells.SPELLS.filter((x) => x.tier < spells.GOD)) {
+    ring(); pe2.spells = [spell.key]; pe2.slots = [spell.key, "", "", ""]; pe2.slot = 0; pe2.mana = 1e6; spells.resetCooldowns(e);
+    spells.castSelected(e); advance(90); check(`casting ${spell.name}`);
+  }
+  worn = {}; e.dimension.mobs = []; e.aimed = []; players.splice(players.indexOf(e), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);

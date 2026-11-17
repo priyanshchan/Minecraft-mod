@@ -139,7 +139,7 @@ export function feedRace(player, amount) {
       if (rank > rankBefore) {
         player.onScreenDisplay.setTitle(`${info.color}${info.ranks[rank]}`, { subtitle: `§7Your ${info.name} blood awakens`, fadeInDuration: 5, stayDuration: 60, fadeOutDuration: 15 });
         player.sendMessage(`§6[Race] §fYou became ${info.color}${info.ranks[rank]}§f!${rank === 1 ? ` §7Hold sneak and jump to take your ${info.form}.` : ""}`);
-        fx.pillar(player.dimension, player.location, info.element, 6);
+        fx.crown(player.dimension, player.location, info.element, 6);
       } else {
         player.sendMessage(`§6[Race] §f${info.name} level §6${p.raceLv}§f.`);
       }
@@ -172,7 +172,7 @@ export function chooseRace(player, race) {
   touch(player);
   const info = RACES[race];
   fx.rise(player.dimension, player.location, info.element, 1);
-  fx.pillar(player.dimension, player.location, info.element, 4);
+  fx.crown(player.dimension, player.location, info.element, 4);
   return `${info.color}You are now ${info.ranks[0]}`;
 }
 
@@ -375,7 +375,7 @@ export function transform(player, now = system.currentTick) {
   forms.set(player.id, now + seconds * TICKS);
   rested.set(player.id, now + (seconds + FORM_COOLDOWN) * TICKS);
   fx.pose(player, "awaken");
-  fx.pillar(player.dimension, player.location, info.element, 7, 1.8);
+  fx.crown(player.dimension, player.location, info.element, 7, 1.8);
   fx.nova(player.dimension, { x: player.location.x, y: player.location.y + 1, z: player.location.z }, info.element, 4);
   fx.shake(player.dimension, player.location, 10, 0.25, 0.4);
   try {

@@ -335,6 +335,17 @@ export function beam(dimension, from, to, element, scale = 1) {
 }
 
 /**
+ * A pillar of light for a player standing in it (10.0.2): a ring at their feet, light rising round them, and the
+ * column itself starting above their head - so in first person nothing bursts inside the player's view.
+ * @param {Dimension} dimension @param {Vector3} feet @param {string} element @param {number} height @param {number} [scale]
+ */
+export function crown(dimension, feet, element, height, scale = 1.5) {
+  circle(dimension, feet, element, 1.4);
+  rise(dimension, feet, element, 1.2);
+  pillar(dimension, up(feet, 2.9), element, Math.max(2.5, height - 2.9), scale);
+}
+
+/**
  * Column of light standing on the ground, wrapped in sparks.
  * @param {Dimension} dimension @param {Vector3} base @param {string} element @param {number} height @param {number} [scale]
  */
@@ -353,6 +364,7 @@ export function pillar(dimension, base, element, height, scale = 1.5) {
  * @param {Dimension} dimension @param {() => Vector3 | undefined} center @param {string} element @param {number} [radius] @param {number} [height]
  */
 export function spiral(dimension, center, element, radius = 0.9, height = 2.2) {
+  radius = Math.max(radius, 1.4); // spirals wind round someone at arm's length, never through their head (10.0.2)
   const start = center();
   if (start) adorn(dimension, "aura", up(start, 0.1), element, radius);
   const steps = 18;
@@ -428,11 +440,11 @@ export function skull(dimension, at, scale = 1) {
 /** Stacked magic circles - the dome that surrounds a super-tier caster. @param {Dimension} dimension @param {Vector3} at @param {string} element */
 export function dome(dimension, at, element) {
   circle(dimension, at, element, 4.5);
-  circle(dimension, up(at, 1.4), element, 3.6);
+  circle(dimension, up(at, 0.35), element, 4.0); // well below the eyes of whoever stands inside (10.0.2)
   circle(dimension, up(at, 2.8), element, 2.6);
   circle(dimension, up(at, 4.0), element, 1.4);
   rise(dimension, at, element, 3.5);
-  implode(dimension, up(at, 1.2), element, 4.5);
+  implode(dimension, up(at, 0.4), element, 4.5);
   adorn(dimension, "orbit", at, element, 3);
   light(dimension, up(at, 1), 15, 40);
   light(dimension, up(at, 4), 15, 40);
@@ -492,15 +504,73 @@ export function pose(player, pose) {
   }
 }
 
-/** Where a player's casting hand is: in front of the chest. @param {Player} player @param {number} [reach] */
-export function handOf(player, reach = 0.7) {
-  let view = { x: 0, y: 0, z: 1 };
+/** The flat direction a player faces (x, z), from their rotation or, failing that, their view. @param {Player} player */
+export function facingOf(player) {
   try {
-    view = player.getViewDirection();
+    const yaw = (player.getRotation().y * Math.PI) / 180;
+    return { x: -Math.sin(yaw), z: Math.cos(yaw) };
+  } catch {
+    // no rotation: use the view
+  }
+  try {
+    const view = player.getViewDirection();
+    const flat = Math.hypot(view.x, view.z);
+    if (flat > 0.15) return { x: view.x / flat, z: view.z / flat };
   } catch {
     // keep the default
   }
-  return { x: player.location.x + view.x * reach, y: player.location.y + 1.3 + view.y * reach * 0.5, z: player.location.z + view.z * reach };
+  return { x: 0, z: 1 };
+}
+
+/** How far the player looks up (+1) or down (-1). @param {Player} player */
+function pitchOf(player) {
+  try {
+    return player.getViewDirection().y;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Where a player's weapon hand is: at chest height, a little to the right and at least 1.2 blocks out.
+ * Since 10.0.2 effects start here rather than just in front of the eyes, so in first person they appear
+ * low and to the right, where the weapon is, and never inside the player's head.
+ * @param {Player} player @param {number} [reach]
+ */
+export function handOf(player, reach = 0.7) {
+  const flat = facingOf(player);
+  const out = Math.max(reach, 1.2);
+  const look = pitchOf(player);
+  return {
+    x: player.location.x + flat.x * out - flat.z * 0.35,
+    y: player.location.y + 1.05 + look * 0.6,
+    z: player.location.z + flat.z * out + flat.x * 0.35,
+  };
+}
+
+/**
+ * Where a beam from a player to something should leave them: 1.2 blocks out towards it, at chest height - so a
+ * beam to a foe beside or behind the player never passes through their head (10.0.2).
+ * @param {Player} player @param {Vector3} target
+ */
+export function towards(player, target) {
+  const dx = target.x - player.location.x;
+  const dz = target.z - player.location.z;
+  const n = Math.hypot(dx, dz);
+  if (n < 0.01) return handOf(player);
+  const out = Math.min(1.2, n * 0.5);
+  return { x: player.location.x + (dx / n) * out, y: player.location.y + 1.0, z: player.location.z + (dz / n) * out };
+}
+
+/**
+ * A point well in front of the player at chest height, following where they look up or down: where swings,
+ * cuts and bursts in front of the player are drawn, so they never form in their face (10.0.2).
+ * @param {Player} player @param {number} [distance]
+ */
+export function frontOf(player, distance = 2.5) {
+  const flat = facingOf(player);
+  const d = Math.max(distance, 2);
+  return { x: player.location.x + flat.x * d, y: player.location.y + 1.0 + pitchOf(player) * d * 0.6, z: player.location.z + flat.z * d };
 }
 
 /**
@@ -525,8 +595,8 @@ export function castFx(player, element, tier, how) {
   light(dimension, handOf(player), 9 + tier * 0.6, 10);
   if (tier >= 5) adorn(dimension, "orbit", feet, element, 0.9 + tier * 0.05);
   if (tier >= 4) rise(dimension, feet, element, 0.7 + tier * 0.05);
-  if (tier >= 6) implode(dimension, up(feet, 1.1), element, 1.4 + tier * 0.1);
-  if (tier >= 7) circle(dimension, up(feet, 1.2), element, 0.8 + tier * 0.08);
+  if (tier >= 6) implode(dimension, up(feet, 0.5), element, 1.4 + tier * 0.1); // at the waist, below the eyes (10.0.2)
+  if (tier >= 7) circle(dimension, up(feet, 0.3), element, 0.8 + tier * 0.08);
   if (tier >= 9) adorn(dimension, "glyph", up(feet, 0.3), element, 2);
   pose(player, how);
 }
@@ -563,7 +633,7 @@ export function tome(player, element, tier = 6) {
  * @param {Player} player @param {string} element @param {"slash" | "smash"} how @param {number} [scale]
  */
 export function swing(player, element, how, scale = 1.3) {
-  if (how === "slash") slash(player.dimension, handOf(player, 1.3), element, scale);
+  if (how === "slash") slash(player.dimension, frontOf(player, 2.2), element, scale);
   else ring(player.dimension, player.location, element, scale * 1.2);
   pose(player, how);
 }
