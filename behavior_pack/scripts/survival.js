@@ -21,7 +21,7 @@
 // versions of those start switched off.
 import { world, system, EntityDamageCause, EquipmentSlot, GameMode, ItemTypes } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { creditedPlayer, giveItem, hooks, isElite, notify, profileOf, registerMenu, touch } from "./rpg.js";
+import { creditedPlayer, giveItem, hooks, isElite, notify, profileOf, registerMenu, showTitle, touch } from "./rpg.js";
 import { raceOf } from "./races.js";
 import { spawnHooks } from "./director.js";
 import { wearsDivine } from "./divine.js";
@@ -614,7 +614,7 @@ export function watchZone(player) {
   if (was === undefined || was === zone) return zone;
   try {
     const colour = zone >= 4 ? "§4" : zone >= 2 ? "§c" : zone === 1 ? "§6" : "§a";
-    player.onScreenDisplay.setTitle(`${colour}${ZONES[zone]}`, {
+    showTitle(player, `${colour}${ZONES[zone]}`, {
       subtitle: zone > was ? `§7Danger ${zone} of ${MAX_DANGER}: the monsters here are stronger` : `§7Danger ${zone} of ${MAX_DANGER}: safer ground`,
       fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 15,
     });

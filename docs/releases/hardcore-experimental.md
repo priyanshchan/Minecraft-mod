@@ -1,4 +1,4 @@
-## Hardcore Survival (experimental build, v10.1.2)
+## Hardcore Survival (experimental build, v10.1.3)
 
 An experimental branch (`experimental-hardcore`) that adds a hard survival layer to the whole add-on, in the
 spirit of the hardest survival modpacks. Everything in it is this add-on's own: original code, items and art.
@@ -85,6 +85,8 @@ It is **not** merged into the main add-on.
 - With RSCraft installed, Overlord no longer writes to the action bar. Its short messages go to chat (the same one
   is not repeated within three seconds), and its status line is shown on the Adventurer's Plate.
 - The Plate has a button to show Overlord's status bar anyway. It will flicker with RSCraft's icons.
+- In the **Overcraft** build (v10.1.3), Overlord's status, and its short messages, show as a small block in the
+  top-left corner instead, beside RSCraft's HUD. The Plate's button hides or shows it.
 
 ### Settings
 - The **Hardcore Survival** page on the Adventurer's Plate shows your water, temperature, injuries, lost hearts
