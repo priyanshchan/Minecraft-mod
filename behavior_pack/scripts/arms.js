@@ -50,7 +50,7 @@ export const WEAPONS = {
   twilight_greatsword: { kind: "greatsword", element: "dark", trait: "withers the target", art: "Twilight Cross: two vast crossing cuts through everything in a 7-block arc before you, withering it" },
   thunderlord_glaive: { kind: "polearm", element: "lightning", trait: "one blow in four calls down lightning", art: "Wrath of the Thunder Lord: lightning falls on up to six foes within 14 blocks" },
   eight_elements_staff: { kind: "staff", element: "arcane", trait: "+30% spell power while held", art: "Elemental Convergence: six elements gather where you aim and burst through everything within 5 blocks" },
-  longinus: { kind: "polearm", element: "holy", trait: "undead and demons take a quarter more", art: "Erasure: the foe you look at is erased from the world - a great foe loses a quarter of its life instead" },
+  longinus_reforged: { kind: "polearm", element: "holy", trait: "undead and demons take a quarter more", art: "Erasure: the foe you look at is erased from the world - a great foe loses a quarter of its life instead" },
   world_breaker: { kind: "greatsword", element: "arcane", trait: "a fifth of every blow cuts again, through anything", art: "World Severance: a 16-block cut through the world itself, and the rift it leaves cuts twice more" },
   nidhogg_fang: { kind: "dagger", element: "dark", trait: "drinks a fifth of every blow", art: "World-Eater's Bite: devours the life of every foe within 7 blocks, healing you and shielding you" },
   staff_of_ainz_ooal_gown: { kind: "staff", element: "dark", trait: "-", art: "Fireball; sneak: Grasp Heart" },
@@ -115,7 +115,7 @@ export const NEW_ARTS = {
   twilight_greatsword: ["overlord_twilight_cross", 12],
   thunderlord_glaive: ["overlord_thunder_lord", 14],
   eight_elements_staff: ["overlord_convergence", 16],
-  longinus: ["overlord_erasure", 90],
+  longinus_reforged: ["overlord_erasure", 90],
   world_breaker: ["overlord_severance", 25],
   nidhogg_fang: ["overlord_world_eater", 20],
 };
@@ -389,7 +389,7 @@ export function divineTrait(player, victim, damage, key) {
       fx.pillar(d, victim.location, "lightning", 6, 1);
       sound(player, "ambient.weather.lightning.impact", 1.2);
     }
-  } else if (key === "longinus") {
+  } else if (key === "longinus_reforged") {
     let unholy = isDemon(victim);
     try {
       unholy ||= victim.matches({ families: ["undead"] });
@@ -700,7 +700,7 @@ export function useWeaponArt(player, item) {
     }, 20);
     fx.pose(player, "channel");
     sound(player, "beacon.activate", 0.8);
-  } else if (key === "longinus") {
+  } else if (key === "longinus_reforged") {
     const foe = aimed(player, 24);
     if (!foe) {
       cooldowns.delete(`${player.id}|${art[0]}`);
@@ -1256,7 +1256,7 @@ const TWO_EFFECTS = {
  */
 export const DIVINE = {
   twilight_greatsword: 70, thunderlord_glaive: 70, eight_elements_staff: 70, seraph: 70,
-  longinus: 80, world_breaker: 80, nidhogg_fang: 80, supreme: 80,
+  longinus_reforged: 80, world_breaker: 80, nidhogg_fang: 80, supreme: 80,
 };
 
 /** "Super-tier", "God-tier" or "" for a weapon or set key. @param {string} key */

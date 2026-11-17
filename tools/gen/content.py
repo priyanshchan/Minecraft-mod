@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [10, 0, 0]
+VERSION = [10, 0, 1]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -11,7 +11,7 @@ UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
 UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
 
 PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v10.0.0"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v10.0.1"
 
 
 def oid(name):
@@ -367,7 +367,7 @@ ITEMS = {
     "twilight_greatsword": ("Greatsword of the Twilight Hero", "equipment", _weapon(19, {"minecraft:glint": True})),
     "thunderlord_glaive": ("Glaive of the Thunder Lord", "equipment", _weapon(18, {"minecraft:glint": True})),
     "eight_elements_staff": ("Staff of the Eight Elements", "equipment", _weapon(12, {"minecraft:glint": True})),
-    "longinus": ("Longinus, the Spear That Erases", "equipment", _weapon(24, {"minecraft:glint": True})),
+    "longinus_reforged": ("Longinus Reforged, the Spear That Erases", "equipment", _weapon(24, {"minecraft:glint": True})),
     "world_breaker": ("World Breaker", "equipment", _weapon(26, {"minecraft:glint": True})),
     "nidhogg_fang": ("Fang of Nidhogg", "equipment", _weapon(21, {"minecraft:glint": True})),
     "seraph_helmet": ("Seraph's Winged Helm", "equipment", {**_armor("slot.armor.head", 4, 1400, "armor_head"), "minecraft:rarity": "epic", "minecraft:glint": True}),
@@ -490,7 +490,7 @@ WEAPON_ARTS = {
     "twilight_greatsword": ("overlord_twilight_cross", 12.0),
     "thunderlord_glaive": ("overlord_thunder_lord", 14.0),
     "eight_elements_staff": ("overlord_convergence", 16.0),
-    "longinus": ("overlord_erasure", 90.0),
+    "longinus_reforged": ("overlord_erasure", 90.0),
     "world_breaker": ("overlord_severance", 25.0),
     "nidhogg_fang": ("overlord_world_eater", 20.0),
 }
@@ -770,8 +770,8 @@ def recipe_files():
             "F": oid("rune_of_fire"), "I": oid("divine_ingot"), "C": oid("rune_of_frost"), "W": oid("rune_of_storm"),
             "L": oid("rune_of_life"), "S": oid("fluder_staff"), "T": "minecraft:blaze_rod"}, oid("eight_elements_staff"),
             unlock=oid("divine_ingot")),
-        "longinus": _shaped("longinus", [" W ", "WLW", "IWI"], {
-            "W": oid("world_fragment"), "L": oid("spuit_lance"), "I": oid("divine_ingot")}, oid("longinus"), unlock=oid("world_fragment")),
+        "longinus_reforged": _shaped("longinus_reforged", [" W ", "WLW", "IWI"], {
+            "W": oid("world_fragment"), "L": oid("spuit_lance"), "I": oid("divine_ingot")}, oid("longinus_reforged"), unlock=oid("world_fragment")),
         "world_breaker": _shaped("world_breaker", [" W ", "WGW", "IWI"], {
             "W": oid("world_fragment"), "G": oid("twilight_greatsword"), "I": oid("divine_ingot")}, oid("world_breaker"),
             unlock=oid("world_fragment")),

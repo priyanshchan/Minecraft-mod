@@ -27,15 +27,19 @@ SKELETON = [  # the player's bones, without cubes, so the weapon can hang from r
     ("leftLeg", "root", (1.9, 12, 0)), ("rightLeg", "root", (-1.9, 12, 0)),
 ]
 
-# How each kind is held: (third person rotation, position), (first person rotation, position)
+# How each kind is held: (third person rotation, position), (first person rotation, position).
+# Since 10.0.1 every weapon held in the hand shares one pose, so they all line up the same way (before, staffs
+# stood almost upright and daggers and hammers leaned differently from swords). Only the rifle, which is aimed,
+# and gauntlets, which are worn on the fist, keep their own.
+HELD = (((60, 0, 0), (0, 0, 0)), ((150, 0, 0), (0, 0, 0)))
 HOLDS = {
-    "blade": (((60, 0, 0), (0, 0, 0)), ((150, 0, 0), (0, 0, 0))),
-    "greatsword": (((60, 0, 0), (0, 0, 0)), ((150, 0, 0), (0, 0, 0))),
-    "dagger": (((70, 0, 0), (0, 0, 0)), ((150, 0, 0), (0, 0, 0))),
-    "heavy": (((55, 0, 0), (0, 0, 0)), ((150, 0, 0), (0, 0, 0))),
-    "polearm": (((60, 0, 0), (0, 0, 0)), ((150, 0, 0), (0, 0, 0))),
-    "staff": (((25, 0, 0), (0, 0, 0)), ((165, 0, -10), (0, 0, 0))),
-    "whip": (((60, 0, 0), (0, 0, 0)), ((150, 0, 0), (0, 0, 0))),
+    "blade": HELD,
+    "greatsword": HELD,
+    "dagger": HELD,
+    "heavy": HELD,
+    "polearm": HELD,
+    "staff": HELD,
+    "whip": HELD,
     "rifle": (((90, 0, 0), (0, 0, 0)), ((115, 0, 0), (0, 0, 0))),
     "fist": (((0, 0, 0), (0, 0, 0)), ((0, 0, 0), (0, 0, 0))),
 }
@@ -669,10 +673,10 @@ def eight_elements_staff():
     return staff("eight_elements_staff", "#e8ecf4", GOLD, top)
 
 
-def longinus():
+def longinus_reforged():
     """Longinus (god-tier), the World Item that erases: a slender white spear, its head a long blade of light
     held in a gold crown."""
-    w = Weapon("longinus", "polearm")
+    w = Weapon("longinus_reforged", "polearm")
     w.shaft(-12, 26, "#f4f0e6", band=GOLD)
     w.box(-1.5, 13, -1.5, 3, 1, 3, GOLD)
     for x, z in ((-1.5, -1.5), (1, -1.5), (-1.5, 1), (1, 1)):  # the crown that holds the head
@@ -745,7 +749,7 @@ ALL = {
     "cavalier_lance": cavalier_lance, "ghoulfang_sickle": ghoulfang_sickle, "heartwood_staff": heartwood_staff,
     "runeblade": runeblade, "demonbane_halberd": demonbane_halberd, "shooting_star_bow": shooting_star_bow,
     "twilight_greatsword": twilight_greatsword, "thunderlord_glaive": thunderlord_glaive,
-    "eight_elements_staff": eight_elements_staff, "longinus": longinus, "world_breaker": world_breaker,
+    "eight_elements_staff": eight_elements_staff, "longinus_reforged": longinus_reforged, "world_breaker": world_breaker,
     "nidhogg_fang": nidhogg_fang,
     "magic_wand": magic_wand,
 }

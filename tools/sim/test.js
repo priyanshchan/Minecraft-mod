@@ -2274,7 +2274,7 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   const arms = await import("./arms.js");
   const divine = await import("./divine.js");
   const g = mkPlayer("godhand"); const pg2 = rpg.profileOf(g); g.dimension.mobs = [];
-  let hand = "overlord:longinus"; let worn = {};
+  let hand = "overlord:longinus_reforged"; let worn = {};
   g.getComponent = ((base) => (c) => (c === "minecraft:equippable" ? { getEquipment: (slot) => (slot === "Mainhand" ? (hand ? { typeId: hand } : undefined) : worn[slot] ? { typeId: worn[slot] } : undefined) } : base(c)))(g.getComponent);
   g.applyKnockback = () => {}; g.startItemCooldown = () => {}; g.isSneaking = false;
   const foe = (x, z, hp = 200, fam = ["monster"]) => { const m = mob("minecraft:zombie", hp, fam); Object.assign(m, { id: `d${Math.random()}`, location: { x, y: 64, z }, tags: new Set(), afflicted: [], burning: 0,
@@ -2282,21 +2282,21 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
     applyDamage(n) { m.health.currentValue = Math.max(0, m.health.currentValue - n); } }); return m; };
   const blow = (victim, damage = 10) => world.afterEvents.entityHurt.fire({ hurtEntity: victim, damage, damageSource: { damagingEntity: g, cause: "entityAttack" } });
   // ranks and the levels they ask
-  assert.equal(arms.rankName("longinus"), "God-tier"); assert.equal(arms.rankName("seraph"), "Super-tier"); assert.equal(arms.rankName("razor_edge"), "");
-  for (const key of ["twilight_greatsword", "thunderlord_glaive", "eight_elements_staff", "longinus", "world_breaker", "nidhogg_fang"]) {
+  assert.equal(arms.rankName("longinus_reforged"), "God-tier"); assert.equal(arms.rankName("seraph"), "Super-tier"); assert.equal(arms.rankName("razor_edge"), "");
+  for (const key of ["twilight_greatsword", "thunderlord_glaive", "eight_elements_staff", "longinus_reforged", "world_breaker", "nidhogg_fang"]) {
     assert.ok(arms.WEAPONS[key] && arms.NEW_ARTS[key], key); assert.ok(arms.DIVINE[key] >= 70, key);
   }
   // below level 80, Longinus is only a spear
   pg2.level = 60; const prey = foe(0, 3, 40); g.aimed = [prey]; g.dimension.mobs = [prey];
-  assert.equal(arms.useWeaponArt(g, "overlord:longinus"), true); assert.ok(g.bar.includes("level 80"), g.bar); assert.equal(prey.health.currentValue, 40);
+  assert.equal(arms.useWeaponArt(g, "overlord:longinus_reforged"), true); assert.ok(g.bar.includes("level 80"), g.bar); assert.equal(prey.health.currentValue, 40);
   const weak = foe(0, 2, 100); blow(weak, 10); assert.ok(!arms.worthy(g, "nidhogg_fang"));
   // at level 80: Erasure ends a lesser foe, and takes a quarter from a great one
-  pg2.level = 80; arms.useWeaponArt(g, "overlord:longinus"); assert.equal(prey.health.currentValue, 0, "erased");
-  advance(1900); const titan = foe(0, 4, 800); g.aimed = [titan]; g.dimension.mobs = [titan]; arms.useWeaponArt(g, "overlord:longinus"); assert.equal(titan.health.currentValue, 600);
-  assert.ok(g.bar.includes("reels")); arms.useWeaponArt(g, "overlord:longinus"); assert.ok(g.bar.includes("Recharging"), "a long wait between erasures");
+  pg2.level = 80; arms.useWeaponArt(g, "overlord:longinus_reforged"); assert.equal(prey.health.currentValue, 0, "erased");
+  advance(1900); const titan = foe(0, 4, 800); g.aimed = [titan]; g.dimension.mobs = [titan]; arms.useWeaponArt(g, "overlord:longinus_reforged"); assert.equal(titan.health.currentValue, 600);
+  assert.ok(g.bar.includes("reels")); arms.useWeaponArt(g, "overlord:longinus_reforged"); assert.ok(g.bar.includes("Recharging"), "a long wait between erasures");
   // Longinus's blows bite deeper into the undead
-  const ghoul = foe(0, 2, 200, ["monster", "undead"]); const man = foe(1, 2, 200); hand = "overlord:longinus";
-  arms.divineTrait(g, ghoul, 20, "longinus"); arms.divineTrait(g, man, 20, "longinus"); assert.equal(ghoul.health.currentValue, 195); assert.equal(man.health.currentValue, 200);
+  const ghoul = foe(0, 2, 200, ["monster", "undead"]); const man = foe(1, 2, 200); hand = "overlord:longinus_reforged";
+  arms.divineTrait(g, ghoul, 20, "longinus_reforged"); arms.divineTrait(g, man, 20, "longinus_reforged"); assert.equal(ghoul.health.currentValue, 195); assert.equal(man.health.currentValue, 200);
   // World Breaker: a 16-block severance, and its rift cuts twice more
   const line = [foe(0, 3), foe(0, 9), foe(0, 15)]; g.dimension.mobs = line; arms.useWeaponArt(g, "overlord:world_breaker"); assert.ok(line.every((m) => m.health.currentValue === 155));
   advance(25); assert.ok(line.every((m) => m.health.currentValue === 135), String(line.map((m) => m.health.currentValue)));
@@ -2306,7 +2306,7 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   assert.ok(ring.every((m) => m.health.currentValue === 182)); assert.ok(g.health.currentValue > 4 && g.effects.has("absorption"));
   g.health.currentValue = 10; arms.divineTrait(g, foe(0, 2), 20, "nidhogg_fang"); assert.equal(g.health.currentValue, 14);
   // super-tier at level 70: the Twilight Cross, the Thunder Lord, the Eight Elements
-  pg2.level = 70; assert.ok(!arms.worthy(g, "longinus") && arms.worthy(g, "twilight_greatsword"));
+  pg2.level = 70; assert.ok(!arms.worthy(g, "longinus_reforged") && arms.worthy(g, "twilight_greatsword"));
   const front = foe(0, 3); g.dimension.mobs = [front]; arms.useWeaponArt(g, "overlord:twilight_greatsword"); assert.equal(front.health.currentValue, 176); assert.ok(front.afflicted.includes("wither"));
   g.dimension.mobs = []; arms.useWeaponArt(g, "overlord:thunderlord_glaive"); assert.ok(g.bar.includes("No foe"));
   const storm = [foe(5, 5), foe(-5, 5), foe(8, 0)]; g.dimension.mobs = storm; arms.useWeaponArt(g, "overlord:thunderlord_glaive"); advance(10); assert.ok(storm.every((m) => m.health.currentValue === 178));

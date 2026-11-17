@@ -2518,7 +2518,7 @@ def all_item_icons():
         "twilight_greatsword": blade_icon("#1a1424", "#0c0a10", GOLD, "#c070ff", "#3a2a52", "#1a1424", length=11, glow="#e0b0ff"),
         "thunderlord_glaive": lance_of("#2a2e36", "#14161a", "#ffe94a", "#fff6b0", "#b8a020", "#ffffff", collar="#3ed0ff"),
         "eight_elements_staff": staff_of("#e8ecf4", "#a8b0c0"),
-        "longinus": lance_of("#f4f0e6", "#c8c2b4", "#ffffff", "#fff6c8", "#c9a227", "#fff0a0"),
+        "longinus_reforged": lance_of("#f4f0e6", "#c8c2b4", "#ffffff", "#fff6c8", "#c9a227", "#fff0a0"),
         "world_breaker": blade_icon("#f4f0e6", "#c8c2b4", "#3f7fe0", "#ffffff", "#9fd8ff", "#4a6aa8", length=11, glow="#d0f0ff"),
         "nidhogg_fang": blade_icon("#2a1a10", "#140c08", "#5a1f8c", "#e9e2cc", "#9cff6a", "#3a2a1a", length=6, glow="#b6ff4a"),
         **{f"seraph_{p}": fn(SERAPH_PAL) for p, fn in (("helmet", helmet), ("chestplate", chestplate), ("leggings", leggings), ("boots", boots))},

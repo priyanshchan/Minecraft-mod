@@ -273,8 +273,9 @@ The inventory icon stays as before.
 
 - **Glow:** runes, edges, gems and orbs are drawn lit, so they glow at night and in caves.
 - **Auras:** in third person, weapons of an element trail motes of its colour from their tips.
-- **Holding:** blades, axes and hammers are held forward and up like a vanilla sword; staves upright; the rifle
-  levelled; gauntlets on the hand. Every swing, art and finisher animation moves the model with the arm.
+- **Holding:** every weapon - blades, axes, hammers, spears, staves and the bow - is held the same way, forward
+  and up like a vanilla sword (since v10.0.1); the rifle is levelled and gauntlets are worn on the hand. Every
+  swing, art and finisher animation moves the model with the arm.
 - **New techniques** for every add-on weapon:
   - **Plunging Strike:** strike while falling to slam down on everything within 3.5 blocks of the target. The
     harder you fall, the harder it hits, and foes are thrown up.
@@ -1247,7 +1248,7 @@ below that their arts, on-hit powers and set bonuses do nothing (the Arsenal pag
 - **Super-tier weapons:** the **Greatsword of the Twilight Hero** (Twilight Cross), the **Glaive of the Thunder
   Lord** (Wrath of the Thunder Lord) and the **Staff of the Eight Elements** (+30% spell power; Elemental
   Convergence).
-- **God-tier weapons:** **Longinus** (Erasure: erases the foe you look at; a boss loses a quarter of its life),
+- **God-tier weapons:** **Longinus Reforged** (Erasure: erases the foe you look at; a boss loses a quarter of its life),
   **World Breaker** (World Severance: a 16-block cut and a rift) and the **Fang of Nidhogg** (World-Eater's Bite:
   drains every foe near you).
 - **Seraph's Holy Plate** (super-tier, upgraded from Platinum): Resistance II, Regeneration and Fire
