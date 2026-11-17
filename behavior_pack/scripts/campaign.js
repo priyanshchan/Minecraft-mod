@@ -9,7 +9,7 @@
 // Finishing the tenth crowns the player and lets them found the Sorcerer Kingdom (kingdom.js).
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { giveItem, grantXp, notify, profileOf, registerMenu, touch } from "./rpg.js";
+import { giveItem, grantXp, notify, profileOf, registerMenu, showTitle, touch } from "./rpg.js";
 import { inRaid } from "./raid.js";
 import * as fx from "./vfx.js";
 
@@ -360,7 +360,7 @@ export function foesOf(run) {
 /** @param {Player} player @param {string} title @param {string} subtitle @param {number} [stay] */
 function banner(player, title, subtitle, stay = 50) {
   try {
-    player.onScreenDisplay.setTitle(title, { subtitle, fadeInDuration: 5, stayDuration: stay, fadeOutDuration: 10 });
+    showTitle(player, title, { subtitle, fadeInDuration: 5, stayDuration: stay, fadeOutDuration: 10 });
   } catch {
     // the player left mid-tick
   }

@@ -9,7 +9,7 @@
 // moves leave burning, freezing or poisoned ground behind. A fallen boss pays out gear materials to
 // everyone who fought it, and the first time you defeat each boss a Codex of the Supreme Beings.
 import { world, system, EntityDamageCause } from "@minecraft/server";
-import { giveItem, notify, profileOf, touch } from "./rpg.js";
+import { giveItem, notify, profileOf, showTitle, touch } from "./rpg.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -296,7 +296,7 @@ function playersNear(boss, radius, at = boss.location) {
 function announce(boss, title, subtitle) {
   for (const player of playersNear(boss, 48)) {
     try {
-      player.onScreenDisplay.setTitle(title, { subtitle, fadeInDuration: 4, stayDuration: 40, fadeOutDuration: 10 });
+      showTitle(player, title, { subtitle, fadeInDuration: 4, stayDuration: 40, fadeOutDuration: 10 });
     } catch {
       // the player left
     }

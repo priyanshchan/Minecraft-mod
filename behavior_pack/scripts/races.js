@@ -8,7 +8,7 @@
 // changes the race (Reincarnation starts the new one from level 1).
 import { world, system, EntityDamageCause } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { hooks, notify, profileOf, registerMenu, restoreMana, spendMana, touch } from "./rpg.js";
+import { hooks, notify, profileOf, registerMenu, restoreMana, showTitle, spendMana, touch } from "./rpg.js";
 import { countItem, takeItem } from "./spells.js";
 import { foesNear, strike } from "./arms.js";
 import * as fx from "./vfx.js";
@@ -137,7 +137,7 @@ export function feedRace(player, amount) {
     const rank = rankOf(p.raceLv);
     try {
       if (rank > rankBefore) {
-        player.onScreenDisplay.setTitle(`${info.color}${info.ranks[rank]}`, { subtitle: `§7Your ${info.name} blood awakens`, fadeInDuration: 5, stayDuration: 60, fadeOutDuration: 15 });
+        showTitle(player, `${info.color}${info.ranks[rank]}`, { subtitle: `§7Your ${info.name} blood awakens`, fadeInDuration: 5, stayDuration: 60, fadeOutDuration: 15 });
         player.sendMessage(`§6[Race] §fYou became ${info.color}${info.ranks[rank]}§f!${rank === 1 ? ` §7Hold sneak and jump to take your ${info.form}.` : ""}`);
         fx.crown(player.dimension, player.location, info.element, 6);
       } else {
@@ -379,7 +379,7 @@ export function transform(player, now = system.currentTick) {
   fx.nova(player.dimension, { x: player.location.x, y: player.location.y + 1, z: player.location.z }, info.element, 4);
   fx.shake(player.dimension, player.location, 10, 0.25, 0.4);
   try {
-    player.onScreenDisplay.setTitle(`${info.color}${info.form}`, { subtitle: `§7${seconds} seconds`, fadeInDuration: 3, stayDuration: 30, fadeOutDuration: 10 });
+    showTitle(player, `${info.color}${info.form}`, { subtitle: `§7${seconds} seconds`, fadeInDuration: 3, stayDuration: 30, fadeOutDuration: 10 });
     player.playSound(race === "angel" ? "beacon.activate" : "mob.wither.spawn", { volume: 0.7, pitch: race === "angel" ? 1.2 : 1.6 });
   } catch {
     // cosmetic only

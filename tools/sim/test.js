@@ -2477,6 +2477,26 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   assert.equal(rpg.profileOf(r).barShare, true, "the player can choose to share the bar anyway");
   r.bar = ""; advance(60); assert.ok(r.bar.includes("Lv."), "and then the status bar is drawn");
   script.push(3); rpg.openMenu(r); await new Promise((res) => setTimeout(res, 20)); assert.equal(rpg.profileOf(r).barShare, false);
+  // Overcraft: the status goes out as hidden "ovl:" titles, shown by a panel in the top-left corner
+  const { hudMode } = await import("./hudmode.js");
+  hudMode.title = true; r.titles = []; r.onScreenDisplay.setTitle = (t) => r.titles.push(t); r.bar = "";
+  advance(40);
+  const sent = r.titles.filter((t) => t.startsWith("ovl:"));
+  assert.ok(sent.length >= 1 && sent.at(-1).includes("Lv.") && sent.at(-1).includes("\n§bMP"), `the status goes out as a tagged title: ${JSON.stringify(sent.at(-1))}`);
+  assert.equal(r.bar, "", "and never through the action bar");
+  advance(60); const settled = r.titles.length; advance(100); assert.equal(r.titles.length, settled, "an unchanged status is not sent again");
+  r.msgs.length = 0; rpg.notify(r, "§cNot enough mana");
+  assert.ok(r.titles.at(-1).includes("§cNot enough mana") && r.msgs.length === 0, "messages show in the panel, not in chat");
+  advance(80); assert.ok(!r.titles.at(-1).includes("Not enough mana"), "and leave it again");
+  r.addTag("zc_title_busy"); const busy = r.titles.length; rpg.notify(r, "§eSomething"); advance(30);
+  assert.equal(r.titles.length, busy, "nothing is sent while one of RSCraft's titles is on screen"); r.tags.delete("zc_title_busy");
+  rpg.showTitle(r, "§6The Boss", { fadeInDuration: 5, stayDuration: 40, fadeOutDuration: 10 }); const shownAt = r.titles.length;
+  rpg.notify(r, "§eAnother"); advance(40); assert.equal(r.titles.length, shownAt, "nor while Overlord's own title is on screen");
+  advance(40); rpg.notify(r, "§eAfter the title"); assert.ok(r.titles.at(-1).includes("After the title"), "after it, the status is sent again");
+  script.push(3); rpg.openMenu(r); await new Promise((res) => setTimeout(res, 20));
+  assert.equal(rpg.profileOf(r).hud, false); assert.equal(r.titles.at(-1), "ovl:", "hiding the status clears the panel");
+  script.push(3); rpg.openMenu(r); await new Promise((res) => setTimeout(res, 20)); assert.equal(rpg.profileOf(r).hud, true);
+  hudMode.title = false;
   ItemTypes.known.delete("zc:noob_heart"); rpg.forgetActionBarOwner(); assert.equal(rpg.actionBarOwner(), "");
   players.splice(players.indexOf(r), 1);
 }

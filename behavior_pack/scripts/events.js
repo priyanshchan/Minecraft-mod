@@ -10,7 +10,7 @@
 // is not won within its time, passes.
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { giveItem, grantXp, notify, profileOf, registerMenu, touch } from "./rpg.js";
+import { giveItem, grantXp, notify, profileOf, registerMenu, showTitle, touch } from "./rpg.js";
 import { countItem, takeItem } from "./spells.js";
 import * as fx from "./vfx.js";
 
@@ -150,7 +150,7 @@ export function proclaim(near, kind, now, random = Math.random) {
   tellAll(`§6[World Event] §e${info.name}! §f${info.tale}`);
   for (const p of world.getAllPlayers()) {
     try {
-      p.onScreenDisplay.setTitle(`§6${info.name}`, { subtitle: "§7A world event approaches", fadeInDuration: 10, stayDuration: 70, fadeOutDuration: 20 });
+      showTitle(p, `§6${info.name}`, { subtitle: "§7A world event approaches", fadeInDuration: 10, stayDuration: 70, fadeOutDuration: 20 });
       p.playSound("raid.horn", { volume: 1, pitch: 0.7 });
       if (inOverworld(p)) p.sendMessage(`§6[World Event] §fIt gathers ${Math.round(Math.hypot(event.at.x - p.location.x, event.at.z - p.location.z))} blocks to the ${heading(p.location, event.at)}. It begins in two minutes.`);
     } catch {
@@ -239,7 +239,7 @@ export function begin(event, now) {
   spawnWave(event, info.waves[0], false);
   for (const p of fighters(event)) {
     try {
-      p.onScreenDisplay.setTitle(`§c${info.name}`, { subtitle: `§7Wave 1/${info.waves.length}`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
+      showTitle(p, `§c${info.name}`, { subtitle: `§7Wave 1/${info.waves.length}`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
     } catch {
       // the player left
     }
@@ -292,7 +292,7 @@ export function win(event) {
     touch(player);
     paid[pid] = pay;
     try {
-      player.onScreenDisplay.setTitle(`§6${info.name}`, { subtitle: "§eVictory!", fadeInDuration: 5, stayDuration: 60, fadeOutDuration: 15 });
+      showTitle(player, `§6${info.name}`, { subtitle: "§eVictory!", fadeInDuration: 5, stayDuration: 60, fadeOutDuration: 15 });
       player.sendMessage(`§6[World Event] §fVictory! Your score: §e${score}§f${pid === best && score > 0 ? " §6(the best!)" : ""}. Reward: §6${pay.medals} Medals of Valor§f, §6${pay.coins} Gold Coins§f, §a${pay.xp} XP§f.`);
       player.playSound("random.totem", { volume: 1, pitch: 1 });
     } catch {
@@ -392,7 +392,7 @@ export function tick(now, random = Math.random) {
     spawnWave(event, info.boss, true);
     for (const p of fighters(event)) {
       try {
-        p.onScreenDisplay.setTitle("§4The final battle", { subtitle: `§7${info.name}`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
+        showTitle(p, "§4The final battle", { subtitle: `§7${info.name}`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
       } catch {
         // the player left
       }
