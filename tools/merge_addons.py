@@ -4,7 +4,10 @@
 Experimental (branch experimental-merge). It never stores or publishes anyone else's files: you pass the
 add-ons in, and the combined file is written to dist/merged/, which git ignores.
 
-    python3 -I tools/merge_addons.py OUT.mcaddon OVERLORD.mcaddon OTHER.mcaddon [OTHER.mcaddon ...]
+    python3 -I tools/merge_addons.py [--set NAME] OUT.mcaddon OVERLORD.mcaddon OTHER.mcaddon [OTHER.mcaddon ...]
+
+--set NAME makes a separate combined set (for example "hardcore" for the Hardcore build): its packs get ids and
+names of their own, so it installs beside another combined set built from the same add-ons.
 
 What it does:
 - Every pack keeps its own folder and its own scripts. A pack can run only one version of the script API, and
@@ -93,11 +96,11 @@ def read_addon(path: str, label: str) -> list[Pack]:
     return packs
 
 
-def new_id(old: str) -> str:
-    return str(uuid.uuid5(SPACE, f"merged:{old.lower()}"))
+def new_id(old: str, tag: str = "") -> str:
+    return str(uuid.uuid5(SPACE, f"merged:{tag + ':' if tag else ''}{old.lower()}"))
 
 
-def merge(out: str, inputs: list[tuple[str, str]]):
+def merge(out: str, inputs: list[tuple[str, str]], tag: str = ""):
     addons = [(label, read_addon(path, label)) for label, path in inputs]
     overlord = addons[0][1]
     report = []
@@ -128,9 +131,9 @@ def merge(out: str, inputs: list[tuple[str, str]]):
     remap = {}
     for _label, packs in addons:
         for pack in packs:
-            remap[pack.uuid] = new_id(pack.uuid)
+            remap[pack.uuid] = new_id(pack.uuid, tag)
             for module in pack.manifest.get("modules", []):
-                remap[module["uuid"]] = new_id(module["uuid"])
+                remap[module["uuid"]] = new_id(module["uuid"], tag)
     for label, packs in addons:
         for pack in packs:
             header = pack.manifest["header"]
@@ -143,7 +146,8 @@ def merge(out: str, inputs: list[tuple[str, str]]):
             name = header.get("name", pack.folder)
             if name == "pack.name":  # named in its language file
                 name = pack.folder
-            header["name"] = re.sub(r"(\s*\[(BP|RP)\])?$", lambda m: f" (merged){m.group(0)}", name, count=1)
+            mark = f" (merged, {tag})" if tag else " (merged)"
+            header["name"] = re.sub(r"(\s*\[(BP|RP)\])?$", lambda m: f"{mark}{m.group(0)}", name, count=1)
             subs = pack.manifest.get("subpacks")
             if subs:
                 subs.sort(key=lambda s: s.get("folder_name") != "normal")
@@ -192,10 +196,17 @@ def main():
     if len(sys.argv) < 4:
         print(__doc__)
         return 1
-    out, paths = sys.argv[1], sys.argv[2:]
+    args = sys.argv[1:]
+    tag = ""
+    if args[:1] == ["--set"]:
+        tag, args = re.sub(r"[^a-z0-9]+", "-", args[1].lower()).strip("-"), args[2:]
+    if len(args) < 3:
+        print(__doc__)
+        return 1
+    out, paths = args[0], args[1:]
     labels = ["Overlord"] + [re.sub(r"[^A-Za-z0-9]+", "", PurePosixPath(p).stem.split("-", 1)[-1])[:24] or f"Addon{i}"
                              for i, p in enumerate(paths[1:], 1)]
-    every, report = merge(out, list(zip(labels, paths)))
+    every, report = merge(out, list(zip(labels, paths)), tag)
     for line in report:
         print(" ", line)
     for pack in every:
