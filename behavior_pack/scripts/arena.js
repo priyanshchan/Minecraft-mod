@@ -4,7 +4,7 @@
 // Go Gin, the Martial Lord. Winning pays Gold Coins and XP.
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { giveItem, grantXp, notify, profileOf, questEvent } from "./rpg.js";
+import { giveItem, grantXp, notify, profileOf, questEvent, showTitle } from "./rpg.js";
 import { countItem } from "./spells.js";
 import * as fx from "./vfx.js";
 
@@ -84,7 +84,7 @@ function sendOut(player, bout) {
   }
   bout.deadline = system.currentTick + ROUND_SECONDS * TICKS;
   try {
-    player.onScreenDisplay.setTitle(`§6Round ${bout.round + 1}/${ROUNDS[bout.tier].length}`, { fadeInDuration: 5, stayDuration: 40, fadeOutDuration: 10 });
+    showTitle(player, `§6Round ${bout.round + 1}/${ROUNDS[bout.tier].length}`, { fadeInDuration: 5, stayDuration: 40, fadeOutDuration: 10 });
     player.playSound("raid.horn", { volume: 1, pitch: 1.1 });
   } catch {
     // cosmetic only
@@ -124,7 +124,7 @@ function win(player, bout) {
   if (prize) giveItem(player, id("depiction_of_nature"), 1);
   fx.dome(bout.dimension, bout.origin, "holy");
   try {
-    player.onScreenDisplay.setTitle("§6Victory!", { subtitle: `§e${purse.coins} Gold Coins, ${purse.xp} XP`, fadeInDuration: 5, stayDuration: 60, fadeOutDuration: 10 });
+    showTitle(player, "§6Victory!", { subtitle: `§e${purse.coins} Gold Coins, ${purse.xp} XP`, fadeInDuration: 5, stayDuration: 60, fadeOutDuration: 10 });
     player.sendMessage(
       `§6[Arena] §fThe crowd roars! Purse: §6${purse.coins} Gold Coins§f, §a${purse.xp} XP§f${purse.crests ? ", a Guardian Crest" : ""}${prize ? " - and the Emperor's prize, the §dDepiction of Nature and Society§f" : ""}.`
     );

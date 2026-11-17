@@ -3,7 +3,7 @@
 // player. Clearing them all pays out coins, crystals and XP; dying, leaving the area
 // or running out of time fails the raid.
 import { world, system } from "@minecraft/server";
-import { giveItem, grantXp, notify, profileOf, questEvent } from "./rpg.js";
+import { giveItem, grantXp, notify, profileOf, questEvent, showTitle } from "./rpg.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -81,7 +81,7 @@ function tierFor(level) {
  */
 function banner(player, title, subtitle) {
   try {
-    player.onScreenDisplay.setTitle(title, { subtitle, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
+    showTitle(player, title, { subtitle, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
   } catch {
     // player left mid-tick
   }

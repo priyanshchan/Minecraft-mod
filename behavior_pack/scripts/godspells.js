@@ -14,7 +14,7 @@
 // - Cataclysm: the sky darkens over the place the caster points at, thirty meteors rain down across
 //   it, and then one colossal meteor falls, leaving burning ground and a shockwave out to 26 blocks.
 import { world, system, EntityDamageCause } from "@minecraft/server";
-import { notify, restoreMana } from "./rpg.js";
+import { notify, restoreMana, showTitle } from "./rpg.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -123,7 +123,7 @@ function playersNear(dimension, at, radius) {
 function proclaim(caster, name, line, rank = "God-tier") {
   for (const p of playersNear(caster.dimension, caster.location, 72)) {
     try {
-      p.onScreenDisplay.setTitle(name, { subtitle: line, fadeInDuration: 6, stayDuration: 50, fadeOutDuration: 20 });
+      showTitle(p, name, { subtitle: line, fadeInDuration: 6, stayDuration: 50, fadeOutDuration: 20 });
     } catch {
       // the player left
     }

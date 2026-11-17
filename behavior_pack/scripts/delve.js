@@ -9,7 +9,7 @@
 // dungeon's own reward and leads back up. Entering again later, with nobody inside, finds it restored. No
 // two dungeons are ever built over one another, and none can be entered from inside another.
 import { world, system, EntityDamageCause, GameMode } from "@minecraft/server";
-import { giveItem, grantXp, notify, profileOf, touch } from "./rpg.js";
+import { giveItem, grantXp, notify, profileOf, showTitle, touch } from "./rpg.js";
 import { Builder, campAt, stockChests } from "./structures.js";
 import { tombOf, floorAt as tombFloorAt } from "./dungeon.js";
 import * as fx from "./vfx.js";
@@ -142,7 +142,7 @@ function alive(e) {
 function title(players, text, sub) {
   for (const p of players) {
     try {
-      p.onScreenDisplay.setTitle(text, { subtitle: sub, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 15 });
+      showTitle(p, text, { subtitle: sub, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 15 });
     } catch {
       // the player left
     }

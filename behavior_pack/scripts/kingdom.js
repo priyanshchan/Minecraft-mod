@@ -12,7 +12,7 @@
 // for the whole world, so two rulers can never hold the same camp.
 import { world, system } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
-import { giveItem, grantXp, notify, profileOf, registerMenu, touch } from "./rpg.js";
+import { giveItem, grantXp, notify, profileOf, registerMenu, showTitle, touch } from "./rpg.js";
 import { countItem, takeItem } from "./spells.js";
 import { Builder, campAt, claim, claimOf, defendersLeft, isHostile, regionKey, stockChests, unclaim } from "./structures.js";
 import { crowned } from "./campaign.js";
@@ -277,7 +277,7 @@ export function found(player, name) {
   fx.nova(player.dimension, { x: at.x + 0.5, y: at.y + 1, z: at.z + 0.5 }, "dark", 10);
   fx.pillar(player.dimension, { x: at.x + 0.5, y: at.y, z: at.z - 6.5 }, "holy", 9);
   try {
-    player.onScreenDisplay.setTitle(`§5${realm.name}`, { subtitle: "§6A new kingdom rises", fadeInDuration: 5, stayDuration: 70, fadeOutDuration: 15 });
+    showTitle(player, `§5${realm.name}`, { subtitle: "§6A new kingdom rises", fadeInDuration: 5, stayDuration: 70, fadeOutDuration: 15 });
     player.playSound("random.totem", { volume: 1, pitch: 0.8 });
   } catch {
     // cosmetic only
@@ -321,7 +321,7 @@ export function upgrade(player) {
     fx.pillar(player.dimension, { x: realm.x + Math.cos(a) * next.radius * 0.6, y: realm.y, z: realm.z + Math.sin(a) * next.radius * 0.6 }, "dark", 8);
   }
   try {
-    player.onScreenDisplay.setTitle(`§5${next.name}`, { subtitle: `§6${realm.name} grows`, fadeInDuration: 5, stayDuration: 60, fadeOutDuration: 15 });
+    showTitle(player, `§5${next.name}`, { subtitle: `§6${realm.name} grows`, fadeInDuration: 5, stayDuration: 60, fadeOutDuration: 15 });
   } catch {
     // cosmetic only
   }
@@ -526,7 +526,7 @@ function spawnWave(siege) {
     }
   }
   try {
-    siege.ruler.onScreenDisplay.setTitle(`§c${siege.foe.name}`, { subtitle: `§7Wave ${siege.wave + 1}/${siege.foe.waves.length} at ${siege.name}`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
+    showTitle(siege.ruler, `§c${siege.foe.name}`, { subtitle: `§7Wave ${siege.wave + 1}/${siege.foe.waves.length} at ${siege.name}`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
     siege.ruler.playSound("raid.horn", { volume: 1, pitch: 0.9 });
   } catch {
     // cosmetic only
@@ -594,7 +594,7 @@ export function loseSiege(siege, reason) {
   }
   touch(player);
   try {
-    player.onScreenDisplay.setTitle("§4The invaders prevail", { subtitle: `§7${reason}`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
+    showTitle(player, "§4The invaders prevail", { subtitle: `§7${reason}`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
     player.sendMessage(`§6[Kingdom] §c${siege.foe.name} prevailed at ${siege.name}: ${reason}. ${what}`);
   } catch {
     // the player left
@@ -613,7 +613,7 @@ function winSiege(siege) {
   realm.treasury += spoils;
   touch(player);
   try {
-    player.onScreenDisplay.setTitle("§6The realm stands", { subtitle: `§e${siege.foe.name} are routed`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
+    showTitle(player, "§6The realm stands", { subtitle: `§e${siege.foe.name} are routed`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
     player.sendMessage(`§6[Kingdom] §f${siege.name} held against ${siege.foe.name}! §6+${spoils} Gold Coins§f to the treasury, §d+1 renown§f.`);
     player.playSound("random.totem", { volume: 1, pitch: 1.1 });
   } catch {

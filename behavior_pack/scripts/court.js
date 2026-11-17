@@ -9,7 +9,7 @@
 // together and every invasion repelled, and makes a companion's move stronger.
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { giveItem, notify, profileOf, touch } from "./rpg.js";
+import { giveItem, notify, profileOf, showTitle, touch } from "./rpg.js";
 import { realmHooks, realmOf } from "./kingdom.js";
 import { foesNear, strike } from "./arms.js";
 import * as fx from "./vfx.js";
@@ -120,7 +120,7 @@ export function swear(player, key) {
   sworn(realm)[key] = { loyalty: 0 };
   touch(player);
   try {
-    player.onScreenDisplay.setTitle(`§d${g.name}`, { subtitle: `§f"${g.oath}"`, fadeInDuration: 5, stayDuration: 80, fadeOutDuration: 15 });
+    showTitle(player, `§d${g.name}`, { subtitle: `§f"${g.oath}"`, fadeInDuration: 5, stayDuration: 80, fadeOutDuration: 15 });
     player.sendMessage(`§6[Court] §d${g.name}§f, ${g.title}, kneels: §7"${g.oath}" §fPost: §e${g.role}§f - ${g.roleHelp}.`);
     player.playSound("random.totem", { volume: 0.8, pitch: 1.2 });
   } catch {

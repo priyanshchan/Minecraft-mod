@@ -12,7 +12,7 @@
 // each hall holds treasure. Clearing the Throne Room - Albedo, then Ainz himself - leads back to the
 // surface with the Tomb's rewards. Entering again later, with nobody inside, finds the Tomb restored.
 import { world, system, EntityDamageCause, GameMode } from "@minecraft/server";
-import { giveItem, grantXp, notify, profileOf, touch } from "./rpg.js";
+import { giveItem, grantXp, notify, profileOf, showTitle, touch } from "./rpg.js";
 import { record } from "./delve.js";
 import { Builder, campAt, stockChests } from "./structures.js";
 import * as fx from "./vfx.js";
@@ -235,7 +235,7 @@ function playersOn(dimension, tomb, index) {
 function title(players, title, sub) {
   for (const p of players) {
     try {
-      p.onScreenDisplay.setTitle(title, { subtitle: sub, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 15 });
+      showTitle(p, title, { subtitle: sub, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 15 });
     } catch {
       // the player left
     }

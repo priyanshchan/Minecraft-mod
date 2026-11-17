@@ -5,6 +5,7 @@
 import { world, system, DisplaySlotId, EntityDamageCause, EquipmentSlot, ItemStack, ItemTypes } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import * as skills from "./skills.js";
+import { hudMode } from "./hudmode.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -513,6 +514,73 @@ export function mayUseActionBar(player) {
 /** The last message each player was sent in chat instead, so the same one is not repeated at once. */
 const lastNote = new Map();
 
+// ------------------------------------------------------------ the title HUD (Overcraft)
+
+/** RSCraft's tag on a player while one of its titles is on screen: leave the titles alone then. */
+const TITLE_BUSY_TAG = "zc_title_busy";
+/** The tag that marks Overlord's status titles; the Overcraft screen layout hides them and shows them top-left. */
+export const TITLE_HUD_MARK = "ovl:";
+/** Tick until which a real title Overlord showed is still on screen, per player. */
+const titleHold = new Map();
+/** The last status title sent to each player, and when. */
+const titleSent = new Map();
+/** A short message shown under the status for a moment, per player. */
+const hudNote = new Map();
+
+/** Whether this player's status goes out as hidden titles (an Overcraft build beside RSCraft). @param {import("@minecraft/server").Player} player */
+export function titleMode(player) {
+  return hudMode.title && !mayUseActionBar(player);
+}
+
+/**
+ * Shows a title, and keeps the status titles from replacing it while it is on screen. Every title Overlord shows goes
+ * through here.
+ * @param {import("@minecraft/server").Player} player @param {string} title
+ * @param {{ subtitle?: string, fadeInDuration?: number, stayDuration?: number, fadeOutDuration?: number }} [options]
+ */
+export function showTitle(player, title, options = {}) {
+  const ticks = (options.fadeInDuration ?? 10) + (options.stayDuration ?? 70) + (options.fadeOutDuration ?? 20);
+  titleHold.set(player.id, system.currentTick + ticks);
+  player.onScreenDisplay.setTitle(title, /** @type {any} */ (options));
+}
+
+/** The status as lines for the top-left panel. @param {import("@minecraft/server").Player} player */
+export function statusLines(player) {
+  const p = profileOf(player);
+  if (!p.hud) return [];
+  const parts = statusText(player).split(" §7| ").filter(Boolean);
+  const lines = [parts[0], parts.slice(1, 3).join(" §7| "), ...parts.slice(3)].filter(Boolean);
+  const note = hudNote.get(player.id);
+  if (note && system.currentTick < note.until) lines.push(`§r${note.text}`);
+  return lines;
+}
+
+/**
+ * Sends the status as a hidden title, when it has changed (or every ten seconds to be safe), at most twice a second,
+ * and never over a title that is on screen. Returns whether it sent one.
+ * @param {import("@minecraft/server").Player} player @param {boolean} [urgent] a new message: skip the twice-a-second limit
+ */
+export function sendTitleHud(player, urgent = false) {
+  const now = system.currentTick;
+  if (now < (titleHold.get(player.id) ?? 0)) return false;
+  try {
+    if (player.hasTag(TITLE_BUSY_TAG)) return false;
+  } catch {
+    return false;
+  }
+  const text = TITLE_HUD_MARK + statusLines(player).join("\n");
+  const last = titleSent.get(player.id);
+  if (last && last.text === text && now - last.at < 200) return false;
+  if (last && now - last.at < 10 && !urgent) return false;
+  try {
+    player.onScreenDisplay.setTitle(text, { fadeInDuration: 0, stayDuration: 2, fadeOutDuration: 0 });
+  } catch {
+    return false;
+  }
+  titleSent.set(player.id, { text, at: now });
+  return true;
+}
+
 /**
  * Shows a short message on the action bar (and pauses the HUD so it stays readable). When another add-on draws its
  * HUD there, the message goes to chat instead, and the same message is not repeated within three seconds.
@@ -521,6 +589,11 @@ const lastNote = new Map();
  */
 export function notify(player, text) {
   try {
+    if (titleMode(player) && profileOf(player).hud) {
+      hudNote.set(player.id, { text, until: system.currentTick + 3 * TICKS });
+      sendTitleHud(player, true);
+      return;
+    }
     if (!mayUseActionBar(player)) {
       const last = lastNote.get(player.id);
       if (last && last.text === text && system.currentTick - last.at < 3 * TICKS) return;
@@ -568,6 +641,10 @@ export function statusText(player) {
 /** @param {import("@minecraft/server").Player} player */
 function drawHud(player) {
   const p = profileOf(player);
+  if (titleMode(player)) {
+    sendTitleHud(player); // when the status is hidden, this sends an empty one once, which clears the panel
+    return;
+  }
   if (!p.hud || !mayUseActionBar(player) || system.currentTick < (hudHold.get(player.id) ?? 0)) return;
   try {
     player.onScreenDisplay.setActionBar(statusText(player));
@@ -1179,12 +1256,12 @@ export function openMenu(player) {
         `Mana: §b${Math.floor(p.mana)}/${maxMana(p)}§r\n` +
         STAT_KEYS.map((k) => `${STATS[k].color}${STATS[k].name}: ${p[k]}§r`).join("   ") +
         `\nUnspent stat points: §d${p.points}§r` +
-        (owner && !p.barShare ? `\n\n§7${owner} draws its HUD where Overlord's status bar goes, so it is shown here:§r\n${statusText(player)}§r` : "")
+        (owner && !p.barShare && !hudMode.title ? `\n\n§7${owner} draws its HUD where Overlord's status bar goes, so it is shown here:§r\n${statusText(player)}§r` : "")
     )
     .button(`Spend stat points (${p.points})`)
     .button("Choose class")
     .button(p.quest ? "Guild quest (in progress)" : "Guild quests")
-    .button(owner ? (p.barShare ? `Give the status bar back to ${owner}` : `Show status bar (flickers with ${owner})`) : p.hud ? "Hide status bar" : "Show status bar")
+    .button(owner && hudMode.title ? (p.hud ? "Hide status (top-left)" : "Show status (top-left)") : owner ? (p.barShare ? `Give the status bar back to ${owner}` : `Show status bar (flickers with ${owner})`) : p.hud ? "Hide status bar" : "Show status bar")
     .button("How it works")
     .button("Bestiary");
   for (const extra of extraMenus) form.button(extra.label(player));
@@ -1193,6 +1270,13 @@ export function openMenu(player) {
     else if (choice === 1) openClasses(player);
     else if (choice === 2) openQuests(player);
     else if (choice === 3) {
+      if (owner && hudMode.title) {
+        p.hud = !p.hud;
+        save(player);
+        notify(player, p.hud ? "§7Status shown in the top-left corner" : "§7Status hidden");
+        if (!p.hud) sendTitleHud(player, true);
+        return;
+      }
       if (owner) {
         p.barShare = !p.barShare;
         p.hud = true;
