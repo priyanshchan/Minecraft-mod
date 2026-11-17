@@ -158,7 +158,27 @@ def png(texture_path: str):
     return RP / f"{texture_path}.png"
 
 
+def duplicate_keys():
+    """Keys written twice in one of the generator's dict literals: Python silently keeps only the last (v10.0.1)."""
+    import ast
+    found = []
+    for f in sorted((ROOT / "tools" / "gen").glob("*.py")):
+        for node in ast.walk(ast.parse(f.read_text(encoding="utf-8"))):
+            if not isinstance(node, ast.Dict):
+                continue
+            seen = {}
+            for k in node.keys:
+                if isinstance(k, ast.Constant) and isinstance(k.value, str):
+                    if k.value in seen:
+                        found.append(f"tools/gen/{f.name}:{k.lineno}: {k.value!r} is defined twice (also at line {seen[k.value]})")
+                    seen.setdefault(k.value, k.lineno)
+    return found
+
+
 def main():
+    for problem in duplicate_keys():
+        check(False, problem)
+
     # ------------------------------------------------------------- JSON + names
     for base in (BP, RP):
         for f in base.rglob("*"):
@@ -378,6 +398,11 @@ def main():
             # only an attachable named after the item replaces the flat item in the hand (v8.6.1)
             check(d["identifier"] == f"{NS}:{f.stem[len('weapon_'):]}" and "item" not in d,
                   f"{rel(f)}: a held weapon's attachable must be named after its item, or the flat item shows too")
+            # and the item must be held like a tool, or the game turns the model to another angle (v10.0.1)
+            item_file = BP / "items" / f"{f.stem[len('weapon_'):]}.json"
+            comps = load(item_file)["minecraft:item"]["components"] if item_file.is_file() else {}
+            check(comps.get("minecraft:hand_equipped") is True,
+                  f"{rel(f)}: its item is not hand_equipped, so it would be held at a different angle from the other weapons")
         modeled = any("/armor3d/" in t for t in d["textures"].values())  # 3D armour on players (v8.1)
         for tex in d["textures"].values():
             used_textures.add(tex)

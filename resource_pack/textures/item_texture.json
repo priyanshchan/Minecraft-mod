@@ -566,6 +566,9 @@
     "overlord_longinus": {
       "textures": "textures/items/overlord/longinus"
     },
+    "overlord_longinus_reforged": {
+      "textures": "textures/items/overlord/longinus_reforged"
+    },
     "overlord_magic_rifle": {
       "textures": "textures/items/overlord/magic_rifle"
     },

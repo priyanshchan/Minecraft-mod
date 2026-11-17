@@ -74,7 +74,7 @@
       "bones": {
         "weapon": {
           "rotation": [
-            70,
+            60,
             0,
             0
           ],
@@ -108,7 +108,7 @@
       "bones": {
         "weapon": {
           "rotation": [
-            55,
+            60,
             0,
             0
           ],
@@ -176,7 +176,7 @@
       "bones": {
         "weapon": {
           "rotation": [
-            25,
+            60,
             0,
             0
           ],
@@ -193,9 +193,9 @@
       "bones": {
         "weapon": {
           "rotation": [
-            165,
+            150,
             0,
-            -10
+            0
           ],
           "position": [
             0,

@@ -1,0 +1,35 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:longinus_reforged",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_longinus_reforged"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.longinus_reforged.name"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:damage": 24,
+      "minecraft:can_destroy_in_creative": false,
+      "minecraft:enchantable": {
+        "slot": "sword",
+        "value": 15
+      },
+      "minecraft:rarity": "epic",
+      "minecraft:glint": true,
+      "minecraft:cooldown": {
+        "category": "overlord_erasure",
+        "duration": 90.0
+      }
+    }
+  }
+}
