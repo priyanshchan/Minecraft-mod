@@ -166,11 +166,9 @@ function hurt(player, target, amount, element) {
   }
 }
 
-/** Where a spell leaves the caster: roughly the outstretched hand. @param {Player} player */
+/** Where a spell leaves the caster: the hand, low and to the right, never in front of the eyes (10.0.2). @param {Player} player */
 function hand(player) {
-  const head = player.getHeadLocation();
-  const dir = player.getViewDirection();
-  return { x: head.x + dir.x * 0.7, y: head.y - 0.25 + dir.y * 0.7, z: head.z + dir.z * 0.7 };
+  return fx.handOf(player);
 }
 
 /** Beam plus impact burst on a target point. @param {Player} player @param {Vector3} from @param {Vector3} at @param {Element} element @param {string} accent */
@@ -352,7 +350,7 @@ function healing(amount, radius) {
       fx.rise(player.dimension, ally.location, "holy", 0.8);
       fx.circle(player.dimension, ally.location, "holy", 1.0);
       fx.spiral(player.dimension, () => (ally.isValid ? ally.location : undefined), "holy", 0.8, 2);
-      particle(player.dimension, "minecraft:heart_particle", add(ally.location, { x: 0, y: 2, z: 0 }));
+      particle(player.dimension, "minecraft:heart_particle", add(ally.location, { x: 0, y: 2.7, z: 0 }));
     }
     if (radius > 0) fx.ring(player.dimension, player.location, "holy", radius);
     playSound(player.dimension, "random.orb", player.location, 0.9);
@@ -386,7 +384,7 @@ function drain(damage, healShare, mana) {
     fx.spark(player.dimension, at, "dark", 1.2);
     fx.beam(player.dimension, at, hand(player), "dark");
     fx.rise(player.dimension, player.location, "dark", 0.7);
-    fx.implode(player.dimension, add(player.location, { x: 0, y: 1, z: 0 }), "dark", 1.4);
+    fx.implode(player.dimension, add(player.location, { x: 0, y: 0.4, z: 0 }), "dark", 1.4);
     particle(player.dimension, SOUL, at);
     hurt(player, target, damage * power, "dark");
     const health = player.getComponent("minecraft:health");
@@ -477,7 +475,7 @@ function buff(effects, color = "none") {
 /** @param {Player} player */
 function castFireball(player) {
   const dir = player.getViewDirection();
-  const origin = add(player.getHeadLocation(), dir, 1.4);
+  const origin = add(fx.handOf(player), dir, 0.6);
   const ball = player.dimension.spawnEntity(id("fireball"), origin);
   const projectile = ball.getComponent("minecraft:projectile");
   const velocity = { x: dir.x * 1.8, y: dir.y * 1.8, z: dir.z * 1.8 };
@@ -710,8 +708,8 @@ export function resetCooldowns(player) {
 function wishUponAStar(player) {
   const d = player.dimension;
   fx.pose(player, "super");
-  fx.fall(d, player.location, "holy", 12);
-  fx.pillar(d, player.location, "holy", 16, 2);
+  fx.fall(d, { x: player.location.x + 2, y: player.location.y, z: player.location.z + 1 }, "holy", 12); // lands beside the caster, not through them
+  fx.crown(d, player.location, "holy", 16, 2);
   fx.dome(d, player.location, "holy");
   let allies = [player];
   try {
@@ -796,7 +794,7 @@ export function castSelected(player) {
   fx.castFx(player, spell.element, spell.tier, POSE[spell.key] ?? "point");
   if (maximized || surge) {
     // The spell visibly swells: a second, larger burst of its element at the caster's hand.
-    fx.nova(player.dimension, fx.handOf(player), spell.element, maximized ? 2.2 : 1.4);
+    fx.nova(player.dimension, player.location, spell.element, maximized ? 2.2 : 1.4); // at the feet, not in the face
   }
   if (spell.element === "holy") radiate(player, skills.value(prof, "radiance") * 2);
   ready.set(key, system.currentTick + Math.round(spell.cooldown * skills.cooldownFactor(prof) * (spell.tier >= SUPER ? skills.greatRecharge(prof) : 1) * TICKS));

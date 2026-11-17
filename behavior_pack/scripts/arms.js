@@ -196,6 +196,12 @@ function above(entity, dy = 1) {
   return { x: entity.location.x, y: entity.location.y + dy, z: entity.location.z };
 }
 
+/** Where a skull or sign looms over a player's foes: three blocks ahead and above, not over their head (10.0.2). @param {Player} player */
+function loom(player) {
+  const p = fx.frontOf(player, 3);
+  return { x: p.x, y: p.y + 1.2, z: p.z };
+}
+
 /** Flat facing of a player. @param {Player} player */
 function facing(player) {
   let view = { x: 0, y: 0, z: 1 };
@@ -476,7 +482,7 @@ export function finisher(player, victim, damage, kind, element) {
       strike(player, foe, damage * 0.7);
       fx.slash(d, above(foe), element, 1.3);
     }
-    for (let i = 0; i < 3; i++) system.runTimeout(() => fx.slash(d, fx.handOf(player, 1.6), element, 1.6 - i * 0.2), i * 2);
+    for (let i = 0; i < 3; i++) system.runTimeout(() => fx.slash(d, fx.frontOf(player, 2.4), element, 1.6 - i * 0.2), i * 2);
     fx.pose(player, "slash");
   } else if (kind === "greatsword") {
     for (const foe of foesNear(player, player.location, 3.5)) strike(player, foe, damage * 0.8);
@@ -552,9 +558,9 @@ export function tryAwaken(player) {
   gauges.set(player.id, 0);
   awake.set(player.id, system.currentTick + AWAKEN_TICKS);
   const d = player.dimension;
-  fx.pillar(d, player.location, element, 5);
-  fx.nova(d, above(player), element, 3);
-  fx.spiral(d, () => (player.isValid ? player.location : undefined), element, 1.1, 2.6);
+  fx.circle(d, player.location, element, 2.5); // round the feet, not up through the head (10.0.2)
+  fx.nova(d, player.location, element, 3);
+  fx.spiral(d, () => (player.isValid ? player.location : undefined), element, 1.8, 2.6);
   fx.shake(d, player.location, 8, 0.3, 0.4);
   fx.pose(player, "awaken");
   sound(player, "beacon.activate", 0.7);
@@ -580,7 +586,7 @@ export function useWeaponArt(player, item) {
   const d = player.dimension;
   const element = WEAPONS[key].element;
   const dir = facing(player);
-  const ahead = (/** @type {number} */ n) => add(above(player, 1.1), dir, n);
+  const ahead = (/** @type {number} */ n) => add(above(player, 0.95), dir, n); // chest height, so nothing forms in the face (10.0.2)
   if (key === "cavalier_lance") {
     for (const foe of foesInLine(player, 9)) {
       strike(player, foe, 13);
@@ -592,7 +598,7 @@ export function useWeaponArt(player, item) {
     } catch {
       // cannot be moved
     }
-    fx.beam(d, above(player, 1), ahead(9), "dark", 1.4);
+    fx.beam(d, fx.handOf(player), ahead(9), "dark", 1.4);
     fx.pose(player, "thrust");
     sound(player, "mob.wither.shoot", 0.8);
   } else if (key === "ghoulfang_sickle") {
@@ -637,7 +643,7 @@ export function useWeaponArt(player, item) {
         try {
           if (!foe.isValid) return;
           strike(player, foe, 12);
-          fx.beam(d, above(player, 1.5), above(foe, 1), "holy", 1);
+          fx.beam(d, fx.towards(player, foe.location), above(foe, 1), "holy", 1);
           fx.flash(d, above(foe, 1), "holy", 0.8);
         } catch {
           // gone
@@ -711,7 +717,7 @@ export function useWeaponArt(player, item) {
     const max = health?.effectiveMax ?? 20;
     const great = max >= 250;
     strike(player, foe, great ? Math.max(60, max * 0.25) : max * 4);
-    fx.beam(d, above(player, 1.3), above(foe, 1), "holy", 2);
+    fx.beam(d, fx.handOf(player), above(foe, 1), "holy", 2);
     fx.implode(d, above(foe, 1), "holy", 2);
     fx.pose(player, "thrust");
     sound(player, "random.totem", 0.6);
@@ -719,7 +725,7 @@ export function useWeaponArt(player, item) {
   } else if (key === "world_breaker") {
     const cut = () => foesInLine(player, 16);
     for (const foe of cut()) strike(player, foe, 45);
-    const from = above(player, 1.1);
+    const from = fx.handOf(player);
     const to = ahead(16);
     fx.beam(d, from, to, "arcane", 2.2);
     fx.shake(d, player.location, 16, 0.6, 0.5);
@@ -740,11 +746,11 @@ export function useWeaponArt(player, item) {
     for (const foe of foesNear(player, player.location, 7)) {
       strike(player, foe, 18);
       drawn += 18;
-      fx.beam(d, above(foe, 1), above(player, 1), "dark", 0.8);
+      fx.beam(d, above(foe, 1), fx.towards(player, foe.location), "dark", 0.8);
     }
     heal(player, drawn / 2);
     player.addEffect("absorption", 10 * TICKS, { amplifier: 1, showParticles: false });
-    fx.implode(d, above(player, 1), "dark", 7);
+    fx.implode(d, above(player, 0.4), "dark", 7);
     fx.pose(player, "summon");
     sound(player, "mob.wither.ambient", 0.7);
   } else if (key === "demonbane_halberd") {
@@ -811,7 +817,7 @@ export function useWeaponArt(player, item) {
     } catch {
       // cannot be moved
     }
-    fx.beam(d, above(player, 1), ahead(6), "ice", 1.2);
+    fx.beam(d, fx.handOf(player), ahead(6), "ice", 1.2);
     fx.pose(player, "draw");
     sound(player, "item.trident.riptide_1", 1.3);
   } else if (key === "death_knight_sword") {
@@ -820,7 +826,7 @@ export function useWeaponArt(player, item) {
       foe.addEffect("wither", 4 * TICKS, { amplifier: 1 });
     }
     fx.nova(d, player.location, "dark", 4);
-    fx.skull(d, above(player, 2.2), 1.2);
+    fx.skull(d, loom(player), 1.2);
     fx.shake(d, player.location, 8, 0.3, 0.3);
     fx.pose(player, "smash");
     sound(player, "mob.wither.shoot", 0.7);
@@ -870,7 +876,7 @@ export function useWeaponArt(player, item) {
       lift(foe, 0.5, player.location);
     }
     fx.beam(d, fx.handOf(player), ahead(6), "none", 1.6);
-    fx.spark(d, ahead(2), "none", 1.6);
+    fx.spark(d, ahead(3), "none", 1.6);
     fx.shake(d, player.location, 6, 0.25, 0.25);
     fx.pose(player, "thrust");
     sound(player, "mob.irongolem.hit", 0.7);
@@ -923,7 +929,7 @@ export function useWeaponArt(player, item) {
       lift(foe, 0.3, player.location);
       fx.slash(d, above(foe), "none", 1.5);
     }
-    fx.slash(d, ahead(2), "none", 2.2);
+    fx.slash(d, ahead(3), "none", 2.2);
     fx.shake(d, player.location, 8, 0.3, 0.3);
     fx.pose(player, "spin");
     sound(player, "mob.enderdragon.hit", 0.8);
@@ -958,7 +964,7 @@ export function armourArt(player, set) {
   const d = player.dimension;
   const dir = facing(player);
   const element = info.element;
-  const ahead = (/** @type {number} */ n) => add(above(player, 1.1), dir, n);
+  const ahead = (/** @type {number} */ n) => add(above(player, 0.95), dir, n); // chest height, so nothing forms in the face (10.0.2)
   if (set === "dark_warrior") {
     for (const foe of foesInLine(player, 6)) strike(player, foe, 10);
     try {
@@ -967,7 +973,7 @@ export function armourArt(player, set) {
       // cannot be moved
     }
     player.addEffect("resistance", 3 * TICKS, { amplifier: 1, showParticles: false });
-    fx.beam(d, above(player, 1), ahead(6), "dark", 1.5);
+    fx.beam(d, fx.handOf(player), ahead(6), "dark", 1.5);
     fx.pose(player, "thrust");
     sound(player, "mob.enderdragon.flap", 0.8);
   } else if (set === "world_champion") {
@@ -1027,7 +1033,9 @@ export function armourArt(player, set) {
         for (let i = 0; i < 4; i++) {
           const a = Math.random() * Math.PI * 2;
           const r = Math.random() * 3.5;
-          fx.fall(d, { x: target.x + Math.cos(a) * r, y: target.y, z: target.z + Math.sin(a) * r }, "acid", 6, 2);
+          const spot = { x: target.x + Math.cos(a) * r, y: target.y, z: target.z + Math.sin(a) * r };
+          if (Math.hypot(spot.x - player.location.x, spot.z - player.location.z) < 2.5) continue; // no arrow falls through the archer (10.0.2)
+          fx.fall(d, spot, "acid", 6, 2);
         }
         sound(player, "random.bow", 0.8 + wave * 0.1);
       }, wave * 6);
@@ -1054,13 +1062,13 @@ export function armourArt(player, set) {
       fx.rise(d, foe.location, "dark", 0.9);
     }
     fx.ring(d, player.location, "dark", 6);
-    fx.skull(d, above(player, 2.3), 1.3);
+    fx.skull(d, loom(player), 1.3);
     fx.pose(player, "summon");
     sound(player, "mob.skeleton.death", 0.6);
   } else if (set === "maid") {
     for (const foe of foesNear(player, player.location, 10).slice(0, 6)) {
       strike(player, foe, 10);
-      fx.beam(d, above(player, 1.2), above(foe, 1), "arcane", 0.6);
+      fx.beam(d, fx.towards(player, foe.location), above(foe, 1), "arcane", 0.6);
     }
     for (const ally of player.dimension.getPlayers({ location: player.location, maxDistance: 8 })) {
       ally.addEffect("speed", 8 * TICKS, { amplifier: 1, showParticles: false });
@@ -1090,7 +1098,7 @@ export function armourArt(player, set) {
     player.addEffect("strength", 10 * TICKS, { amplifier: 1, showParticles: false });
     fx.dome(d, player.location, "dark");
     fx.ring(d, player.location, "dark", 12);
-    fx.skull(d, above(player, 2.6), 1.6);
+    fx.skull(d, loom(player), 1.6);
     fx.pose(player, "raise");
     sound(player, "mob.wither.spawn", 0.8);
   } else if (set === "cavalier") {
@@ -1105,7 +1113,7 @@ export function armourArt(player, set) {
       // cannot be moved
     }
     player.addEffect("speed", 4 * TICKS, { amplifier: 1, showParticles: false });
-    fx.beam(d, above(player, 1), ahead(8), "dark", 1.2);
+    fx.beam(d, fx.handOf(player), ahead(8), "dark", 1.2);
     fx.pose(player, "thrust");
     sound(player, "item.trident.riptide_1", 0.7);
   } else if (set === "beasthide") {
@@ -1168,8 +1176,8 @@ export function techniques(player, victim, damage, element) {
   if (player.isSprinting && rested(player, "charge", TECHNIQUE_REST)) {
     const dir = facing(player);
     for (const foe of foesInLine(player, 5)) strike(player, foe, damage * 0.5);
-    fx.beam(d, above(player, 1), add(above(player, 1), dir, 5), element, 1.2);
-    for (let n = 1.5; n <= 5; n += 1.75) fx.slash(d, add(above(player, 1), dir, n), element, 1.1);
+    fx.beam(d, fx.handOf(player), add(above(player, 1), dir, 5), element, 1.2);
+    for (let n = 2.5; n <= 5.5; n += 1.5) fx.slash(d, add(above(player, 0.95), dir, n), element, 1.1);
     fx.pose(player, "thrust");
     sound(player, "item.trident.riptide_1", 1.2);
     notify(player, "§6Charging Strike!");
@@ -1315,18 +1323,18 @@ export function step(player, tick) {
       // A full set wraps its wearer in its own particles.
       const info = SETS[set];
       const a = (tick / TICKS) * 1.3;
-      fx.puff(d, info.particle, { x: player.location.x + Math.cos(a) * 0.6, y: player.location.y + 0.4 + (tick % 3) * 0.5, z: player.location.z + Math.sin(a) * 0.6 }, info.element, 0.7);
+      fx.puff(d, info.particle, { x: player.location.x + Math.cos(a) * 0.8, y: player.location.y + 0.3 + (tick % 3) * 0.3, z: player.location.z + Math.sin(a) * 0.8 }, info.element, 0.7);
     }
   }
   const key = heldWeapon(player);
   if (!key) return;
   const element = WEAPONS[key].element;
   if (isAwake(player)) {
-    fx.puff(d, "flame_linger", fx.handOf(player, 0.8), element, 0.8);
+    fx.puff(d, "flame_linger", above(player, 0.6), element, 0.8);
     fx.puff(d, "orbit", player.location, element, 0.9);
     fx.light(d, above(player, 1.2), 10, 22);
   } else if ((gauges.get(player.id) ?? 0) >= AWAKEN_FULL && tick % (2 * TICKS) === 0) {
-    fx.puff(d, "spark", fx.handOf(player, 0.8), element, 0.6);
+    fx.puff(d, "spark", above(player, 0.6), element, 0.6);
   }
 }
 

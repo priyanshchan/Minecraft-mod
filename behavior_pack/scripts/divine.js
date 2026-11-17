@@ -71,7 +71,7 @@ export function grace(player, now) {
       player.addEffect("absorption", 15 * TICKS, { amplifier: 3, showParticles: false });
       player.addEffect("resistance", 5 * TICKS, { amplifier: 3, showParticles: false });
       try {
-        fx.pillar(player.dimension, player.location, "dark", 8, 1.6);
+        fx.crown(player.dimension, player.location, "dark", 8, 1.6);
         fx.nova(player.dimension, player.location, "holy", 5);
       } catch {
         // cosmetic only
