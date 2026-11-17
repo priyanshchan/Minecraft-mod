@@ -21,11 +21,14 @@ What it does:
   - anything else is kept from the add-on given first on the command line and dropped from those after it
     (for example chest loot that two add-ons both replace).
   - Overlord itself must never lose a file: if one of its other files is shared, the merge stops.
+- Vanilla particles that Overlord's scripts use are never stripped: if another add-on redefines one (as
+  performance packs do, to hide it), that redefinition is dropped, so Overlord's effects still show.
 - A subpack folder named "normal" is moved to the front, so it is the one a world starts with.
 - Afterwards every manifest is checked: ids unique, every dependency present at the right version.
 """
 from __future__ import annotations
 
+import io
 import json
 import re
 import sys
@@ -75,17 +78,32 @@ class Pack:
         return self.manifest["header"]["version"]
 
 
-def read_addon(path: str, label: str) -> list[Pack]:
-    """The packs inside an .mcaddon (or .zip), each with its files."""
-    z = zipfile.ZipFile(path)
-    groups: dict[str, dict[str, bytes]] = {}
+def entries(z: zipfile.ZipFile, path: str):
+    """A zip's files as (path parts, bytes), refusing anything that would land outside it."""
     for info in z.infolist():
         if info.is_dir():
             continue
         name = PurePosixPath(info.filename)
-        if name.is_absolute() or ".." in name.parts or len(name.parts) < 2:
+        if name.is_absolute() or ".." in name.parts:
             raise SystemExit(f"{path}: refusing odd entry {info.filename}")
-        groups.setdefault(name.parts[0], {})["/".join(name.parts[1:])] = z.read(info)
+        yield name.parts, z.read(info)
+
+
+def read_addon(path: str, label: str) -> list[Pack]:
+    """The packs inside an .mcaddon (or .zip), each with its files. Packs may be folders or nested .mcpack files."""
+    z = zipfile.ZipFile(path)
+    groups: dict[str, dict[str, bytes]] = {}
+    for parts, data in entries(z, path):
+        if len(parts) == 1 and parts[0].lower().endswith((".mcpack", ".zip")):
+            inner = list(entries(zipfile.ZipFile(io.BytesIO(data)), f"{path}/{parts[0]}"))
+            roots = {p[0] for p, _ in inner if len(p) > 1 and p[-1] == "manifest.json" and len(p) == 2}
+            strip = 1 if not any(p == ("manifest.json",) for p, _ in inner) and len(roots) == 1 else 0
+            for p, d in inner:
+                groups.setdefault(parts[0], {})["/".join(p[strip:])] = d
+            continue
+        if len(parts) < 2:
+            raise SystemExit(f"{path}: refusing odd entry {'/'.join(parts)}")
+        groups.setdefault(parts[0], {})["/".join(parts[1:])] = data
     packs = []
     for folder, files in sorted(groups.items()):
         if "manifest.json" not in files:
@@ -104,6 +122,27 @@ def merge(out: str, inputs: list[tuple[str, str]], tag: str = ""):
     addons = [(label, read_addon(path, label)) for label, path in inputs]
     overlord = addons[0][1]
     report = []
+
+    # 0. Vanilla particles Overlord's scripts use stay visible: other add-ons' redefinitions of them are dropped.
+    used = set()
+    for pack in overlord:
+        for rel, raw in pack.files.items():
+            if rel.startswith("scripts/") and rel.endswith(".js"):
+                used |= set(re.findall(r'"(minecraft:[a-z0-9_]+)"', raw.decode("utf-8", "replace")))
+    for label, packs in addons[1:]:
+        for pack in packs:
+            if pack.kind != "RP":
+                continue
+            for rel in list(pack.files):
+                if not rel.endswith(".json") or "particles/" not in rel:
+                    continue
+                try:
+                    ident = lenient(pack.files[rel])["particle_effect"]["description"]["identifier"]
+                except Exception:
+                    continue
+                if ident in used:
+                    del pack.files[rel]
+                    report.append(f"kept the vanilla {ident} that Overlord uses (dropped {label}'s version)")
 
     # 1. Shared paths. Recipes: Overlord's copy is renamed. Anything else: the earlier add-on keeps it.
     owner: dict[str, tuple[str, str]] = {}
@@ -147,7 +186,7 @@ def merge(out: str, inputs: list[tuple[str, str]], tag: str = ""):
             if name == "pack.name":  # named in its language file
                 name = pack.folder
             mark = f" (merged, {tag})" if tag else " (merged)"
-            header["name"] = re.sub(r"(\s*\[(BP|RP)\])?$", lambda m: f"{mark}{m.group(0)}", name, count=1)
+            header["name"] = re.sub(r"(\s*(?:§.)*\[(BP|RP)\])?$", lambda m: f"{mark}{m.group(0)}", name, count=1)
             subs = pack.manifest.get("subpacks")
             if subs:
                 subs.sort(key=lambda s: s.get("folder_name") != "normal")
