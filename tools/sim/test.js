@@ -2522,6 +2522,26 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   players.splice(players.indexOf(k), 1);
 }
 
+// ---- Data Crystals: any monster may drop one, the stronger the likelier ----
+{
+  const drops = [];
+  const dim = { spawnItem: (stack) => drops.push(stack.typeId) };
+  const monster = (lvl, tags = [], hp = 20) => ({ ...mob("minecraft:zombie", hp, ["monster"]), dimension: dim, hasTag: (t) => tags.includes(t),
+    getDynamicProperty: (k) => (k === "overlord:lvl" ? lvl : undefined) });
+  assert.equal(rpg.crystalChance(monster(0)), 0.1, "one kill in ten at level 0");
+  assert.ok(Math.abs(rpg.crystalChance(monster(50)) - 0.2) < 1e-9, "one in five at level 50");
+  assert.equal(rpg.crystalChance(monster(500)), 0.3, "never more than 30%");
+  assert.equal(rpg.crystalChance(mob("minecraft:cow", 10, ["mob"])), 0, "animals carry none");
+  assert.equal(rpg.crystalChance(monster(0, ["overlord_summoned"])), 0, "nor summoned allies");
+  assert.equal(rpg.crystalChance(monster(0, ["overlord_arena"])), 0, "nor the arena's waves");
+  assert.equal(rpg.crystalChance(monster(0, [], 600)), 0, "bosses keep their own loot");
+  const realRandom = Math.random;
+  Math.random = () => 0.05; kill(a, monster(0));
+  Math.random = () => 0.5; kill(a, monster(0));
+  Math.random = realRandom;
+  assert.deepEqual(drops.filter((d) => d === "overlord:data_crystal"), ["overlord:data_crystal"], "a monster can drop a crystal where it falls, but usually does not");
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);
