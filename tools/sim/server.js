@@ -28,6 +28,7 @@ export const EntityDamageCause = { entityAttack: "entityAttack", magic: "magic",
 export const Direction = { Up: "Up", Down: "Down", North: "North", South: "South", East: "East", West: "West" };
 export const EquipmentSlot = { Head: "Head", Chest: "Chest", Legs: "Legs", Feet: "Feet", Mainhand: "Mainhand", Offhand: "Offhand" };
 export const GameMode = { Creative: "Creative", Spectator: "Spectator" };
+export const ItemTypes = { known: new Set(), get(id) { return this.known.has(id) ? { id } : undefined; } };
 export const emitted = [];
 export class MolangVariableMap { constructor() { this.v = {}; } setColorRGB(k, c) { this.v[k] = c; } setFloat(k, n) { this.v[k] = n; } setVector3(k, vec) { this.v[k] = vec; } }
 export class BlockVolume { constructor(from, to) { this.from = from; this.to = to; } }

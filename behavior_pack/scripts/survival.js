@@ -17,8 +17,9 @@
 // slake their thirst on the blows they strike; Demons cannot overheat; Dragonkin shrug off both heat and cold;
 // Dark Elves cannot catch parasites. Players in creative or spectator mode are left alone. Each rule can be
 // switched off for the whole world, from the Hardcore Survival page of the Adventurer's Plate, by a player
-// in creative mode.
-import { world, system, EntityDamageCause, EquipmentSlot, GameMode } from "@minecraft/server";
+// in creative mode. Alongside an add-on with its own thirst, temperature, first aid or hearts (RSCraft), our
+// versions of those start switched off.
+import { world, system, EntityDamageCause, EquipmentSlot, GameMode, ItemTypes } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { creditedPlayer, giveItem, hooks, isElite, notify, profileOf, registerMenu, touch } from "./rpg.js";
 import { raceOf } from "./races.js";
@@ -92,15 +93,45 @@ export const RULES = {
 /** @typedef {keyof typeof RULES} RuleKey */
 const RULES_KEY = "overlord:hardcore_rules";
 
+/**
+ * Add-ons with their own versions of some of these rules. When one is installed in the world, our versions of the
+ * rules it covers start switched off, so nobody has two water meters or two systems fighting over the health bar.
+ * Each is recognised by an item only it has.
+ */
+export const COMPANIONS = [
+  { name: "RSCraft", marker: "zc:noob_heart", covers: ["thirst", "temperature", "injuries", "hearts"] },
+];
+
 /** @type {Record<string, boolean> | undefined} */
 let ruleCache;
+/** @type {typeof COMPANIONS | undefined} */
+let found;
 
-/** Which rules are on in this world (all of them unless switched off). */
+/** The companion add-ons installed in this world. */
+export function companions() {
+  if (found) return found;
+  found = COMPANIONS.filter((c) => {
+    try {
+      return ItemTypes.get(c.marker) !== undefined;
+    } catch {
+      return false;
+    }
+  });
+  return found;
+}
+
+/** Forgets what was read, so the world's rules and add-ons are looked at afresh. */
+export function forgetRules() {
+  ruleCache = undefined;
+  found = undefined;
+}
+
+/** Which rules are on in this world: all of them, except those a companion add-on covers, unless changed by hand. */
 export function rules() {
   if (ruleCache) return ruleCache;
   /** @type {Record<string, boolean>} */
   const out = {};
-  for (const key of Object.keys(RULES)) out[key] = true;
+  for (const key of Object.keys(RULES)) out[key] = !companions().some((c) => c.covers.includes(key));
   try {
     const raw = world.getDynamicProperty(RULES_KEY);
     if (typeof raw === "string") {
@@ -793,6 +824,10 @@ export function status(player) {
   const body = bodyOf(player);
   const lines = [];
   if (exempt(player)) lines.push("§7You are in creative or spectator mode: the world leaves you alone.\n");
+  for (const c of companions()) {
+    const off = c.covers.filter((k) => !ruleOn(/** @type {RuleKey} */ (k)));
+    if (off.length) lines.push(`§7${c.name} is installed and brings its own ${off.map((k) => RULES[/** @type {RuleKey} */ (k)].name.toLowerCase()).join(", ")}, so ours are off. Turn them on in World rules to have both.\n`);
+  }
   if (thirsts(player)) lines.push(`§bWater: §f${Math.floor(body.thirst)}/${THIRST_MAX}`);
   else if (ruleOn("thirst")) lines.push("§5Water: §7your undead body needs none");
   if (feelsWeather(player)) lines.push(`§fBody temperature: ${tempWord(body.temp)}`);
@@ -818,6 +853,7 @@ export const GUIDE = [
   "§lDeath§r: each death takes a heart, down to three. A §dCrystal of Vitality§r restores one. Elites sometimes carry them, world bosses always do, and they can be crafted from gold, Data Crystals and a golden apple.",
   "§lThe wilds§r: the further you travel from the world spawn, the stronger the monsters and the more elites - and the more XP they give.",
   "§lRaces§r: the Undead neither thirst nor feel heat and cold, and do not bleed; Vampires drink from the blows they strike; Demons cannot overheat; Dragonkin shrug off both heat and cold; Dark Elves cannot catch parasites.",
+  "§lWith RSCraft§r: it has its own thirst, temperature, first aid and hearts, so ours start switched off and only the dangerous wilds stay on. Any of ours can be switched on in World rules.",
 ];
 
 /** Opens the Hardcore Survival page. @param {Player} player */
@@ -958,7 +994,7 @@ world.afterEvents.playerSpawn.subscribe((event) => {
     try {
       if (!player.isValid) return;
       const body = bodyOf(player);
-      if (event.initialSpawn && anyRule() && !player.hasTag("overlord_hardcore_kit")) {
+      if (event.initialSpawn && (ruleOn("thirst") || ruleOn("injuries")) && !player.hasTag("overlord_hardcore_kit")) {
         player.addTag("overlord_hardcore_kit");
         giveItem(player, PURE, 1);
         giveItem(player, WATERSKIN, 1);

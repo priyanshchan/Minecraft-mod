@@ -1311,6 +1311,8 @@ Only on the `experimental-hardcore` branch. The full rules are in [the notes](do
 - **Races:** each race feels it differently. For example, the Undead neither thirst nor feel the cold.
 - **Settings:** the **Hardcore Survival** page on the Adventurer's Plate shows your state and has a guide. A player
   in creative mode can switch each rule off for the world there.
+- **With RSCraft:** it has its own thirst, temperature, first aid and hearts, so ours start switched off and only the
+  dangerous wilds stay on. Any of ours can be switched back on in World rules.
 
 ### Testing in creative mode (v7.6.1)
 

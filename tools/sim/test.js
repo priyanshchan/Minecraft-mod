@@ -2599,8 +2599,22 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   sv.setRule("hearts", true); sv.setRule("wilds", false); assert.equal(director.spawnHooks.level.reduce((n, f) => n + f(faraway), 0), 0); sv.setRule("wilds", true);
   // creative players are left alone
   h.getGameMode = () => "Creative"; body.thirst = 5; assert.deepEqual(sv.endure(h, nether), []); assert.equal(sv.hud(h), ""); h.getGameMode = () => "Survival";
+  // beside RSCraft, which has its own thirst, temperature, first aid and hearts, ours start switched off
+  const { ItemTypes } = await import("@minecraft/server");
+  const savedRules = world.props.get("overlord:hardcore_rules"); world.props.delete("overlord:hardcore_rules");
+  ItemTypes.known.add("zc:noob_heart"); sv.forgetRules();
+  assert.deepEqual(sv.rules(), { thirst: false, temperature: false, injuries: false, hearts: false, wilds: true }, "RSCraft's own systems are used");
+  assert.ok(sv.status(h).includes("RSCraft is installed"));
+  body.thirst = 3; steps(1); assert.equal(body.thirst, 20); assert.equal(sv.hud(h), "", "one water meter, not two");
+  sv.onDeath(h); assert.equal(body.lost, 0, "and RSCraft keeps the health bar");
+  sv.setRule("thirst", true); sv.forgetRules(); assert.equal(sv.ruleOn("thirst"), true, "a rule switched on by hand stays on");
+  const kitless = mkPlayer("kit"); world.afterEvents.playerSpawn.fire({ player: kitless, initialSpawn: true });
+  world.props.delete("overlord:hardcore_rules"); sv.forgetRules(); advance(45);
+  assert.ok(!kitless.inv.some((s) => s.typeId === sv.WATERSKIN), "no waterskin when there is no thirst of ours"); players.splice(players.indexOf(kitless), 1);
+  ItemTypes.known.delete("zc:noob_heart"); world.props.set("overlord:hardcore_rules", savedRules); sv.forgetRules();
+  assert.equal(sv.ruleOn("thirst"), true);
   // the body is saved with the profile
-  body.lost = 2; body.thirst = 7; advance(100); world.afterEvents.playerLeave.fire({ playerId: "hal" });
+  body.lost = 2; body.thirst = 7; rpg.touch(h); advance(100); world.afterEvents.playerLeave.fire({ playerId: "hal" });
   const back = sv.bodyOf(h); assert.notStrictEqual(back, body); assert.equal(back.lost, 2); assert.equal(back.thirst, 7);
   players.splice(players.indexOf(h), 1);
 }

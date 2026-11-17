@@ -1,4 +1,4 @@
-## Hardcore Survival (experimental build, v10.1.0)
+## Hardcore Survival (experimental build, v10.1.1)
 
 An experimental branch (`experimental-hardcore`) that adds a hard survival layer to the whole add-on, in the
 spirit of the hardest survival modpacks. Everything in it is this add-on's own: original code, items and art.
@@ -68,6 +68,15 @@ It is **not** merged into the main add-on.
 - **Demons:** cannot overheat, but feel the cold more.
 - **Dragonkin:** shrug off both heat and cold.
 - **Dark Elves:** cannot catch parasites.
+
+### With RSCraft (v10.1.1)
+- RSCraft has its own thirst, temperature, first aid (health per body part) and extra hearts. Running both would
+  show two water meters and two temperature gauges, and make the two first-aid systems fight over the health bar.
+- So when RSCraft is installed in the world, Hardcore's thirst, body temperature, injuries and price of
+  resurrection start **switched off** and RSCraft's are used. Hardcore's **dangerous wilds** stay on.
+- Any of them can still be switched on in World rules; a rule changed by hand stays as it was set.
+- The Hardcore Survival page says which are off because of RSCraft. No waterskin or bandages are handed out
+  while Hardcore's thirst and injuries are both off.
 
 ### Settings
 - The **Hardcore Survival** page on the Adventurer's Plate shows your water, temperature, injuries, lost hearts
