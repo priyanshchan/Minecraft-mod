@@ -1286,6 +1286,12 @@ Something new for every part of the add-on:
 - **Titles:** six new ones.
 - **Creative tome:** an endgame kit.
 
+### Data Crystals from every monster (v10.0.4)
+
+Every monster you slay has a chance to drop a **Data Crystal**: one in ten, more against stronger monsters, up to three
+in ten. Bosses carry their own larger hoards, elites give one more, and the Nazarick Maid and the Dwarf smith sell them
+for 6 Gold Coins. Summoned allies and arena waves drop none.
+
 ### Soulbound tools and multiplayer (v10.0.3)
 
 - **Soulbound tools:** the **Adventurer's Plate**, the **Grimoire** and the **Magic Wand** stay with you when you die.
