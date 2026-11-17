@@ -2458,6 +2458,153 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   worn = {}; e.dimension.mobs = []; e.aimed = []; players.splice(players.indexOf(e), 1);
 }
 
+// ---- experimental: Hardcore Survival ----
+{
+  const sv = await import("./survival.js");
+  const h = mkPlayer("hal"); const ph = rpg.profileOf(h);
+  h.applyDamage = (n) => { h.health.currentValue -= n; };
+  h.isSneaking = false; h.isSprinting = false; h.isInWater = false; h.selectedSlotIndex = 0;
+  const calm = { dimension: "minecraft:overworld", y: 64, climate: "mild", sky: true, night: false, raining: false, inWater: false, sprinting: false, heat: 0, cold: 0, leather: 0 };
+  const steps = (n, r = calm) => { for (let i = 0; i < n; i++) sv.endure(h, r); };
+  const use = (typeId, amount = 1) => { h.inv.length = 0; h.inv.push(new ItemStack(typeId, amount)); world.afterEvents.itemUse.fire({ source: h, itemStack: h.inv[0] }); };
+  const drinkUp = (typeId) => world.afterEvents.itemCompleteUse.fire({ source: h, itemStack: new ItemStack(typeId) });
+  assert.ok(Object.values(sv.rules()).every(Boolean), "every rule is on in a new world");
+  const body = sv.bodyOf(h);
+  assert.deepEqual([body.thirst, body.temp, body.lost, body.bleed, body.leg, body.parasites], [20, 15, 0, 0, 0, 0]);
+  // a waterskin and bandages to start with
+  world.afterEvents.playerSpawn.fire({ player: h, initialSpawn: true }); advance(45);
+  assert.ok(h.inv.some((s) => s.typeId === sv.PURE) && h.inv.some((s) => s.typeId === sv.WATERSKIN), "a waterskin to start with");
+  assert.equal(h.inv.filter((s) => s.typeId === sv.BANDAGE).reduce((n, s) => n + s.amount, 0), 3, "and three bandages");
+  assert.ok(h.msgs.some((m) => m.includes("The New World is unforgiving")));
+  // the surroundings set the body's temperature
+  assert.equal(sv.ambient(calm), 15);
+  const snowyNight = sv.ambient({ ...calm, climate: "snowy", night: true });
+  assert.ok(snowyNight <= sv.COLD_AT, `a snowy night is cold: ${snowyNight}`);
+  assert.ok(sv.ambient({ ...calm, climate: "snowy", night: true, heat: 4 }) > snowyNight + 3, "a campfire warms");
+  assert.ok(sv.ambient({ ...calm, climate: "snowy", night: true, leather: 4 }) > sv.COLD_AT + 3, "leather keeps the cold out");
+  assert.ok(sv.ambient({ ...calm, dimension: "minecraft:nether", sky: false }) >= sv.HOT_AT, "the Nether is hot");
+  assert.ok(sv.ambient({ ...calm, climate: "hot", sprinting: true }) >= sv.HOT_AT, "sprinting across a desert by day is hot");
+  assert.ok(sv.ambient({ ...calm, climate: "hot", night: true }) < sv.HOT_AT - 4, "the desert night is cool");
+  assert.ok(sv.ambient({ ...calm, y: 200, climate: "snowy", night: true }) <= sv.FREEZE_AT, "a snowy peak at night freezes");
+  assert.deepEqual([0, 4, 8, 15, 22, 25, 29].map((t) => sv.tempWord(t).slice(2)), ["Freezing", "Cold", "Chilly", "Mild", "Warm", "Hot", "Heatstroke"]);
+  // thirst: a point every 45 seconds at rest, faster when sprinting
+  steps(23); assert.equal(body.thirst, 19, "a point of water every 45 seconds at rest");
+  body.thirst = 20; body.drain = 0; steps(23, { ...calm, sprinting: true }); assert.ok(body.thirst <= 18, `sprinting is thirsty work: ${body.thirst}`);
+  body.thirst = 5; h.effects.clear(); steps(1); assert.ok(h.effects.has("slowness"), "parched");
+  body.thirst = 0; h.health.currentValue = 10;
+  for (let i = 0; i < 4; i++) { sv.endure(h, calm); advance(sv.STEP); }
+  assert.ok(h.health.currentValue < 10, "dehydration hurts");
+  h.health.currentValue = 1.5; for (let i = 0; i < 6; i++) { sv.endure(h, calm); advance(sv.STEP); }
+  assert.ok(h.health.currentValue >= 1, "but never kills: the monsters do that");
+  // cold and heat
+  body.thirst = 20; body.temp = 15; h.effects.clear(); h.health.currentValue = 20;
+  steps(40, { ...calm, climate: "snowy", night: true, raining: true, inWater: true });
+  assert.ok(body.temp <= sv.FREEZE_AT, `freezing: ${body.temp}`); assert.equal(h.effects.get("slowness").amplifier, 1, "frozen stiff");
+  steps(40, { ...calm, heat: 4 }); assert.ok(body.temp > sv.COLD_AT + 3, `a campfire thaws you: ${body.temp}`);
+  const nether = { ...calm, dimension: "minecraft:nether", sky: false };
+  body.temp = 15; h.effects.clear(); steps(20, nether); assert.ok(body.temp >= sv.HOT_AT && h.effects.has("weakness"), `the Nether's heat: ${body.temp}`);
+  body.temp = 15; h.effects.set("fire_resistance", { duration: 999, amplifier: 0 }); steps(40, nether);
+  assert.ok(body.temp < sv.HOT_AT, "fire resistance keeps the heat off"); h.effects.delete("fire_resistance");
+  // drinks
+  body.thirst = 4; drinkUp(sv.PURE); assert.equal(body.thirst, 12, "boiled water");
+  drinkUp("minecraft:potion"); assert.equal(body.thirst, 15, "a bottle of water");
+  assert.equal(sv.drink(h, sv.MURKY, 0), "parasites"); assert.equal(body.parasites, sv.PARASITE_SECONDS, "river water may carry parasites");
+  assert.equal(sv.drink(h, sv.MURKY, 0.99), "drank");
+  h.effects.clear(); steps(1); assert.ok(h.effects.has("hunger") && h.effects.has("weakness"), "parasites sap you");
+  drinkUp("minecraft:milk_bucket"); assert.equal(body.parasites, 0, "milk purges them");
+  assert.equal(sv.drink(h, "minecraft:stick"), "", "a stick is not a drink");
+  body.temp = 27; drinkUp(sv.FROST); assert.ok(body.temp <= 21 && body.chill === sv.DRAUGHT_SECONDS, "Cocytus's Frost Draught cools");
+  steps(40, nether); assert.ok(body.temp < sv.HOT_AT, "and guards against the heat");
+  body.chill = 0; body.temp = 3; drinkUp(sv.EMBER); assert.ok(body.temp >= 9 && body.warm === sv.DRAUGHT_SECONDS, "Demiurge's Ember Draught warms");
+  body.temp = 10; drinkUp(sv.PURE); assert.equal(body.temp, 10, "water never chills a cold body further"); body.warm = 0; body.temp = 15;
+  // sipping from water: sneak, empty hand, look at it
+  body.thirst = 10; h.isSneaking = true; h.getBlockFromViewDirection = () => ({ block: { typeId: "minecraft:water" } });
+  advance(25); assert.ok(body.thirst > 10, `sipping from water: ${body.thirst}`);
+  h.isSneaking = false; const sipped = body.thirst; advance(25); assert.equal(body.thirst, sipped, "standing up stops the sipping");
+  // filling a waterskin: only at water
+  use(sv.WATERSKIN, 2); assert.equal(h.inv[0].amount, 1); assert.ok(h.inv.some((s) => s?.typeId === sv.MURKY), "a filled waterskin");
+  h.getBlockFromViewDirection = () => undefined; use(sv.WATERSKIN); assert.equal(h.inv[0].amount, 1, "no water, no filling"); assert.ok(h.bar.includes("Look at water"));
+  // wounds: heavy blows bleed, bad falls break legs
+  body.parasites = 0; body.thirst = 20;
+  assert.equal(sv.wound(h, "entityAttack", 8, 0), "bleed"); assert.equal(body.bleed, sv.BLEED_SECONDS);
+  assert.equal(sv.wound(h, "entityAttack", 3, 0), "", "a light blow does not cut");
+  assert.equal(sv.wound(h, "entityAttack", 8, 0.99), "", "and a heavy one only sometimes");
+  h.health.currentValue = 10; for (let i = 0; i < 4; i++) { sv.endure(h, calm); advance(sv.STEP); }
+  assert.ok(h.health.currentValue < 10, "bleeding hurts"); assert.ok(h.fx.some((f) => f.color?.red === 0.7), "and shows");
+  use(sv.BANDAGE, 2); assert.equal(body.bleed, 0, "a bandage stops it"); assert.equal(h.inv[0].amount, 1);
+  advance(25); h.health.currentValue = 20; use(sv.BANDAGE); assert.ok(h.bar.includes("no wound"), "nothing to bind"); assert.equal(h.inv[0].amount, 1);
+  world.afterEvents.entityHurt.fire({ hurtEntity: h, damage: 9, damageSource: { cause: "fall" } }); assert.ok(body.leg > 0, "a bad fall breaks a leg");
+  h.effects.clear(); steps(1); assert.equal(h.effects.get("slowness").amplifier, 1, "and slows you");
+  advance(25); use(sv.SPLINT); assert.equal(body.leg, 0, "a splint sets it");
+  advance(25); use(sv.SPLINT); assert.ok(h.bar.includes("No bone"), "no bone to set");
+  advance(25); body.bleed = 10; body.leg = 10; body.parasites = 10; h.health.currentValue = 8; use(sv.FIELD_KIT);
+  assert.deepEqual([body.bleed, body.leg, body.parasites], [0, 0, 0], "Pestonya's Field Kit mends everything"); assert.equal(h.health.currentValue, 14);
+  // the races
+  ph.race = "undead"; body.thirst = 10; steps(5); assert.equal(body.thirst, 20, "the undead never thirst");
+  assert.equal(sv.wound(h, "entityAttack", 12, 0), "", "nor bleed"); assert.equal(sv.hud(h).includes("Water"), false);
+  steps(5, nether); assert.equal(body.temp, 15, "nor feel the heat");
+  ph.race = "vampire"; body.thirst = 10;
+  world.afterEvents.entityHurt.fire({ hurtEntity: mob("minecraft:cow", 20, ["mob"]), damage: 5, damageSource: { damagingEntity: h, cause: "entityAttack" } });
+  assert.equal(body.thirst, 11, "vampires drink from the blows they strike");
+  world.afterEvents.entityHurt.fire({ hurtEntity: mob("minecraft:zombie", 20, ["monster", "undead"]), damage: 5, damageSource: { damagingEntity: h, cause: "entityAttack" } });
+  assert.equal(body.thirst, 11, "but there is no blood in the dead");
+  ph.race = "darkelf"; assert.equal(sv.infect(h), false, "dark elves cannot catch parasites");
+  ph.race = "demon"; body.temp = 15; steps(40, nether); assert.ok(body.temp < sv.HOT_AT, "demons cannot overheat");
+  ph.race = "dragonkin"; body.temp = 15; steps(40, { ...calm, climate: "snowy", night: true, raining: true }); assert.ok(body.temp > sv.COLD_AT, "dragonkin shrug off the cold");
+  ph.race = "none"; body.temp = 15;
+  // the price of resurrection
+  h.health.currentValue = 20; h.msgs.length = 0;
+  world.afterEvents.entityDie.fire({ deadEntity: h, damageSource: {} }); assert.equal(body.lost, 1, "death takes a heart");
+  world.afterEvents.playerSpawn.fire({ player: h, initialSpawn: false }); advance(45);
+  assert.ok(h.msgs.some((m) => m.includes("Resurrection has a price")));
+  h.health.currentValue = 20; advance(10); assert.equal(h.health.currentValue, 18, "the lost heart cannot be filled");
+  use(sv.CRYSTAL, 2); assert.equal(body.lost, 0, "a Crystal of Vitality restores it"); assert.equal(h.inv[0].amount, 1);
+  advance(25); use(sv.CRYSTAL); assert.ok(h.bar.includes("lost no hearts")); assert.equal(h.inv[0].amount, 1, "and is kept when there is nothing to restore");
+  for (let i = 0; i < 9; i++) sv.onDeath(h);
+  assert.equal(body.lost, sv.MAX_LOST); assert.equal(sv.capOf(h), sv.MIN_HEALTH, "never fewer than three hearts");
+  body.lost = 0; body.died = false;
+  // world bosses always carry a crystal
+  const lord = { ...mob("overlord:zytl_qae", 900), dimension: { id: "minecraft:overworld" }, hasTag: (t) => t === "overlord_worldboss" };
+  h.inv.length = 0; world.afterEvents.entityDie.fire({ deadEntity: lord, damageSource: { damagingEntity: h } });
+  assert.ok(h.inv.some((s) => s.typeId === sv.CRYSTAL), "a world boss carries a Crystal of Vitality");
+  // the wilds: the further from spawn, the stronger the monsters
+  assert.equal(sv.dangerAt("minecraft:overworld", { x: 100, z: 100 }), 0);
+  assert.equal(sv.dangerAt("minecraft:overworld", { x: 2500, z: 0 }), 2);
+  assert.equal(sv.dangerAt("minecraft:overworld", { x: 1e6, z: 0 }), sv.MAX_DANGER);
+  assert.equal(sv.dangerAt("minecraft:nether", { x: 0, z: 0 }), 1, "the Nether is never safe");
+  assert.equal(sv.dangerAt("minecraft:nether", { x: 300, z: 0 }), 3, "and its distances count eightfold");
+  assert.equal(sv.dangerAt("minecraft:the_end", { x: 0, z: 0 }), sv.MAX_DANGER);
+  const faraway = { typeId: "minecraft:zombie", dimension: { id: "minecraft:overworld" }, location: { x: 3000, y: 64, z: 0 } };
+  assert.equal(director.spawnHooks.level.reduce((n, f) => n + f(faraway), 0), 3 * sv.LEVELS_PER_DANGER, "monsters far out gain levels");
+  assert.ok(Math.abs(director.spawnHooks.elite.reduce((n, f) => n + f(faraway), 0) - 3 * sv.ELITE_PER_DANGER) < 1e-9, "and are more often elites");
+  h.title = ""; sv.watchZone(h); h.location = { x: 2500, y: 64, z: 0 }; sv.watchZone(h); assert.ok(h.title.includes("Wild Frontier"), h.title);
+  h.location = { x: 0, y: 64, z: 0 }; sv.watchZone(h);
+  // the status bar and the Adventurer's Plate
+  body.thirst = 14; body.bleed = 6; advance(60);
+  assert.ok(/Water 1[34]/.test(h.bar) && h.bar.includes("Mild") && h.bar.includes("Bleeding"), h.bar); body.bleed = 0; body.thirst = 14;
+  const formsBefore = shown.length; rpg.openMenu(h); await new Promise((r) => setTimeout(r, 20));
+  assert.ok(shown.slice(formsBefore).some((f) => f.buttons?.some((b) => b.includes("Hardcore Survival"))), "a page on the Adventurer's Plate");
+  sv.openSurvival(h); await new Promise((r) => setTimeout(r, 20));
+  assert.ok(shown[shown.length - 1].body.includes("Water: §f14/20") && shown[shown.length - 1].body.includes("Lands of Men"));
+  // world rules: only a player in creative mode may change them
+  script.push(1, 0); sv.openSurvival(h); await new Promise((r) => setTimeout(r, 20));
+  assert.equal(sv.ruleOn("thirst"), true, "a survival player cannot switch thirst off"); assert.ok(h.bar.includes("creative mode"));
+  h.getGameMode = () => "Creative"; world.said.length = 0;
+  script.push(1, 0); sv.openSurvival(h); await new Promise((r) => setTimeout(r, 20));
+  assert.equal(sv.ruleOn("thirst"), false, "a creative player can"); assert.ok(world.said.some((m) => m.includes("turned")));
+  assert.equal(JSON.parse(world.props.get("overlord:hardcore_rules")).thirst, false, "and it is saved with the world");
+  h.getGameMode = () => "Survival"; body.thirst = 3; steps(1); assert.equal(body.thirst, 20, "with thirst off, nobody thirsts");
+  assert.equal(sv.hud(h).includes("Water"), false);
+  sv.setRule("thirst", true); sv.setRule("hearts", false); sv.onDeath(h); assert.equal(body.lost, 0, "with the price off, death takes nothing");
+  sv.setRule("hearts", true); sv.setRule("wilds", false); assert.equal(director.spawnHooks.level.reduce((n, f) => n + f(faraway), 0), 0); sv.setRule("wilds", true);
+  // creative players are left alone
+  h.getGameMode = () => "Creative"; body.thirst = 5; assert.deepEqual(sv.endure(h, nether), []); assert.equal(sv.hud(h), ""); h.getGameMode = () => "Survival";
+  // the body is saved with the profile
+  body.lost = 2; body.thirst = 7; advance(100); world.afterEvents.playerLeave.fire({ playerId: "hal" });
+  const back = sv.bodyOf(h); assert.notStrictEqual(back, body); assert.equal(back.lost, 2); assert.equal(back.thirst, 7);
+  players.splice(players.indexOf(h), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);

@@ -1,13 +1,13 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Overlord: Tomb of Nazarick [BP]",
-    "description": "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. \u00a77v10.0.2",
-    "uuid": "e6440d11-49cb-4a78-994b-2621743284c3",
+    "name": "Overlord: Tomb of Nazarick - Hardcore (experimental) [BP]",
+    "description": "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom - and Hardcore Survival: thirst, body temperature, injuries, the price of resurrection and dangerous wilds. \u00a77v10.1.0 \u00a7c(experimental)",
+    "uuid": "4081c237-7cfd-4b13-aa30-83bf1422af08",
     "version": [
       10,
-      0,
-      2
+      1,
+      0
     ],
     "min_engine_version": [
       1,
@@ -18,32 +18,32 @@
   "modules": [
     {
       "type": "data",
-      "uuid": "92b407c1-2afe-47be-96e5-2ca63d6e95e3",
+      "uuid": "7600055e-46a1-4c37-94c3-b6fed3b480d3",
       "version": [
         10,
-        0,
-        2
+        1,
+        0
       ]
     },
     {
       "type": "script",
       "language": "javascript",
-      "uuid": "953c5275-23d2-4160-bd35-cc41791660c6",
+      "uuid": "255f8082-9d0d-4993-b1da-f8cfb49f03c7",
       "entry": "scripts/main.js",
       "version": [
         10,
-        0,
-        2
+        1,
+        0
       ]
     }
   ],
   "dependencies": [
     {
-      "uuid": "c0efa9f1-85eb-41e8-a663-b693b3f36197",
+      "uuid": "da93148b-6a55-4164-b6c4-7473062b4b30",
       "version": [
         10,
-        0,
-        2
+        1,
+        0
       ]
     },
     {

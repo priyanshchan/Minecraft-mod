@@ -2,16 +2,18 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [10, 0, 2]
+VERSION = [10, 1, 0]
 MIN_ENGINE = [1, 21, 90]
-UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
-UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
-UUID_BP_SCRIPT = "953c5275-23d2-4160-bd35-cc41791660c6"
-UUID_RP = "c0efa9f1-85eb-41e8-a663-b693b3f36197"
-UUID_RP_MOD = "6f472436-ea00-42b5-b73d-8ee5e218a303"
+# The experimental Hardcore Survival build (branch experimental-hardcore) has pack ids of its own, so it installs
+# beside the main add-on instead of replacing it. Use one or the other in a world, never both.
+UUID_BP = "4081c237-7cfd-4b13-aa30-83bf1422af08"
+UUID_BP_DATA = "7600055e-46a1-4c37-94c3-b6fed3b480d3"
+UUID_BP_SCRIPT = "255f8082-9d0d-4993-b1da-f8cfb49f03c7"
+UUID_RP = "da93148b-6a55-4164-b6c4-7473062b4b30"
+UUID_RP_MOD = "27d8b6cb-d78f-4835-b4d0-223af4a386ea"
 
-PACK_NAME = "Overlord: Tomb of Nazarick"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom. §7v10.0.2"
+PACK_NAME = "Overlord: Tomb of Nazarick - Hardcore (experimental)"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom - and Hardcore Survival: thirst, body temperature, injuries, the price of resurrection and dangerous wilds. §7v10.1.0 §c(experimental)"
 
 
 def oid(name):
@@ -92,6 +94,15 @@ def _meal(nutrition, saturation, drink=False):
     return {"minecraft:max_stack_size": 16, "minecraft:use_animation": "drink" if drink else "eat",
             "minecraft:use_modifiers": {"use_duration": 1.6, "movement_modifier": 0.35},
             "minecraft:food": food, "minecraft:rarity": "uncommon"}
+
+
+def _drink(rarity="common"):
+    """Water in a waterskin: survival.js quenches thirst when it is finished, and the empty skin comes back."""
+    return {"minecraft:max_stack_size": 16, "minecraft:use_animation": "drink",
+            "minecraft:use_modifiers": {"use_duration": 1.6, "movement_modifier": 0.35},
+            "minecraft:food": {"can_always_eat": True, "nutrition": 0, "saturation_modifier": 0.0,
+                               "using_converts_to": oid("waterskin")},
+            "minecraft:rarity": rarity}
 
 
 def _cooldown(category, seconds):
@@ -466,6 +477,17 @@ ITEMS = {
     "beasthide_boots": ("Beast Hide Boots", "equipment", _armor("slot.armor.feet", 2, 240, "armor_feet")),
     "sigil_of_ainz": ("Sigil of Ainz Ooal Gown", "items", {
         "minecraft:max_stack_size": 16, "minecraft:rarity": "epic", "minecraft:glint": True}),
+    # experimental: Hardcore Survival (survival.js) - water, draughts, dressings and the Crystal of Vitality
+    "waterskin": ("Leather Waterskin", "items", {"minecraft:max_stack_size": 16}),
+    "waterskin_murky": ("Waterskin of River Water", "items", _drink()),
+    "waterskin_pure": ("Waterskin of Boiled Water", "items", _drink()),
+    "frost_draught": ("Cocytus's Frost Draught", "items", _drink("rare")),
+    "ember_draught": ("Demiurge's Ember Draught", "items", _drink("rare")),
+    "linen_bandage": ("Linen Bandage", "items", {"minecraft:max_stack_size": 16}),
+    "splint": ("Splint", "items", {"minecraft:max_stack_size": 16}),
+    "field_kit": ("Pestonya's Field Kit", "items", {"minecraft:max_stack_size": 8, "minecraft:rarity": "uncommon"}),
+    "vitality_crystal": ("Crystal of Vitality", "items", {
+        "minecraft:max_stack_size": 16, "minecraft:rarity": "epic", "minecraft:glint": True}),
 }
 
 # v7.2: weapons that had no art of their own now have one (see behavior_pack/scripts/arms.js).
@@ -645,6 +667,19 @@ def _shapeless(name, ingredients, result, count=1):
             "ingredients": [{"item": i} for i in ingredients],
             "unlock": [{"item": ingredients[-1]}],
             "result": {"item": result, "count": count},
+        },
+    }
+
+
+def _cook(name, item, result):
+    """Cooked in a furnace, a smoker or over a campfire."""
+    return {
+        "format_version": "1.20.10",
+        "minecraft:recipe_furnace": {
+            "description": {"identifier": oid(name)},
+            "tags": ["furnace", "smoker", "campfire", "soul_campfire"],
+            "input": item,
+            "output": result,
         },
     }
 
@@ -885,6 +920,19 @@ def recipe_files():
             "C": cry, "L": "minecraft:lapis_lazuli", "B": "minecraft:glass_bottle"}, oid("blue_potion"), 3),
         "sigil_of_ainz": _shaped("sigil_of_ainz", ["KCK", "CDC", "KCK"], {
             "K": oid("guardian_crest"), "C": cry, "D": "minecraft:diamond_block"}, oid("sigil_of_ainz")),
+        # experimental: Hardcore Survival
+        "waterskin": _shaped("waterskin", [" S ", "L L", " L "], {"S": "minecraft:string", "L": "minecraft:leather"},
+                             oid("waterskin"), unlock="minecraft:leather"),
+        "boil_waterskin": _cook("boil_waterskin", oid("waterskin_murky"), oid("waterskin_pure")),
+        "frost_draught": _shapeless("frost_draught", ["minecraft:snowball", oid("waterskin_pure")], oid("frost_draught")),
+        "ember_draught": _shapeless("ember_draught", ["minecraft:blaze_powder", oid("waterskin_pure")], oid("ember_draught")),
+        "linen_bandage": _shapeless("linen_bandage", ["minecraft:string", "minecraft:white_wool"], oid("linen_bandage"), 3),
+        "splint": _shapeless("splint", ["minecraft:string", "minecraft:stick", "minecraft:stick"], oid("splint")),
+        "field_kit": _shapeless("field_kit", [oid("splint"), oid("linen_bandage"), oid("linen_bandage"), oid("red_potion")],
+                                oid("field_kit")),
+        "vitality_crystal": _shaped("vitality_crystal", ["GDG", "DAD", "GDG"], {
+            "G": "minecraft:gold_ingot", "D": cry, "A": "minecraft:golden_apple"}, oid("vitality_crystal"),
+            unlock="minecraft:golden_apple"),
     }
     for who, (_n, mat) in SIGILS.items():
         r[f"sigil_of_{who}"] = _shaped(f"sigil_of_{who}", ["CXC", "XGX", "CXC"], {
@@ -908,6 +956,7 @@ VANILLA_ITEMS_USED = [
     "minecraft:rotten_flesh", "minecraft:emerald", "minecraft:stone", "minecraft:raw_iron",
     "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool", "minecraft:blue_ice",
     "minecraft:coal", "minecraft:netherrack", "minecraft:quartz_block", "minecraft:blaze_powder",
+    "minecraft:snowball", "minecraft:white_wool",
 ]
 
 

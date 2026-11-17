@@ -15,7 +15,7 @@ export const world = {
   getDefaultSpawnLocation: () => ({ x: 0, y: 64, z: 0 }),
   getDimension: () => players[0]?.dimension ?? { id: "minecraft:overworld", getPlayers: () => [], getEntities: () => [], getBlock: () => undefined },
   clock: { time: 6000, day: 0 }, getTimeOfDay() { return this.clock.time; }, getDay() { return this.clock.day; },
-  afterEvents: { playerDimensionChange: sig(), entitySpawn: sig(), entityDie: sig(), entityHurt: sig(), playerSpawn: sig(), playerLeave: sig(), worldLoad: sig(), itemUse: sig(), itemCompleteUse: sig(), projectileHitEntity: sig(), projectileHitBlock: sig() },
+  afterEvents: { playerDimensionChange: sig(), entitySpawn: sig(), entityDie: sig(), entityHurt: sig(), playerSpawn: sig(), playerLeave: sig(), worldLoad: sig(), itemUse: sig(), itemCompleteUse: sig(), weatherChange: sig(), projectileHitEntity: sig(), projectileHitBlock: sig() },
   getEntity: () => undefined, getAllPlayers: () => players, said: [], sendMessage(m) { this.said.push(m); },
   scoreboard: {
     getObjective: (n) => objectives.get(n), addObjective: (n) => { const o = { scores: new Map(), setScore(p, v) { this.scores.set(p.id, v); } }; objectives.set(n, o); return o; },
@@ -24,10 +24,10 @@ export const world = {
 };
 export const EntityInitializationCause = { Spawned: "Spawned", Loaded: "Loaded", Born: "Born", Event: "Event", Transformed: "Transformed" };
 export const DisplaySlotId = { BelowName: "BelowName" };
-export const EntityDamageCause = { entityAttack: "entityAttack", magic: "magic", fire: "fire", lightning: "lightning", entityExplosion: "entityExplosion", wither: "wither", fallingBlock: "fallingBlock" };
+export const EntityDamageCause = { entityAttack: "entityAttack", magic: "magic", fire: "fire", lightning: "lightning", entityExplosion: "entityExplosion", wither: "wither", fallingBlock: "fallingBlock", fall: "fall", projectile: "projectile", starve: "starve", freezing: "freezing", temperature: "temperature", override: "override" };
 export const Direction = { Up: "Up", Down: "Down", North: "North", South: "South", East: "East", West: "West" };
 export const EquipmentSlot = { Head: "Head", Chest: "Chest", Legs: "Legs", Feet: "Feet", Mainhand: "Mainhand", Offhand: "Offhand" };
-export const GameMode = { Creative: "Creative" };
+export const GameMode = { Creative: "Creative", Spectator: "Spectator" };
 export const emitted = [];
 export class MolangVariableMap { constructor() { this.v = {}; } setColorRGB(k, c) { this.v[k] = c; } setFloat(k, n) { this.v[k] = n; } setVector3(k, vec) { this.v[k] = vec; } }
 export class BlockVolume { constructor(from, to) { this.from = from; this.to = to; } }

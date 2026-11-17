@@ -33,7 +33,7 @@ const PARTY_SHARE = 0.5;
  *   skills: Record<string, number>, codex: number, bosses: string[], story: string[], realm: Record<string, any>,
  *   race: string, raceLv: number, raceXp: number, reborn: number, army: any[], raisedTotal: number, events: string[], medalsEarned: number,
  *   sagas: Record<string, any>, capitalRuns: number, familiars: Record<string, any>, wallRuns: number,
- *   records: Record<string, number>,
+ *   records: Record<string, number>, hardcore: Record<string, any>,
  * }} Profile
  */
 
@@ -307,15 +307,17 @@ const extraMenus = [];
 
 /**
  * Hooks other modules use to add to the character without this module importing them (races.js):
- * `melee` adds to the melee damage factor, `xpFactor` multiplies XP earned and `xp` hears about it.
+ * `melee` adds to the melee damage factor, `xpFactor` multiplies XP earned and `xp` hears about it; `hud` adds
+ * text to the end of the status bar (survival.js).
  * @type {{
  *   melee: ((player: import("@minecraft/server").Player, p: Profile, victim: import("@minecraft/server").Entity) => number)[],
  *   xpFactor: ((p: Profile) => number)[],
  *   xp: ((player: import("@minecraft/server").Player, amount: number) => void)[],
  *   power: ((player: import("@minecraft/server").Player) => number)[],
+ *   hud: ((player: import("@minecraft/server").Player) => string)[],
  * }}
  */
-export const hooks = { melee: [], xpFactor: [], xp: [], power: [] };
+export const hooks = { melee: [], xpFactor: [], xp: [], power: [], hud: [] };
 
 /**
  * Adds a button to the Adventurer's Plate menu, at the end or (with `first`) ahead of the others.
@@ -354,7 +356,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [], story: [], realm: {}, race: "none", raceLv: 1, raceXp: 0, reborn: 0, army: [], raisedTotal: 0, events: [], medalsEarned: 0, sagas: {}, capitalRuns: 0, familiars: { owned: {}, active: "" }, wallRuns: 0, records: {} };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [], story: [], realm: {}, race: "none", raceLv: 1, raceXp: 0, reborn: 0, army: [], raisedTotal: 0, events: [], medalsEarned: 0, sagas: {}, capitalRuns: 0, familiars: { owned: {}, active: "" }, wallRuns: 0, records: {}, hardcore: {} };
 }
 
 /**
@@ -508,9 +510,17 @@ function drawHud(player) {
   const questText = quest && p.quest ? ` §7| §e${quest.what} ${p.quest.progress}/${quest.count}` : "";
   const free = skills.available(p);
   const points = (p.points > 0 ? ` §7| §d+${p.points} pts` : "") + (free > 0 ? ` §7| §a+${free} SP` : "");
+  let more = "";
+  for (const hook of hooks.hud) {
+    try {
+      more += hook(player);
+    } catch {
+      // one hook failing must not blank the bar
+    }
+  }
   try {
     player.onScreenDisplay.setActionBar(
-      `§6Lv.${p.level} §f${className(p)} §7| §bMP ${Math.floor(p.mana)}/${maxMana(p)} §7| §aXP ${percent}${hudExtra.get(player.id) ?? ""}${questText}${points}`
+      `§6Lv.${p.level} §f${className(p)} §7| §bMP ${Math.floor(p.mana)}/${maxMana(p)} §7| §aXP ${percent}${hudExtra.get(player.id) ?? ""}${questText}${points}${more}`
     );
   } catch {
     // player left mid-tick

@@ -586,6 +586,101 @@ def pestonya_soup():
     ], {"B": "#8a5a30", "b": "#5a3a1a", "Y": "#e8b84a", "y": "#ffd27a", "G": "#5aa040", "o": "#e86a2a", "w": "#d8d8e8"})
 
 
+# ------------------------------------------------- experimental: Hardcore Survival (survival.js)
+WATERSKIN_ROWS = [
+    "................",
+    "..........sss...",
+    ".........s...s..",
+    "......CC.....s..",
+    "......NN....s...",
+    ".....NNNN..s....",
+    "....LLLLLLs.....",
+    "...LLhhLLLLL....",
+    "..LLhLLLLLLLL...",
+    "..LhLLLLLLLLd...",
+    "..LhLLLLLLLLd...",
+    "..LLLLLLLLLdd...",
+    "...LLLLLLLddd...",
+    "....dLLLLddd....",
+    ".....ddddd......",
+    "................",
+]
+# A mark beside the skin's neck: a drop of water, a snowflake or a flame.
+DROP = [(2, 2), (1, 3), (2, 3), (3, 3), (1, 4), (2, 4), (3, 4), (2, 5)]
+FLAKE = [(2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (0, 3), (1, 3), (3, 3), (4, 3), (1, 2), (3, 4), (3, 2), (1, 4)]
+FLAME = [(2, 1), (2, 2), (3, 2), (1, 3), (2, 3), (3, 3), (1, 4), (2, 4), (3, 4), (2, 5)]
+
+
+def waterskin(leather="#8a5a30", mark=None, mark_colour="#4fb4ff", core=None):
+    """A leather waterskin with a cork and a strap; what it holds shows as a mark beside its neck."""
+    pal = {"L": leather, "h": mix(leather, "#ffffff", 0.35), "d": shade(leather, 0.62), "C": "#d8b47a",
+           "N": shade(leather, 0.8), "s": "#4a2e16"}
+    img = sprite16(WATERSKIN_ROWS, pal)
+    if mark:
+        for x, y in mark:
+            img.putpixel((x, y), rgba(mark_colour))
+        if core:
+            x, y = mark[len(mark) // 2]
+            img.putpixel((x, y), rgba(core))
+    return img
+
+
+def linen_bandage():
+    """A roll of linen bandage with its loose end trailing off."""
+    return sprite16([
+        "................",
+        "................",
+        ".....WWWWW......",
+        "...WWwwwwwWW....",
+        "..WwwWWWWWwwW...",
+        "..WwWWcccWWwW...",
+        ".WwWWcBBBcWWwW..",
+        ".WwWWcBBBcWWwW..",
+        ".WwWWWcccWWWwW..",
+        "..WwWWWWWWWwWW..",
+        "..WWwwwwwwwWWWWW",
+        "...WWWWWWWWWwwwW",
+        ".........WWWWWW.",
+        "................",
+        "................",
+        "................",
+    ], {"W": "#f1ead8", "w": "#cfc4a8", "c": "#e2d8bf", "B": "#b8ab8c"})
+
+
+def splint():
+    """Two sticks laid side by side and bound with two strips of linen."""
+    s = Sprite()
+    s.shaft(1, 12, 11, "#a07a44", "#6e5028")
+    s.shaft(4, 15, 11, "#a07a44", "#6e5028")
+    for start in (3, 8):  # the bindings cross both sticks
+        for j in range(6):
+            s.px(start - 1 + j, 13 - start - 3 + j, "#f1ead8")
+            s.px(start + j, 13 - start - 3 + j, "#cfc4a8")
+    return s.outline().img
+
+
+def field_kit():
+    """Pestonya's Field Kit: a cream satchel with a gold clasp and a green cross of healing."""
+    return sprite16([
+        "................",
+        "................",
+        "......bbbb......",
+        ".....b....b.....",
+        "..CCCCCCCCCCCC..",
+        "..CccccccccccC..",
+        "..CCCCCYYCCCCC..",
+        "..CWWWWWWWWWWC..",
+        "..CWWWWGGWWWWC..",
+        "..CWWWGGGGWWWC..",
+        "..CWWWGGGGWWWC..",
+        "..CWWWWGGWWWWC..",
+        "..CWWWWWWWWWWC..",
+        "..CCCCCCCCCCCC..",
+        "................",
+        "................",
+    ], {"C": "#b8925a", "c": "#d8b47a", "b": "#5a3a1a", "Y": GOLD_L, "W": "#f1ead8", "G": "#3c9a4a"})
+
+
 def feast_pie():
     """A golden pie with a lattice crust and a Nazarick crest pressed in its middle."""
     return sprite16([
@@ -2556,6 +2651,16 @@ def all_item_icons():
         "rune_of_shadow": rune_stone("#9a4aff"),
         "gem_moonstone": gem("#b8c8ff", "#eef2ff", "#5a6aa8"),
         "pestonya_soup": pestonya_soup(),
+        # experimental: Hardcore Survival
+        "waterskin": waterskin(),
+        "waterskin_murky": waterskin(mark=DROP, mark_colour="#7a7a3a", core="#4e5a24"),
+        "waterskin_pure": waterskin(mark=DROP, mark_colour="#4fb4ff", core="#d8f0ff"),
+        "frost_draught": waterskin("#4d6f96", FLAKE, "#bfefff", "#ffffff"),
+        "ember_draught": waterskin("#8e2c1c", FLAME, "#ff8a2a", "#ffe07a"),
+        "linen_bandage": linen_bandage(),
+        "splint": splint(),
+        "field_kit": field_kit(),
+        "vitality_crystal": crystal("#e8436a", "#ff8fa8", "#ffe6ec", "#9a1c3a"),
         "shooting_star_bow": star_bow(),
         **{f"maid_{p}": fn(MAID_PAL) for p, fn in (("helmet", helmet), ("chestplate", chestplate), ("leggings", leggings), ("boots", boots))},
         "wise_kings_acorn": acorn(),

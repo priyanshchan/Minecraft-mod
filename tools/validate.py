@@ -62,6 +62,9 @@ VANILLA = {
         "lectern", "lime_wool", "moss_carpet", "nether_brick", "oak_leaves", "oak_slab", "quartz_pillar", "raw_gold_block",
         "raw_iron_block", "red_carpet", "red_nether_brick", "scaffolding", "sea_lantern", "smithing_table", "smoker", "smooth_quartz",
         "spruce_log", "spruce_slab", "stone_brick_slab", "stone_brick_wall", "web", "white_carpet", "yellow_stained_glass",
+        # Hardcore Survival (experimental): what warms a player, verified against @minecraft/vanilla-data 1.26.60
+        "fire", "soul_fire", "lava", "flowing_lava", "flowing_water", "lit_furnace", "lit_blast_furnace", "lit_smoker",
+        "torch", "soul_torch",
     },
     "script_entity": {"minecraft:villager_v2", "minecraft:zombie", "minecraft:lightning_bolt"},
     # verified against @minecraft/vanilla-data 1.26.60
@@ -88,6 +91,9 @@ VANILLA = {
         "minecraft:cod", "minecraft:bread", "minecraft:arrow", "minecraft:red_wool", "minecraft:blue_ice",
         "minecraft:raw_gold", "minecraft:bowl",  # v10, verified against @minecraft/vanilla-data  # the Dwarven Royal Capital (v9.5), verified against @minecraft/vanilla-data
         "minecraft:coal", "minecraft:netherrack", "minecraft:quartz_block", "minecraft:blaze_powder",
+        # Hardcore Survival (experimental): drinks and ingredients, verified against @minecraft/vanilla-data 1.26.60
+        "minecraft:potion", "minecraft:milk_bucket", "minecraft:honey_bottle", "minecraft:melon_slice",
+        "minecraft:sweet_berries", "minecraft:snowball", "minecraft:white_wool",
     },
     # verified against the vanilla sound_definitions.json (1.26.60)
     "sound": {
@@ -107,6 +113,7 @@ VANILLA = {
         "random.levelup", "mob.zombie.say", "mob.wither.shoot", "mob.ravager.ambient", "raid.horn",
         "mob.ravager.roar", "random.totem", "horn.call.0", "random.anvil_land", "random.anvil_use",
         "mob.enderdragon.growl", "mob.enderdragon.flap", "mob.enderdragon.hit", "mob.enderdragon.death",
+        "random.drink", "bucket.fill_water",  # Hardcore Survival (experimental)
     },
     # verified against the vanilla particle definitions
     "particle": {
@@ -261,7 +268,8 @@ def main():
                 check(it in items or it in VANILLA["item"] or (BP / f"items/{it.split(':')[1]}.json").is_file(),
                       f"{rel(f)}: unknown repair item {it}")
         convert = comps.get("minecraft:food", {}).get("using_converts_to")
-        check(convert is None or convert in VANILLA["item"], f"{rel(f)}: unknown using_converts_to {convert}")
+        check(convert is None or convert in VANILLA["item"] or (convert.startswith(f"{NS}:") and (BP / f"items/{convert.split(':')[1]}.json").is_file()),
+              f"{rel(f)}: unknown using_converts_to {convert}")
         if "minecraft:wearable" in comps:
             piece = f.stem.rsplit("_", 1)[1]
             for suffix in ("", ".player"):
@@ -445,6 +453,16 @@ def main():
     recipe_ids = set()
     for f in sorted((BP / "recipes").glob("*.json")):
         d = load(f)
+        cooked = d.get("minecraft:recipe_furnace")
+        if cooked is not None:  # boiled, smelted or cooked over a campfire
+            rid = cooked["description"]["identifier"]
+            check(rid not in recipe_ids, f"duplicate recipe {rid}")
+            recipe_ids.add(rid)
+            check(cooked.get("tags") and set(cooked["tags"]) <= {"furnace", "smoker", "blast_furnace", "campfire", "soul_campfire"},
+                  f"{rel(f)}: unknown cooking tags {cooked.get('tags')}")
+            for it in (cooked["input"], cooked["output"]):
+                check(isinstance(it, str) and it in known_items, f"{rel(f)}: unknown item {it}")
+            continue
         body = d.get("minecraft:recipe_shaped") or d.get("minecraft:recipe_shapeless")
         if not check(body is not None, f"{rel(f)}: unknown recipe type"):
             continue

@@ -14,6 +14,26 @@ const LONG = 20000000;
 export const LEVEL_KEY = "overlord:lvl";
 export const ELITE_CHANCE = 0.05;
 
+/**
+ * What other modules add to a naturally spawned mob (survival.js): `level` gives extra levels, `elite` an extra
+ * chance (0..1) of it being an elite.
+ * @type {{ level: ((mob: import("@minecraft/server").Entity) => number)[], elite: ((mob: import("@minecraft/server").Entity) => number)[] }}
+ */
+export const spawnHooks = { level: [], elite: [] };
+
+/** The sum of one kind of spawn hook for a mob. @param {"level" | "elite"} kind @param {import("@minecraft/server").Entity} mob */
+function hooked(kind, mob) {
+  let total = 0;
+  for (const hook of spawnHooks[kind]) {
+    try {
+      total += hook(mob) || 0;
+    } catch {
+      // a hook failing must not stop the spawn
+    }
+  }
+  return total;
+}
+
 /** Tags of mobs the add-on spawned on purpose; they are never removed by the level gate. */
 const SCRIPTED_TAGS = ["overlord_raid", "overlord_patrol", "overlord_summoned", "overlord_guard", "overlord_camp", "overlord_worldboss", "overlord_arena"];
 
@@ -107,7 +127,7 @@ export function mobLevelFor(playerLevel, roll) {
  */
 function applyLevel(mob, level) {
   // About one in twenty is an elite: five levels higher, much tougher, harder hitting.
-  const elite = Math.random() < ELITE_CHANCE;
+  const elite = Math.random() < ELITE_CHANCE + hooked("elite", mob);
   if (elite) {
     level = Math.min(100, level + 5);
     mob.setDynamicProperty("overlord:elite", true);
@@ -150,7 +170,7 @@ function onSpawn(mob) {
     }
     if (mob.typeId === id("war_troll")) mob.addEffect("regeneration", LONG, { amplifier: 1, showParticles: false }); // trolls knit themselves back together
     if (health.effectiveMax >= 200) return; // bosses keep their own numbers
-    applyLevel(mob, mobLevelFor(Math.max(...levels), Math.random()));
+    applyLevel(mob, Math.min(100, mobLevelFor(Math.max(...levels), Math.random()) + Math.round(hooked("level", mob))));
   } catch {
     // the mob vanished while we were looking at it
   }

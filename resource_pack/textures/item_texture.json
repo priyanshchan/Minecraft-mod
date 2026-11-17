@@ -455,6 +455,9 @@
     "overlord_elf_kings_staff": {
       "textures": "textures/items/overlord/elf_kings_staff"
     },
+    "overlord_ember_draught": {
+      "textures": "textures/items/overlord/ember_draught"
+    },
     "overlord_familiar_bell": {
       "textures": "textures/items/overlord/familiar_bell"
     },
@@ -467,6 +470,9 @@
     "overlord_fell_iron": {
       "textures": "textures/items/overlord/fell_iron"
     },
+    "overlord_field_kit": {
+      "textures": "textures/items/overlord/field_kit"
+    },
     "overlord_fluder_staff": {
       "textures": "textures/items/overlord/fluder_staff"
     },
@@ -475,6 +481,9 @@
     },
     "overlord_frost_dragon_scale": {
       "textures": "textures/items/overlord/frost_dragon_scale"
+    },
+    "overlord_frost_draught": {
+      "textures": "textures/items/overlord/frost_draught"
     },
     "overlord_frost_pain": {
       "textures": "textures/items/overlord/frost_pain"
@@ -562,6 +571,9 @@
     },
     "overlord_kilineyram": {
       "textures": "textures/items/overlord/kilineyram"
+    },
+    "overlord_linen_bandage": {
+      "textures": "textures/items/overlord/linen_bandage"
     },
     "overlord_longinus": {
       "textures": "textures/items/overlord/longinus"
@@ -854,6 +866,9 @@
     "overlord_spectral_iron": {
       "textures": "textures/items/overlord/spectral_iron"
     },
+    "overlord_splint": {
+      "textures": "textures/items/overlord/splint"
+    },
     "overlord_spuit_lance": {
       "textures": "textures/items/overlord/spuit_lance"
     },
@@ -920,11 +935,23 @@
     "overlord_vestment_leggings": {
       "textures": "textures/items/overlord/vestment_leggings"
     },
+    "overlord_vitality_crystal": {
+      "textures": "textures/items/overlord/vitality_crystal"
+    },
     "overlord_wall_seal": {
       "textures": "textures/items/overlord/wall_seal"
     },
     "overlord_warrior_captains_sigil": {
       "textures": "textures/items/overlord/warrior_captains_sigil"
+    },
+    "overlord_waterskin": {
+      "textures": "textures/items/overlord/waterskin"
+    },
+    "overlord_waterskin_murky": {
+      "textures": "textures/items/overlord/waterskin_murky"
+    },
+    "overlord_waterskin_pure": {
+      "textures": "textures/items/overlord/waterskin_pure"
     },
     "overlord_wise_kings_acorn": {
       "textures": "textures/items/overlord/wise_kings_acorn"

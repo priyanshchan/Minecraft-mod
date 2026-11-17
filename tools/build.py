@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packages the add-on into dist/Overlord_Tomb_of_Nazarick.mcaddon.
+"""Packages the add-on into dist/Overlord_Hardcore_Experimental.mcaddon (on main: Overlord_Tomb_of_Nazarick).
 
 The archive is deterministic (fixed timestamps, sorted entries) so rebuilding
 without changes yields a byte-identical file.
@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
-NAME = "Overlord_Tomb_of_Nazarick"
+NAME = "Overlord_Hardcore_Experimental"  # the experimental-hardcore branch builds its own file (main: Overlord_Tomb_of_Nazarick)
 PACKS = {"behavior_pack": f"{NAME}_BP", "resource_pack": f"{NAME}_RP"}
 STAMP = (2026, 1, 1, 0, 0, 0)
 

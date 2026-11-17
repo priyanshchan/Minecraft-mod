@@ -24,6 +24,7 @@ const COLORS = {
   acid: { red: 0.5, green: 0.9, blue: 0.25 },
   dark: { red: 0.6, green: 0.15, blue: 0.75 },
   none: { red: 0.85, green: 0.85, blue: 0.95 },
+  blood: { red: 0.7, green: 0.04, blue: 0.04 }, // wounds (survival.js)
 };
 
 /** @type {Record<Pose, string>} */

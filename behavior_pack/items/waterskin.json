@@ -1,0 +1,22 @@
+{
+  "format_version": "1.21.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "overlord:waterskin",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "overlord_waterskin"
+        }
+      },
+      "minecraft:display_name": {
+        "value": "item.overlord.waterskin.name"
+      },
+      "minecraft:max_stack_size": 16
+    }
+  }
+}
