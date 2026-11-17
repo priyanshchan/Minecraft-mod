@@ -1,0 +1,89 @@
+{
+  "//": "Overcraft: the panel that shows Overlord's status in the top-left corner. merge_addons.py --overcraft adds these to the HUD layout of the add-on that owns the action bar (RSCraft), and teaches that layout to hide titles tagged 'ovl:'. Overlord sends its status as such titles (rpg.js, sendTitleHud). The data panel keeps the last 'ovl:' title it saw, the label shows it without the tag.",
+  "ovl_data": {
+    "type": "panel",
+    "size": [0, 0],
+    "property_bag": { "#preserved_text": "" },
+    "bindings": [
+      { "binding_name": "#hud_title_text_string" },
+      {
+        "binding_name": "#hud_title_text_string",
+        "binding_name_override": "#preserved_text",
+        "binding_condition": "visibility_changed"
+      },
+      {
+        "binding_type": "view",
+        "source_property_name": "(not (#hud_title_text_string = #preserved_text) and (not ((#hud_title_text_string - 'ovl:') = #hud_title_text_string)))",
+        "target_property_name": "#visible"
+      }
+    ]
+  },
+  "ovl_status_root": {
+    "type": "panel",
+    "size": ["100%", "100%"],
+    "layer": 6,
+    "controls": [
+      {
+        "ovl_column": {
+          "type": "stack_panel",
+          "orientation": "vertical",
+          "size": ["100%", "100%"],
+          "controls": [
+            { "ovl_top_margin": { "type": "panel", "size": ["100%", 3] } },
+            {
+              "ovl_coords_pad": {
+                "type": "panel",
+                "size": ["100%", 12],
+                "bindings": [
+                  {
+                    "binding_name": "#player_position_visible",
+                    "binding_name_override": "#visible",
+                    "binding_condition": "always",
+                    "binding_type": "global"
+                  }
+                ]
+              }
+            },
+            {
+              "ovl_days_pad": {
+                "type": "panel",
+                "size": ["100%", 12],
+                "bindings": [
+                  {
+                    "binding_name": "#number_of_days_played_visible",
+                    "binding_name_override": "#visible",
+                    "binding_condition": "always",
+                    "binding_type": "global"
+                  }
+                ]
+              }
+            },
+            { "ovl_data@hud.ovl_data": {} },
+            {
+              "ovl_status": {
+                "type": "label",
+                "size": ["default", "default"],
+                "offset": [4, 0],
+                "text": "#text",
+                "localize": false,
+                "text_alignment": "left",
+                "shadow": true,
+                "layer": 31,
+                "color": [1.0, 1.0, 1.0],
+                "bindings": [
+                  {
+                    "binding_type": "view",
+                    "source_control_name": "ovl_data",
+                    "resolve_sibling_scope": true,
+                    "source_property_name": "(#preserved_text - 'ovl:')",
+                    "target_property_name": "#text"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

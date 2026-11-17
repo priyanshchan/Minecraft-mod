@@ -9,6 +9,12 @@ add-ons in, and the combined file is written to dist/merged/, which git ignores.
 --set NAME makes a separate combined set (for example "hardcore" for the Hardcore build): its packs get ids and
 names of their own, so it installs beside another combined set built from the same add-ons.
 
+--overcraft REV builds Overcraft, the combined set under its own name. The ids stay those of the plain combined
+set (so a world keeps its progress), and the other packs' versions become a.b.(c*100+REV) so a rebuild replaces
+them. If an add-on draws its HUD through the action bar and hides tagged titles (RSCraft), its screen layout is
+taught to hide titles tagged "ovl:" too and gets the panel in tools/overcraft/hud.json; Overlord's hudmode.js is
+switched on, so Overlord's status shows in the top-left corner instead of fighting for the action bar.
+
 What it does:
 - Every pack keeps its own folder and its own scripts. A pack can run only one version of the script API, and
   other add-ons are often written for an older one than Overlord's, so their packs are not poured into
@@ -118,7 +124,57 @@ def new_id(old: str, tag: str = "") -> str:
     return str(uuid.uuid5(SPACE, f"merged:{tag + ':' if tag else ''}{old.lower()}"))
 
 
-def merge(out: str, inputs: list[tuple[str, str]], tag: str = ""):
+# The Overcraft pack icon's banner: a 5x7 pixel font for the letters it needs.
+GLYPHS = {
+    "O": [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
+    "V": ["#...#", "#...#", "#...#", "#...#", ".#.#.", ".#.#.", "..#.."],
+    "E": ["#####", "#....", "#....", "####.", "#....", "#....", "#####"],
+    "R": ["####.", "#...#", "#...#", "####.", "#.#..", "#..#.", "#...#"],
+    "C": [".####", "#....", "#....", "#....", "#....", "#....", ".####"],
+    "A": [".###.", "#...#", "#...#", "#####", "#...#", "#...#", "#...#"],
+    "F": ["#####", "#....", "#....", "####.", "#....", "#....", "#...."],
+    "T": ["#####", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."],
+}
+
+
+def banner(icon: bytes, word: str, colour: tuple) -> bytes:
+    """The pack icon with a dark band across its foot and the word in pixel letters on it."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return icon
+    im = Image.open(io.BytesIO(icon)).convert("RGBA")
+    w, h = im.size
+    k = max(1, (w - 16) // (len(word) * 6 - 1))
+    tw, th = (len(word) * 6 - 1) * k, 7 * k
+    band = Image.new("RGBA", (w, th + 4 * k), (12, 8, 20, 215))
+    im.alpha_composite(band, (0, h - band.height - 2 * k))
+    x0, y0 = (w - tw) // 2, h - band.height - 2 * k + 2 * k
+    px = im.load()
+    for i, ch in enumerate(word):
+        for gy, row in enumerate(GLYPHS[ch]):
+            for gx, bit in enumerate(row):
+                if bit != "#":
+                    continue
+                for dy in range(k):
+                    for dx in range(k):
+                        x, y = x0 + (i * 6 + gx) * k + dx, y0 + gy * k + dy
+                        if 0 <= x < w and 0 <= y < h:
+                            px[x, y] = colour if dy < k - max(1, k // 4) else tuple(int(c * 0.6) for c in colour[:3]) + (255,)
+    out = io.BytesIO()
+    im.save(out, "PNG")
+    return out.getvalue()
+
+
+def plain_name(name: str) -> str:
+    """An add-on's name without colour codes, pack suffixes or version: "RSCraftV4.4.3" -> "RSCraft"."""
+    name = re.sub(r"§.", "", name).split("|")[0]
+    name = re.sub(r"\s*\[?(BP|RP)\]?\s*$", "", name.strip())
+    name = re.sub(r"\s*[vV]?\d+(\.\d+)+\s*$", "", name)
+    return name.strip()
+
+
+def merge(out: str, inputs: list[tuple[str, str]], tag: str = "", overcraft: int = 0):
     addons = [(label, read_addon(path, label)) for label, path in inputs]
     overlord = addons[0][1]
     report = []
@@ -185,11 +241,82 @@ def merge(out: str, inputs: list[tuple[str, str]], tag: str = ""):
             name = header.get("name", pack.folder)
             if name == "pack.name":  # named in its language file
                 name = pack.folder
-            mark = f" (merged, {tag})" if tag else " (merged)"
-            header["name"] = re.sub(r"(\s*(?:§.)*\[(BP|RP)\])?$", lambda m: f"{mark}{m.group(0)}", name, count=1)
+            if overcraft:
+                title = "Overcraft" + (f" {tag.capitalize()}" if tag else "")
+                if label == addons[0][0]:
+                    header["name"] = f"§6{title}§r [{pack.kind}]"
+                    others = [plain_name(next((p.manifest["header"].get("name", "") for p in ps if p.kind == "BP"), l)) for l, ps in addons[1:]]
+                    header["description"] = (f"§6{title}§r: Overlord: Tomb of Nazarick with {', '.join(others[:-1])} and {others[-1]}, "
+                                             "in one. For your own worlds only." if len(others) > 1 else f"§6{title}§r")
+                else:
+                    header["name"] = f"§6{title}:§r {name}"
+            else:
+                mark = f" (merged, {tag})" if tag else " (merged)"
+                header["name"] = re.sub(r"(\s*(?:§.)*\[(BP|RP)\])?$", lambda m: f"{mark}{m.group(0)}", name, count=1)
             subs = pack.manifest.get("subpacks")
             if subs:
                 subs.sort(key=lambda s: s.get("folder_name") != "normal")
+    if overcraft:
+        # 2b. Overcraft: the other packs' versions move on, so a rebuild replaces what is installed; the panel; the icon.
+        bumped = {}
+        for _label, packs in addons[1:]:
+            for pack in packs:
+                a, b, c = pack.manifest["header"]["version"]
+                pack.manifest["header"]["version"] = [a, b, c * 100 + overcraft]
+                bumped[pack.uuid] = pack.manifest["header"]["version"]
+        for pack in [p for _l, ps in addons for p in ps]:
+            for dep in pack.manifest.get("dependencies", []):
+                if dep.get("uuid") in bumped:
+                    dep["version"] = bumped[dep["uuid"]]
+        with open(str(PurePosixPath(__file__).parent / "overcraft" / "hud.json"), encoding="utf-8") as f:
+            hud = json.load(f)
+        hud.pop("//", None)
+        patched = 0
+        for label, packs in addons[1:]:
+            for pack in packs:
+                raw = pack.files.get("ui/hud_screen.json")
+                if pack.kind != "RP" or raw is None or b"#hud_title_text_string - 'zcfa:'" not in raw:
+                    continue
+                layout = lenient(raw)
+                count = 0
+
+                def teach(node):
+                    nonlocal count
+                    if isinstance(node, dict):
+                        for k, v in node.items():
+                            # only the rules that hide tagged titles (a chain over all of its tags), never one of its
+                            # own data readers, which keep the last title with one particular tag
+                            if (k == "source_property_name" and isinstance(v, str) and "#hud_title_text_string - 'zcfa:'" in v
+                                    and "#preserved_text" not in v and v.count(" - '") >= 3):
+                                node[k] = v.replace("#hud_title_text_string - 'zcfa:'", "(#hud_title_text_string - 'ovl:') - 'zcfa:'")
+                                count += 1
+                            else:
+                                teach(v)
+                    elif isinstance(node, list):
+                        for x in node:
+                            teach(x)
+
+                teach(layout)
+                for key, value in hud.items():
+                    assert key not in layout, f"{label}'s HUD already has {key}"
+                    layout[key] = value
+                layout.setdefault("root_panel", {}).setdefault("modifications", []).append(
+                    {"array_name": "controls", "operation": "insert_back", "value": [{"ovl_status_root@hud.ovl_status_root": {}}]})
+                pack.files["ui/hud_screen.json"] = json.dumps(layout, indent=1, ensure_ascii=False).encode("utf-8")
+                patched += 1
+                report.append(f"taught {label}'s HUD to hide Overlord's status titles ({count} places) and added the top-left panel")
+        if patched:
+            for pack in overlord:
+                mode = pack.files.get("scripts/hudmode.js")
+                if mode is not None:
+                    text = mode.decode("utf-8")
+                    assert text.count("export const hudMode = { title: false };") == 1, "hudmode.js is not as expected"
+                    pack.files["scripts/hudmode.js"] = text.replace("{ title: false }", "{ title: true }").encode("utf-8")
+                    report.append("switched Overlord's status to the top-left panel")
+        word, colour = "OVERCRAFT", ((246, 217, 104, 255) if not tag else (232, 72, 64, 255))
+        for pack in overlord:
+            if "pack_icon.png" in pack.files:
+                pack.files["pack_icon.png"] = banner(pack.files["pack_icon.png"], word, colour)
     for pack in overlord:
         if pack.kind != "BP":
             continue
@@ -236,16 +363,20 @@ def main():
         print(__doc__)
         return 1
     args = sys.argv[1:]
-    tag = ""
-    if args[:1] == ["--set"]:
-        tag, args = re.sub(r"[^a-z0-9]+", "-", args[1].lower()).strip("-"), args[2:]
+    tag, overcraft = "", 0
+    while args[:1] in (["--set"], ["--overcraft"]):
+        if args[0] == "--set":
+            tag = re.sub(r"[^a-z0-9]+", "-", args[1].lower()).strip("-")
+        else:
+            overcraft = int(args[1])
+        args = args[2:]
     if len(args) < 3:
         print(__doc__)
         return 1
     out, paths = args[0], args[1:]
     labels = ["Overlord"] + [re.sub(r"[^A-Za-z0-9]+", "", PurePosixPath(p).stem.split("-", 1)[-1])[:24] or f"Addon{i}"
                              for i, p in enumerate(paths[1:], 1)]
-    every, report = merge(out, list(zip(labels, paths)), tag)
+    every, report = merge(out, list(zip(labels, paths)), tag, overcraft)
     for line in report:
         print(" ", line)
     for pack in every:
