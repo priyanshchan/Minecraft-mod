@@ -5,6 +5,7 @@
 import { world, system, DisplaySlotId, EntityDamageCause, EquipmentSlot, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import * as skills from "./skills.js";
+import { SOULBOUND } from "./soulbound.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -871,6 +872,7 @@ export function giveItem(player, itemId, amount) {
     const container = player.getComponent("minecraft:inventory")?.container;
     while (left > 0) {
       const stack = new ItemStack(itemId, Math.min(64, left));
+      if (SOULBOUND.has(itemId)) stack.keepOnDeath = true; // the starting tools stay with you through death
       left -= stack.amount;
       const overflow = container ? container.addItem(stack) : stack;
       if (overflow) player.dimension.spawnItem(overflow, player.location);

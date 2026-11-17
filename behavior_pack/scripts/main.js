@@ -58,6 +58,7 @@ import "./sagas.js";
 import "./wall.js";
 import "./familiars.js";
 import "./divine.js";
+import "./soulbound.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;

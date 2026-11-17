@@ -1286,6 +1286,14 @@ Something new for every part of the add-on:
 - **Titles:** six new ones.
 - **Creative tome:** an endgame kit.
 
+### Soulbound tools and multiplayer (v10.0.3)
+
+- **Soulbound tools:** the **Adventurer's Plate**, the **Grimoire** and the **Magic Wand** stay with you when you die.
+  They are not dropped, and they are back in your inventory when you respawn.
+- **Multiplayer:** everything personal is kept per player: levels, mana, quests, kingdoms, familiars, retainers, arena
+  fights and raids. The dungeons (the Great Tomb, the Dwarven Royal Capital, the Great Wall) are shared co-op runs:
+  everyone near the gate goes in together, and every player on the last floor is rewarded.
+
 ### Testing in creative mode (v7.6.1)
 
 The **Creative Tome of Ascension** (`/give @s overlord:ascension_tome`, or from the creative inventory; it
