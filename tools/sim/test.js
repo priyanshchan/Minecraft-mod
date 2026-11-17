@@ -2611,12 +2611,35 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   const kitless = mkPlayer("kit"); world.afterEvents.playerSpawn.fire({ player: kitless, initialSpawn: true });
   world.props.delete("overlord:hardcore_rules"); sv.forgetRules(); advance(45);
   assert.ok(!kitless.inv.some((s) => s.typeId === sv.WATERSKIN), "no waterskin when there is no thirst of ours"); players.splice(players.indexOf(kitless), 1);
-  ItemTypes.known.delete("zc:noob_heart"); world.props.set("overlord:hardcore_rules", savedRules); sv.forgetRules();
+  ItemTypes.known.delete("zc:noob_heart"); world.props.set("overlord:hardcore_rules", savedRules); sv.forgetRules(); rpg.forgetActionBarOwner();
   assert.equal(sv.ruleOn("thirst"), true);
   // the body is saved with the profile
   body.lost = 2; body.thirst = 7; rpg.touch(h); advance(100); world.afterEvents.playerLeave.fire({ playerId: "hal" });
   const back = sv.bodyOf(h); assert.notStrictEqual(back, body); assert.equal(back.lost, 2); assert.equal(back.thirst, 7);
   players.splice(players.indexOf(h), 1);
+}
+
+// ---- beside RSCraft, whose HUD is drawn through the action bar, Overlord leaves the bar alone ----
+{
+  const { ItemTypes } = await import("@minecraft/server");
+  const r = mkPlayer("rena"); rpg.profileOf(r).hud = true; rpg.forgetActionBarOwner();
+  advance(40); assert.ok(r.bar.includes("Lv."), "on its own, Overlord draws its status bar");
+  ItemTypes.known.add("zc:noob_heart"); rpg.forgetActionBarOwner();
+  assert.equal(rpg.actionBarOwner(), "RSCraft");
+  r.bar = ""; advance(60); assert.equal(r.bar, "", "beside RSCraft it never writes to the action bar");
+  r.msgs.length = 0; rpg.notify(r, "§cNot enough mana"); rpg.notify(r, "§cNot enough mana");
+  assert.equal(r.bar, ""); assert.deepEqual(r.msgs, ["§cNot enough mana"], "messages go to chat, without repeats");
+  advance(70); rpg.notify(r, "§cNot enough mana"); assert.equal(r.msgs.filter((m) => m === "§cNot enough mana").length, 2, "but are repeated later");
+  const before = shown.length; rpg.openMenu(r); await new Promise((res) => setTimeout(res, 20));
+  const plate = shown.slice(before).find((f) => f.title === "Adventurer's Plate");
+  assert.ok(plate.body.includes("RSCraft draws its HUD") && plate.body.includes("MP "), "the status is on the Adventurer's Plate");
+  assert.ok(plate.buttons[3].includes("flickers with RSCraft"));
+  script.push(3); rpg.openMenu(r); await new Promise((res) => setTimeout(res, 20));
+  assert.equal(rpg.profileOf(r).barShare, true, "the player can choose to share the bar anyway");
+  r.bar = ""; advance(60); assert.ok(r.bar.includes("Lv."), "and then the status bar is drawn");
+  script.push(3); rpg.openMenu(r); await new Promise((res) => setTimeout(res, 20)); assert.equal(rpg.profileOf(r).barShare, false);
+  ItemTypes.known.delete("zc:noob_heart"); rpg.forgetActionBarOwner(); assert.equal(rpg.actionBarOwner(), "");
+  players.splice(players.indexOf(r), 1);
 }
 
 // persistence: saved profile is restored after leaving

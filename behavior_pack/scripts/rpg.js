@@ -2,7 +2,7 @@
 // Levels and XP, stat points, mana, classes, guild quests with adventurer ranks,
 // an action-bar HUD, party XP sharing and a level tag under player names.
 // Uses only stable @minecraft/server 2.0.0 and @minecraft/server-ui 2.0.0 APIs.
-import { world, system, DisplaySlotId, EntityDamageCause, EquipmentSlot, ItemStack } from "@minecraft/server";
+import { world, system, DisplaySlotId, EntityDamageCause, EquipmentSlot, ItemStack, ItemTypes } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import * as skills from "./skills.js";
 
@@ -33,7 +33,7 @@ const PARTY_SHARE = 0.5;
  *   skills: Record<string, number>, codex: number, bosses: string[], story: string[], realm: Record<string, any>,
  *   race: string, raceLv: number, raceXp: number, reborn: number, army: any[], raisedTotal: number, events: string[], medalsEarned: number,
  *   sagas: Record<string, any>, capitalRuns: number, familiars: Record<string, any>, wallRuns: number,
- *   records: Record<string, number>, hardcore: Record<string, any>,
+ *   records: Record<string, number>, hardcore: Record<string, any>, barShare: boolean,
  * }} Profile
  */
 
@@ -356,7 +356,7 @@ const dirty = new Set();
 
 /** @returns {Profile} */
 function freshProfile() {
-  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [], story: [], realm: {}, race: "none", raceLv: 1, raceXp: 0, reborn: 0, army: [], raisedTotal: 0, events: [], medalsEarned: 0, sagas: {}, capitalRuns: 0, familiars: { owned: {}, active: "" }, wallRuns: 0, records: {}, hardcore: {} };
+  return { level: 1, xp: 0, points: 0, str: 0, vit: 0, int: 0, agi: 0, cls: "none", mana: 50, done: 0, hud: true, quest: null, spells: [], slots: [], slot: 0, casts: {}, party: [], stance: "come", kills: {}, rep: {}, daily: {}, title: "", titles: [], sites: [], supply: true, bank: 0, skills: {}, codex: 0, bosses: [], story: [], realm: {}, race: "none", raceLv: 1, raceXp: 0, reborn: 0, army: [], raisedTotal: 0, events: [], medalsEarned: 0, sagas: {}, capitalRuns: 0, familiars: { owned: {}, active: "" }, wallRuns: 0, records: {}, hardcore: {}, barShare: false };
 }
 
 /**
@@ -477,12 +477,57 @@ function rankOf(p) {
 const hudHold = new Map();
 
 /**
- * Shows a short message on the action bar (and pauses the HUD so it stays readable).
+ * Add-ons whose screen layout draws their own HUD through the action bar, each recognised by an item only it
+ * has. RSCraft draws its water and temperature icons that way, many times a second: anything else written to the
+ * action bar is cut into pieces by its layout and wipes its icons, so Overlord leaves the bar to it.
+ */
+export const ACTION_BAR_OWNERS = [{ name: "RSCraft", marker: "zc:noob_heart" }];
+/** @type {string | undefined} */
+let barOwner;
+
+/** The add-on that draws its HUD through the action bar in this world, or "" when there is none. */
+export function actionBarOwner() {
+  if (barOwner) return barOwner;
+  let found = "";
+  for (const o of ACTION_BAR_OWNERS) {
+    try {
+      if (ItemTypes.get(o.marker) !== undefined) found = o.name;
+    } catch {
+      // not ready yet: look again next time
+    }
+  }
+  if (found || system.currentTick > 100) barOwner = found; // early on, before the world has loaded, ask again later
+  return found;
+}
+
+/** Forgets which add-on owns the action bar, so it is looked up afresh. */
+export function forgetActionBarOwner() {
+  barOwner = undefined;
+}
+
+/** Whether Overlord may write to this player's action bar. @param {import("@minecraft/server").Player} player */
+export function mayUseActionBar(player) {
+  return !actionBarOwner() || profileOf(player).barShare;
+}
+
+/** The last message each player was sent in chat instead, so the same one is not repeated at once. */
+const lastNote = new Map();
+
+/**
+ * Shows a short message on the action bar (and pauses the HUD so it stays readable). When another add-on draws its
+ * HUD there, the message goes to chat instead, and the same message is not repeated within three seconds.
  * @param {import("@minecraft/server").Player} player
  * @param {string} text
  */
 export function notify(player, text) {
   try {
+    if (!mayUseActionBar(player)) {
+      const last = lastNote.get(player.id);
+      if (last && last.text === text && system.currentTick - last.at < 3 * TICKS) return;
+      lastNote.set(player.id, { text, at: system.currentTick });
+      player.sendMessage(text);
+      return;
+    }
     hudHold.set(player.id, system.currentTick + 2 * TICKS);
     player.onScreenDisplay.setActionBar(text);
   } catch {
@@ -501,10 +546,9 @@ export function setHudExtra(player, text) {
   hudExtra.set(player.id, text);
 }
 
-/** @param {import("@minecraft/server").Player} player */
-function drawHud(player) {
+/** The status bar's text for a player. @param {import("@minecraft/server").Player} player */
+export function statusText(player) {
   const p = profileOf(player);
-  if (!p.hud || system.currentTick < (hudHold.get(player.id) ?? 0)) return;
   const percent = p.level >= MAX_LEVEL ? "MAX" : `${Math.floor((p.xp / xpForNext(p.level)) * 100)}%`;
   const quest = p.quest ? QUESTS.find((q) => q.key === p.quest?.quest) : undefined;
   const questText = quest && p.quest ? ` §7| §e${quest.what} ${p.quest.progress}/${quest.count}` : "";
@@ -518,10 +562,15 @@ function drawHud(player) {
       // one hook failing must not blank the bar
     }
   }
+  return `§6Lv.${p.level} §f${className(p)} §7| §bMP ${Math.floor(p.mana)}/${maxMana(p)} §7| §aXP ${percent}${hudExtra.get(player.id) ?? ""}${questText}${points}${more}`;
+}
+
+/** @param {import("@minecraft/server").Player} player */
+function drawHud(player) {
+  const p = profileOf(player);
+  if (!p.hud || !mayUseActionBar(player) || system.currentTick < (hudHold.get(player.id) ?? 0)) return;
   try {
-    player.onScreenDisplay.setActionBar(
-      `§6Lv.${p.level} §f${className(p)} §7| §bMP ${Math.floor(p.mana)}/${maxMana(p)} §7| §aXP ${percent}${hudExtra.get(player.id) ?? ""}${questText}${points}${more}`
-    );
+    player.onScreenDisplay.setActionBar(statusText(player));
   } catch {
     // player left mid-tick
   }
@@ -1117,6 +1166,7 @@ export function applyPassives(player) {
  */
 export function openMenu(player) {
   const p = profileOf(player);
+  const owner = actionBarOwner();
   const rank = RANKS[rankOf(p)];
   const next = p.level >= MAX_LEVEL ? "max level" : `${p.xp}/${xpForNext(p.level)} XP`;
   const form = new ActionFormData()
@@ -1128,12 +1178,13 @@ export function openMenu(player) {
         `Level: §6${p.level}§r  (${next})\n` +
         `Mana: §b${Math.floor(p.mana)}/${maxMana(p)}§r\n` +
         STAT_KEYS.map((k) => `${STATS[k].color}${STATS[k].name}: ${p[k]}§r`).join("   ") +
-        `\nUnspent stat points: §d${p.points}§r`
+        `\nUnspent stat points: §d${p.points}§r` +
+        (owner && !p.barShare ? `\n\n§7${owner} draws its HUD where Overlord's status bar goes, so it is shown here:§r\n${statusText(player)}§r` : "")
     )
     .button(`Spend stat points (${p.points})`)
     .button("Choose class")
     .button(p.quest ? "Guild quest (in progress)" : "Guild quests")
-    .button(p.hud ? "Hide status bar" : "Show status bar")
+    .button(owner ? (p.barShare ? `Give the status bar back to ${owner}` : `Show status bar (flickers with ${owner})`) : p.hud ? "Hide status bar" : "Show status bar")
     .button("How it works")
     .button("Bestiary");
   for (const extra of extraMenus) form.button(extra.label(player));
@@ -1142,6 +1193,13 @@ export function openMenu(player) {
     else if (choice === 1) openClasses(player);
     else if (choice === 2) openQuests(player);
     else if (choice === 3) {
+      if (owner) {
+        p.barShare = !p.barShare;
+        p.hud = true;
+        save(player);
+        notify(player, p.barShare ? `§7Status bar shown. It will flicker with ${owner}'s HUD.` : `§7Status bar given back to ${owner}. Your status is on the Adventurer's Plate.`);
+        return;
+      }
       p.hud = !p.hud;
       save(player);
       notify(player, p.hud ? "§7Status bar shown" : "§7Status bar hidden");
