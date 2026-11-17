@@ -1,4 +1,4 @@
-## Hardcore Survival (experimental build, v10.1.4)
+## Hardcore Survival (experimental build, v10.1.5)
 
 An experimental branch (`experimental-hardcore`) that adds a hard survival layer to the whole add-on, in the
 spirit of the hardest survival modpacks. Everything in it is this add-on's own: original code, items and art.
@@ -90,6 +90,10 @@ It is **not** merged into the main add-on.
 
 ### Soulbound tools (v10.1.4)
 - As in Overlord v10.0.3, the Adventurer's Plate, the Grimoire and the Magic Wand stay with you when you die.
+
+### Data Crystals from every monster (v10.1.5)
+- As in Overlord v10.0.4, every monster you slay has a chance to drop a Data Crystal (one in ten, more against
+  stronger foes). In the dangerous wilds monsters are higher level, so they drop them more often.
 
 ### Settings
 - The **Hardcore Survival** page on the Adventurer's Plate shows your water, temperature, injuries, lost hearts

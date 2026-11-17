@@ -1018,6 +1018,25 @@ export function giveItem(player, itemId, amount) {
   }
 }
 
+/** Data Crystals from ordinary monsters: a chance on every kill, better against stronger (levelled) foes. */
+export const CRYSTAL_CHANCE = 0.1;
+export const CRYSTAL_PER_LEVEL = 0.002;
+export const CRYSTAL_MAX = 0.3;
+/** Mobs that never drop a crystal this way: summoned allies and arena waves (bosses carry their own). */
+const NO_CRYSTAL_TAGS = ["overlord_summoned", "overlord_arena"];
+
+/** The chance a slain mob drops a Data Crystal: 0 for anything but an ordinary monster. @param {import("@minecraft/server").Entity} dead */
+export function crystalChance(dead) {
+  try {
+    if (!dead.matches({ families: ["monster"] }) || NO_CRYSTAL_TAGS.some((tag) => dead.hasTag(tag))) return 0;
+    const health = dead.getComponent("minecraft:health");
+    if (health && health.effectiveMax >= 200) return 0; // a boss: its own loot
+  } catch {
+    return 0;
+  }
+  return Math.min(CRYSTAL_MAX, CRYSTAL_CHANCE + mobLevel(dead) * CRYSTAL_PER_LEVEL);
+}
+
 world.afterEvents.entityDie.subscribe((event) => {
   try {
     // Kills by a retainer count for its master.
@@ -1025,6 +1044,15 @@ world.afterEvents.entityDie.subscribe((event) => {
     if (!player) return;
     const dead = event.deadEntity;
     if (dead.typeId === "minecraft:player" || dead.typeId === id("retainer")) return;
+    // Any monster may drop a Data Crystal where it falls, the stronger the likelier.
+    const chance = crystalChance(dead);
+    if (chance > 0 && Math.random() < chance) {
+      try {
+        dead.dimension.spawnItem(new ItemStack(id("data_crystal"), 1), dead.location);
+      } catch {
+        giveItem(player, id("data_crystal"), 1); // nowhere to drop it: straight to the killer
+      }
+    }
     const typeId = dead.typeId;
     const xp = killXp(dead);
     const p = profileOf(player);
@@ -1447,6 +1475,7 @@ function openHelp(player) {
         "§eBestiary§r: every 5, 15 and 40 kills of a kind of foe add 5% damage against it.\n\n" +
         "§eReputation§r: factions remember what you do. Kill their people and they turn on you until the grudge fades.\n\n" +
         "§eElites§r: about one monster in twenty spawns as an elite - tougher, five levels higher, worth triple XP and carrying coins and a Data Crystal.\n\n" +
+        "§eData Crystals§r: every monster you slay has a chance to drop one (one in ten, more against stronger foes); bosses carry several; the Nazarick Maid and the Dwarf smith sell them for 6 Gold Coins. Spend them in the Grimoire to learn spells.\n\n" +
         "§eDaily bounty§r: every in-game day the guild posts one bounty for everyone. Finish bounties on consecutive days to build a streak worth up to +50%.\n\n" +
         "§eTitles§r: great deeds earn titles; wear one in front of your name from this menu.\n\n" +
         `§eClass mastery§r: at level ${ADVANCE_LEVEL} your class takes its advanced form (Sword Saint, High Wizard, Master Assassin, High Priest) with a stronger bonus and a faster skill.\n\n` +
