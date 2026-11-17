@@ -1,4 +1,4 @@
-## Hardcore Survival (experimental build, v10.1.3)
+## Hardcore Survival (experimental build, v10.1.4)
 
 An experimental branch (`experimental-hardcore`) that adds a hard survival layer to the whole add-on, in the
 spirit of the hardest survival modpacks. Everything in it is this add-on's own: original code, items and art.
@@ -87,6 +87,9 @@ It is **not** merged into the main add-on.
 - The Plate has a button to show Overlord's status bar anyway. It will flicker with RSCraft's icons.
 - In the **Overcraft** build (v10.1.3), Overlord's status, and its short messages, show as a small block in the
   top-left corner instead, beside RSCraft's HUD. The Plate's button hides or shows it.
+
+### Soulbound tools (v10.1.4)
+- As in Overlord v10.0.3, the Adventurer's Plate, the Grimoire and the Magic Wand stay with you when you die.
 
 ### Settings
 - The **Hardcore Survival** page on the Adventurer's Plate shows your water, temperature, injuries, lost hearts

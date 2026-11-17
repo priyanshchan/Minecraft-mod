@@ -58,6 +58,7 @@ import "./sagas.js";
 import "./wall.js";
 import "./familiars.js";
 import "./divine.js";
+import "./soulbound.js";
 import "./survival.js";
 
 const NS = "overlord";

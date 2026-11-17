@@ -2662,6 +2662,27 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   players.splice(players.indexOf(r), 1);
 }
 
+// ---- soulbound tools: the Adventurer's Plate, the Grimoire and the Magic Wand stay with you through death ----
+{
+  const soul = await import("./soulbound.js");
+  assert.ok(a.inv.find((s) => s.typeId === "overlord:adventurer_plate").keepOnDeath, "the plate handed out at the start is soulbound");
+  assert.ok(a.inv.find((s) => s.typeId === "overlord:grimoire").keepOnDeath && a.inv.find((s) => s.typeId === "overlord:magic_wand").keepOnDeath,
+    "and so are the Grimoire and the Magic Wand");
+  const k = mkPlayer("kai"); k.inv.length = 0;
+  k.inv.push(new ItemStack("overlord:grimoire"), new ItemStack("minecraft:bread", 5), new ItemStack("overlord:magic_wand"), new ItemStack("overlord:adventurer_plate"));
+  advance(45);
+  assert.deepEqual(k.inv.map((s) => Boolean(s.keepOnDeath)), [true, false, true, true], "found in the inventory, they are bound within two seconds; bread is not");
+  // where the game offers inventory slots, the mark goes on the slot, so the item in hand is not swapped out
+  const slots = [{ item: new ItemStack("overlord:magic_wand"), keep: false }, { item: new ItemStack("minecraft:stick"), keep: false }];
+  let swaps = 0;
+  const container = { size: 2, getSlot: (i) => ({ hasItem: () => true, get typeId() { return slots[i].item.typeId; }, get keepOnDeath() { return slots[i].keep; }, set keepOnDeath(v) { slots[i].keep = v; } }),
+    getItem: (i) => slots[i].item, setItem: () => { swaps++; } };
+  const holder = { getComponent: (c) => (c === "minecraft:inventory" ? { container } : undefined) };
+  assert.equal(soul.bindAll(holder), 1); assert.deepEqual(slots.map((x) => x.keep), [true, false]); assert.equal(swaps, 0, "no item is swapped");
+  assert.equal(soul.bindAll(holder), 0, "and nothing is done twice");
+  players.splice(players.indexOf(k), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);
