@@ -2458,6 +2458,29 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   worn = {}; e.dimension.mobs = []; e.aimed = []; players.splice(players.indexOf(e), 1);
 }
 
+// ---- beside RSCraft, whose HUD is drawn through the action bar, Overlord leaves the bar alone ----
+{
+  const { ItemTypes } = await import("@minecraft/server");
+  const r = mkPlayer("rena"); rpg.profileOf(r).hud = true;
+  advance(40); assert.ok(r.bar.includes("Lv."), "on its own, Overlord draws its status bar");
+  ItemTypes.known.add("zc:noob_heart"); rpg.forgetActionBarOwner();
+  assert.equal(rpg.actionBarOwner(), "RSCraft");
+  r.bar = ""; advance(60); assert.equal(r.bar, "", "beside RSCraft it never writes to the action bar");
+  r.msgs.length = 0; rpg.notify(r, "§cNot enough mana"); rpg.notify(r, "§cNot enough mana");
+  assert.equal(r.bar, ""); assert.deepEqual(r.msgs, ["§cNot enough mana"], "messages go to chat, without repeats");
+  advance(70); rpg.notify(r, "§cNot enough mana"); assert.equal(r.msgs.length, 2, "but are repeated later");
+  const before = shown.length; rpg.openMenu(r); await new Promise((res) => setTimeout(res, 20));
+  const plate = shown.slice(before).find((f) => f.title === "Adventurer's Plate");
+  assert.ok(plate.body.includes("RSCraft draws its HUD") && plate.body.includes("MP "), "the status is on the Adventurer's Plate");
+  assert.ok(plate.buttons[3].includes("flickers with RSCraft"));
+  script.push(3); rpg.openMenu(r); await new Promise((res) => setTimeout(res, 20));
+  assert.equal(rpg.profileOf(r).barShare, true, "the player can choose to share the bar anyway");
+  r.bar = ""; advance(60); assert.ok(r.bar.includes("Lv."), "and then the status bar is drawn");
+  script.push(3); rpg.openMenu(r); await new Promise((res) => setTimeout(res, 20)); assert.equal(rpg.profileOf(r).barShare, false);
+  ItemTypes.known.delete("zc:noob_heart"); rpg.forgetActionBarOwner(); assert.equal(rpg.actionBarOwner(), "");
+  players.splice(players.indexOf(r), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);
