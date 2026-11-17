@@ -1,4 +1,4 @@
-## Hardcore Survival (experimental build, v10.1.1)
+## Hardcore Survival (experimental build, v10.1.2)
 
 An experimental branch (`experimental-hardcore`) that adds a hard survival layer to the whole add-on, in the
 spirit of the hardest survival modpacks. Everything in it is this add-on's own: original code, items and art.
@@ -77,6 +77,14 @@ It is **not** merged into the main add-on.
 - Any of them can still be switched on in World rules; a rule changed by hand stays as it was set.
 - The Hardcore Survival page says which are off because of RSCraft. No waterskin or bandages are handed out
   while Hardcore's thirst and injuries are both off.
+
+### The status bar beside RSCraft (v10.1.2)
+- RSCraft draws its water and temperature icons by writing to the action bar (the line above the hotbar) many
+  times a second. Anything else written there is cut into pieces by its screen layout and wipes its icons, so
+  Overlord's status bar used to flash up scrambled for a moment and vanish.
+- With RSCraft installed, Overlord no longer writes to the action bar. Its short messages go to chat (the same one
+  is not repeated within three seconds), and its status line is shown on the Adventurer's Plate.
+- The Plate has a button to show Overlord's status bar anyway. It will flicker with RSCraft's icons.
 
 ### Settings
 - The **Hardcore Survival** page on the Adventurer's Plate shows your water, temperature, injuries, lost hearts
