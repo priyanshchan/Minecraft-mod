@@ -138,6 +138,11 @@ export function feed(player, amount) {
     notify(player, `${kind.colour}${bond.name} reached level ${bond.level}!${learned >= 0 ? ` §fIt learned §e${kind.tricks[learned][0]}§f.` : ""}`);
   }
   if (bond.level >= MAX_LEVEL) bond.xp = 0;
+  if (rose) {
+    // the level above its head rises with it (it used to keep the level it was called out at)
+    const body = bodyOf(player);
+    if (body) body.nameTag = nameplate(f.active, bond);
+  }
   touch(player);
   return rose;
 }
@@ -169,6 +174,11 @@ function recall(player) {
   }
 }
 
+/** The name a familiar wears above its head: its name and its level now. @param {string} key @param {{ name: string, level: number }} bond */
+export function nameplate(key, bond) {
+  return `${BY_KEY[key].colour}${bond.name} §7Lv.${bond.level}`;
+}
+
 /** Brings the active familiar out beside the player. @param {Player} player */
 function appear(player) {
   const f = familiarsOf(player);
@@ -179,7 +189,7 @@ function appear(player) {
   const body = player.dimension.spawnEntity(kind.type, at);
   body.addTag(tagOf(player));
   body.setDynamicProperty("overlord:owner", player.id);
-  body.nameTag = `${kind.colour}${f.owned[f.active].name} §7Lv.${f.owned[f.active].level}`;
+  body.nameTag = nameplate(f.active, f.owned[f.active]);
   system.runTimeout(() => {
     try {
       if (body.isValid && player.isValid) body.getComponent("minecraft:tameable")?.tame(player);
@@ -220,7 +230,7 @@ export function rename(player, key, name) {
   if (!bond || !clean) return false;
   bond.name = clean;
   const body = familiarsOf(player).active === key ? bodyOf(player) : undefined;
-  if (body) body.nameTag = `${BY_KEY[key].colour}${clean} §7Lv.${bond.level}`;
+  if (body) body.nameTag = nameplate(key, bond);
   touch(player);
   return true;
 }
@@ -418,6 +428,8 @@ export function tend(player, now) {
   let body = bodyOf(player);
   if (!body) body = appear(player);
   if (!body) return [];
+  const plate = nameplate(f.active, f.owned[f.active]);
+  if (body.nameTag !== plate) body.nameTag = plate; // always the level it has now
   if (dist(body, player) > 20 || Math.abs(body.location.y - player.location.y) > 10) {
     try {
       body.teleport({ x: player.location.x + 1, y: player.location.y, z: player.location.z + 1 });

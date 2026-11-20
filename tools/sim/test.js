@@ -2240,6 +2240,10 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   // it grows with the foes its master fells, and learns its tricks
   for (let i = 0; i < 12; i++) kill(pet, being("overlord:ogre", { x: 50, y: 64, z: 50 }, ["monster"], 120));
   assert.ok(f.owned.dragonling.level >= 4, `level ${f.owned.dragonling.level}`); assert.ok(fam.knows(pet, 1));
+  assert.ok(body.nameTag.endsWith(`Lv.${f.owned.dragonling.level}`), `the level above its head rises with it: ${body.nameTag}`);
+  f.owned.dragonling.level += 1; fam.tend(pet, now += 5);
+  assert.ok(body.nameTag.endsWith(`Lv.${f.owned.dragonling.level}`), "and is put right on its next step, whatever changed it");
+  f.owned.dragonling.level -= 1; fam.tend(pet, now += 5);
   pet.health.currentValue = 6; pet.effects.clear(); const used = fam.act(pet, body, now += 200); assert.ok(used.includes("Frost Ward") && pet.effects.has("resistance"));
   f.owned.dragonling.level = 8; const near = being("overlord:goblin", { x: 2, y: 64, z: 1 }); assert.ok(fam.act(pet, body, now += 400).includes("Winter Gale")); assert.ok(near.knocked);
   for (let i = 0; i < 400; i++) fam.feed(pet, 60); assert.equal(f.owned.dragonling.level, fam.MAX_LEVEL);
