@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [10, 1, 5]
+VERSION = [10, 1, 6]
 MIN_ENGINE = [1, 21, 90]
 # The experimental Hardcore Survival build (branch experimental-hardcore) has pack ids of its own, so it installs
 # beside the main add-on instead of replacing it. Use one or the other in a world, never both.
@@ -13,7 +13,7 @@ UUID_RP = "da93148b-6a55-4164-b6c4-7473062b4b30"
 UUID_RP_MOD = "27d8b6cb-d78f-4835-b4d0-223af4a386ea"
 
 PACK_NAME = "Overlord: Tomb of Nazarick - Hardcore (experimental)"
-PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom - and Hardcore Survival: thirst, body temperature, injuries, the price of resurrection and dangerous wilds. §7v10.1.5 §c(experimental)"
+PACK_DESC = "Ainz Ooal Gown, the Floor Guardians, tier magic, levels, quests, companions and faction camps, a story campaign and your own kingdom - and Hardcore Survival: thirst, body temperature, injuries, the price of resurrection and dangerous wilds. §7v10.1.6 §c(experimental)"
 
 
 def oid(name):

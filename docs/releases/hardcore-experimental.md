@@ -1,4 +1,4 @@
-## Hardcore Survival (experimental build, v10.1.5)
+## Hardcore Survival (experimental build, v10.1.6)
 
 An experimental branch (`experimental-hardcore`) that adds a hard survival layer to the whole add-on, in the
 spirit of the hardest survival modpacks. Everything in it is this add-on's own: original code, items and art.
@@ -94,6 +94,9 @@ It is **not** merged into the main add-on.
 ### Data Crystals from every monster (v10.1.5)
 - As in Overlord v10.0.4, every monster you slay has a chance to drop a Data Crystal (one in ten, more against
   stronger foes). In the dangerous wilds monsters are higher level, so they drop them more often.
+
+### Familiars show their real level (v10.1.6)
+- As in Overlord v10.0.5, a familiar's nameplate rises with it when it levels up mid-fight.
 
 ### Settings
 - The **Hardcore Survival** page on the Adventurer's Plate shows your water, temperature, injuries, lost hearts
