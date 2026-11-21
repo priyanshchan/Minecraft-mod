@@ -8,23 +8,7 @@ import {
   EquipmentSlot,
   GameMode,
 } from "@minecraft/server";
-import {
-  creditedPlayer,
-  grantLevel,
-  grantXp,
-  killXp,
-  loseLevels,
-  notify,
-  profileOf,
-  touch,
-  openMenu,
-  resetStats,
-  restoreMana,
-  setRegalia,
-  spellPower,
-  spendMana,
-  useClassSkill,
-} from "./rpg.js";
+import { creditedPlayer, grantLevel, grantXp, healPlayer, killXp, loseLevels, notify, openMenu, profileOf, resetStats, restoreMana, setRegalia, spellPower, spendMana, touch, useClassSkill } from "./rpg.js";
 import { startRaid } from "./raid.js";
 import { allyLimit, castSelected, countItem, creditCast, cycleSpell, openGrimoire, studyTome, summonAlly } from "./spells.js";
 import * as fx from "./vfx.js";
@@ -267,6 +251,10 @@ function consumeHeldItem(player) {
  * @param {number} amount
  */
 function heal(entity, amount) {
+  if (entity.typeId === "minecraft:player") {
+    healPlayer(/** @type {import("@minecraft/server").Player} */ (entity), amount);
+    return;
+  }
   const health = entity.getComponent("minecraft:health");
   if (!health || health.currentValue <= 0) return;
   health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + amount));

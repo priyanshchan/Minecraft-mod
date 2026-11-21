@@ -3,10 +3,7 @@
 // for kills, reading a Codex). The nodes themselves and the arithmetic live in skills.js.
 import { world, system, EntityDamageCause, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import {
-  applyPassives, creditedPlayer, giveItem, grantXp, healthShare, isElite, killXp, lastBlow, notify, openMenu,
-  profileOf, registerMenu, restoreMana, touch,
-} from "./rpg.js";
+import { applyPassives, creditedPlayer, giveItem, grantXp, healPlayer, healthShare, isElite, killXp, lastBlow, notify, openMenu, profileOf, registerMenu, restoreMana, touch } from "./rpg.js";
 import { countItem, takeItem } from "./spells.js";
 import * as skills from "./skills.js";
 import * as fx from "./vfx.js";
@@ -42,6 +39,10 @@ function ready(player, what, seconds) {
 /** @param {Entity} entity @param {number} amount */
 function heal(entity, amount) {
   try {
+    if (entity.typeId === "minecraft:player") {
+      healPlayer(/** @type {import("@minecraft/server").Player} */ (entity), amount);
+      return;
+    }
     const health = entity.getComponent("minecraft:health");
     if (!health || health.currentValue <= 0 || amount <= 0) return;
     health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + amount));
