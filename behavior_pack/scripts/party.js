@@ -8,7 +8,7 @@
 // master's potions and rest between fights; archers scout for camps.
 import { world, system, EntityDamageCause, EquipmentSlot } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
-import { MAX_LEVEL, TIPS, creditedPlayer, giveItem, isElite, killXp, notify, profileOf, registerMenu, standingOf, touch, xpForNext } from "./rpg.js";
+import { creditedPlayer, giveItem, healPlayer, isElite, killXp, MAX_LEVEL, notify, profileOf, registerMenu, standingOf, TIPS, touch, xpForNext } from "./rpg.js";
 import { countItem, takeItem } from "./spells.js";
 import { rumour } from "./structures.js";
 import * as fx from "./vfx.js";
@@ -743,9 +743,13 @@ function above(entity, y) {
   return { x: entity.location.x, y: entity.location.y + y, z: entity.location.z };
 }
 
+/** A healer mends its master below this share of their health, and other companions below the second. */
+export const MEND_MASTER_AT = 0.85;
+export const MEND_ALLY_AT = 0.6;
+
 /**
- * The ally a healer should mend: whoever of the master and the rest of the party has lost
- * the largest share of their health, if that is at least two fifths.
+ * The ally a healer should mend: whoever of the master and the rest of the party has lost the largest share of their
+ * health, if the master has lost more than a seventh (healers keep their master topped up) or a companion two fifths.
  * @param {Player} player @param {Entity} healer
  */
 function mostWounded(player, healer) {
@@ -761,7 +765,8 @@ function mostWounded(player, healer) {
       const health = ally.getComponent("minecraft:health");
       if (!health || health.currentValue <= 0) continue;
       const share = health.currentValue / health.effectiveMax;
-      if (share < 0.6 && (!worst || share < worst.share)) worst = { entity: ally, health, share };
+      const at = ally.id === player.id ? MEND_MASTER_AT : MEND_ALLY_AT;
+      if (share < at && (!worst || share < worst.share)) worst = { entity: ally, health, share };
     } catch {
       // that ally is unloading
     }
@@ -1076,7 +1081,9 @@ export const ATTACKS = [
     { key: "mend", name: "Mend", level: 1, cooldown: 5, urgent: true, help: "heals the most wounded of you and the party", use: (t) => {
       const patient = mostWounded(t.player, t.entity);
       if (!patient) return false;
-      patient.health.setCurrentValue(Math.min(patient.health.effectiveMax, patient.health.currentValue + (6 + t.level * 0.15) * t.power));
+      const amount = (6 + t.level * 0.15) * t.power;
+      if (patient.entity.id === t.player.id) healPlayer(t.player, amount);
+      else patient.health.setCurrentValue(Math.min(patient.health.effectiveMax, patient.health.currentValue + amount));
       fx.beam(t.d, t.hand, above(patient.entity, 1), "holy");
       fx.rise(t.d, patient.entity.location, "holy", 0.7);
       if (patient.entity.id === t.player.id) say(t.player, t.member, "Hold on, Master - I have you.", 30);
@@ -1121,7 +1128,7 @@ export const ATTACKS = [
     } },
     { key: "sanctuary", name: "Sanctuary", level: 20, cooldown: 40, urgent: true, help: "a great heal when you are near death", use: (t) => {
       if (!t.masterHealth || t.masterShare >= 0.3 || !t.near) return false;
-      t.masterHealth.setCurrentValue(Math.min(t.masterHealth.effectiveMax, t.masterHealth.currentValue + (12 + t.level * 0.25) * t.power));
+      healPlayer(t.player, (12 + t.level * 0.25) * t.power);
       t.player.addEffect("regeneration", 5 * TICKS, { amplifier: 1 });
       fx.dome(t.d, t.player.location, "holy");
       say(t.player, t.member, "Sanctuary! You will not fall here, Master.", 30);

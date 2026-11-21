@@ -396,6 +396,16 @@ party.tend(f); advance(41); assert.equal(f.dimension.mobs.filter((m) => m.typeId
 party.cycleStance(f); assert.equal(pf.stance, "go"); assert.equal(lyra.events.at(-1), "overlord:stance_go");
 // the healer mends a wounded master and speaks
 f.health.currentValue = 5; f.msgs.length = 0; party.tend(f); assert.ok(f.health.currentValue > 5, "healed"); assert.ok(f.msgs.some((m) => m.startsWith("§b<Lyra>")));
+// v10.0.6: a healer keeps its master topped up - from below 85%, not only once two fifths are lost
+f.health.currentValue = 20; advance(7 * 20); f.health.currentValue = 16; party.tend(f); assert.ok(f.health.currentValue > 16, "mended at 80%");
+f.health.currentValue = 20; advance(7 * 20); f.health.currentValue = 18; party.tend(f); assert.equal(f.health.currentValue, 18, "but not at 90%");
+// every heal on a player goes through healPlayer, which another add-on's health system may take over
+{
+  const taken = []; rpg.hooks.heal.push((pl, n) => (taken.push([pl.id, n]), true));
+  f.health.currentValue = 10; assert.equal(rpg.healPlayer(f, 4), true); assert.equal(f.health.currentValue, 10); assert.deepEqual(taken, [["finn", 4]]);
+  rpg.hooks.heal.pop(); assert.equal(rpg.healPlayer(f, 4), true); assert.equal(f.health.currentValue, 14);
+  f.health.currentValue = 20; assert.equal(rpg.healPlayer(f, 4), false, "nothing to heal at full health");
+}
 f.health.currentValue = 20;
 // hiring costs coins and the party is capped at three
 const offer = { name: "Borin", look: 0, level: 3, cost: 16 };

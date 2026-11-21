@@ -10,7 +10,7 @@
 // of mana, Lakyus's Blue Rose Brooch Resistance, Zaryusu's Ring of the Four Tribes water breathing (and Speed in
 // water), and Pinison's Dryad's Blossom mends its wearer while they stand on grass or moss.
 import { world, system, EquipmentSlot } from "@minecraft/server";
-import { notify, restoreMana } from "./rpg.js";
+import { healPlayer, notify, restoreMana } from "./rpg.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -138,7 +138,7 @@ export function wear(player) {
   if (last && Math.hypot(last.x - here.x, last.z - here.z) < 0.2) {
     const health = player.getComponent("minecraft:health");
     if (health && health.currentValue > 0 && health.currentValue < health.effectiveMax) {
-      health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + 1));
+      healPlayer(player, 1);
       return "mend";
     }
   }

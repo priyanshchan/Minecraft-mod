@@ -5,7 +5,7 @@
 // some creatures are weak or resistant to.
 import { world, system, EntityDamageCause, Direction } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { giveItem, notify, profileOf, setHudExtra, spellPower, spendMana, restoreMana, touch, hasAllies } from "./rpg.js";
+import { giveItem, hasAllies, healPlayer, notify, profileOf, restoreMana, setHudExtra, spellPower, spendMana, touch } from "./rpg.js";
 import * as skills from "./skills.js";
 import { absoluteZero, cataclysm, creation, goalOfAllLife, ouroboros, pantheon, requiemOfFortyOne, summonBehemoth } from "./godspells.js";
 import * as fx from "./vfx.js";
@@ -343,10 +343,7 @@ function healing(amount, radius) {
   return (/** @type {Player} */ player, /** @type {number} */ power) => {
     const targets = radius > 0 ? player.dimension.getPlayers({ location: player.location, maxDistance: radius }) : [player];
     for (const ally of targets) {
-      const health = ally.getComponent("minecraft:health");
-      if (health && health.currentValue > 0) {
-        health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + amount * power));
-      }
+      healPlayer(ally, amount * power);
       fx.rise(player.dimension, ally.location, "holy", 0.8);
       fx.circle(player.dimension, ally.location, "holy", 1.0);
       fx.spiral(player.dimension, () => (ally.isValid ? ally.location : undefined), "holy", 0.8, 2);
@@ -720,7 +717,10 @@ function wishUponAStar(player) {
   for (const ally of allies) {
     try {
       const health = ally.getComponent("minecraft:health");
-      if (health && health.currentValue > 0) health.setCurrentValue(health.effectiveMax);
+      if (health && health.currentValue > 0) {
+        if (ally.typeId === "minecraft:player") healPlayer(/** @type {Player} */ (ally), health.effectiveMax);
+        else health.setCurrentValue(health.effectiveMax);
+      }
       ally.addEffect("absorption", 30 * TICKS, { amplifier: 3, showParticles: false });
       ally.addEffect("resistance", 30 * TICKS, { amplifier: 1, showParticles: false });
       fx.rise(d, ally.location, "holy", 1);
@@ -831,7 +831,8 @@ function radiate(player, amount) {
       if (!ours) continue;
       const health = ally.getComponent("minecraft:health");
       if (!health || health.currentValue <= 0) continue;
-      health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + amount));
+      if (ally.typeId === "minecraft:player") healPlayer(/** @type {Player} */ (ally), amount);
+      else health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + amount));
       fx.rise(player.dimension, ally.location, "holy", 0.6);
     }
   } catch {

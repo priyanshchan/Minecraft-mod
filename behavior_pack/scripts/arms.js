@@ -11,7 +11,7 @@
 // used by tapping sneak twice.
 import { world, system, EntityDamageCause, EquipmentSlot } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { notify, profileOf, registerMenu, restoreMana } from "./rpg.js";
+import { healPlayer, notify, profileOf, registerMenu, restoreMana } from "./rpg.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -217,6 +217,10 @@ function facing(player) {
 /** @param {Entity} entity @param {number} amount */
 function heal(entity, amount) {
   try {
+    if (entity.typeId === "minecraft:player") {
+      healPlayer(/** @type {import("@minecraft/server").Player} */ (entity), amount);
+      return;
+    }
     const health = entity.getComponent("minecraft:health");
     if (!health || health.currentValue <= 0 || amount <= 0) return;
     health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + amount));

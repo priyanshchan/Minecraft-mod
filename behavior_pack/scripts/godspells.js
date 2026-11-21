@@ -14,7 +14,7 @@
 // - Cataclysm: the sky darkens over the place the caster points at, thirty meteors rain down across
 //   it, and then one colossal meteor falls, leaving burning ground and a shockwave out to 26 blocks.
 import { world, system, EntityDamageCause } from "@minecraft/server";
-import { notify, restoreMana } from "./rpg.js";
+import { healPlayer, notify, restoreMana } from "./rpg.js";
 import * as fx from "./vfx.js";
 
 const NS = "overlord";
@@ -604,7 +604,7 @@ export function ouroboros(caster, power) {
   for (const ally of playersNear(d, centre, 32)) {
     try {
       const health = ally.getComponent("minecraft:health");
-      if (health && health.currentValue > 0) health.setCurrentValue(health.effectiveMax);
+      if (health && health.currentValue > 0) healPlayer(ally, health.effectiveMax);
       for (const bad of ["poison", "wither", "weakness", "slowness", "blindness", "nausea", "hunger", "mining_fatigue"]) {
         if (ally.getEffect(bad)) ally.removeEffect(bad);
       }
