@@ -8,7 +8,7 @@
 // changes the race (Reincarnation starts the new one from level 1).
 import { world, system, EntityDamageCause } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { hooks, notify, profileOf, registerMenu, restoreMana, showTitle, spendMana, touch } from "./rpg.js";
+import { healPlayer, hooks, notify, profileOf, registerMenu, restoreMana, showTitle, spendMana, touch } from "./rpg.js";
 import { countItem, takeItem } from "./spells.js";
 import { foesNear, strike } from "./arms.js";
 import * as fx from "./vfx.js";
@@ -240,8 +240,7 @@ function healthShare(player) {
 /** @param {Player} player @param {number} amount */
 function heal(player, amount) {
   try {
-    const h = player.getComponent("minecraft:health");
-    if (h && h.currentValue > 0) h.setCurrentValue(Math.min(h.effectiveMax, h.currentValue + amount));
+    healPlayer(player, amount);
   } catch {
     // no health
   }

@@ -1,4 +1,4 @@
-## Hardcore Survival (experimental build, v10.1.6)
+## Hardcore Survival (experimental build, v10.1.7)
 
 An experimental branch (`experimental-hardcore`) that adds a hard survival layer to the whole add-on, in the
 spirit of the hardest survival modpacks. Everything in it is this add-on's own: original code, items and art.
@@ -97,6 +97,10 @@ It is **not** merged into the main add-on.
 
 ### Familiars show their real level (v10.1.6)
 - As in Overlord v10.0.5, a familiar's nameplate rises with it when it levels up mid-fight.
+
+### Healers keep you topped up (v10.1.7)
+- As in Overlord v10.0.6, a Healer companion mends you below 85%. Beside RSCraft, Overlord's heals are paid in First
+  Aid's body-part points, so they show in full on the health bar.
 
 ### Settings
 - The **Hardcore Survival** page on the Adventurer's Plate shows your water, temperature, injuries, lost hearts
