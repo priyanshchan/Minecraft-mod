@@ -309,15 +309,17 @@ const extraMenus = [];
 
 /**
  * Hooks other modules use to add to the character without this module importing them (races.js):
- * `melee` adds to the melee damage factor, `xpFactor` multiplies XP earned and `xp` hears about it.
+ * `melee` adds to the melee damage factor, `xpFactor` multiplies XP earned and `xp` hears about it; `heal` may take over
+ * healing a player (returning true), for a health system of another add-on that keeps its own score.
  * @type {{
  *   melee: ((player: import("@minecraft/server").Player, p: Profile, victim: import("@minecraft/server").Entity) => number)[],
  *   xpFactor: ((p: Profile) => number)[],
  *   xp: ((player: import("@minecraft/server").Player, amount: number) => void)[],
  *   power: ((player: import("@minecraft/server").Player) => number)[],
+ *   heal: ((player: import("@minecraft/server").Player, amount: number) => boolean)[],
  * }}
  */
-export const hooks = { melee: [], xpFactor: [], xp: [], power: [] };
+export const hooks = { melee: [], xpFactor: [], xp: [], power: [], heal: [] };
 
 /**
  * Adds a button to the Adventurer's Plate menu, at the end or (with `first`) ahead of the others.
@@ -987,6 +989,69 @@ export function questEvent(player, deed) {
   advanceQuest(player, `event:${deed}`);
 }
 
+// ---------------------------------------------- healing beside RSCraft's First Aid
+
+/**
+ * RSCraft's First Aid keeps health per body part: on its default setting about two and a half times the health bar
+ * (25 hearts against 10). It counts a rise of the bar as that many part points and then draws the bar again from the
+ * parts, so a heal written straight onto the bar shows at two fifths of its size. Beside it, Overlord's heals on a
+ * player are paid in part points instead, a little each tick (the bar can only rise as far as its top at once), so
+ * they show in full. What cannot be paid within three seconds is let go.
+ */
+export const FIRST_AID_SCALE = 2.5;
+/** Part points still owed to each player, and the tick by which to let them go. */
+const owedHeal = new Map();
+
+hooks.heal.push((player, amount) => {
+  if (actionBarOwner() !== "RSCraft") return false;
+  const owed = owedHeal.get(player.id);
+  owedHeal.set(player.id, { left: (owed?.left ?? 0) + amount * FIRST_AID_SCALE, until: system.currentTick + 3 * TICKS });
+  return true;
+});
+
+system.runInterval(() => {
+  if (owedHeal.size === 0) return;
+  for (const player of world.getAllPlayers()) {
+    const owed = owedHeal.get(player.id);
+    if (!owed) continue;
+    try {
+      const health = player.getComponent("minecraft:health");
+      if (!health || health.currentValue <= 0 || system.currentTick > owed.until) {
+        owedHeal.delete(player.id);
+        continue;
+      }
+      const give = Math.min(owed.left, health.effectiveMax - health.currentValue, 4);
+      if (give > 0) {
+        health.setCurrentValue(health.currentValue + give);
+        owed.left -= give;
+      }
+      if (owed.left <= 0.01) owedHeal.delete(player.id);
+    } catch {
+      owedHeal.delete(player.id);
+    }
+  }
+}, 1);
+
+/**
+ * Heals a player by an amount of health (two to a heart), up to their maximum. Companions' and spells' heals go through
+ * here, so another add-on's health system can take them over (hooks.heal). Returns whether anything was healed.
+ * @param {import("@minecraft/server").Player} player @param {number} amount
+ */
+export function healPlayer(player, amount) {
+  if (!(amount > 0)) return false;
+  for (const hook of hooks.heal) {
+    try {
+      if (hook(player, amount)) return true;
+    } catch {
+      // fall back to healing directly
+    }
+  }
+  const health = player.getComponent("minecraft:health");
+  if (!health || health.currentValue <= 0 || health.currentValue >= health.effectiveMax) return false;
+  health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + amount));
+  return true;
+}
+
 /**
  * @param {import("@minecraft/server").Player} player
  * @param {string} itemId
@@ -1516,7 +1581,7 @@ world.afterEvents.playerSpawn.subscribe((event) => {
 world.afterEvents.playerLeave.subscribe((event) => {
   profiles.delete(event.playerId);
   dirty.delete(event.playerId);
-  for (const perPlayer of [lastNote, titleHold, titleSent, hudNote]) perPlayer.delete(event.playerId);
+  for (const perPlayer of [lastNote, titleHold, titleSent, hudNote, owedHeal]) perPlayer.delete(event.playerId);
   hudHold.delete(event.playerId);
   hudExtra.delete(event.playerId);
   regalia.delete(event.playerId);
@@ -1555,9 +1620,7 @@ system.runInterval(() => {
       applyPassives(player);
       if (p.cls === "cleric") {
         const health = player.getComponent("minecraft:health");
-        if (health && health.currentValue > 0 && health.currentValue < health.effectiveMax) {
-          health.setCurrentValue(Math.min(health.effectiveMax, health.currentValue + (advanced(p) ? 2 : 1)));
-        }
+        if (health && health.currentValue > 0 && health.currentValue < health.effectiveMax) healPlayer(player, advanced(p) ? 2 : 1);
       }
       // Mana font: is the player standing on a Block of Data Crystal?
       let onFont = false;

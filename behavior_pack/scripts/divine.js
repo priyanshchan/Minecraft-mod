@@ -9,7 +9,7 @@
 //   and wither cannot take hold; +25% spell power; and Last Stand - once every five minutes, falling below a fifth
 //   of your health restores all of it and shields you.
 import { world, system } from "@minecraft/server";
-import { hooks, notify } from "./rpg.js";
+import { healPlayer, hooks, notify } from "./rpg.js";
 import { heldWeapon, wornSets, worthy } from "./arms.js";
 import * as fx from "./vfx.js";
 
@@ -67,7 +67,7 @@ export function grace(player, now) {
     const health = player.getComponent("minecraft:health");
     if (health && health.currentValue > 0 && health.currentValue <= health.effectiveMax * LAST_STAND_AT && now >= (lastStand.get(player.id) ?? 0)) {
       lastStand.set(player.id, now + LAST_STAND_EVERY * TICKS);
-      health.setCurrentValue(health.effectiveMax);
+      healPlayer(player, health.effectiveMax);
       player.addEffect("absorption", 15 * TICKS, { amplifier: 3, showParticles: false });
       player.addEffect("resistance", 5 * TICKS, { amplifier: 3, showParticles: false });
       try {
