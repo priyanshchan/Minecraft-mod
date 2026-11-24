@@ -2036,44 +2036,45 @@ VOCATION_BUILDERS = [fighter, archer, mage, healer, rogue, bard, monk, necromanc
 
 # ------------------------------------------------------------------------------------------ the looks
 # One entry per look, in the order of behavior_pack/scripts/classes.js (the look number is the variant).
+# face: "soft" (big gentle eyes, the default) for the bright and kind, "sharp" (narrow eyes) for the cool and dark.
 # style: short, wild, slick, crop, topknot, bob, long, ponytail, twintails, braid, buns
 # fringe (bangs): hime, swept, parted, spiky, short, side
 LOOKS = [
     # the twelve looks of before v11, drawn anew
-    dict(name="Knight", helmet="full", voc=0, sex="m", cut="knight", skin="#f2d2bc", hair="#5a3a26", style="short", fringe="spiky", eyes="#3a6ad0", main="#2f4f9f", plume="#d0302c"),
-    dict(name="Swordsman", voc=0, sex="m", cut="swordsman", skin="#e8c2a4", hair="#c8402a", style="wild", fringe="spiky", eyes="#d08a2a", main="#9f2a2a", scar=True),
+    dict(name="Knight", face="sharp", helmet="full", voc=0, sex="m", cut="knight", skin="#f2d2bc", hair="#5a3a26", style="short", fringe="spiky", eyes="#3a6ad0", main="#2f4f9f", plume="#d0302c"),
+    dict(name="Swordsman", face="sharp", voc=0, sex="m", cut="swordsman", skin="#e8c2a4", hair="#c8402a", style="wild", fringe="spiky", eyes="#d08a2a", main="#9f2a2a", scar=True),
     dict(name="Ranger", helmet="hood", voc=1, sex="m", cut="ranger", skin="#f2d6c0", hair="#d8b048", style="short", fringe="swept", eyes="#3aa04a", main="#3f7a4a"),
-    dict(name="Hunter", voc=1, sex="m", cut="hunter", skin="#a8704a", hair="#1f1a16", style="short", fringe="short", eyes="#8a5a2a", main="#6b4a36", second="#7a5a3a", beard=True),
-    dict(name="Sorcerer", helmet="hood", voc=2, sex="m", cut="sorcerer", skin="#f6e2d4", hair="#6a4a8a", style="short", fringe="parted", eyes="#a050e0", main="#4a2a7a", second="#6a3aa0", orb="#c05bff"),
+    dict(name="Hunter", face="sharp", voc=1, sex="m", cut="hunter", skin="#a8704a", hair="#1f1a16", style="short", fringe="short", eyes="#8a5a2a", main="#6b4a36", second="#7a5a3a", beard=True),
+    dict(name="Sorcerer", face="sharp", helmet="hood", voc=2, sex="m", cut="sorcerer", skin="#f6e2d4", hair="#6a4a8a", style="short", fringe="parted", eyes="#a050e0", main="#4a2a7a", second="#6a3aa0", orb="#c05bff"),
     dict(name="Wizard", helmet="hat", voc=2, sex="m", cut="wizard", skin="#ecc8aa", hair="#eceae4", style="long", fringe="parted", eyes="#3a9ad0", main="#22336c", second="#6a4a9f", orb="#59d0ff"),
     dict(name="Priest", helmet="hat", voc=3, sex="m", cut="priest", skin="#f8e6d8", hair="#f0d070", style="short", fringe="swept", eyes="#3a7ad0", main="#f6f3ec", second="#e8c870", orb="#f6d968"),
     dict(name="Acolyte", voc=3, sex="m", cut="acolyte", skin="#7a4e36", hair="#15131a", style="crop", eyes="#6a4a2a", main="#b0d0e8", trim="#e0c06a", ahoge=True),
-    dict(name="Assassin", helmet="hood", voc=4, sex="m", cut="assassin", skin="#eccaac", hair="#1a1622", style="short", fringe="spiky", eyes="#d0203a", main="#22222c", second="#2c2c38"),
-    dict(name="Thief", voc=4, sex="m", cut="thief", skin="#e8c2a4", hair="#7a5230", style="wild", fringe="spiky", eyes="#3aa04a", main="#556a3a", second="#5a4a32", band="#b8322e"),
+    dict(name="Assassin", face="sharp", helmet="hood", voc=4, sex="m", cut="assassin", skin="#eccaac", hair="#1a1622", style="short", fringe="spiky", eyes="#d0203a", main="#22222c", second="#2c2c38"),
+    dict(name="Thief", face="sharp", voc=4, sex="m", cut="thief", skin="#e8c2a4", hair="#7a5230", style="wild", fringe="spiky", eyes="#3aa04a", main="#556a3a", second="#5a4a32", band="#b8322e"),
     dict(name="Minstrel", helmet="hat", voc=5, sex="m", cut="minstrel", skin="#f6dcc8", hair="#c8582e", style="short", fringe="swept", eyes="#2a9a7a", main="#b0322e", second="#e8b440", feather="#f4f1ea", ahoge=True),
-    dict(name="Skald", helmet="open", voc=5, sex="m", cut="skald", skin="#f0cfb2", hair="#e0cfa0", style="braid", fringe="swept", eyes="#3a7ad0", main="#3a5a8a", beard=True, trim="#c9b98a"),
+    dict(name="Skald", face="sharp", helmet="open", voc=5, sex="m", cut="skald", skin="#f0cfb2", hair="#e0cfa0", style="braid", fringe="swept", eyes="#3a7ad0", main="#3a5a8a", beard=True, trim="#c9b98a"),
     # v11: the women of every vocation
     dict(name="Valkyrie", helmet="open", voc=0, sex="f", cut="valkyrie", skin="#fae2d2", hair="#f4d470", tip="#fff0b0", style="braid", fringe="parted", eyes="#3a9ae0", main="#2f4f9f", metal="#dfe4ec", ribbon="#2f4f9f"),
-    dict(name="Shieldmaiden", voc=0, sex="f", cut="shieldmaiden", skin="#f2d2bc", hair="#d0502e", tip="#f0a040", style="ponytail", fringe="swept", eyes="#4aa04a", main="#5a7a4a", shield="#8a2a22", ribbon="#e9e3cf"),
+    dict(name="Shieldmaiden", face="sharp", voc=0, sex="f", cut="shieldmaiden", skin="#f2d2bc", hair="#d0502e", tip="#f0a040", style="ponytail", fringe="swept", eyes="#4aa04a", main="#5a7a4a", shield="#8a2a22", ribbon="#e9e3cf"),
     dict(name="Huntress", voc=1, sex="f", cut="huntress", skin="#eccaac", hair="#6a4428", style="ponytail", fringe="swept", eyes="#8a6a2a", main="#3f7a4a", second="#7a5238", ribbon="#3f7a4a"),
     dict(name="Windrunner", voc=1, sex="f", cut="windrunner", skin="#fae8dc", hair="#f4f6fa", tip="#7ae0c0", style="long", fringe="parted", eyes="#2ac0b0", main="#2f8a7a", second="#ecebe4", trim="#d9a92b", gem="#59d0ff"),
     dict(name="Witch", helmet="hat", voc=2, sex="f", cut="witch", skin="#fae4d6", hair="#7a4ab0", tip="#e070c0", style="long", fringe="hime", eyes="#5ad06a", main="#2a1f3e", second="#5a2a7a", trim="#b07af0", orb="#63ff6b", ahoge=True),
     dict(name="Enchantress", voc=2, sex="f", cut="enchantress", skin="#f6dcc8", hair="#d8e2f2", tip="#7ab0f0", style="long", fringe="parted", eyes="#4a80f0", main="#2a4a90", second="#a8c0e0", trim="#ecebe4", orb="#59d0ff"),
     dict(name="Priestess", helmet="veil", voc=3, sex="f", cut="priestess", skin="#fbe8dc", hair="#f8dc78", tip="#fff4c8", style="long", fringe="hime", eyes="#3a9ae0", main="#fdfcf8", second="#f4ead0", trim="#d9a92b"),
     dict(name="Battle Sister", helmet="veil", voc=3, sex="f", cut="battle_sister", skin="#a8704a", hair="#1f1a16", style="bob", fringe="hime", eyes="#8a5a2a", main="#24222e", trim="#d9a92b"),
-    dict(name="Shadow Dancer", voc=4, sex="f", cut="shadow_dancer", skin="#f2d2bc", hair="#1e1828", tip="#6a3a9a", style="bob", fringe="hime", eyes="#c050f0", main="#2c2040", second="#3e2c58", trim="#c0a8e8", sash="#9a3af0"),
-    dict(name="Nightblade", voc=4, sex="f", cut="nightblade", skin="#fae4d6", hair="#262e48", tip="#6a3ab0", style="ponytail", fringe="swept", eyes="#e0303a", main="#1f2436", second="#2c3248", trim="#8a909c", scarf="#b8322e", ribbon="#b8322e"),
+    dict(name="Shadow Dancer", face="sharp", voc=4, sex="f", cut="shadow_dancer", skin="#f2d2bc", hair="#1e1828", tip="#6a3a9a", style="bob", fringe="hime", eyes="#c050f0", main="#2c2040", second="#3e2c58", trim="#c0a8e8", sash="#9a3af0"),
+    dict(name="Nightblade", face="sharp", voc=4, sex="f", cut="nightblade", skin="#fae4d6", hair="#262e48", tip="#6a3ab0", style="ponytail", fringe="swept", eyes="#e0303a", main="#1f2436", second="#2c3248", trim="#8a909c", scarf="#b8322e", ribbon="#b8322e"),
     dict(name="Songstress", voc=5, sex="f", cut="songstress", skin="#fae2d2", hair="#d8703a", tip="#f0c050", style="long", fringe="parted", eyes="#4ab04a", main="#b0222e", second="#f0c050", gem="#e0405a"),
     dict(name="Blade Dancer", voc=5, sex="f", cut="blade_dancer", skin="#c8906a", hair="#1f1a16", style="buns", fringe="hime", eyes="#e0b040", main="#1f8a8a", second="#38b0b0", trim="#f0c050", sash="#f0c050", ribbon="#f0c050"),
     # v11: the Monks and the Necromancers
-    dict(name="Martial Monk", voc=6, sex="m", cut="martial", skin="#f0cfb2", hair="#15131a", style="short", fringe="spiky", eyes="#5a3a2a", main="#f6f3ec", second="#1a1418", band="#d0302c"),
-    dict(name="Ascetic", voc=6, sex="m", cut="ascetic", skin="#c8906a", hair="#15131a", style="topknot", eyes="#6a4a2a", main="#f08a20", second="#b83a18", trim="#f6d968"),
+    dict(name="Martial Monk", face="sharp", voc=6, sex="m", cut="martial", skin="#f0cfb2", hair="#15131a", style="short", fringe="spiky", eyes="#5a3a2a", main="#f6f3ec", second="#1a1418", band="#d0302c"),
+    dict(name="Ascetic", face="sharp", voc=6, sex="m", cut="ascetic", skin="#c8906a", hair="#15131a", style="topknot", eyes="#6a4a2a", main="#f08a20", second="#b83a18", trim="#f6d968"),
     dict(name="Wind Disciple", voc=6, sex="f", cut="wind", skin="#fae2d2", hair="#2a5a9a", tip="#7ac8f0", style="ponytail", fringe="swept", eyes="#3a9ae0", main="#a8d8f8", second="#f4f1ea", trim="#ecebe4", ribbon="#f4f1ea", ahoge=True),
     dict(name="Lotus Fist", voc=6, sex="f", cut="lotus", skin="#fae4d6", hair="#1a1418", style="buns", fringe="hime", eyes="#a03a2a", main="#c0141c", second="#f6d968", trim="#e0b030", ribbon="#e0b030"),
-    dict(name="Necromancer", helmet="hood", voc=7, sex="m", cut="necromancer", skin="#e6dfd6", hair="#2a2632", style="short", fringe="parted", eyes="#7df0c8", main="#1f1a2a", second="#2c2040", trim="#9a3af0", orb="#c05bff"),
-    dict(name="Bone Sage", voc=7, sex="m", cut="bone_sage", skin="#cfc6ba", hair="#8a8680", style="crop", eyes="#7df0c8", main="#4a4656", trim="#c9c0a0", orb="#7df0c8", glow="#7df0c8"),
-    dict(name="Death Witch", helmet="hat", voc=7, sex="f", cut="death_witch", skin="#f2eae4", hair="#18151e", tip="#2f8a4a", style="long", fringe="hime", eyes="#63ff6b", main="#2c2040", second="#1a1424", trim="#6ad07a", orb="#63ff6b"),
-    dict(name="Grave Maiden", voc=7, sex="f", cut="grave_maiden", skin="#f4e8ea", hair="#2a1e30", tip="#c04a9a", style="long", fringe="heavy", eyes="#d070ff", glow="#d070ff", main="#18141e", second="#8a3ad0", trim="#d0c8dc", length=24, strands=8),
+    dict(name="Necromancer", face="sharp", helmet="hood", voc=7, sex="m", cut="necromancer", skin="#e6dfd6", hair="#2a2632", style="short", fringe="parted", eyes="#7df0c8", main="#1f1a2a", second="#2c2040", trim="#9a3af0", orb="#c05bff"),
+    dict(name="Bone Sage", face="sharp", voc=7, sex="m", cut="bone_sage", skin="#cfc6ba", hair="#8a8680", style="crop", eyes="#7df0c8", main="#4a4656", trim="#c9c0a0", orb="#7df0c8", glow="#7df0c8"),
+    dict(name="Death Witch", face="sharp", helmet="hat", voc=7, sex="f", cut="death_witch", skin="#f2eae4", hair="#18151e", tip="#2f8a4a", style="long", fringe="hime", eyes="#63ff6b", main="#2c2040", second="#1a1424", trim="#6ad07a", orb="#63ff6b"),
+    dict(name="Grave Maiden", face="sharp", voc=7, sex="f", cut="grave_maiden", skin="#f4e8ea", hair="#2a1e30", tip="#c04a9a", style="long", fringe="heavy", eyes="#d070ff", glow="#d070ff", main="#18141e", second="#8a3ad0", trim="#d0c8dc", length=24, strands=8),
 ]
 
 
