@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [11, 1, 0]
+VERSION = [11, 2, 0]
 MIN_ENGINE = [1, 21, 90]
 # The experimental Hardcore Survival build (branch experimental-hardcore) has pack ids of its own, so it installs
 # beside the main add-on instead of replacing it. Use one or the other in a world, never both.
@@ -3230,6 +3230,11 @@ for _new, _like in (("skeletal_dragon", "frost_dragon"), ("khajiit", "nigun"), (
                     ("brain_eater", "elder_lich"), ("hell_steed", "hellhound"),
                     *FAMILIAR_LOOKS.items()):
     ENTITY_ANIMS[_new] = ENTITY_ANIMS[_like]
+# v11.1: the NPCs redrawn in anime style (npcs.py) have legs under their skirts, and walk on them; the long robes
+# and gowns (Albedo, Fluder, Ainz) still glide.
+for _name in ("narberal", "lupusregina", "entoma", "solution", "yuri", "cz_delta", "nazarick_maid", "vampire_bride",
+              "pinison", "rubedo"):
+    ENTITY_ANIMS[_name] = ["walk" if _a == "robe_walk" else _a for _a in ENTITY_ANIMS[_name]]
 for _key in GUARDIAN_COMPANIONS:
     ENTITY_ANIMS[f"guardian_{_key}"] = ENTITY_ANIMS[_key]
 

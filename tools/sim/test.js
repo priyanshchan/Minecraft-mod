@@ -2812,6 +2812,48 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   party.dismiss(v); players.splice(players.indexOf(v), 1);
 }
 
+// ---- v11.1: the NPCs fight with arts of their own ----
+{
+  const npcarts = await import("./npcarts.js"); const bosses = await import("./bosses.js");
+  const land = makeLand(); const hero = mkPlayer("npcfoe"); hero.dimension = land; land.getPlayers = () => [hero];
+  hero.taken = 0; hero.applyDamage = (n) => { hero.taken += n; return true; }; hero.location = { x: 0, y: 64, z: 0 };
+  land.mobs.push(hero); // the players stand in the world as well
+  const npc = (typeId, x, z, fam = ["monster", "mob"], hp = 40) => { const m = mob(typeId, hp, fam); const tags = new Set();
+    Object.assign(m, { id: `${typeId}-${x}-${z}`, location: { x, y: 64, z }, dimension: land, tags, hasTag: (t) => tags.has(t), addTag: (t) => tags.add(t),
+      nameTag: "", anims: [], playAnimation(n) { m.anims.push(n); }, addEffect(e) { (m.effects ??= []).push(e); }, getEffect: () => undefined,
+      applyKnockback() {}, applyImpulse() {}, setOnFire() {}, tryTeleport(to) { m.location = { ...to }; return true; }, getDynamicProperty: () => undefined,
+      applyDamage(n) { m.damaged.push(n); } }); land.mobs.push(m); return m; };
+  hero.matches = () => false; hero.isValid = true;
+  // a bandit uses its arts on the player beside it
+  const thug = npc("overlord:bandit", 1.5, 0);
+  let used; for (let k = 0; k < 4 && !used; k++) { used = npcarts.act(thug, 100000 + k * 200); advance(20); }
+  assert.ok(used, "the bandit used an art"); advance(20);
+  assert.ok(hero.taken > 0 || hero.effects.has("blindness") || hero.effects.has("slowness"), "and it reached the player");
+  assert.ok(thug.anims.length > 0, "with a pose");
+  // a creative player is no one's foe
+  hero.getGameMode = () => "Creative"; const thug2 = npc("overlord:bandit", 1.5, 1);
+  assert.equal(npcarts.act(thug2, 200000), undefined, "nobody fights a player in creative"); hero.getGameMode = () => "Survival";
+  thug.isValid = false; thug2.isValid = false;
+  // a guard turns its arts on monsters, never on the player
+  const watchman = npc("overlord:guard", -1.5, 0, ["guard", "mob"]); const zombie = npc("minecraft:zombie", -2.5, 0.5); zombie.matches = (q) => q.families.every((f) => ["monster", "mob"].includes(f));
+  const takenBefore = hero.taken; used = undefined;
+  for (let k = 0; k < 4 && !used; k++) { used = npcarts.act(watchman, 300000 + k * 200); advance(20); }
+  assert.ok(used && zombie.damaged.length > 0, `the guard struck the zombie: ${used}`); assert.equal(hero.taken, takenBefore, "and spared the player");
+  zombie.isValid = false; watchman.isValid = false;
+  // a lich raises the dead, and they are the players' foes, not the party's friends
+  const lich = npc("overlord:elder_lich", 3, 3); used = undefined;
+  const seen = new Set();
+  for (let k = 0; k < 12; k++) { const u = npcarts.act(lich, 400000 + k * 700); if (u) seen.add(u); advance(20); }
+  const risen = land.mobs.filter((m) => m.tags.has("overlord_art_summon"));
+  assert.ok(seen.has("Raise the Dead") && risen.length >= 1, `${[...seen]}`);
+  assert.ok(risen.every((m) => !m.tags.has("overlord_summoned")), "the lich's dead are wild");
+  // a boss in its fight keeps to its own moves
+  bosses.fights.set(lich.id, { entity: lich }); assert.equal(npcarts.act(lich, 900000), undefined); bosses.fights.delete(lich.id);
+  // every kit's arts are of kinds the engine knows
+  for (const [type, kit] of Object.entries(npcarts.KITS)) for (const art of kit.arts) assert.ok(art.kind in (await import("./arts.js")).KINDS, `${type} ${art.key}`);
+  lich.isValid = false; risen.forEach((m) => { m.isValid = false; }); players.splice(players.indexOf(hero), 1);
+}
+
 // persistence: saved profile is restored after leaving
 advance(100);
 const saved = a.props.get("overlord:rpg"); assert.ok(saved);

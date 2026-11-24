@@ -6,7 +6,7 @@
     "uuid": "4081c237-7cfd-4b13-aa30-83bf1422af08",
     "version": [
       11,
-      1,
+      2,
       0
     ],
     "min_engine_version": [
@@ -21,7 +21,7 @@
       "uuid": "7600055e-46a1-4c37-94c3-b6fed3b480d3",
       "version": [
         11,
-        1,
+        2,
         0
       ]
     },
@@ -32,7 +32,7 @@
       "entry": "scripts/main.js",
       "version": [
         11,
-        1,
+        2,
         0
       ]
     }
@@ -42,7 +42,7 @@
       "uuid": "da93148b-6a55-4164-b6c4-7473062b4b30",
       "version": [
         11,
-        1,
+        2,
         0
       ]
     },

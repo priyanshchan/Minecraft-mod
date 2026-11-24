@@ -34,6 +34,7 @@ import "./steeds.js";
 import "./court.js";
 import "./districts.js";
 import "./haunts.js";
+import "./npcarts.js"; // v11.1: the NPCs fight with arts of their own
 import "./comforts.js";
 import "./necromancy.js";
 import "./events.js";
