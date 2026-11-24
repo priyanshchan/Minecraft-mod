@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [11, 2, 1]
+VERSION = [11, 2, 2]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -3097,6 +3097,9 @@ def animations_json():
                                   "math.sin(query.life_time * 95.0) * 3.0", 0.0, 0.0]}}},
         # v11.2: the anime figures' bigger heads (the client entity scales the whole figure down to match)
         "animation.overlord.chibi_head": {"loop": True, "bones": {"head": {"scale": _people()[1]}}},
+        # v11.2.1: grown-ups stand on longer legs (the figure lifted onto them), with a head only a little bigger
+        "animation.overlord.adult_figure": {"loop": True, "bones": _adult_bones(robe=False)},
+        "animation.overlord.adult_robe": {"loop": True, "bones": _adult_bones(robe=True)},
         "animation.overlord.projectile.spin": {"loop": True, "bones": {
             "body": {"rotation": ["query.life_time * 420.0", "query.life_time * 300.0", 0.0]}}},
     }
@@ -3998,8 +4001,8 @@ MODEL_ALIASES = {"soul_steed": "soul_eater", "hell_steed": "hellhound", **{f"gua
 
 
 def _people():
-    """The models built as anime figures (the companions and the people of npcs.py), the scale of their heads
-    and the scale that keeps such a figure as tall as it was."""
+    """The models built as anime figures (the companions and the people of npcs.py), the scale of a child's head
+    and the scale that keeps a child's figure as tall as it was."""
     import companions
     import npcs
     names = {f"retainer_{n}" for n in range(len(companions.LOOKS))} | set(npcs.PEOPLE)
@@ -4007,13 +4010,56 @@ def _people():
     return names, scale, round(32 / (24 + companions.Figure.HEAD * scale), 4)
 
 
+def _adult_bones(robe):
+    import companions
+    legs = [1.0, companions.ADULT_LEGS, 1.0]
+    w = "(variable.width ?? 1.0)"  # each grown-up's build, set by its client entity
+    head = companions.ADULT_HEAD
+    bones = {"head": {"scale": [f"{head} / {w}", head, f"{head} / {w}"]}, "rightLeg": {"scale": legs}, "leftLeg": {"scale": legs},
+             "cape": {"scale": [1.0, companions.ADULT_CAPE, 1.0]},
+             "root": {"position": [0.0, round(14 * (companions.ADULT_LEGS - 1), 3), 0.0], "scale": [w, 1.0, w]}}
+    if robe:
+        bones["robe"] = {"scale": legs}
+    return bones
+
+
+def _width_expr(name, model):
+    """The Molang that sets a grown-up's build: a number, or for the companions one per look (by its variant)."""
+    import companions
+    import npcs
+    if name == "retainer":
+        terms = " + ".join(f"(query.variant == {n}) * {round(companions.width_of(look) - 1, 3)}"
+                           for n, look in enumerate(companions.LOOKS) if companions.width_of(look) != 1.0)
+        return f"1.0 + {terms}"
+    look = npcs.PEOPLE[model][0] if model in npcs.PEOPLE else {"sex": "m"}
+    return str(npcs.WIDTH.get(model, companions.width_of(look)))
+
+
+def _figure_of(model):
+    """How a people model is drawn in game: "child", "adult", "adult_robe", or None (not an anime figure)."""
+    import npcs
+    people, head_scale, _ = _people()
+    if model not in people or head_scale == 1.0:
+        return None
+    if model in npcs.PEOPLE:
+        _look, _dress, bones = npcs.PEOPLE[model]
+        if model in npcs.MODEST:
+            return "child"
+        return "adult_robe" if "robe" in bones else "adult"
+    return "adult"
+
+
 def client_entity_files():
     out = {}
     people, head_scale, figure_scale = _people()
     for name, anims in ENTITY_ANIMS.items():
         model = "retainer_0" if name == "retainer" else MODEL_ALIASES.get(name, name)
-        if model in people and head_scale != 1.0:  # a bigger head on a figure scaled to stand as tall as before
+        figure = _figure_of(model)
+        if figure == "child":  # a big head on a figure scaled to stand as tall as before
             anims = list(anims) + ["chibi_head"]
+        elif figure:  # a grown-up on longer legs
+            anims = list(anims) + [figure.replace("adult", "adult_figure") if figure == "adult" else "adult_robe"]
+            width_expr = _width_expr(name, model)
         d = {
             "identifier": oid(name),
             "materials": {"default": "entity_alphatest"},
@@ -4025,6 +4071,8 @@ def client_entity_files():
         }
         if "chibi_head" in anims:
             d["scripts"]["scale"] = str(figure_scale)
+        if "adult_figure" in anims or "adult_robe" in anims:  # how broadly this one is built
+            d["scripts"]["pre_animation"] = [f"variable.width = {width_expr};"]
         if name == "retainer":
             d["textures"] = {f"v{n}": f"textures/entity/{NS}/retainer_{n}" for n in range(RETAINER_LOOKS)}
             d["geometry"] = {f"v{n}": f"geometry.overlord.retainer_{n}" for n in range(RETAINER_LOOKS)}
