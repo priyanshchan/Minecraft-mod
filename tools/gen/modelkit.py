@@ -130,13 +130,14 @@ class Face:
 
 
 class Cube:
-    def __init__(self, origin, size, inflate=0.0, rotation=None, pivot=None):
+    def __init__(self, origin, size, inflate=0.0, rotation=None, pivot=None, res=1):
         self.origin = tuple(float(v) for v in origin)
         self.size = tuple(int(v) for v in size)
         self.inflate = float(inflate)
         self.rotation = rotation
         self.pivot = pivot
-        w, h, d = self.size
+        self.res = res  # texels painted per model unit (v11: the companions are painted at 4)
+        w, h, d = (v * res for v in self.size)
         self.img = Image.new("RGBA", (2 * d + 2 * w, d + h), TRANSPARENT)
         self.right = Face(self.img, 0, d, d, h)
         self.front = Face(self.img, d, d, w, h)
@@ -171,13 +172,14 @@ class Cube:
 
 
 class Bone:
-    def __init__(self, name, pivot, parent=None, rotation=None):
+    def __init__(self, name, pivot, parent=None, rotation=None, res=1):
         self.name, self.pivot, self.parent, self.rotation = name, tuple(pivot), parent, rotation
+        self.res = res
         self.cubes: list[Cube] = []
         self.locators: dict = {}
 
     def cube(self, origin, size, inflate=0.0, rotation=None, pivot=None):
-        c = Cube(origin, size, inflate, rotation, pivot)
+        c = Cube(origin, size, inflate, rotation, pivot, self.res)
         self.cubes.append(c)
         return c
 
@@ -225,28 +227,31 @@ class Model:
     SIZES = [(32, 32), (64, 32), (64, 64), (128, 64), (128, 128), (256, 128), (256, 256)]
     HD = 2  # texels per painted pixel in the texture that is shipped
 
-    def __init__(self, name, bounds=(3.0, 3.5, 1.25)):
+    def __init__(self, name, bounds=(3.0, 3.5, 1.25), res=1):
         self.name = name
         self.bones: list[Bone] = []
         self.bounds = bounds  # visible bounds width, height, y offset (blocks)
+        self.res = res  # texels painted per model unit; a model painted finely ships as painted
         self.texture = None
+        self.units = None  # the texture's size in model units, as the geometry names it
         self._hd = None
 
     def bone(self, name, pivot, parent=None, rotation=None):
-        b = Bone(name, pivot, parent, rotation)
+        b = Bone(name, pivot, parent, rotation, self.res)
         self.bones.append(b)
         return b
 
     # ---------------------------------------------------------------- packing
     def pack(self):
         cubes = [c for b in self.bones for c in b.cubes]
+        r = self.res
         order = sorted(cubes, key=lambda c: (-c.img.height, -c.img.width))
         for tw, th in self.SIZES:
             x = y = shelf = 0
             ok = True
             placed = []
             for c in order:
-                w, h = c.img.size
+                w, h = c.img.width // r, c.img.height // r
                 if w > tw:
                     ok = False
                     break
@@ -259,11 +264,12 @@ class Model:
                 x += w
                 shelf = max(shelf, h)
             if ok:
-                tex = Image.new("RGBA", (tw, th), TRANSPARENT)
+                tex = Image.new("RGBA", (tw * r, th * r), TRANSPARENT)
                 for c, px, py in placed:
                     c.uv = (px, py)
-                    tex.paste(c.img, (px, py))
+                    tex.paste(c.img, (px * r, py * r))
                 self.texture = tex
+                self.units = (tw, th)
                 return tex
         raise ValueError(f"{self.name}: cubes do not fit the largest atlas")
 
@@ -276,6 +282,9 @@ class Model:
         if self.texture is None:
             self.pack()
         if self._hd is not None:
+            return self._hd
+        if self.res > 1:  # painted finely already: shipped as painted
+            self._hd = self.texture
             return self._hd
         k = self.HD
         src = np.asarray(self.texture).astype(np.float32)
@@ -322,8 +331,8 @@ class Model:
             "minecraft:geometry": [{
                 "description": {
                     "identifier": f"geometry.overlord.{self.name}",
-                    "texture_width": self.texture.width,
-                    "texture_height": self.texture.height,
+                    "texture_width": self.units[0],
+                    "texture_height": self.units[1],
                     "visible_bounds_width": self.bounds[0],
                     "visible_bounds_height": self.bounds[1],
                     "visible_bounds_offset": [0, self.bounds[2], 0],
@@ -338,7 +347,7 @@ class Model:
         if self.texture is None:
             self.pack()
         tex = np.asarray(self.hd()).astype(np.float32)
-        K = self.HD
+        K = self.res if self.res > 1 else self.HD
         W, H = size
         color = np.zeros((H, W, 4), np.float32)
         color[:, :] = bg

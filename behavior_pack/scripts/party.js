@@ -6,6 +6,10 @@
 // with its master; mercenaries earn XP. Fighting together builds a bond with each member
 // that strengthens its skills and shortens its recovery. Hurt members fall back, drink the
 // master's potions and rest between fights; archers scout for camps.
+//
+// v11: eight vocations and thirty-two looks, men and women (classes.js); a path at level 30 and a mastery at 60,
+// with a new art every ten levels to 100 (arts.js); companions defend their master unbidden, choose their arts by
+// need, and can be talked to, gifted, ordered and high-fived by using them.
 import { world, system, EntityDamageCause, EquipmentSlot } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { creditedPlayer, giveItem, healPlayer, isElite, killXp, MAX_LEVEL, notify, profileOf, registerMenu, standingOf, TIPS, touch, xpForNext } from "./rpg.js";
@@ -14,6 +18,8 @@ import { rumour } from "./structures.js";
 import * as fx from "./vfx.js";
 import * as skills from "./skills.js";
 import { fights, hazards } from "./bosses.js";
+import * as classes from "./classes.js";
+import * as arts from "./arts.js";
 
 const NS = "overlord";
 const id = (/** @type {string} */ name) => `${NS}:${name}`;
@@ -38,8 +44,13 @@ const POTION_HEAL = 20;
 const SCOUT_FIRST = 120; // seconds before an archer first reports what lies ahead
 const SCOUT_EVERY = 360;
 /** How a member chooses the foe for its skills. */
-export const TACTICS = ["Vanguard", "Guardian", "Free hand"];
-const TACTIC_HELP = ["strikes the foe you are fighting", "strikes whatever last hurt you", "picks its own foe within 12 blocks: whatever hurts you, elites and staggered foes first"];
+export const TACTICS = ["Vanguard", "Guardian", "Free hand", "Hold fire"];
+const TACTIC_HELP = [
+  "strikes the foe you are fighting, and on its own any monster that comes near you",
+  "strikes whatever last hurt you or the party first, then anything near you",
+  "picks its own foe: whatever hurts you, elites and staggered foes first",
+  "starts no fights: strikes only what attacks you or the party",
+];
 const STANCES = /** @type {const} */ (["come", "go", "stay"]);
 const STANCE_HELP = {
   come: "Come - stay close and defend",
@@ -47,10 +58,12 @@ const STANCE_HELP = {
   stay: "Stay - hold this spot",
 };
 
-export const VOCATIONS = ["Fighter", "Archer", "Mage", "Healer", "Rogue", "Bard"];
-const VOC_KEYS = ["fighter", "archer", "mage", "healer", "rogue", "bard"];
-/** The twelve looks; look N belongs to vocation floor(N / 2). */
-export const LOOKS = ["Knight", "Swordsman", "Ranger", "Hunter", "Sorcerer", "Wizard", "Priest", "Acolyte", "Assassin", "Thief", "Minstrel", "Skald"];
+export const VOCATIONS = classes.VOCATIONS.map((v) => v.name);
+const VOC_KEYS = classes.VOCATIONS.map((v) => v.key);
+/** The thirty-two looks (v11: women of every vocation, Monks and Necromancers); each belongs to one vocation. */
+export const LOOKS = classes.LOOKS.map((look) => look.name);
+/** Gold Coins to unlearn a companion's path and mastery and choose again. */
+export const RETRAIN_COST = 25;
 
 /** Traits a member can be given: one from level 10 and a second from level 30. */
 export const TRAITS = [
@@ -68,54 +81,45 @@ const GIFT_BOND = 5;
 export const UNISON_COOLDOWN = 45; // seconds between Unison orders
 const UNISON_POWER = 1.25;
 const NAMES = ["Aria", "Borin", "Celia", "Dain", "Elsa", "Fenn", "Gwen", "Hale", "Iris", "Joss", "Kara", "Lund", "Mira", "Nils", "Orla", "Penn"];
+/** Names for hired companions, by the look's sex (v11). */
+const MEN = ["Borin", "Dain", "Fenn", "Hale", "Joss", "Lund", "Nils", "Penn", "Aldo", "Bram", "Cael", "Doran", "Edric", "Garr", "Ivo", "Kestrel"];
+const WOMEN = ["Aria", "Celia", "Elsa", "Gwen", "Iris", "Kara", "Mira", "Orla", "Brenna", "Dagny", "Freya", "Ilse", "Lyra", "Nessa", "Runa", "Sigrid"];
 
 /** Element a mage retainer reaches for against particular foes. */
-const WEAK_TO = {
-  [id("cocytus")]: "fire",
-  [id("soul_eater")]: "fire",
-  [id("solution")]: "fire",
-  [id("frost_dragon")]: "fire",
-  [id("war_troll")]: "fire",
-  [id("frost_giant")]: "fire",
-  [id("treant_sapling")]: "fire",
-  [id("zytl_qae")]: "fire",
-  [id("wraith")]: "holy",
-  [id("death_cavalier")]: "holy",
-  [id("go_gin")]: "fire",
-  [id("behemoth")]: "acid",
-  [id("eight_edge_assassin")]: "holy",
-  [id("platinum_dragon_lord")]: "dark",
-  [id("dark_young")]: "fire",
-  [id("jaldabaoth")]: "ice",
-  [id("gigant_basilisk")]: "ice",
-  [id("skeletal_dragon")]: "holy",
-  [id("hellhound")]: "ice",
-  [id("evil_lord_wrath")]: "ice",
-  [id("shadow_demon")]: "holy",
-  [id("archangel_flame")]: "dark",
-  [id("dominion_authority")]: "dark",
-  [id("demiurge")]: "ice",
-  [id("fluder")]: "ice",
-  "minecraft:blaze": "ice",
-  "minecraft:stray": "fire",
-};
+const WEAK_TO = arts.WEAK_TO;
 
 /** @typedef {import("@minecraft/server").Player} Player */
 /** @typedef {import("@minecraft/server").Entity} Entity */
-/** @typedef {{ name: string, look: number, gear: number, hired: boolean, level: number, out: boolean, xp: number, bond: number, tactic: number, traits: string[], gift: number, persona?: string }} Member */
+/**
+ * @typedef {{ name: string, look: number, gear: number, hired: boolean, level: number, out: boolean, xp: number, bond: number,
+ *   tactic: number, traits: string[], gift: number, persona?: string, branch?: number, mastery?: number, talk?: number }} Member
+ * branch and mastery: the path (level 30) and mastery (level 60) chosen, -1 for none yet; talk: the day it was last talked to.
+ */
 
 // ------------------------------------------------------------------- v8.7: who they are and how they fight
 
 /** Each member's temper colours what they say in battle. */
 export const PERSONAS = {
-  brave: { name: "Brave", start: ["For the Master!", "Stand fast - they will break on us!", "Here they come. Good."], elite: ["A worthy foe, felled!", "That one fought well. Not well enough."], low: ["It is only a scratch!", "I will not fall here!"] },
-  cautious: { name: "Cautious", start: ["Careful, Master - more than one.", "Stay close. Watch the flanks.", "I count several. Let us be wise."], elite: ["Done. Let us not meet another like it.", "We were lucky there, Master."], low: ["Too close - I am pulling back!", "I need a moment!"] },
-  cheerful: { name: "Cheerful", start: ["Oh, company! Let us say hello!", "Ready when you are, Master!", "This should be fun!"], elite: ["Ha! Did you see that, Master?", "And that is how it is done!"], low: ["Ouch, ouch, ouch!", "That one stung!"] },
-  stoic: { name: "Stoic", start: ["Engaging.", "As you command.", "Hostiles ahead."], elite: ["It is finished.", "Threat removed."], low: ["Wounded. Continuing.", "Pain is irrelevant."] },
+  brave: { name: "Brave", start: ["For the Master!", "Stand fast - they will break on us!", "Here they come. Good."], elite: ["A worthy foe, felled!", "That one fought well. Not well enough."], low: ["It is only a scratch!", "I will not fall here!"],
+    win: ["Another battle won for Nazarick!", "Is that all they had?", "Victory, Master!"], greet: ["At your side, Master.", "I am here. Point me at the enemy."],
+    idle: ["My blade grows restless, Master.", "I could march all night.", "Every day at your side is a day well spent."], learn: ["A new art! Let them come.", "I am stronger than yesterday."],
+    talk: ["I trained before dawn again. One day I will stand beside the Floor Guardians.", "They say the Warrior-Captain fought with six blades of light. I mean to see it.", "If the Master asked, I would charge a dragon. Please do not ask."] },
+  cautious: { name: "Cautious", start: ["Careful, Master - more than one.", "Stay close. Watch the flanks.", "I count several. Let us be wise."], elite: ["Done. Let us not meet another like it.", "We were lucky there, Master."], low: ["Too close - I am pulling back!", "I need a moment!"],
+    win: ["That is the last of them, I think.", "Clear. Let us catch our breath.", "We came through. Good."], greet: ["Ah, Master. I was keeping watch.", "Here. I have checked the way ahead."],
+    idle: ["Something is watching us. Or I am tired.", "We should rest before nightfall.", "I counted our potions. We could use more."], learn: ["A new art. I will practise it before I trust it.", "Another trick learned. Good to have."],
+    talk: ["I keep a map of every road we have walked. Just in case.", "The Theocracy has eyes everywhere, Master. I would rather not meet them.", "Thank you for not charging into that last cave. I appreciated it."] },
+  cheerful: { name: "Cheerful", start: ["Oh, company! Let us say hello!", "Ready when you are, Master!", "This should be fun!"], elite: ["Ha! Did you see that, Master?", "And that is how it is done!"], low: ["Ouch, ouch, ouch!", "That one stung!"],
+    win: ["We did it! High five!", "Ha! Too easy!", "That was amazing, Master!"], greet: ["Master! I missed you!", "Hello hello! Where are we off to?"],
+    idle: ["Do you think the maids of Nazarick ever get a day off?", "I could go for a meat pie right now.", "Look at that sky, Master!"], learn: ["Oh! Oh! I learned something new!", "Watch this, Master - a brand new art!"],
+    talk: ["I tried to cook stew yesterday. The stew won.", "If I ever meet Lady Shalltear I am asking where she got that dress.", "You are the best master anyone ever had. I mean it!"] },
+  stoic: { name: "Stoic", start: ["Engaging.", "As you command.", "Hostiles ahead."], elite: ["It is finished.", "Threat removed."], low: ["Wounded. Continuing.", "Pain is irrelevant."],
+    win: ["Area secure.", "Enemies neutralised.", "Done."], greet: ["Present.", "Awaiting orders."],
+    idle: ["...", "All quiet.", "I am listening, Master."], learn: ["Art acquired.", "Ready to apply it."],
+    talk: ["I do not talk much. I listen.", "Your orders have been sound. I will follow them.", "There is a stillness in fighting well. You know it too."] },
 };
 const PERSONA_KEYS = Object.keys(PERSONAS);
 /** How each vocation fights: front holds the line, back keeps its distance, support stays by the master, flank goes behind. */
-export const ROLES = ["front", "back", "back", "support", "flank", "back"];
+export const ROLES = classes.VOCATIONS.map((v) => v.role);
 const ROLE_NAMES = { front: "Vanguard - holds the line and draws foes off you", back: "Back line - keeps its distance and steps away from foes that close in", support: "Support - stays at your side and keeps everyone standing", flank: "Flanker - slips behind foes and strikes where they are open" };
 /**
  * The pose each attack is drawn with: the casting and weapon animations the player uses, and the party's own.
@@ -136,7 +140,7 @@ export const POSES = {
   dirge: "animation.overlord.party_strum", crescendo: "animation.overlord.party_strum", requiem: "animation.overlord.party_strum",
 };
 /** The element of each vocation's attacks, for the flash at the hand. */
-const VOC_ELEMENT = ["none", "none", "arcane", "holy", "dark", "arcane"];
+const VOC_ELEMENT = classes.VOCATIONS.map((v) => v.element);
 /** Foe id -> tick until which it is staggered and open to the party's blows. */
 /** @type {Map<string, number>} */
 export const staggered = new Map();
@@ -148,6 +152,30 @@ const dashReady = new Map();
 /** Player id -> tick of the last time the party went into battle. */
 const lastBattle = new Map();
 
+/** The vocation a member belongs to (from its look). @param {{ look: number }} member */
+export function vocOf(member) {
+  return classes.LOOKS[member.look]?.voc ?? 0;
+}
+
+/** The path (-1 for none) and mastery (-1 for none) a member has chosen. @param {{ branch?: number, mastery?: number }} member */
+function pathOf(member) {
+  const branch = member.branch === 0 || member.branch === 1 ? member.branch : -1;
+  const mastery = branch >= 0 && (member.mastery === 0 || member.mastery === 1) ? member.mastery : -1;
+  return { branch, mastery };
+}
+
+/** The role a member fights in, by its vocation and path. @param {{ look: number, branch?: number, mastery?: number }} member */
+export function roleOf(member) {
+  const { branch, mastery } = pathOf(member);
+  return classes.roleOf(vocOf(member), branch, mastery);
+}
+
+/** The class a member goes by: its mastery's, its path's or its vocation's name. @param {{ look: number, branch?: number, mastery?: number }} member */
+export function classOf(member) {
+  const { branch, mastery } = pathOf(member);
+  return classes.className(vocOf(member), branch, mastery);
+}
+
 /** A member's temper; older members are given one from their name. @param {Member} member */
 export function personaOf(member) {
   if (member.persona && member.persona in PERSONAS) return member.persona;
@@ -156,7 +184,7 @@ export function personaOf(member) {
   return PERSONA_KEYS[h % PERSONA_KEYS.length];
 }
 
-/** One of a member's lines for a moment. @param {Member} member @param {"start" | "elite" | "low"} moment @param {() => number} [random] */
+/** One of a member's lines for a moment. @param {Member} member @param {"start" | "elite" | "low" | "win" | "greet" | "idle" | "learn" | "talk"} moment @param {() => number} [random] */
 export function lineFor(member, moment, random = Math.random) {
   const lines = PERSONAS[/** @type {keyof typeof PERSONAS} */ (personaOf(member))][moment];
   return lines[Math.floor(random() * lines.length) % lines.length];
@@ -196,6 +224,10 @@ export function partyOf(player) {
     m.traits = [...new Set(Array.isArray(m.traits) ? m.traits : [])].filter((key) => TRAITS.some((t) => t.key === key)).slice(0, 2);
     m.gift = Number.isFinite(Number(m.gift)) ? Math.floor(Number(m.gift)) : -1;
     m.persona = personaOf(m);
+    const path = pathOf(m); // v11: a path from level 30 and a mastery from 60
+    m.branch = path.branch;
+    m.mastery = path.mastery;
+    m.talk = Number.isFinite(Number(m.talk)) ? Math.floor(Number(m.talk)) : -1;
   }
   if (!STANCES.includes(/** @type {any} */ (p.stance))) p.stance = "come";
   return p.party;
@@ -237,7 +269,7 @@ export function recoveryOf(member) {
  */
 export function formationOf(player) {
   const active = partyOf(player).filter((m, i) => m.out && recovering(player, i) === 0);
-  const vocations = active.map((m) => Math.floor(m.look / 2));
+  const vocations = active.map((m) => vocOf(m));
   const balanced = active.length >= 3 && new Set(vocations).size === active.length;
   const doubled = new Set(vocations.filter((v, i) => vocations.indexOf(v) !== i));
   const name = balanced ? "Balanced formation" : doubled.size > 0 ? `${VOCATIONS[[...doubled][0]]} specialists` : "";
@@ -265,13 +297,18 @@ export function createMain(player, name, look) {
   const party = partyOf(player);
   const clean = name.trim().slice(0, 16) || "Retainer";
   const existing = party.find((m) => !m.hired);
+  const lookNo = Math.min(LOOKS.length - 1, Math.max(0, Math.floor(look) || 0));
   if (existing) {
+    if (vocOf(existing) !== vocOf({ look: lookNo })) {
+      existing.branch = -1; // a new vocation starts its paths afresh
+      existing.mastery = -1;
+    }
     existing.name = clean;
-    existing.look = look;
+    existing.look = lookNo;
     refresh(player, party.indexOf(existing));
   } else {
     if (party.length >= MAX_PARTY) return false;
-    party.unshift({ name: clean, look, gear: 0, hired: false, level: 1, out: true, xp: 0, bond: 0, tactic: 0, traits: [], gift: -1 });
+    party.unshift({ name: clean, look: lookNo, gear: 0, hired: false, level: 1, out: true, xp: 0, bond: 0, tactic: 0, traits: [], gift: -1, branch: -1, mastery: -1, talk: -1 });
     retag(player);
   }
   touch(player);
@@ -287,12 +324,18 @@ export function candidates(player, random = Math.random) {
   const discount = standingOf(profileOf(player), "adventurers") >= 30 ? 0.75 : 1; // friends of the guild pay less
   const list = [];
   for (let i = 0; i < 3; i++) {
-    const hireLevel = Math.max(1, level + Math.floor(random() * 5) - 2);
+    const hireLevel = Math.min(MAX_LEVEL, Math.max(1, level + Math.floor(random() * 5) - 2));
+    const look = Math.floor(random() * LOOKS.length) % LOOKS.length;
+    const names = classes.LOOKS[look].sex === "f" ? WOMEN : MEN;
+    // A seasoned mercenary has already walked a path, and past 60 mastered it.
+    const roll = Math.floor(random() * 4) % 4;
     list.push({
-      name: NAMES[Math.floor(random() * NAMES.length)],
-      look: Math.floor(random() * LOOKS.length),
+      name: names[Math.floor(random() * names.length) % names.length],
+      look,
       level: hireLevel,
       cost: Math.round((10 + hireLevel * 2) * discount),
+      branch: hireLevel >= classes.BRANCH_AT ? roll % 2 : -1,
+      mastery: hireLevel >= classes.MASTERY_AT ? Math.floor(roll / 2) : -1,
     });
   }
   return list;
@@ -300,14 +343,17 @@ export function candidates(player, random = Math.random) {
 
 /**
  * Hires a mercenary. Returns a message describing the outcome.
- * @param {Player} player @param {{ name: string, look: number, level: number, cost: number }} who
+ * @param {Player} player @param {{ name: string, look: number, level: number, cost: number, branch?: number, mastery?: number }} who
  */
 export function hire(player, who) {
   const party = partyOf(player);
   if (party.length >= MAX_PARTY) return `§7Your party is full (${MAX_PARTY})`;
   if (countItem(player, COIN) < who.cost) return `§7${who.name} asks for ${who.cost} Gold Coins`;
   takeItem(player, COIN, who.cost);
-  party.push({ name: who.name, look: who.look, gear: 0, hired: true, level: who.level, out: true, xp: 0, bond: 0, tactic: 0, traits: [], gift: -1 });
+  const level = Math.min(MAX_LEVEL, Math.max(1, Math.floor(who.level)));
+  const branch = level >= classes.BRANCH_AT && (who.branch === 0 || who.branch === 1) ? who.branch : -1;
+  const mastery = branch >= 0 && level >= classes.MASTERY_AT && (who.mastery === 0 || who.mastery === 1) ? who.mastery : -1;
+  party.push({ name: who.name, look: who.look, gear: 0, hired: true, level, out: true, xp: 0, bond: 0, tactic: 0, traits: [], gift: -1, branch, mastery, talk: -1 });
   touch(player);
   return `§a${who.name} the ${LOOKS[who.look]} joins your party`;
 }
@@ -344,6 +390,100 @@ export function upgrade(player, index) {
 /** @param {number} gear */
 export function gearCost(gear) {
   return 20 * (gear + 1);
+}
+
+/**
+ * Sets a member on one of its vocation's two paths (from level 30), or - once on a path - one of the path's two
+ * masteries (from level 60). Returns a message describing the outcome.
+ * @param {Player} player @param {number} index @param {number} choice 0 or 1
+ */
+export function choosePath(player, index, choice) {
+  const member = partyOf(player)[index];
+  if (!member) return "§7No such party member";
+  if (choice !== 0 && choice !== 1) return "§7No such path";
+  const level = levelOf(player, member);
+  const voc = classes.VOCATIONS[vocOf(member)];
+  const branch = member.branch ?? -1;
+  if (branch < 0) {
+    if (level < classes.BRANCH_AT) return `§7${member.name} can choose a path from level ${classes.BRANCH_AT}`;
+    member.branch = choice;
+    member.mastery = -1;
+    touch(player);
+    const path = voc.branches[choice];
+    announceLearned(player, member, `§a${member.name} walks the path of the §e${path.name}§a: ${path.help}`);
+    return `§a${member.name} is now a ${path.name}`;
+  }
+  if ((member.mastery ?? -1) >= 0) return `§7${member.name} has already mastered a path - retrain to choose again`;
+  if (level < classes.MASTERY_AT) return `§7${member.name} can master the path from level ${classes.MASTERY_AT}`;
+  member.mastery = choice;
+  touch(player);
+  const mastery = voc.branches[branch].masteries[choice];
+  announceLearned(player, member, `§a${member.name} becomes a §e${mastery.name}§a: ${mastery.help}`);
+  return `§a${member.name} is now a ${mastery.name}`;
+}
+
+/**
+ * Unlearns a member's path and mastery for Gold Coins so they can be chosen again.
+ * @param {Player} player @param {number} index
+ */
+export function retrain(player, index) {
+  const member = partyOf(player)[index];
+  if (!member) return "§7No such party member";
+  if ((member.branch ?? -1) < 0) return `§7${member.name} has not chosen a path yet`;
+  if (countItem(player, COIN) < RETRAIN_COST) return `§7Retraining costs ${RETRAIN_COST} Gold Coins`;
+  takeItem(player, COIN, RETRAIN_COST);
+  member.branch = -1;
+  member.mastery = -1;
+  touch(player);
+  return `§a${member.name} is ready to choose a path again`;
+}
+
+/** Tells the master and has the member cheer. @param {Player} player @param {Member} member @param {string} text */
+function announceLearned(player, member, text) {
+  player.sendMessage(`§6[Party] §f${text}`);
+  const index = partyOf(player).indexOf(member);
+  for (const entity of index >= 0 ? entitiesOf(player, index) : []) emote(entity, "cheer");
+}
+
+/**
+ * The arts a member knows at its level, by its path (v11). Hand-made arts of the old party keep their effects.
+ * @param {number} vocation @param {number} level @param {number} [branch] @param {number} [mastery]
+ */
+export function attacksKnown(vocation, level, branch = -1, mastery = -1) {
+  return classes.artsFor(vocation, branch, mastery, level);
+}
+
+/** The arts a member knows now. @param {Player} player @param {Member} member */
+export function artsOf(player, member) {
+  const { branch, mastery } = pathOf(member);
+  return attacksKnown(vocOf(member), levelOf(player, member), branch, mastery);
+}
+
+/** An art's name and description, the old party's hand-made ones included. @param {classes.Art} art */
+export function artInfo(art) {
+  if (art.kind !== "legacy") return { name: art.name, help: art.help, cd: art.cd };
+  const legacy = legacyArt(art.key);
+  return { name: legacy?.name ?? art.key, help: legacy?.help ?? "", cd: legacy?.cooldown ?? 10 };
+}
+
+/** The old party's arts that help rather than harm. */
+const HELPING = new Set(["mend", "purify", "sanctuary", "blessing", "aegis", "cry", "ballad", "haste"]);
+const HELPING_KINDS = new Set(["heal", "shield", "buff", "revive", "cleanse", "escape"]);
+
+/** Whether an art does harm (and so needs a foe). @param {classes.Art} art */
+function offensive(art) {
+  if (art.kind === "legacy") return !HELPING.has(art.key);
+  const kind = art.kind === "combo" ? art.parts?.[0]?.kind : art.kind;
+  return !HELPING_KINDS.has(kind);
+}
+
+/** One of the old party's hand-made arts, by key. @param {string} key */
+function legacyArt(key) {
+  for (const kit of ATTACKS) {
+    const found = kit.find((a) => a.key === key);
+    if (found) return found;
+  }
+  return undefined;
 }
 
 /**
@@ -537,12 +677,21 @@ function spawn(player, index) {
       console.warn(`[Overlord] could not ready a retainer: ${error}`);
     }
   }, 2);
+  // v11: a wave on arriving, and now and then a word.
+  system.runTimeout(() => {
+    if (!entity.isValid || !player.isValid) return;
+    emote(entity, "wave");
+    if (system.currentTick - (greeted.get(player.id) ?? -1e9) > 120 * TICKS) {
+      greeted.set(player.id, system.currentTick);
+      say(player, member, lineFor(member, "greet"), 0); // a greeting never holds up a warning
+    }
+  }, 12);
   return entity;
 }
 
 /** @param {Player} player @param {Member} member */
 function label(player, member) {
-  return `${member.name} §7Lv.${levelOf(player, member)} ${VOCATIONS[Math.floor(member.look / 2)]}`;
+  return `${member.name} §7Lv.${levelOf(player, member)} ${classOf(member)}`;
 }
 
 /** Re-creates a member's entity after its look or gear changed. @param {Player} player @param {number} index */
@@ -610,6 +759,16 @@ const FRESH = 10 * TICKS; // how long a target or threat stays current
 /** The foe each player has ordered the whole party to strike (Unison). */
 /** @type {Map<string, { entity: Entity, tick: number }>} */
 const orders = new Map();
+/** The mob that last hurt one of each player's companions (v11). */
+/** @type {Map<string, { entity: Entity, tick: number }>} */
+const partyThreats = new Map();
+/** `${playerId}|${foeId}` of neutral monsters that have turned on the master or the party. */
+const angry = new Set();
+/** Player id -> the foe the party is pressing hardest, so members pile onto one target. */
+/** @type {Map<string, { id: string, tick: number }>} */
+const focus = new Map();
+/** Player id -> tick of their party's last greeting. */
+const greeted = new Map();
 
 /** Whether the player has fought within the last ten seconds. @param {Player} player */
 function inCombat(player) {
@@ -618,7 +777,8 @@ function inCombat(player) {
 }
 
 /**
- * The foe a member turns its skills on, according to its tactic.
+ * The foe a member turns its skills on, according to its tactic (v11: every tactic but Hold fire also defends the
+ * master on its own - any monster that comes near is fought without waiting to be told).
  * @param {Player} player @param {Entity} entity @param {Member} member
  * @returns {Entity | undefined}
  */
@@ -627,12 +787,13 @@ function pickFoe(player, entity, member) {
     mark && system.currentTick - mark.tick <= FRESH && mark.entity.isValid ? mark.entity : undefined;
   const ordered = current(orders.get(player.id)); // a Unison order outranks every tactic
   if (ordered) return ordered;
-  if (member.tactic === 2) {
-    const chosen = bestFoe(player, entity, member);
-    if (chosen) return chosen;
-  }
-  if (member.tactic === 1) return current(threats.get(player.id)) ?? current(targets.get(player.id));
-  return current(targets.get(player.id));
+  const target = current(targets.get(player.id));
+  const threat = current(threats.get(player.id));
+  const harmed = current(partyThreats.get(player.id));
+  if (member.tactic === 3) return threat ?? harmed; // Hold fire
+  if (member.tactic === 2) return bestFoe(player, entity, member) ?? threat ?? target;
+  if (member.tactic === 1) return threat ?? harmed ?? target ?? bestFoe(player, entity, member);
+  return target ?? threat ?? harmed ?? bestFoe(player, entity, member);
 }
 
 /**
@@ -643,30 +804,33 @@ function pickFoe(player, entity, member) {
  * @returns {Entity | undefined}
  */
 export function bestFoe(player, entity, member) {
-  /** @type {Entity[]} */
-  let near = [];
-  try {
-    near = player.dimension.getEntities({ location: entity.location, maxDistance: 12, families: ["monster"] });
-  } catch {
-    return undefined;
-  }
+  const near = monstersNear(player, entity.location, 12);
+  if (near.length === 0) return undefined;
   const threat = threats.get(player.id);
   const hunting = threat && system.currentTick - threat.tick <= FRESH ? threat.entity : undefined;
-  const role = ROLES[Math.floor(member.look / 2)];
-  const vocation = Math.floor(member.look / 2);
+  const harm = partyThreats.get(player.id);
+  const harming = harm && system.currentTick - harm.tick <= FRESH ? harm.entity : undefined;
+  const role = roleOf(member);
+  const vocation = vocOf(member);
+  const pressed = focus.get(player.id);
+  const leash = profileOf(player).stance === "go" ? 26 : 16; // foes far from the master are left be
   let best;
   let bestScore = -Infinity;
   for (const foe of near) {
     if (!foe.isValid) continue;
+    const fromMaster = Math.hypot(foe.location.x - player.location.x, foe.location.z - player.location.z);
+    if (fromMaster > leash && !(hunting && foe.id === hunting.id) && !(harming && foe.id === harming.id)) continue;
     let score = -Math.hypot(foe.location.x - entity.location.x, foe.location.z - entity.location.z);
     if (hunting && foe.id === hunting.id) score += 30;
+    if (harming && foe.id === harming.id) score += 12;
+    if (pressed && pressed.id === foe.id && system.currentTick - pressed.tick <= FRESH) score += 10; // pile on together
     try {
       if (isElite(foe)) score += 20;
     } catch {
       // no mark
     }
     if (isStaggered(foe)) score += 15;
-    if (vocation === 1 || vocation === 4) {
+    if (vocation === 1 || vocation === 4 || role === "flank") {
       try {
         const health = foe.getComponent("minecraft:health");
         if (health && health.effectiveMax > 0 && health.currentValue / health.effectiveMax < 0.35) score += 20;
@@ -674,7 +838,7 @@ export function bestFoe(player, entity, member) {
         // unreadable
       }
     }
-    if (role === "front") score -= Math.hypot(foe.location.x - player.location.x, foe.location.z - player.location.z);
+    if (role === "front" || role === "support") score -= fromMaster;
     if (score > bestScore) {
       bestScore = score;
       best = foe;
@@ -690,9 +854,24 @@ export function bestFoe(player, entity, member) {
  */
 function monstersNear(player, at, radius) {
   try {
-    return player.dimension.getEntities({ location: at, maxDistance: radius, families: ["monster"] });
+    return player.dimension.getEntities({ location: at, maxDistance: radius, families: ["monster"] }).filter((e) => isFoe(player, e));
   } catch {
     return [];
+  }
+}
+
+/** Monsters the party leaves alone unless they start it: striking them would turn a whole crowd on the master. */
+const NEUTRAL = new Set(["minecraft:zombie_pigman", "minecraft:enderman", "minecraft:piglin"]);
+
+/** Whether the party should fight an entity of the monster family (v11). @param {Player} player @param {Entity} e */
+function isFoe(player, e) {
+  try {
+    if (!e.isValid) return false;
+    if (e.hasTag("overlord_summoned") || e.hasTag("overlord_retainer") || e.hasTag("overlord_raised")) return false;
+    if (NEUTRAL.has(e.typeId)) return angry.has(`${player.id}|${e.id}`);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -701,13 +880,30 @@ world.afterEvents.entityHurt.subscribe((event) => {
     const attacker = event.damageSource.damagingEntity;
     const victim = event.hurtEntity;
     if (attacker && attacker.isValid && victim.typeId === "minecraft:player" && attacker.typeId !== "minecraft:player" && attacker.typeId !== RETAINER) {
+      if (attacker.hasTag("overlord_summoned")) return; // a stray blow from an ally
       threats.set(victim.id, { entity: attacker, tick: system.currentTick }); // Guardians answer this
+      if (NEUTRAL.has(attacker.typeId)) angry.add(`${victim.id}|${attacker.id}`);
+      return;
+    }
+    if (victim.typeId === RETAINER && victim.isValid) {
+      // v11: whatever hurts a companion is the whole party's foe, and the companion flinches.
+      const owner = victim.getDynamicProperty("overlord:owner");
+      if (attacker && attacker.isValid && attacker.typeId !== "minecraft:player" && attacker.typeId !== RETAINER && typeof owner === "string" && !attacker.hasTag("overlord_summoned")) {
+        partyThreats.set(owner, { entity: attacker, tick: system.currentTick });
+        arts.noteHurt(victim.id, attacker.id);
+        if (NEUTRAL.has(attacker.typeId)) angry.add(`${owner}|${attacker.id}`);
+      }
+      if (event.damage >= 2 && system.currentTick >= (flinchReady.get(victim.id) ?? 0)) {
+        flinchReady.set(victim.id, system.currentTick + 2 * TICKS);
+        emote(victim, "hurt");
+      }
       return;
     }
     if (!attacker || attacker.typeId !== "minecraft:player" || !victim.isValid) return;
     if (victim.typeId === "minecraft:player" || victim.typeId === RETAINER) return;
     const player = /** @type {Player} */ (attacker);
     targets.set(player.id, { entity: victim, tick: system.currentTick });
+    if (NEUTRAL.has(victim.typeId)) angry.add(`${player.id}|${victim.id}`); // the master started it
     if (isElite(victim) && !victim.hasTag("overlord_called")) {
       victim.addTag("overlord_called");
       const awake = partyOf(player).filter((m, i) => m.out && recovering(player, i) === 0);
@@ -735,8 +931,13 @@ const ready = new Map();
 const openingCalled = new Map();
 /** Entity id -> tick before which it will not attack again. */
 const busy = new Map();
-/** Entity id -> which of its attacks it used last, so the next one is a different one. */
+/** Entity id -> which of its arts it used last, so the next one is a different one. */
+/** @type {Map<string, string>} */
 const lastUsed = new Map();
+/** Entity id -> tick before which it will not call out another great art. */
+const shoutReady = new Map();
+/** Entity id -> tick before which it will not flinch again. */
+const flinchReady = new Map();
 
 /** @param {Entity} entity @param {number} y */
 function above(entity, y) {
@@ -778,7 +979,7 @@ function mostWounded(player, healer) {
  * @typedef {{
  *   player: Player, entity: Entity, member: Member, level: number, power: number, d: import("@minecraft/server").Dimension,
  *   hand: import("@minecraft/server").Vector3, foe: Entity | undefined, gap: number, masterShare: number,
- *   masterHealth: import("@minecraft/server").EntityHealthComponent | undefined, near: boolean,
+ *   masterHealth: import("@minecraft/server").EntityHealthComponent | undefined, near: boolean, voc?: number,
  * }} Turn everything an attack needs to know: who is acting, on whom, how hard
  */
 /**
@@ -793,7 +994,7 @@ function hit(t, target, amount, cause = "entityAttack") {
   try {
     // A foe the party has staggered is open: every blow on it lands harder.
     const open = isStaggered(target);
-    target.applyDamage(amount * t.power * (open ? OPENING : 1), { cause: EntityDamageCause[cause], damagingEntity: t.entity });
+    target.applyDamage(amount * t.power * (open ? OPENING : 1) * arts.markOf(target), { cause: EntityDamageCause[cause], damagingEntity: t.entity });
     if (open && system.currentTick >= (openingCalled.get(t.player.id) ?? 0)) {
       openingCalled.set(t.player.id, system.currentTick + 12 * TICKS);
       fx.spark(t.d, above(target, 1.6), "holy", 1.2);
@@ -1326,35 +1527,36 @@ export const ATTACKS = [
 /**
  * How an attack looks: the member's pose, a flash at its hand, and - on the first blow of a fight -
  * a word that suits its temper.
- * @param {Player} player @param {Entity} entity @param {Member} member @param {string} key @param {number} vocation @param {number} now
+ * @param {Player} player @param {Entity} entity @param {Member} member @param {classes.Art} art @param {number} vocation @param {number} now
  */
-function perform(player, entity, member, key, vocation, now) {
+function perform(player, entity, member, art, vocation, now) {
+  const pose = art.kind === "legacy" ? POSES[art.key] : arts.poseOf(art, vocation);
   try {
-    if (POSES[key]) entity.playAnimation(POSES[key], { blendOutTime: 0.2 });
+    if (pose) entity.playAnimation(pose, { blendOutTime: 0.2 });
   } catch {
     // poses are cosmetic
+  }
+  if (art.kind !== "legacy" && art.at >= 60 && system.currentTick >= (shoutReady.get(entity.id) ?? 0)) {
+    shoutReady.set(entity.id, system.currentTick + 20 * TICKS); // the great arts are called out by name
+    say(player, member, `${art.name}!`, 4, art.at === 100);
   }
   fx.flash(player.dimension, above(entity, 1.3), VOC_ELEMENT[vocation] ?? "none", 0.7);
   if (now - (lastBattle.get(player.id) ?? -1e9) > 30 * TICKS) say(player, member, lineFor(member, "start"), 10);
   lastBattle.set(player.id, now);
 }
 
-/** The attacks a member of this vocation knows at this level. @param {number} vocation @param {number} level */
-export function attacksKnown(vocation, level) {
-  return (ATTACKS[vocation] ?? []).filter((attack) => level >= attack.level);
-}
-
 /**
- * Lets one retainer act: it uses the next attack in its cycle that is ready and has something
- * to do. Returns the name of the attack used, if any.
+ * Lets one retainer act (v11): it weighs every art it knows that is ready - need first (the hurt healed, the party
+ * shielded before a boss's blow), then how many foes an art would catch and how strong it is - and uses the best
+ * one that has something to do. Returns the name of the art used, if any.
  * @param {Player} player @param {Entity} entity @param {Member} member
  */
 export function useSkill(player, entity, member) {
   const now = system.currentTick;
   if (now < (busy.get(entity.id) ?? 0)) return undefined;
-  const vocation = Math.floor(member.look / 2);
+  const vocation = vocOf(member);
   const level = levelOf(player, member);
-  const known = attacksKnown(vocation, level);
+  const known = artsOf(player, member);
   if (known.length === 0) return undefined;
   const formation = formationOf(player);
   const unison = now - (orders.get(player.id)?.tick ?? -1e9) <= FRESH;
@@ -1380,31 +1582,35 @@ export function useSkill(player, entity, member) {
     masterHealth,
     masterShare: masterHealth && masterHealth.currentValue > 0 ? masterHealth.currentValue / masterHealth.effectiveMax : 1,
     near: reach(player) <= 12,
+    voc: vocation,
   };
   let mine = ready.get(entity.id);
   if (!mine) {
     mine = new Map();
     ready.set(entity.id, mine);
   }
-  // What answers need comes first; after that the member takes the next attack in its cycle.
-  const start = ((lastUsed.get(entity.id) ?? -1) + 1) % known.length;
-  const cycle = known.map((_, step) => (start + step) % known.length);
-  const order = [...cycle.filter((i) => known[i].urgent).sort((a, b) => known[b].level - known[a].level), ...cycle.filter((i) => !known[i].urgent)];
-  for (const index of order) {
-    const attack = known[index];
-    if (now < (mine.get(attack.key) ?? 0)) continue;
+  // With no foe of its own to fight (Hold fire, a quiet road), a member keeps to arts that help, so a sweep
+  // or a burst does not start a fight the master did not want.
+  const waiting = known.filter((art) => now >= (mine.get(art.key) ?? 0) && (foe || !offensive(art)));
+  if (waiting.length === 0) return undefined;
+  const sense = arts.senseOf(turn, lastUsed.get(entity.id));
+  const ranked = waiting.map((art) => ({ art, value: arts.score(turn, art, sense) })).sort((a, b) => b.value - a.value);
+  for (const { art, value } of ranked.slice(0, 6)) {
+    if (value <= -50) break; // nothing left worth trying
     let used = false;
     try {
-      used = attack.use(turn);
+      used = arts.use(turn, art);
     } catch {
       used = false; // the target vanished mid-attack
     }
     if (!used) continue;
-    mine.set(attack.key, now + Math.round(attack.cooldown * haste * TICKS));
+    const info = artInfo(art);
+    mine.set(art.key, now + Math.round(info.cd * haste * TICKS));
     busy.set(entity.id, now + Math.round(ATTACK_GAP * haste));
-    perform(player, entity, member, attack.key, vocation, now);
-    if (!attack.urgent) lastUsed.set(entity.id, index);
-    return attack.name;
+    perform(player, entity, member, art, vocation, now);
+    lastUsed.set(entity.id, art.key);
+    if (foe) focus.set(player.id, { id: foe.id, tick: now });
+    return info.name;
   }
   return undefined;
 }
@@ -1419,6 +1625,7 @@ export function useSkill(player, entity, member) {
 export function shareKill(player, dead, random = Math.random) {
   const party = partyOf(player);
   if (party.length === 0) return;
+  fightKills.set(player.id, (fightKills.get(player.id) ?? 0) + 1);
   const xp = killXp(dead);
   const bond = isElite(dead) ? 3 : 1;
   let changed = false;
@@ -1431,7 +1638,7 @@ export function shareKill(player, dead, random = Math.random) {
     addBond(player, member, Math.floor(growth) + (random() < growth % 1 ? 1 : 0));
     if (hasTrait(player, member, "scavenger") && random() < 0.1) coins += 1;
     if (hasTrait(player, member, "lucky") && random() < 0.04) crystals += 1;
-    if (Math.floor(member.look / 2) === 4 && levelOf(player, member) >= CUTPURSE_LEVEL && random() < 0.2) coins += 1; // Cutpurse
+    if (vocOf(member) === 4 && levelOf(player, member) >= CUTPURSE_LEVEL && random() < 0.2) coins += 1; // Cutpurse
     if (member.hired && member.level < MAX_LEVEL) {
       member.xp += Math.round(xp * MERC_SHARE * (hasTrait(player, member, "studious") ? 2 : 1));
       const start = member.level;
@@ -1440,7 +1647,10 @@ export function shareKill(player, dead, random = Math.random) {
         member.level += 1;
       }
       if (member.level >= MAX_LEVEL) member.xp = 0;
-      if (member.level > start) player.sendMessage(`§6[Party] §b${member.name}§f has reached level §6${member.level}§f.`);
+      if (member.level > start) {
+        player.sendMessage(`§6[Party] §b${member.name}§f has reached level §6${member.level}§f.`);
+        for (const entity of entitiesOf(player, index)) emote(entity, "cheer");
+      }
     }
   });
   if (crystals > 0) {
@@ -1559,6 +1769,7 @@ export function tend(player) {
         lookAfter(player, entity, member);
         brain(player, entity, member);
         useSkill(player, entity, member);
+        growth(player, entity, member, index);
       } catch {
         // entity is unloading
       }
@@ -1566,6 +1777,8 @@ export function tend(player) {
   });
   scout(player);
   nightfall(player);
+  afterBattle(player);
+  idle(player);
   if (party.some((m) => m.out) && health.currentValue < health.effectiveMax * 0.3) {
     const awake = party.filter((m, i) => m.out && recovering(player, i) === 0);
     if (awake.length > 0) say(player, awake[0], "Master, you are badly hurt - fall back!", 40);
@@ -1579,7 +1792,7 @@ function backLine(player) {
   /** @type {Entity[]} */
   const out = [];
   partyOf(player).forEach((member, index) => {
-    if (ROLES[Math.floor(member.look / 2)] === "back") out.push(...entitiesOf(player, index));
+    if (roleOf(member) === "back") out.push(...entitiesOf(player, index));
   });
   return out;
 }
@@ -1653,7 +1866,7 @@ function dash(entity, dir, strength) {
  */
 export function brain(player, entity, member, now = system.currentTick) {
   if (now < (dashReady.get(entity.id) ?? 0)) return "";
-  const role = ROLES[Math.floor(member.look / 2)];
+  const role = roleOf(member);
   const out = danger(entity.location);
   if (out) {
     dashReady.set(entity.id, now + 2 * TICKS);
@@ -1690,6 +1903,22 @@ export function brain(player, entity, member, now = system.currentTick) {
       dash(entity, { x: (player.location.x - at.x) / gap, z: (player.location.z - at.z) / gap }, Math.min(1.5, gap * 0.12));
       return "regroup";
     }
+  } else if (role === "flank") {
+    // v11: a flanker slips round to the far side of the foe the master is facing, where it is open.
+    const mark = targets.get(player.id) ?? threats.get(player.id);
+    const foe = mark && now - mark.tick <= FRESH && mark.entity.isValid ? mark.entity : undefined;
+    if (foe) {
+      const fx0 = foe.location.x - player.location.x;
+      const fz0 = foe.location.z - player.location.z;
+      const flen = Math.hypot(fx0, fz0) || 1;
+      const spot = { x: foe.location.x + (fx0 / flen) * 2, z: foe.location.z + (fz0 / flen) * 2 };
+      const gap = Math.hypot(spot.x - at.x, spot.z - at.z);
+      if (gap > 2.5 && gap < 16) {
+        dashReady.set(entity.id, now + 3 * TICKS);
+        dash(entity, { x: (spot.x - at.x) / gap, z: (spot.z - at.z) / gap }, Math.min(1.4, gap * 0.16));
+        return "flank";
+      }
+    }
   }
   return "";
 }
@@ -1719,13 +1948,13 @@ function lookAfter(player, entity, member) {
     share = own.currentValue / own.effectiveMax;
   }
   const back = entity.getDynamicProperty("overlord:back") === true;
-  if (!back && share < 0.3 && Math.floor(member.look / 2) !== 0) {
+  if (!back && share < 0.3 && roleOf(member) !== "front") {
     entity.setDynamicProperty("overlord:back", true);
     entity.triggerEvent(`${NS}:fall_back`);
     say(player, member, `${lineFor(member, "low")} §7(falling back)`, 20);
   } else if (back && share >= 0.6) {
     entity.setDynamicProperty("overlord:back", false);
-    entity.triggerEvent(`${NS}:rally_${VOC_KEYS[Math.floor(member.look / 2)]}`); // back to the vocation's own way of fighting
+    entity.triggerEvent(`${NS}:rally_${VOC_KEYS[vocOf(member)]}`); // back to the vocation's own way of fighting
   }
 }
 
@@ -1744,7 +1973,7 @@ function scout(player) {
     return;
   }
   if (now < due || inCombat(player)) return;
-  const archer = partyOf(player).find((m, i) => m.out && Math.floor(m.look / 2) === 1 && recovering(player, i) === 0);
+  const archer = partyOf(player).find((m, i) => m.out && vocOf(m) === 1 && recovering(player, i) === 0);
   if (!archer) return;
   const word = rumour(player);
   if (!word) {
@@ -1766,6 +1995,315 @@ function nightfall(player) {
   if (awake.length === 0 || player.dimension.id !== "minecraft:overworld") return;
   if (say(player, awake[Math.floor(Math.random() * awake.length)], "Night is falling, Master. The undead will be abroad - stay close.")) nightSeen.set(player.id, day);
 }
+
+// ------------------------------------------------------------------- v11: life with the party
+
+/** The emotes a companion can make, and the pose each one plays. */
+export const EMOTES = {
+  wave: { name: "Wave", pose: "animation.overlord.party_wave" },
+  bow: { name: "Bow", pose: "animation.overlord.party_bow" },
+  cheer: { name: "Cheer", pose: "animation.overlord.party_cheer" },
+  dance: { name: "Dance", pose: "animation.overlord.party_dance" },
+  laugh: { name: "Laugh", pose: "animation.overlord.party_laugh" },
+  salute: { name: "Salute", pose: "animation.overlord.party_salute" },
+  sit: { name: "Sit and rest", pose: "animation.overlord.party_sit" },
+  highfive: { name: "High five", pose: "animation.overlord.party_highfive" },
+  victory: { name: "Victory", pose: "animation.overlord.party_victory" },
+  hurt: { name: "Flinch", pose: "animation.overlord.party_hurt" },
+  think: { name: "Think", pose: "animation.overlord.party_think" },
+};
+const EMOTE_MENU = /** @type {const} */ (["wave", "bow", "cheer", "dance", "laugh", "salute", "sit", "think"]);
+
+/** Plays an emote on a companion; sitting lasts until it moves. @param {Entity} entity @param {keyof typeof EMOTES} key */
+export function emote(entity, key) {
+  const pose = EMOTES[key]?.pose;
+  if (!pose) return false;
+  try {
+    if (key === "sit") entity.playAnimation(pose, { blendOutTime: 0.3, stopExpression: "query.ground_speed > 0.4 || query.is_on_fire" });
+    else entity.playAnimation(pose, { blendOutTime: 0.25 });
+    return true;
+  } catch {
+    return false; // cosmetic only
+  }
+}
+
+/** `${playerId}|${index}` -> how many arts a member knew when last seen, to announce new ones. */
+const knownCount = new Map();
+/** `${playerId}|${index}` -> the path reminder already given (30 or 60). */
+const pathNagged = new Map();
+
+/**
+ * A member's growth, seen each pass: a new art is announced with a cheer, and a member who has reached level 30
+ * or 60 without choosing its path is reminded once.
+ * @param {Player} player @param {Entity} entity @param {Member} member @param {number} index
+ */
+function growth(player, entity, member, index) {
+  const key = `${player.id}|${index}|${member.name}`;
+  const known = artsOf(player, member);
+  const before = knownCount.get(key);
+  knownCount.set(key, known.length);
+  if (before !== undefined && known.length > before) {
+    const fresh = known.slice(before).map((art) => artInfo(art).name);
+    player.sendMessage(`§6[Party] §b${member.name}§f has learned §e${fresh.join("§f, §e")}§f.`);
+    emote(entity, "cheer");
+    say(player, member, lineFor(member, "learn"), 8, true);
+  }
+  const level = levelOf(player, member);
+  const { branch, mastery } = pathOf(member);
+  const due = branch < 0 && level >= classes.BRANCH_AT ? classes.BRANCH_AT : branch >= 0 && mastery < 0 && level >= classes.MASTERY_AT ? classes.MASTERY_AT : 0;
+  if (due > 0 && pathNagged.get(key) !== due) {
+    pathNagged.set(key, due);
+    player.sendMessage(`§6[Party] §b${member.name}§f is ready to choose ${due === classes.BRANCH_AT ? "a path" : "a mastery"}: open the party menu (or use them) and pick one - it brings new arts.`);
+  }
+}
+
+/** Player id -> kills made since the party went into battle. */
+const fightKills = new Map();
+/** Player id -> whether the party was in battle at the last pass. */
+const wasFighting = new Map();
+
+/** When a fight ends in victory the party celebrates. @param {Player} player */
+function afterBattle(player) {
+  const fighting = inCombat(player);
+  const was = wasFighting.get(player.id) ?? false;
+  wasFighting.set(player.id, fighting);
+  if (fighting || !was) return;
+  const kills = fightKills.get(player.id) ?? 0;
+  fightKills.set(player.id, 0);
+  if (kills < 2) return; // a single stray mob is no victory worth the name
+  const awake = partyOf(player).filter((m, i) => m.out && recovering(player, i) === 0);
+  if (awake.length === 0) return;
+  partyOf(player).forEach((member, index) => {
+    if (!member.out || recovering(player, index) > 0) return;
+    for (const entity of entitiesOf(player, index)) emote(entity, index % 2 === 0 ? "victory" : "cheer");
+  });
+  say(player, awake[system.currentTick % awake.length], lineFor(awake[system.currentTick % awake.length], "win"), 10);
+}
+
+/** Player id -> tick of the party's next idle moment. */
+const idleAt = new Map();
+/** Players whose party has sat down while they sleep. */
+const asleep = new Set();
+const IDLE_EVERY = 240; // seconds between quiet moments on the road
+
+/**
+ * On a quiet road a member now and then speaks its mind or stretches; when the master sleeps or stands still at
+ * night, the party sits down to rest.
+ * @param {Player} player
+ */
+function idle(player) {
+  const now = system.currentTick;
+  const due = idleAt.get(player.id);
+  if (due === undefined) {
+    idleAt.set(player.id, now + IDLE_EVERY * TICKS);
+    return;
+  }
+  if (inCombat(player)) {
+    idleAt.set(player.id, Math.max(due, now + 30 * TICKS));
+    return;
+  }
+  let sleeping = false;
+  try {
+    sleeping = player.isSleeping === true;
+  } catch {
+    sleeping = false;
+  }
+  const party = partyOf(player);
+  const wasSleeping = asleep.has(player.id);
+  if (sleeping) {
+    if (!wasSleeping) {
+      asleep.add(player.id); // sat down once, and they stay sat until they move
+      party.forEach((member, index) => {
+        if (member.out) for (const entity of entitiesOf(player, index)) emote(entity, "sit");
+      });
+    }
+    return;
+  }
+  asleep.delete(player.id);
+  if (now < due) return;
+  idleAt.set(player.id, now + IDLE_EVERY * TICKS);
+  const awake = party.filter((m, i) => m.out && recovering(player, i) === 0);
+  if (awake.length === 0) return;
+  const pick = (now / TICKS) % awake.length | 0;
+  const member = awake[pick];
+  const entity = entitiesOf(player, party.indexOf(member))[0];
+  if (!entity) return;
+  const night = world.getTimeOfDay() > 13000 && world.getTimeOfDay() < 23000;
+  emote(entity, night ? "sit" : /** @type {const} */ (["think", "laugh", "dance"])[pick % 3]);
+  say(player, member, lineFor(member, "idle"), 20);
+}
+
+/** Talks with a member: a word from it, and the bond grows a little once a day. @param {Player} player @param {number} index */
+export function talk(player, index) {
+  const member = partyOf(player)[index];
+  if (!member) return "§7No such party member";
+  const lines = [...PERSONAS[/** @type {keyof typeof PERSONAS} */ (personaOf(member))].talk];
+  const level = levelOf(player, member);
+  const { branch, mastery } = pathOf(member);
+  const health = player.getComponent("minecraft:health");
+  if (health && health.currentValue < health.effectiveMax * 0.5) lines.push("You are hurt, Master. Let me watch the road while you rest.");
+  if (branch < 0 && level >= classes.BRANCH_AT) lines.push(`I have been thinking about my path, Master. ${classes.VOCATIONS[vocOf(member)].branches.map((b) => `The ${b.name}`).join(" or the ")}?`);
+  if (mastery >= 0) lines.push(`Being a ${classOf(member)} suits me. Thank you for believing in me.`);
+  if (bondRank(member) >= 3) lines.push("I would follow you into the Great Tomb itself. I think I already have.");
+  if (world.getTimeOfDay() > 13000 && world.getTimeOfDay() < 23000) lines.push("The stars are bright tonight. Do they look the same from Nazarick?");
+  const line = lines[(system.currentTick + member.name.length) % lines.length];
+  player.sendMessage(`§b<${member.name}>§f ${line}`);
+  for (const entity of entitiesOf(player, index)) {
+    try {
+      entity.playAnimation("animation.overlord.party_talk", { blendOutTime: 0.2 });
+    } catch {
+      // cosmetic only
+    }
+  }
+  const day = world.getDay();
+  if (member.talk !== day) {
+    member.talk = day;
+    addBond(player, member, 1);
+    touch(player);
+  }
+  return "";
+}
+
+/** Player|member -> tick of the next high five that counts towards the bond. */
+const fiveReady = new Map();
+
+/** A high five with a member: both hands up, a cheer, and a little bond now and then. @param {Player} player @param {number} index */
+export function highFive(player, index) {
+  const member = partyOf(player)[index];
+  if (!member) return "§7No such party member";
+  for (const entity of entitiesOf(player, index)) {
+    emote(entity, "highfive");
+    fx.spark(player.dimension, above(entity, 1.9), "holy", 0.8);
+  }
+  try {
+    player.playAnimation("animation.overlord.party_highfive", { blendOutTime: 0.2 });
+    player.playSound("random.orb", { volume: 0.8, pitch: 1.4 });
+  } catch {
+    // cosmetic only
+  }
+  const key = `${player.id}|${index}`;
+  if (system.currentTick >= (fiveReady.get(key) ?? 0)) {
+    fiveReady.set(key, system.currentTick + 300 * TICKS);
+    addBond(player, member, 1);
+    touch(player);
+  }
+  return "§aHigh five!";
+}
+
+/** Has every member at the master's side make an emote. @param {Player} player @param {keyof typeof EMOTES} key */
+export function emoteAll(player, key) {
+  partyOf(player).forEach((member, index) => {
+    if (member.out) for (const entity of entitiesOf(player, index)) emote(entity, key);
+  });
+}
+
+// Using one of your own companions opens its menu; sneaking while you do gives it a high five.
+world.beforeEvents.playerInteractWithEntity.subscribe((event) => {
+  const target = event.target;
+  if (target.typeId !== RETAINER) return;
+  const player = event.player;
+  let owner;
+  let slot;
+  try {
+    owner = target.getDynamicProperty("overlord:owner");
+    slot = target.getDynamicProperty("overlord:slot");
+  } catch {
+    return;
+  }
+  if (owner !== player.id || typeof slot !== "number") return;
+  const held = event.itemStack?.typeId;
+  if (held === POTION || held === "minecraft:bread") return; // feeding heals it, as before
+  event.cancel = true;
+  const sneaking = player.isSneaking;
+  system.run(() => {
+    try {
+      if (!player.isValid) return;
+      if (sneaking) notify(player, highFive(player, slot));
+      else openCompanion(player, slot);
+    } catch (error) {
+      console.warn(`[Overlord] companion interaction failed: ${error}`);
+    }
+  });
+});
+
+/** Fallen members of a player's party, for arts that call them back. @param {Player} player */
+function fallenCount(player) {
+  return partyOf(player).filter((m, i) => m.out && recovering(player, i) > 0).length;
+}
+
+/** Calls up to `count` fallen members back at once (an art's doing, so free). @param {Player} player @param {number} count */
+function reviveFallen(player, count) {
+  let back = 0;
+  partyOf(player).forEach((member, index) => {
+    if (back >= count || !member.out || recovering(player, index) === 0) return;
+    fallen.delete(`${player.id}|${index}`);
+    back++;
+  });
+  if (back > 0) system.run(() => {
+    try {
+      if (player.isValid) tend(player);
+    } catch {
+      // player left
+    }
+  });
+  return back;
+}
+
+/** Player id -> the companions found this tick, so the arts do not search the world again and again. */
+/** @type {Map<string, { tick: number, list: Entity[] }>} */
+const companionCache = new Map();
+
+/** Every companion entity of a player now in the world. @param {Player} player */
+function companionsOf(player) {
+  const cached = companionCache.get(player.id);
+  if (cached && cached.tick === system.currentTick) return cached.list.filter((e) => e.isValid);
+  /** @type {Entity[]} */
+  const out = [];
+  for (let i = 0; i < MAX_PARTY; i++) out.push(...entitiesOf(player, i));
+  companionCache.set(player.id, { tick: system.currentTick, list: out });
+  return out;
+}
+
+arts.bind({
+  hit: (t, target, amount, cause) => hit(/** @type {Turn} */ (t), target, amount, cause),
+  foesNear: (player, at, radius) => monstersNear(player, at, radius),
+  companions: companionsOf,
+  stagger,
+  say: (player, member, text, pause, urgent) => say(player, member, text, pause, urgent),
+  fallen: fallenCount,
+  revive: reviveFallen,
+  inCombat,
+  healPlayer,
+  isElite: (e) => {
+    try {
+      if (isElite(e)) return true;
+      const h = e.getComponent("minecraft:health");
+      return Boolean(h && h.effectiveMax >= 200); // bosses count as elites too
+    } catch {
+      return false;
+    }
+  },
+  coins: (player, count) => {
+    giveItem(player, COIN, count);
+    notify(player, `§6${count} Gold Coin${count === 1 ? "" : "s"} lifted from a foe`);
+  },
+  legacy: (key) => legacyArt(key),
+  danger,
+});
+
+// Summons of the companions whose time ran out while the world was closed are swept away.
+system.runInterval(() => {
+  const seen = new Set();
+  for (const player of world.getAllPlayers()) {
+    try {
+      if (seen.has(player.dimension.id)) continue;
+      seen.add(player.dimension.id);
+      arts.sweep(player.dimension);
+    } catch {
+      // player is leaving
+    }
+  }
+}, 30 * TICKS);
 
 system.runInterval(() => {
   for (const player of world.getAllPlayers()) {
@@ -1839,7 +2377,7 @@ world.afterEvents.entityDie.subscribe((event) => {
     const member = partyOf(owner)[slot];
     if (!member) return;
     // A Healer still on their feet tends the fallen, halving the wait.
-    const tended = partyOf(owner).some((m, i) => i !== slot && m.out && Math.floor(m.look / 2) === 3 && recovering(owner, i) === 0);
+    const tended = partyOf(owner).some((m, i) => i !== slot && m.out && vocOf(m) === 3 && recovering(owner, i) === 0);
     const wait = Math.ceil(recoveryOf(member) / (tended ? 2 : 1));
     fallen.set(`${owner.id}|${slot}`, system.currentTick + wait * TICKS);
     owner.sendMessage(`§6[Party] §c${member.name} has fallen§f and will return in ${wait} seconds. You can revive them at once from the party menu for ${REVIVE_COST} Gold Coins.`);
@@ -1868,6 +2406,16 @@ world.afterEvents.playerLeave.subscribe((event) => {
   nightSeen.delete(event.playerId);
   orders.delete(event.playerId);
   unisonReady.delete(event.playerId);
+  partyThreats.delete(event.playerId);
+  focus.delete(event.playerId);
+  greeted.delete(event.playerId);
+  fightKills.delete(event.playerId);
+  wasFighting.delete(event.playerId);
+  idleAt.delete(event.playerId);
+  asleep.delete(event.playerId);
+  companionCache.delete(event.playerId);
+  for (const key of [...angry]) if (key.startsWith(`${event.playerId}|`)) angry.delete(key);
+  for (const key of [...knownCount.keys()]) if (key.startsWith(`${event.playerId}|`)) knownCount.delete(key);
 });
 
 // -------------------------------------------------------------------- menus
@@ -1893,7 +2441,7 @@ function show(form, player, onChoice) {
 function describe(player, member, index) {
   const wait = recovering(player, index);
   const state = wait > 0 ? `§crecovering ${wait}s` : member.out ? "§awith you" : "§7dismissed";
-  return `${member.name} - ${LOOKS[member.look]} (${VOCATIONS[Math.floor(member.look / 2)]}) Lv.${levelOf(player, member)}, gear ${member.gear}/${MAX_GEAR}${member.hired ? ", mercenary" : ""}, ${BOND_RANKS[bondRank(member)]}, ${TACTICS[member.tactic]} - ${state}§r`;
+  return `${member.name} - ${classOf(member)} (${LOOKS[member.look]}) Lv.${levelOf(player, member)}, gear ${member.gear}/${MAX_GEAR}${member.hired ? ", mercenary" : ""}, ${BOND_RANKS[bondRank(member)]}, ${TACTICS[member.tactic]} - ${state}§r`;
 }
 
 /**
@@ -1910,8 +2458,9 @@ export function openParty(player) {
       (party.length > 0 ? party.map((m, i) => `${i + 1}. ${describe(player, m, i)}`).join("\n") : "You travel alone.") +
         `\n\nStance: §e${STANCE_HELP[/** @type {"come"} */ (p.stance)]}§r` +
         (formationOf(player).name ? `\nFormation: §e${formationOf(player).name}§r` : "") +
-        `\nYour retainer levels with you; mercenaries earn half of your kill XP. Fighting together builds a bond that strengthens skills and shortens recovery. ` +
-        `Three different vocations recharge skills a fifth faster; two of the same strike 15% harder. A Healer halves the time a fallen member is away, and an Archer scouts for camps. Hold the Command Banner to see everyone's health; use it on a foe to order Unison - everyone strikes that foe at once (${UNISON_COOLDOWN} s).`
+        `\nYour retainer levels with you; mercenaries earn half of your kill XP. Every companion learns a new art each ten levels up to 100, chooses a path at level ${classes.BRANCH_AT} and masters it at ${classes.MASTERY_AT}. ` +
+        `Companions defend you on their own; set a member to Hold fire to keep it out of fights it did not start. Fighting together builds a bond that strengthens skills and shortens recovery. ` +
+        `Three different vocations recharge skills a fifth faster; two of the same strike 15% harder. A Healer halves the time a fallen member is away, and an Archer scouts for camps. Use a companion to talk, give orders or emote (sneak to high five). Hold the Command Banner to see everyone's health; use it on a foe to order Unison - everyone strikes that foe at once (${UNISON_COOLDOWN} s).`
     );
   /** @type {(() => void)[]} */
   const actions = [];
@@ -1924,6 +2473,7 @@ export function openParty(player) {
   if (party.length > 0) {
     add("Call everyone", () => summon(player));
     add("Dismiss everyone", () => dismiss(player));
+    add("Party emote\nEveryone at your side", () => openEmotes(player, -1));
     for (const stance of STANCES) add(`Stance: ${STANCE_HELP[stance]}`, () => setStance(player, stance));
   }
   if (party.length > 0) {
@@ -1943,7 +2493,7 @@ function openCreate(player) {
   const form = new ModalFormData()
     .title(existing ? "Restyle your retainer" : "Create your retainer")
     .textField("Name", "up to 16 letters", { defaultValue: existing?.name ?? "" })
-    .dropdown("Look and vocation", LOOKS.map((look, n) => `${look} (${VOCATIONS[Math.floor(n / 2)]})`), {
+    .dropdown("Look and vocation", classes.LOOKS.map((look) => `${look.name} (${VOCATIONS[look.voc]}, ${look.sex === "f" ? "woman" : "man"})`), {
       defaultValueIndex: existing?.look ?? 0,
     });
   form
@@ -1959,23 +2509,49 @@ function openCreate(player) {
     .catch((error) => console.warn(`[Overlord] retainer form failed: ${error}`));
 }
 
+/** Every art a member's vocation teaches, marked known, next, or on another path. @param {Player} player @param {Member} member */
+function artList(player, member) {
+  const level = levelOf(player, member);
+  const { branch, mastery } = pathOf(member);
+  const voc = classes.VOCATIONS[vocOf(member)];
+  const lines = [];
+  for (const { art, branch: b, mastery: m } of classes.treeOf(vocOf(member))) {
+    const onPath = b < 0 || (b === branch && (m < 0 || m === mastery));
+    const open = b < 0 ? true : branch < 0 ? true : b === branch && (m < 0 || mastery < 0 || m === mastery);
+    if (!open) continue; // another path's arts are left out once a path is chosen
+    const info = artInfo(art);
+    const where = b < 0 ? "" : m < 0 ? ` §8[${voc.branches[b].name}]` : ` §8[${voc.branches[b].masteries[m].name}]`;
+    const known = onPath && level >= art.at && (b < 0 || branch >= 0) && (m < 0 || mastery >= 0);
+    lines.push(`${known ? "§a" : "§8"}Lv.${art.at} ${info.name}§r${where} - ${info.help}`);
+  }
+  return lines.join("\n");
+}
+
 /** @param {Player} player @param {number} index */
 function openMember(player, index) {
   const member = partyOf(player)[index];
   if (!member) return openParty(player);
   const level = levelOf(player, member);
   const rank = bondRank(member);
-  const vocation = Math.floor(member.look / 2);
+  const vocation = vocOf(member);
+  const { branch, mastery } = pathOf(member);
+  const voc = classes.VOCATIONS[vocation];
+  const pathLine =
+    branch < 0
+      ? level >= classes.BRANCH_AT ? "§eready to choose a path§r" : `chooses a path at level ${classes.BRANCH_AT}`
+      : `${voc.branches[branch].name}${mastery >= 0 ? ` > ${voc.branches[branch].masteries[mastery].name}` : level >= classes.MASTERY_AT ? " §e(ready to choose a mastery)§r" : ` (mastery at level ${classes.MASTERY_AT})`}`;
   const form = new ActionFormData().title(member.name).body(
     describe(player, member, index) +
-      `\n\nBond: §e${BOND_RANKS[rank]}§r (${member.bond}/${MAX_BOND}) - skills +${Math.round(rank * BOND_POWER * 100)}%, returns ${recoveryOf(member)} s after falling` +
+      `\n\nVocation: §e${voc.name}§r - ${voc.blurb}` +
+      `\nPath: ${pathLine}` +
+      `\nBond: §e${BOND_RANKS[rank]}§r (${member.bond}/${MAX_BOND}) - skills +${Math.round(rank * BOND_POWER * 100)}%, returns ${recoveryOf(member)} s after falling` +
       (member.hired ? `\nXP: ${level >= MAX_LEVEL ? "max level" : `${member.xp}/${xpForNext(level)}`}` : "") +
-      `\nRole: §e${ROLE_NAMES[/** @type {keyof typeof ROLE_NAMES} */ (ROLES[vocation])]}§r` +
+      `\nRole: §e${ROLE_NAMES[/** @type {keyof typeof ROLE_NAMES} */ (roleOf(member))]}§r` +
       `\nTemper: §e${PERSONAS[/** @type {keyof typeof PERSONAS} */ (personaOf(member))].name}§r` +
       `\nTactic: §e${TACTICS[member.tactic]}§r - ${TACTIC_HELP[member.tactic]}` +
       `\nTraits: ${member.traits.length > 0 ? member.traits.map((key) => TRAITS.find((t) => t.key === key)?.name).join(", ") : "none"} (${member.traits.length}/${traitSlots(level)}; slots open at levels 10 and 30)` +
-      `\nAttacks:\n` +
-      (ATTACKS[vocation] ?? []).map((a) => `${level >= a.level ? "§a" : "§8"}${a.name}§r - ${a.help}${level >= a.level ? "" : ` §8(level ${a.level})§r`}`).join("\n") +
+      `\nArts (${artsOf(player, member).length} known):\n` +
+      artList(player, member) +
       (vocation === 4 ? `\n${level >= CUTPURSE_LEVEL ? "§a" : "§8"}Cutpurse§r - one kill in five turns up a Gold Coin${level >= CUTPURSE_LEVEL ? "" : ` §8(level ${CUTPURSE_LEVEL})§r`}` : "")
   );
   /** @type {(() => void)[]} */
@@ -1986,6 +2562,9 @@ function openMember(player, index) {
   };
   if (recovering(player, index) > 0) {
     add(`Revive now (${REVIVE_COST} Gold Coins)`, () => notify(player, revive(player, index)));
+  }
+  if ((branch < 0 && level >= classes.BRANCH_AT) || (branch >= 0 && mastery < 0 && level >= classes.MASTERY_AT)) {
+    add(branch < 0 ? "§2Choose a path§r\nnew arts at levels 30, 40 and 50" : "§2Choose a mastery§r\nnew arts at levels 60 to 100", () => openPath(player, index));
   }
   add(member.out ? "Dismiss" : "Call to your side", () => (member.out ? dismiss(player, index) : summon(player, index)));
   add(`Tactic: ${TACTICS[member.tactic]}\n(tap to change)`, () => {
@@ -2005,6 +2584,12 @@ function openMember(player, index) {
       openMember(player, index);
     });
   }
+  if (branch >= 0) {
+    add(`Retrain path (${RETRAIN_COST} Gold Coins)\nchoose path and mastery again`, () => {
+      notify(player, retrain(player, index));
+      openMember(player, index);
+    });
+  }
   if (!member.hired) add("Change name, look or vocation", () => openCreate(player));
   add(member.hired ? "End contract" : "Release retainer", () => {
     release(player, index);
@@ -2012,6 +2597,81 @@ function openMember(player, index) {
   });
   add("Back", () => openParty(player));
   show(form, player, (choice) => actions[choice]?.());
+}
+
+/** Choosing a path (level 30) or a mastery (level 60). @param {Player} player @param {number} index */
+function openPath(player, index) {
+  const member = partyOf(player)[index];
+  if (!member) return openParty(player);
+  const voc = classes.VOCATIONS[vocOf(member)];
+  const { branch } = pathOf(member);
+  const options = branch < 0 ? voc.branches : voc.branches[branch].masteries;
+  const lines = options.map((o) => {
+    const list = o.arts.map((art) => `  Lv.${art.at} ${artInfo(art).name} - ${artInfo(art).help}`).join("\n");
+    return `§e${o.name}§r - ${o.help}\n${list}`;
+  });
+  const form = new ActionFormData()
+    .title(branch < 0 ? `${member.name}: choose a path` : `${member.name}: choose a mastery`)
+    .body(`${lines.join("\n\n")}\n\n§7You can retrain later for ${RETRAIN_COST} Gold Coins.`);
+  for (const o of options) form.button(`${o.name}\n${o.help}`);
+  form.button("Back");
+  show(form, player, (choice) => {
+    if (choice >= options.length) return openMember(player, index);
+    notify(player, choosePath(player, index, choice));
+    openMember(player, index);
+  });
+}
+
+/**
+ * What using a companion opens: talk, orders, emotes and the way to its full page.
+ * @param {Player} player @param {number} index
+ */
+export function openCompanion(player, index) {
+  const member = partyOf(player)[index];
+  if (!member) return;
+  const entity = entitiesOf(player, index)[0];
+  let hp = "";
+  try {
+    const health = entity?.getComponent("minecraft:health");
+    if (health) hp = ` - ${Math.ceil(health.currentValue)}/${Math.ceil(health.effectiveMax)} HP`;
+  } catch {
+    hp = "";
+  }
+  const { branch, mastery } = pathOf(member);
+  const level = levelOf(player, member);
+  const ready = (branch < 0 && level >= classes.BRANCH_AT) || (branch >= 0 && mastery < 0 && level >= classes.MASTERY_AT);
+  const form = new ActionFormData()
+    .title(member.name)
+    .body(`${classOf(member)} Lv.${level}${hp}\nBond: ${BOND_RANKS[bondRank(member)]} (${member.bond}/${MAX_BOND}) - Temper: ${PERSONAS[/** @type {keyof typeof PERSONAS} */ (personaOf(member))].name}${ready ? "\n§eReady to choose a new path!§r" : ""}`);
+  /** @type {(() => void)[]} */
+  const actions = [];
+  const add = (/** @type {string} */ text, /** @type {() => void} */ action) => {
+    form.button(text);
+    actions.push(action);
+  };
+  add(`Talk${member.talk === world.getDay() ? "" : "\n+1 bond today"}`, () => talk(player, index));
+  add("High five", () => notify(player, highFive(player, index)));
+  add("Emotes", () => openEmotes(player, index));
+  if (ready) add("§2Choose a path§r", () => openPath(player, index));
+  add("Follow me", () => setStance(player, "come"));
+  add("Wait here", () => setStance(player, "stay"));
+  add("Go ahead and clear the way", () => setStance(player, "go"));
+  if (member.bond < MAX_BOND && member.gift !== world.getDay()) add(`Give a gift (${GIFT_COST} Gold Coins)`, () => notify(player, gift(player, index)));
+  add("Manage (arts, tactic, traits, gear)", () => openMember(player, index));
+  show(form, player, (choice) => actions[choice]?.());
+}
+
+/** Emotes for one member, or for everyone at the master's side (index -1). @param {Player} player @param {number} index */
+function openEmotes(player, index) {
+  const form = new ActionFormData().title(index < 0 ? "Party emote" : `${partyOf(player)[index]?.name ?? "Companion"}: emote`);
+  for (const key of EMOTE_MENU) form.button(EMOTES[key].name);
+  form.button("Back");
+  show(form, player, (choice) => {
+    if (choice >= EMOTE_MENU.length) return index < 0 ? openParty(player) : openCompanion(player, index);
+    const key = EMOTE_MENU[choice];
+    if (index < 0) emoteAll(player, key);
+    else for (const entity of entitiesOf(player, index)) emote(entity, key);
+  });
 }
 
 /** @param {Player} player @param {number} index */
@@ -2038,7 +2698,7 @@ function openHire(player) {
     .title("Mercenaries for hire")
     .body(`Gold Coins: §6${countItem(player, COIN)}§r. Friends of the adventurers pay a quarter less.`);
   for (const offer of offers) {
-    form.button(`${offer.name} - ${LOOKS[offer.look]} (${VOCATIONS[Math.floor(offer.look / 2)]}) Lv.${offer.level}\n${offer.cost} Gold Coins`);
+    form.button(`${offer.name} - ${classOf(offer)} (${LOOKS[offer.look]}) Lv.${offer.level}\n${offer.cost} Gold Coins`);
   }
   form.button("Back");
   show(form, player, (choice) => {
