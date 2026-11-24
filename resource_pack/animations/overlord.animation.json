@@ -513,6 +513,14 @@
         }
       }
     },
+    "animation.overlord.chibi_head": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "scale": 1.25
+        }
+      }
+    },
     "animation.overlord.projectile.spin": {
       "loop": true,
       "bones": {

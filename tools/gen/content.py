@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [11, 1, 1]
+VERSION = [11, 2, 1]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -3095,6 +3095,8 @@ def animations_json():
         "animation.overlord.cape": {"loop": True, "bones": {
             "cape": {"rotation": ["6.0 + math.clamp(query.modified_move_speed, 0.0, 1.0) * 28.0 + "
                                   "math.sin(query.life_time * 95.0) * 3.0", 0.0, 0.0]}}},
+        # v11.2: the anime figures' bigger heads (the client entity scales the whole figure down to match)
+        "animation.overlord.chibi_head": {"loop": True, "bones": {"head": {"scale": _people()[1]}}},
         "animation.overlord.projectile.spin": {"loop": True, "bones": {
             "body": {"rotation": ["query.life_time * 420.0", "query.life_time * 300.0", 0.0]}}},
     }
@@ -3995,9 +3997,23 @@ def render_controllers_json():
 MODEL_ALIASES = {"soul_steed": "soul_eater", "hell_steed": "hellhound", **{f"guardian_{k}": k for k in GUARDIAN_COMPANIONS}, **FAMILIAR_LOOKS}
 
 
+def _people():
+    """The models built as anime figures (the companions and the people of npcs.py), the scale of their heads
+    and the scale that keeps such a figure as tall as it was."""
+    import companions
+    import npcs
+    names = {f"retainer_{n}" for n in range(len(companions.LOOKS))} | set(npcs.PEOPLE)
+    scale = companions.HEAD_SCALE
+    return names, scale, round(32 / (24 + companions.Figure.HEAD * scale), 4)
+
+
 def client_entity_files():
     out = {}
+    people, head_scale, figure_scale = _people()
     for name, anims in ENTITY_ANIMS.items():
+        model = "retainer_0" if name == "retainer" else MODEL_ALIASES.get(name, name)
+        if model in people and head_scale != 1.0:  # a bigger head on a figure scaled to stand as tall as before
+            anims = list(anims) + ["chibi_head"]
         d = {
             "identifier": oid(name),
             "materials": {"default": "entity_alphatest"},
@@ -4007,6 +4023,8 @@ def client_entity_files():
             "animations": {a.replace(".", "_"): f"animation.overlord.{a}" for a in anims},
             "render_controllers": [RENDER_CONTROLLER],
         }
+        if "chibi_head" in anims:
+            d["scripts"]["scale"] = str(figure_scale)
         if name == "retainer":
             d["textures"] = {f"v{n}": f"textures/entity/{NS}/retainer_{n}" for n in range(RETAINER_LOOKS)}
             d["geometry"] = {f"v{n}": f"geometry.overlord.retainer_{n}" for n in range(RETAINER_LOOKS)}

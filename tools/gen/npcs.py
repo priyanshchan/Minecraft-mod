@@ -13,6 +13,7 @@ import math
 import numpy as np
 
 from modelkit import shade, mix
+import companions as _cmp
 from companions import (
     Figure, R, GOLD, GOLD_L, GOLD_D, SILVER, SILVER_L, SILVER_D, LEATHER, LEATHER_D, LEATHER_L, BONE, BONE_D, WOOD, WOOD_D,
     paint, toon, toon_metal, toon_leather, toon_hair, pixel_shade, hollow, sides, paint_skin, paint_face, hair_style,
@@ -20,7 +21,7 @@ from companions import (
     bow_tie, collar, hood, circlet, veil, mask, helm, wizard_hat, cap, headband, crown, ribbon, horns, bat_wings,
     feather_wings, halo, elf_ears, sword, katana, staff, scythe, spear, axe, mace, dagger, curved_blade, bow, shield,
     book, quiver, lute, wraps, beads, plate, faulds, emblem_cross, emblem_sun, emblem_skull, lock, chain, Hand, blade,
-    grip, bust, _rot,
+    grip, bust, _rot, fashion, round_figure,
 )
 
 H = Figure.HEAD
@@ -105,8 +106,8 @@ def glasses(fig, frame="#c9a53c"):
 
 def eyepatch(fig, color="#2a3324", left=False):
     with paint(fig.skull.front) as p:
-        x0 = 10 if left else 2
-        p.rect(x0 / R, 3.5, (x0 + 4) / R, 6, color)
+        x0 = 5 if left else 1
+        p.rect(x0, 3.5, x0 + 2, 6, color)
         p.line([(0, 3.2), (8, 4.6) if not left else (0, 4.6)], shade(color, 0.8))
 
 
@@ -124,6 +125,7 @@ def demon_tail(fig, color="#c9ced6", tip="#e0b040", length=5):
 
 
 def military_cap(fig, color, badge=GOLD):
+    fig.headwear = True
     c = fig.head.cube((-H / 2, 24 + H - 2, -H / 2), (H, 3, H), inflate=0.6)
     toon(c, color)
     with paint(c.bottom) as p:
@@ -135,6 +137,7 @@ def military_cap(fig, color, badge=GOLD):
 
 
 def wide_hat(fig, color, band=None, wide=6):
+    fig.headwear = True
     y = 24 + H - 0.4
     brim = fig.head.cube((-wide, y, -wide), (wide * 2, 1, wide * 2))
     toon(brim, color)
@@ -275,15 +278,20 @@ def scale_cloak(fig, color="#c9a53c"):
 
 
 # ------------------------------------------------------------------------------------------ the people
+MODEST = {"aura", "mare", "entoma", "shalltear", "evileye", "cz_delta", "enri", "neia"}  # young: dressed as they are
+
+
 def build_person(name, look, dress, bones=()):
     def make():
-        fig = Figure(0, look, name=name, bones=bones)
+        fig = Figure(0, look, name=name, bones=bones, modest=name in MODEST)
         paint_skin(fig)
         paint_face(fig)
         dress(fig, look)
-        if fig.female and not look.get("flat") and fig.chest:
+        fashion(fig)
+        if fig.female and not look.get("flat") and not (fig.modest and _cmp.FASHION) and fig.chest:
             color, kind, inflate = fig.chest
             bust(fig, color, kind, inflate)
+        round_figure(fig)
         return fig.m
     make.__name__ = name
     return make
@@ -301,7 +309,7 @@ def _albedo(f, L_):
     collar(f, GOLD)
     hair_style(f)
     horns(f, "#f4f0e2", "#d8d0b8", curl=0.9)
-    feather_wings(f, "#1a1622", "#3a2f4a", 1.1)
+    feather_wings(f, "#1a1622", "#3a2f4a", 1.0, folded=True)
     halberd(f)
 
 
@@ -478,11 +486,18 @@ def _evileye(f, L_):
     cape(f, "#5a0d11", 17, GOLD, lining="#1b1a22")
     gloves(f, "#1b1a22")
     hair_style(f)
-    mk = f.head.cube((-H / 2, 24, -H / 2 - 0.55), (H, 6, 1))
+    # her mask: pale, a little narrower than her face, slanted eye holes with her red eyes glowing in them
+    mk = f.head.cube((-H / 2 + 0.5, 24.3, -H / 2 - 0.45), (H - 1, 5, 1), inflate=-0.05)
     toon(mk, "#f1ede4")
     with paint(mk.front) as p:
-        p.rect(1.5, 2.5, 3.2, 3.2, "#15131a").rect(4.8, 2.5, 6.5, 3.2, "#15131a")
-        p.line([(1, 4.5), (2.5, 5.5)], "#e0202c").line([(7, 4.5), (5.5, 5.5)], "#e0202c")
+        W = p.w
+        for x0, x1 in ((0.9, 2.9), (W - 2.9, W - 0.9)):
+            p.rect(x0, 1.5, x1, 2.6, "#15131a")
+            p.rect((x0 + x1) / 2 - 0.3, 1.8, (x0 + x1) / 2 + 0.3, 2.3, "#ff3a3a")
+        for x0, dx in ((1.6, -0.5), (W - 1.6, 0.5)):  # crimson tears under the eyes
+            p.line([(x0, 2.8), (x0 + dx, 4.6)], "#c2171d")
+        p.rect(W / 2 - 0.25, 0.3, W / 2 + 0.25, 1.1, "#c2171d")
+        p.rect(0, 0, W, 0.25, shade("#f1ede4", 0.8)).rect(0, p.h - 0.25, W, p.h, shade("#f1ede4", 0.75))
     wide_hat(f, "#5a0d11", GOLD, 6)
 
 
@@ -492,7 +507,8 @@ def _fluder(f, L_):
     sleeves(f, "#3a2a6a", 6, GOLD, wide=True)
     belt(f, LEATHER_D, GOLD, sash="#6a4a9f", pouch=False)
     hair_style(f)
-    lock(f, (0, 25, -H / 2 - 0.9), 5, 9, 1, (6, 0, 0), "point")  # the long white beard
+    if not _cmp.FASHION:
+        lock(f, (0, 25, -H / 2 - 0.9), 5, 9, 1, (6, 0, 0), "point")  # the long white beard
     staff(f, "orb", WOOD_D, "#59d0ff", GOLD)
 
 
@@ -517,7 +533,7 @@ def _vampire_bride(f, L_):
     sleeves(f, "#f1eff2", 5, None, wide=True)
     hair_style(f)
     with paint(f.skull.front) as p:  # fangs
-        p.px(7, 14, "#ffffff").px(9, 14, "#ffffff")
+        p.rect(3.5, 7, 3.5 + 1 / R, 7 + 1 / R, "#ffffff").rect(4.5, 7, 4.5 + 1 / R, 7 + 1 / R, "#ffffff")
 
 
 def _dwarf(f, L_):
@@ -769,10 +785,10 @@ def _paladin(f, L_):
 
 # name -> (look, dress, extra bones the entity's animations move)
 PEOPLE = {
-    "albedo": (L(sex="f", skin="#f6e2d6", hair="#17141d", tip="#3a2f4a", style="long", fringe="parted", eyes="#f2c21b", face="soft", length=17, strands=7), _albedo, ("robe", "wings")),
+    "albedo": (L(shoulders=True, sex="f", skin="#f6e2d6", hair="#17141d", tip="#3a2f4a", style="long", fringe="parted", eyes="#f2c21b", face="soft", length=17, strands=7), _albedo, ("robe", "wings")),
     "shalltear": (L(sex="f", skin="#fbf0ee", hair="#eef0f4", tip="#c8c8d8", style="twintails", fringe="hime", eyes="#c2171d", face="soft", ribbon="#1a1420"), _shalltear, ()),
     "demiurge": (L(sex="m", skin="#f0cfb2", hair="#1a1620", style="slick", eyes="#e0b040", face="sharp"), _demiurge, ("tail",)),
-    "sebas": (L(sex="m", skin="#e8c2a4", hair="#e8e8ec", style="slick", eyes="#3a6ad0", face="sharp", beard=True), _sebas, ()),
+    "sebas": (L(sex="m", skin="#e8c2a4", hair="#e8e8ec", style="slick", eyes="#3a6ad0", face="sharp", beard="short"), _sebas, ()),
     "narberal": (L(sex="f", skin="#fae8de", hair="#15131a", tip="#2a2a3a", style="ponytail", fringe="hime", eyes="#1a1622", face="sharp", ribbon="#f4f3f5"), _narberal, ("robe",)),
     "lupusregina": (L(sex="f", skin="#d8a882", hair="#c8302a", tip="#f0603a", style="braid", fringe="swept", eyes="#e0b040", face="soft", ribbon="#f4f3f5"), _lupusregina, ("robe",)),
     "entoma": (L(sex="f", skin="#fae8de", hair="#3a2a1e", style="buns", fringe="hime", eyes="#2a1a12", face="sharp", ribbon="#c84a2a"), _entoma, ("robe",)),
@@ -783,15 +799,15 @@ PEOPLE = {
     "aura": (L(sex="f", skin="#c8906a", hair="#f0d060", style="short", fringe="spiky", eyes="#3aa04a", eyes2="#3a7ad0", face="soft", flat=True, ahoge=True), _aura, ()),
     "mare": (L(sex="f", skin="#c8906a", hair="#f0d060", style="bob", fringe="hime", eyes="#3a7ad0", eyes2="#3aa04a", face="soft", flat=True), _mare, ()),
     "pandoras_actor": (L(sex="m", skin="#f2d8c6", hair="#2a2a33", style="bald", eyes="#120c10"), _pandora, ()),
-    "gazef": (L(sex="m", skin="#d8a882", hair="#1a1620", style="short", fringe="short", eyes="#3a2a1a", face="sharp", beard=True), _gazef, ()),
-    "clementine": (L(sex="f", skin="#fae4d6", hair="#f0d060", tip="#fff0b0", style="bob", fringe="swept", eyes="#c2171d", face="sharp"), _clementine, ()),
+    "gazef": (L(sex="m", skin="#d8a882", hair="#1a1620", style="short", fringe="short", eyes="#3a2a1a", face="sharp", beard="stubble"), _gazef, ()),
+    "clementine": (L(midriff=True, sex="f", skin="#fae4d6", hair="#f0d060", tip="#fff0b0", style="bob", fringe="swept", eyes="#c2171d", face="sharp"), _clementine, ()),
     "brain": (L(sex="m", skin="#e8c2a4", hair="#3a5a8a", style="wild", fringe="spiky", eyes="#3a6ad0", face="sharp", scar=True), _brain, ()),
     "nfirea": (L(sex="m", skin="#f6e2d6", hair="#e8c860", style="short", fringe="heavy", eyes="#3a6ad0", face="soft"), _nfirea, ()),
     "evileye": (L(sex="f", skin="#fbf0ee", hair="#f0d060", style="long", fringe="hime", eyes="#c2171d", face="sharp", length=11, strands=5, flat=True), _evileye, ()),
-    "fluder": (L(sex="m", skin="#e8c2a4", hair="#eceae4", style="long", fringe="parted", eyes="#3a7ad0", face="sharp", beard=True, length=12, strands=4), _fluder, ("robe",)),
+    "fluder": (L(sex="m", skin="#e8c2a4", hair="#eceae4", style="long", fringe="parted", eyes="#3a7ad0", face="sharp", beard="long", length=12, strands=4), _fluder, ("robe",)),
     "ainz": (L(sex="m", skin=BONE, hair=BONE, style="bald", eyes="#ff3a2e", helmet="full"), _ainz, ("robe",)),
-    "vampire_bride": (L(sex="f", skin="#f2eef0", hair="#15131a", tip="#3a1020", style="long", fringe="hime", eyes="#e0202c", face="sharp", lips="#a01020", length=16, strands=6), _vampire_bride, ("robe",)),
-    "dwarf": (L(sex="m", skin="#d8a882", hair="#a8502a", style="short", fringe="short", eyes="#3a2a1a", face="sharp", beard=True, helmet="open"), _dwarf, ()),
+    "vampire_bride": (L(shoulders=True, sex="f", skin="#f2eef0", hair="#15131a", tip="#3a1020", style="long", fringe="hime", eyes="#e0202c", face="sharp", lips="#a01020", length=16, strands=6), _vampire_bride, ("robe",)),
+    "dwarf": (L(sex="m", skin="#d8a882", hair="#a8502a", style="short", fringe="short", eyes="#3a2a1a", face="sharp", beard="full", helmet="open"), _dwarf, ()),
     "adventurer": (L(sex="m", skin="#e8c2a4", hair="#7a5230", style="short", fringe="swept", eyes="#3aa04a", face="soft"), _adventurer, ()),
     "guard": (L(sex="m", skin="#f0cfb2", hair="#3a2a1f", style="short", fringe="short", eyes="#3a6ad0", face="sharp", helmet="open"),
               _generic_soldier("#9aa0aa", "#3f66a8", lambda f: spear(f), True, "kite", plume="#3f66a8"), ()),
