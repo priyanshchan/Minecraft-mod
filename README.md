@@ -736,6 +736,35 @@ sticks in a flag shape).
   Players cannot hurt retainers, their kills count as yours for XP, quests and the bestiary, and feeding one
   bread or a Healing Potion heals it.
 
+### The people and monsters redrawn (v11.1)
+
+- **Every NPC is redrawn** in the companions' style: 86 models in all, each the same size as before.
+  - **The people (45):** Albedo, Shalltear, Demiurge, Sebas, the Pleiades and the maids, Aura and Mare, Pandora's Actor, Ainz, Gazef,
+    Brain, Clementine, Climb, Lakyus, Evileye, Neia, Remedios, Zesshi, and the guards, soldiers, archers, knights,
+    priests, bandits and villagers. They have anime faces, hair in 3D locks and their own outfits. Albedo has horns and
+    black wings, Demiurge glasses and a plated tail, CZ an eyepatch and a rifle, Yuri spiked gauntlets, Ainz a skull and
+    a spiked collar, and Pandora's Actor his egg face.
+  - **The monsters (41):** the undead (skeletons, liches, wraiths, the Death Knight, the Death Cavalier, ghouls), goblins,
+    ogres, trolls and giants, lizardmen and beast-folk, quagoa, demons and evil lords, angels, golems, treants,
+    Hamsuke, the beasts, Cocytus and Eclair. They are sculpted from many parts and pixel-shaded as bone, scales, fur,
+    stone, bark, plate and flame.
+  - The maids and others in short skirts now walk on their legs.
+- **NPCs fight with arts of their own.** Forty-five kinds of NPC have one to three special attacks, run by the
+  companions' arts engine. Some examples:
+  - A **lich** throws fireballs and lightning and raises skeletons.
+  - The **Death Knight** cleaves with its flamberge, drags you in with chains and shields itself.
+  - A **troll** sweeps, roars and heals its wounds.
+  - A **skeleton archer** looses volleys and piercing shots.
+  - A **vampire bride** drinks blood.
+  - A **shadow demon** steps through shadows.
+  - A **basilisk** petrifies.
+  - **Clementine** flurries and flashes behind you.
+  - **Nigun** calls an angel.
+
+  Monsters turn their arts on you and your companions. Guards, soldiers, archers, adventurers, paladins and the heroes
+  turn theirs on monsters. Named characters call their arts out by name. A boss in the middle of its fight keeps to its
+  own moves.
+
 ### Bestiary and reputation
 
 - **Bestiary:** every kind of foe you (or your party) slay is recorded. At 5, 15 and 40 kills you gain a
