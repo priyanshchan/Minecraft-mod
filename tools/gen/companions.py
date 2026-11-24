@@ -24,6 +24,27 @@ from PIL import Image, ImageDraw
 from modelkit import Model, rgba, shade, mix
 
 R = 2  # texels per model unit: chunky pixel art, as hand-made Blockbench models are
+SHADE = "ramp"  # how a face is shaded: "ramp" (six dithered tones), "smooth" (blended tones) or "cel" (three flat tones)
+
+# Art styles: how finely every character is painted and how it is shaded. One is picked for the whole pack.
+STYLES = {
+    "pixel": {"res": 2, "shade": "ramp"},  # chunky texels, six dithered tones (v11.0 - v11.1)
+    "cel": {"res": 2, "shade": "cel"},  # the same texels in three flat anime tones with dark edges
+    "hd": {"res": 3, "shade": "smooth"},  # finer texels (24 across a face) and smooth blended tones
+    "anime": {"res": 4, "shade": "cel"},  # finest texels (32 across a face), flat anime tones, big detailed eyes
+}
+STYLE = "pixel"
+
+
+def set_style(name):
+    """Switches every builder (the companions, the people and the monsters) to one art style."""
+    import sys
+    global STYLE, SHADE, R
+    st = STYLES[name]
+    STYLE, SHADE, R = name, st["shade"], st["res"]
+    for mod in ("npcs", "monsters"):
+        if mod in sys.modules:
+            sys.modules[mod].R = R
 
 GOLD, GOLD_L, GOLD_D = "#d9a92b", "#f6d968", "#96701a"
 SILVER, SILVER_L, SILVER_D = "#c9ced6", "#f1f4f8", "#7d838e"
@@ -40,8 +61,9 @@ class Paint:
     shape can never spill onto a neighbouring face.
     """
 
-    def __init__(self, face, res=R):
-        self.face, self.r = face, res
+    def __init__(self, face, res=None):
+        self.face, self.r = face, res or R
+        res = self.r
         self.w, self.h = face.w / res, face.h / res  # size in units
         self.img = face.img.crop((face.x, face.y, face.x + face.w, face.y + face.h))
         self.d = ImageDraw.Draw(self.img)
@@ -258,15 +280,28 @@ def ramp(color, metal=False):
 def pixel_shade(p, color, light=0.0, tip=None, grad=(0.0, 1.0), edge=0.9, span=2.3, base=1.2, metal=False, dither=True):
     """Fills a face with ramp shading: lighter at the top, darker down it and towards its side edges, dithered.
     `tip` fades the colour towards another down the face (hair ending in another colour); `grad` is the part of
-    that fade this face covers."""
+    that fade this face covers. How the tones are laid down depends on the art style (SHADE)."""
     W, H = p.img.width, p.img.height
     ys = (np.arange(H)[:, None] + 0.5) / H
     xs = np.arange(W)[None, :]
     e = np.minimum(xs + 0.5, W - 0.5 - xs) / max(1.0, W / 2)
     v = base + ys * span - light + (1 - np.minimum(1.0, e * 2.2)) * edge
-    if dither:
+    if SHADE == "ramp" and dither:
         v = v + (BAYER[np.arange(H)[:, None] % 2, np.arange(W)[None, :] % 2] - 0.375) * 0.45  # dither only near a step
-    idx = np.clip(v.astype(int), 0, 5)
+    if SHADE == "cel":
+        # three flat tones: a lit band at the top, the base colour, a shadow low down and at the edges
+        idx = np.where(v < 1.45, 1, np.where(v < 2.75, 2, 3))
+        if W >= 3 and edge > 0.5:  # a dark line down each side, as an anime outline
+            idx[:, 0] = 4
+            idx[:, W - 1] = 4
+        frac = None
+    elif SHADE == "smooth":
+        v = np.clip(v, 0, 4.999)
+        idx = v.astype(int)
+        frac = np.round((v - idx) * 3) / 3  # blended in thirds: soft, still painted by hand
+    else:
+        idx = np.clip(v.astype(int), 0, 5)
+        frac = None
     out = np.zeros((H, W, 4), np.uint8)
     rows = {}
     for y in range(H):
@@ -274,13 +309,17 @@ def pixel_shade(p, color, light=0.0, tip=None, grad=(0.0, 1.0), edge=0.9, span=2
             t = grad[0] + (grad[1] - grad[0]) * (y + 0.5) / H
             key = round(t, 2)
             if key not in rows:
-                rows[key] = np.array(ramp(mix(color, tip, min(1.0, max(0.0, t)) ** 1.4), metal), np.uint8)
+                rows[key] = np.array(ramp(mix(color, tip, min(1.0, max(0.0, t)) ** 1.4), metal), np.float32)
             tones = rows[key]
         else:
             if None not in rows:
-                rows[None] = np.array(ramp(color, metal), np.uint8)
+                rows[None] = np.array(ramp(color, metal), np.float32)
             tones = rows[None]
-        out[y] = tones[idx[y]]
+        if frac is None:
+            out[y] = tones[idx[y]]
+        else:
+            a, b = tones[idx[y]], tones[np.minimum(idx[y] + 1, 5)]
+            out[y] = np.round(a + (b - a) * frac[y][:, None])
     p.img.paste(Image.fromarray(out, "RGBA"))
     return p
 
@@ -503,9 +542,78 @@ EYES = {
 }
 
 
+# Finer faces for the finer art styles: 24 and 32 texels across. D dark top of the iris, S the soft lower lash,
+# G a second, smaller glint.
+EYES_HD = {
+    3: {"soft": {"f": ["LLLLL.", "LDDDDL", ".DHDIW", ".IPPIW", ".IPPJW", ".JJJJ.", "..SS.."],
+                 "m": ["LLLLLL", ".DHDDW", ".IPPIW", ".JJJJ.", "..SS.."]},
+        "sharp": {"f": ["LLLLL.", "LLLLLL", ".DHPDW", ".JIPJ.", "..SSS."],
+                  "m": ["LLLLLL", ".LDHPW", ".JIPJ.", "..SS.."]}},
+    4: {"soft": {"f": ["..LLLLL.", "LLLLLLLL", "LLDDDDDL", ".DHHDDDW", ".IHHPPIW", ".IIPPPIW", ".JIPPGJW", "..JJJJJ.", "...SSS.."],
+                 "m": ["LLLLLLLL", ".LDDDDDL", ".DHHPDIW", ".IHPPIIW", "..JJJJJ.", "...SSS.."]},
+        "sharp": {"f": ["LLLLLLL.", "LLLLLLLL", ".LDHHPDW", "..IIPPIW", "...SSSS."],
+                  "m": ["LLLLLLLL", ".LDHPPDW", "..JIPIJ.", "...SSS.."]}},
+}
+
+
+def paint_face_hd(fig, style):
+    look = fig.look
+    skin, eye, hair = look["skin"], look["eyes"], look["hair"]
+    r = R
+    F = 8 * r
+    lash = mix(shade(hair, 0.3), "#100810", 0.65)
+    glow = look.get("glow")
+    iris = glow or eye
+
+    def palette(c):
+        return {"L": lash, "D": shade(c, 0.62) if not glow else c, "I": c, "J": mix(c, "#ffffff", 0.4),
+                "P": shade(c, 0.3) if not glow else mix(c, "#ffffff", 0.6), "H": "#ffffff", "G": mix(c, "#ffffff", 0.75),
+                "W": "#f8f6f2", "S": mix(lash, skin, 0.55)}
+
+    kit = EYES_HD[r].get(style) or EYES_HD[r]["soft"]
+    eyes = kit["f" if fig.female else "m"]
+    ew, eh = len(eyes[0]), len(eyes)
+    tall = eh >= (7 if r == 3 else 9)
+    ey = int(round((6.0 if tall else 5.75) * r)) - eh
+    lx, rx = r, F - r - ew
+    pal, pal2 = palette(iris), palette(look["eyes2"]) if look.get("eyes2") else None
+    with paint(fig.skull.front) as p:
+        p.art(eyes, pal, lx, ey)
+        p.art(eyes, pal2 or pal, rx, ey, mirror=True)
+        brow = mix(shade(hair, 0.75), lash, 0.4)
+        by = ey - (2 if r == 3 else 3)
+        for x in range(1, ew - 1):  # brows, a little higher at the inner end for a soft look
+            lift = 1 if (style == "soft" and x >= ew - 2 and r == 4) else 0
+            p.px(lx + x, by - lift, brow).px(rx + ew - 1 - x, by - lift, brow)
+        c = F // 2
+        nose_y = int(round(6.2 * r))
+        p.px(c, nose_y, shade(skin, 0.86))  # a dot of a nose, its shadow on one side
+        my = int(round(6.85 * r))
+        if fig.female:
+            lips = look.get("lips", "#c06470")
+            p.px(c - 1, my, lips).px(c, my, mix(lips, skin, 0.35))
+            if r == 4:
+                p.px(c - 2, my - 1, mix(lips, skin, 0.5)).px(c + 1, my - 1, mix(lips, skin, 0.6))  # a small smile
+            for x in range(lx, lx + (3 if r == 3 else 4)):  # blush, two rows of soft strokes under each eye
+                for k in range(r - 2):
+                    p.blend(x + k, ey + eh + k, "#ff6f86", 0.32)
+                    p.blend(F - 1 - x - k, ey + eh + k, "#ff6f86", 0.32)
+        else:
+            lips = look.get("lips", shade(skin, 0.66))
+            for x in range(c - r + 1, c + r - 1):
+                p.px(x, my, lips)
+        if look.get("scar"):
+            p.rect(6, 2.5, 6 + 1 / r, 4.6, shade(skin, 0.62))
+    for f in (fig.skull.right, fig.skull.left):
+        with paint(f) as p:  # ears
+            p.rect(3.5, 4, 4.5, 6, shade(skin, 0.86))
+
+
 def paint_face(fig, style=None):
     """A Minecraft anime face: eyes four texels apart at the height of Steve's, a small mouth, blush on the cheeks."""
     style = style or fig.look.get("face", FACE)
+    if R > 2:
+        return paint_face_hd(fig, style)
     look = fig.look
     skin, eye, hair = look["skin"], look["eyes"], look["hair"]
     lash = mix(shade(hair, 0.3), "#100810", 0.65)

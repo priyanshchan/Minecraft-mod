@@ -105,8 +105,8 @@ def glasses(fig, frame="#c9a53c"):
 
 def eyepatch(fig, color="#2a3324", left=False):
     with paint(fig.skull.front) as p:
-        x0 = 10 if left else 2
-        p.rect(x0 / R, 3.5, (x0 + 4) / R, 6, color)
+        x0 = 5 if left else 1
+        p.rect(x0, 3.5, x0 + 2, 6, color)
         p.line([(0, 3.2), (8, 4.6) if not left else (0, 4.6)], shade(color, 0.8))
 
 
@@ -517,7 +517,7 @@ def _vampire_bride(f, L_):
     sleeves(f, "#f1eff2", 5, None, wide=True)
     hair_style(f)
     with paint(f.skull.front) as p:  # fangs
-        p.px(7, 14, "#ffffff").px(9, 14, "#ffffff")
+        p.rect(3.5, 7, 3.5 + 1 / R, 7 + 1 / R, "#ffffff").rect(4.5, 7, 4.5 + 1 / R, 7 + 1 / R, "#ffffff")
 
 
 def _dwarf(f, L_):
