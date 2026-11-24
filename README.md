@@ -746,8 +746,11 @@ sticks in a flag shape).
 ### The new anime look (v11.2)
 
 - **Every companion and person is redrawn in a new anime style**, modelled on popular anime Minecraft models:
-  - a bigger head on a figure that still stands as tall as before (the head is scaled in game by an always-on
-    animation, and the whole figure scaled down to match);
+  - grown-ups stand taller than before (about an eighth taller than the player) on legs a quarter longer, with a head
+    only a little bigger, so they look like adults; children (Aura, Mare, Shalltear, Entoma, Evileye, CZ, Enri and
+    Neia) keep a big head on a small figure (both done in game by always-on animations: v11.2.1);
+  - each grown-up is built as broad as suits them: Gazef, the dwarf, Zero, the knights, soldiers, warriors and monks
+    broad, the curvy women fuller, the sages, elves and mages lean (v11.2.1);
   - big eyes set low under heavy lashes, with sparkle highlights, a small mouth and soft blush;
   - fuller hair, with thick locks framing the face;
   - textures twice as fine, with smooth shading that falls down the whole figure;

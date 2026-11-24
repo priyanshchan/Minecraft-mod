@@ -177,7 +177,8 @@ class Bone:
         self.res = res
         self.cubes: list[Cube] = []
         self.locators: dict = {}
-        self.scale = 1.0  # a scale an always-on animation gives this bone in game (v11.2: the anime heads)
+        self.scale = 1.0  # a scale an always-on animation gives this bone in game (one number, or x, y, z)
+        self.offset = (0.0, 0.0, 0.0)  # and a shift (the figure lifted on longer legs)
 
     def cube(self, origin, size, inflate=0.0, rotation=None, pivot=None):
         c = Cube(origin, size, inflate, rotation, pivot, self.res)
@@ -540,9 +541,12 @@ class Model:
                     while bb is not None:
                         if bb.scale != 1.0:
                             pv = np.array(bb.pivot, np.float64)
-                            pts = (pts - pv) * bb.scale + pv
+                            sc = np.array(bb.scale if isinstance(bb.scale, (tuple, list)) else (bb.scale,) * 3, np.float64)
+                            pts = (pts - pv) * sc + pv
                         if bb.rotation:
                             pts = apply(pts, bb.rotation, bb.pivot)
+                        if any(bb.offset):
+                            pts = pts + np.array(bb.offset, np.float64)
                         bb = bones.get(bb.parent) if bb.parent else None
                     pts = pts * self.view_scale @ cam.T
                     sx_ = pts[:, 0] * scale + W / 2
