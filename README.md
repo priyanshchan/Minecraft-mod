@@ -634,81 +634,94 @@ stats and classes, which work as before.
 
 ### Party: retainers and mercenaries
 
-**The party overhaul (v8.7)**
-- **Looks:** every one of the twelve looks is drawn in full, with a face (eyes, brows, mouth; a beard on the
-  Wizard) and its vocation's gear:
-  - Knight and Swordsman: plate, pauldrons, a cape, a longsword and a kite shield.
-  - Ranger and Hunter: a hooded cloak, bracers, a recurve bow and a quiver of arrows.
-  - Sorcerer and Wizard: a long robe, a hood or pointed hat, a spellbook and a crystal staff.
-  - Priest and Acolyte: vestments with a holy tabard, a mitre or circlet, and a haloed staff.
-  - Assassin and Thief: leathers, hood and mask, and twin daggers.
-  - Minstrel and Skald: finery and a feathered hat or fur mantle, and a lute.
-- **Six attacks per vocation:** each vocation gains a level-14 technique and a level-45 ultimate.
+**The companions overhaul (v11.0)**
+- **Thirty-two looks, men and women.** Every companion is drawn anew in high detail (four times the texture
+  detail of before): faces with eyes, lashes and brows, hair in a dozen styles (braids, ponytails, twin tails,
+  buns, long hair), and each class's own gear. Women of every vocation join the twelve old looks, and two new
+  vocations arrive with four looks each.
 
-| Vocation | Level 14 | Level 45 |
-|----------|----------|----------|
-| Fighter | Taunt: draws foes off you and the back line, weakened | Blade Tempest: three whirling turns |
-| Archer | Pinning Shot: pins and staggers the foe | Starfall Arrow: a rain of light over the foe |
-| Mage | - | Arcane Rift: drags foes into one point, then bursts |
-| Healer | Purify: washes poison, wither, weakness and slowness from everyone | Divine Aegis: a shield of light over you and the party |
-| Rogue | Shadowstep: slips behind the foe and strikes its back | Death Lotus: four cuts at every foe around |
-| Bard | Song of Swiftness: Speed and Haste for everyone | Requiem: four waves of sorrow that hurt and slow |
+  | Vocation | Looks |
+  | --- | --- |
+  | Fighter | Knight, Swordsman, Valkyrie, Shieldmaiden |
+  | Archer | Ranger, Hunter, Huntress, Windrunner |
+  | Mage | Sorcerer, Wizard, Witch, Enchantress |
+  | Healer | Priest, Acolyte, Priestess, Battle Sister |
+  | Rogue | Assassin, Thief, Shadow Dancer, Nightblade |
+  | Bard | Minstrel, Skald, Songstress, Blade Dancer |
+  | Monk (new) | Martial Monk, Ascetic, Wind Disciple, Lotus Fist |
+  | Necromancer (new) | Necromancer, Bone Sage, Death Witch, Grave Maiden |
 
-- **Animations and effects:** every attack plays its own pose, such as a shield bash, bow draw, sky shot,
-  prayer, overarm throw, lute strum, spin, slam or casting gesture. A flash marks the hand that strikes.
-- **Battle sense:**
-  - **Dodging:** members read a boss's warnings and step out of slams, aside from lines, into the safe middle
-    of rings, and off burning ground.
-  - **Positions by role:** the back line (archers, mages, bards) steps away from foes that close in. The
-    vanguard (fighters) throws itself between you or the back line and what threatens them. The healer
-    regroups at your side.
-  - **Openings:** Pinning Shot, Shadowstep and Arcane Rift stagger foes. Every blow on a staggered foe lands 40%
-    harder, and members call it out.
-  - **Free hand:** a member set to Free hand chooses foes by priority: whatever is hurting you, then elites,
-    then staggered foes, then the wounded it can finish.
-- **Tempers:** each member is Brave, Cautious, Cheerful or Stoic. Their battle cries, elite kills and calls when
-  wounded fit their temper. The member page shows their role and temper.
+- **A new art every ten levels, up to level 100.** Each vocation teaches three core arts (levels 1, 10 and 20).
+  At level 30 a companion chooses one of two **paths** (arts at 30, 40 and 50). At level 60 it masters that path
+  in one of two **masteries** (arts at 60, 70, 80, 90 and a capstone at 100). That makes 32 classes and 232 arts.
+  A path can be retrained for 25 Gold Coins.
 
+  | Vocation | Paths (level 30) | Masteries (level 60) |
+  | --- | --- | --- |
+  | Fighter | Knight, Berserker | Paladin, Dark Knight / Warlord, Sword Saint |
+  | Archer | Sharpshooter, Ranger | Sniper, Arcane Archer / Beastmaster, Warden |
+  | Mage | Elementalist, Arcanist | Pyromancer, Cryomancer / Chronomancer, Void Caller |
+  | Healer | Priest, Druid | Saint, Templar / Grove Keeper, Oracle |
+  | Rogue | Assassin, Duelist | Shadow, Venomblade / Swashbuckler, Trickster |
+  | Bard | Skald, Minstrel | Warchanter, Siren / Troubadour, Sword Dancer |
+  | Monk | Ki Master, Wind Walker | Dragon Fist, Iron Body / Storm Dancer, Shadow Fist |
+  | Necromancer | Lich, Bone Lord | Soul Reaper, Plague Lord / Death Commander, Soul Binder |
+
+  Arts include sweeps, piercing bolts, chain lightning, rains of arrows, gravity wells, lasting auras, shields,
+  party buffs, heals over time, resurrection, summoned wolves and undead (Death Knights, skeletons, ghouls, a
+  Behemoth), blinks behind the foe and capstones such as Ultimate Shooting Star, Time Collapse, Miracle, Grasp
+  Heart and Army of Death. The old party's 36 arts are all kept inside the new tree.
+- **Far better AI:**
+  - **Companions defend you on their own.** Any monster that comes near you is fought without waiting for you
+    to strike it first. This works on Overlord monsters, vanilla ones and other add-ons' monsters alike.
+    Zombie pigmen are left alone unless they attack you or the party, and companions do not run up to creepers
+    (their arts still strike them from where they stand).
+  - **Need comes first.** A companion weighs every ready art each second: it heals whoever is hurt, shields the
+    party before a boss's blow lands, sweeps when foes crowd in, and keeps its capstone for elites and big fights.
+  - **The party fights together:** everyone piles onto the foe the party is pressing, a foe that hurts a companion
+    becomes everyone's target, flankers (rogues, wind walkers) slip behind the foe you are fighting, and the
+    front line throws itself between you and danger.
+  - **Hold fire** is a new tactic: the member starts no fights and only answers what attacks you or the party.
+- **Interactions:** use a companion to open its menu: talk (+1 bond a day), high five, emotes (wave, bow, cheer,
+  dance, laugh, salute, sit, think), orders (follow, wait, go ahead), gifts and its full page. **Sneak + use** gives
+  it a quick high five. The party menu has a party emote for everyone at once.
+- **More animations and reactions:** punches and kicks for Monks, a scythe's reap, summoning and channelling
+  poses, a whistle for the pack, a dodge roll, and a flinch when hit. Companions wave when they arrive, cheer when
+  they learn an art or level up, celebrate a won fight, share a thought on a quiet road, and sit down to rest at
+  night or while you sleep. Each temper (Brave, Cautious, Cheerful, Stoic) has its own lines.
 
 Open **Party** in the Adventurer's Plate menu, or use a **Command Banner** (recipe: three red wool and two
 sticks in a flag shape).
 
-- **Your retainer:** create one companion of your own — choose a name and one of twelve looks, two for each
-  vocation. It levels with you and can be restyled or change vocation at any time.
+- **Your retainer:** create one companion of your own: choose a name and one of the 32 looks. It levels with
+  you and can be restyled or change vocation at any time (a new vocation starts its path afresh).
 - **Mercenaries:** hire up to three more (four party members in all) for Gold Coins; friends of the
-  Adventurers' Guild pay a quarter less. Mercenaries earn half of your kill XP and level up on their own.
-- **Vocations and attacks.** Every vocation has a set of attacks that it learns as it levels and uses in turn,
-  about one a second, so two in a row are never the same while another is ready. Attacks that answer need (a
-  heal, a Rallying Cry) are always used first.
-
-  | Vocation | Looks | Level 1 | Level 8 | Level 20 | Level 35 |
-  | --- | --- | --- | --- | --- | --- |
-  | Fighter | Knight, Swordsman | Shield Bash: a staggering blow | Cleave: a sweep through every foe in reach | Rallying Cry: Resistance for you below half health | Earthshatter: the ground bursts under every foe near |
-  | Archer | Ranger, Hunter | Aimed Shot | Volley: three foes at once | Fire Arrow: bursts into flame | Rain of Arrows: three flights over an area |
-  | Mage | Sorcerer, Wizard | Elemental Bolt in the foe's weakness | Flame Burst around the foe | Chain Lightning to four foes (and Frost Nova at 28) | Meteor |
-  | Healer | Priest, Acolyte | Mend: heals the most wounded | Smite: holy bolt, stronger against undead | Sanctuary: a great heal when you are near death | Blessing: Regeneration and Resistance for you, healing for the party |
-  | Rogue | Assassin, Thief | Backstab: a poisoned strike | Poison Flask over the foe and those beside it | Throwing Knives from range (and Cutpurse: coins from kills) | Shadow Flurry: four cuts |
-  | Bard | Minstrel, Skald | Ballad of Valour: Strength and Speed for you | Dissonance: hurts and weakens one foe | Dirge: slows and weakens a group | Crescendo: hurts and stuns a group |
-
-  Companions start with 60 health, gain two hearts every 5 levels and Strength every 20, and their attacks
-  scale with level, bond, formation and the Keen trait.
+  Adventurers' Guild pay a quarter less. Mercenaries earn half of your kill XP and level up on their own. A
+  mercenary hired at level 30 or more comes with a path already chosen, and from 60 with a mastery.
+- **Paths:** when a companion reaches level 30 (or 60) you are told, and **Choose a path** appears on its page.
+  Its page lists every art it can learn, with the level each opens.
+- Companions start with 60 health, gain two hearts every 5 levels and Strength every 20, and their arts scale
+  with level, bond, formation and the Keen trait.
 - **Stances** (whole party): *Come* (stay close and defend), *Go* (range ahead and attack monsters on sight),
   *Stay* (hold a spot and defend it). Sneak + use the Command Banner to switch.
-- **Tactics** (each member): *Vanguard* strikes the foe you are fighting, *Guardian* strikes whatever last
-  hurt you, *Free hand* picks its own foe within 12 blocks.
+- **Tactics** (each member): *Vanguard* strikes the foe you are fighting first, *Guardian* whatever last hurt you
+  or the party, *Free hand* picks its own foe, *Hold fire* starts no fights. All but Hold fire defend you on
+  their own.
 - **Unison:** use the Command Banner while looking at a foe and every member turns on it at once with skills
   readied, striking 25% harder for ten seconds (45 s cooldown). With no foe in view the banner opens the menu.
 - **Bond:** every kill at your side deepens your bond with a member (elites count three). Each of the four
-  ranks — Companion, Trusted, Loyal, Sworn — adds 8% skill power and takes 10 seconds off the time a fallen
-  member is away. A daily gift (5 Gold Coins) adds 5, and a Sworn companion gives you 5 Data Crystals.
+  ranks (Companion, Trusted, Loyal, Sworn) adds 8% skill power and takes 10 seconds off the time a fallen
+  member is away. A daily gift (5 Gold Coins) adds 5, talking and high fives add a little, and a Sworn companion
+  gives you 5 Data Crystals.
 - **Traits:** a member can hold one trait from level 10 and two from level 30, changed freely: Sturdy
   (+4 hearts), Keen (skills +15%), Swift (skills recharge 15% faster), Devoted (bond grows twice as fast),
-  Scavenger (one kill in ten turns up a Gold Coin), Resolute (returns in half the time).
+  Scavenger (one kill in ten turns up a Gold Coin), Resolute (returns in half the time), Lucky (one kill in
+  twenty-five turns up a Data Crystal), Studious (a hired member learns twice as fast).
 - **Formations:** three or more members of different vocations recharge skills a fifth faster; members who
   share a vocation strike 15% harder.
 - **Looking after themselves:** members recover health between fights; a badly hurt member drinks one of your
-  Minor Healing Potions (can be switched off) and, unless it is a Fighter, falls back from monsters until it
-  has recovered.
+  Minor Healing Potions (can be switched off) and, unless it fights in the front line, falls back from monsters
+  until it has recovered. Members dodge a boss's telegraphed blows and burning ground.
 - **Gear:** five ranks bought with Gold Coins (20, 40, 60, 80, 100); each adds 4 hearts, every second one adds
   damage.
 - **Knowledge:** members call out what they know the first time you strike a kind of foe, point out elites,
@@ -716,8 +729,9 @@ sticks in a flag shape).
   every few minutes.
 - **Status:** hold the Command Banner to see every member's health above the hotbar.
 - **Falling:** a fallen member returns after 60 seconds (less with a strong bond, half with a Healer still
-  standing or the Resolute trait), or at once for 8 Gold Coins. Players cannot hurt retainers, their kills
-  count as yours for XP, quests and the bestiary, and feeding one bread or a Healing Potion heals it.
+  standing or the Resolute trait), at once for 8 Gold Coins, or when a companion's Resurrection calls it back.
+  Players cannot hurt retainers, their kills count as yours for XP, quests and the bestiary, and feeding one
+  bread or a Healing Potion heals it.
 
 ### Bestiary and reputation
 

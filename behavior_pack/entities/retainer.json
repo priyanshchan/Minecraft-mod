@@ -139,6 +139,46 @@
           ]
         }
       },
+      "overlord:voc_monk": {
+        "minecraft:attack": {
+          "damage": 9
+        },
+        "minecraft:knockback_resistance": {
+          "value": 0.4
+        },
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 3,
+          "speed_multiplier": 1.6,
+          "track_target": true
+        }
+      },
+      "overlord:voc_necromancer": {
+        "minecraft:shooter": {
+          "def": "overlord:magic_bullet"
+        },
+        "minecraft:behavior.ranged_attack": {
+          "priority": 3,
+          "attack_interval_min": 1.4,
+          "attack_interval_max": 2.4,
+          "attack_radius": 16.0,
+          "speed_multiplier": 1.0
+        },
+        "minecraft:behavior.avoid_mob_type": {
+          "priority": 2,
+          "entity_types": [
+            {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "monster"
+              },
+              "max_dist": 5,
+              "walk_speed_multiplier": 1.2,
+              "sprint_speed_multiplier": 1.4
+            }
+          ]
+        }
+      },
       "overlord:fall_back": {
         "minecraft:behavior.avoid_mob_type": {
           "priority": 1,
@@ -168,6 +208,37 @@
         },
         "minecraft:behavior.owner_hurt_target": {
           "priority": 2
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 3,
+          "must_see": true,
+          "reselect_targets": true,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "monster"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "creeper"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "zombie_pigman"
+                  }
+                ]
+              },
+              "max_dist": 10
+            }
+          ]
         }
       },
       "overlord:stance_go": {
@@ -190,9 +261,25 @@
           "entity_types": [
             {
               "filters": {
-                "test": "is_family",
-                "subject": "other",
-                "value": "monster"
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "monster"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "creeper"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "zombie_pigman"
+                  }
+                ]
               },
               "max_dist": 18
             }
@@ -207,9 +294,25 @@
           "entity_types": [
             {
               "filters": {
-                "test": "is_family",
-                "subject": "other",
-                "value": "monster"
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "monster"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "creeper"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "operator": "!=",
+                    "value": "zombie_pigman"
+                  }
+                ]
               },
               "max_dist": 10
             }
@@ -274,6 +377,106 @@
       "overlord:look_11": {
         "minecraft:variant": {
           "value": 11
+        }
+      },
+      "overlord:look_12": {
+        "minecraft:variant": {
+          "value": 12
+        }
+      },
+      "overlord:look_13": {
+        "minecraft:variant": {
+          "value": 13
+        }
+      },
+      "overlord:look_14": {
+        "minecraft:variant": {
+          "value": 14
+        }
+      },
+      "overlord:look_15": {
+        "minecraft:variant": {
+          "value": 15
+        }
+      },
+      "overlord:look_16": {
+        "minecraft:variant": {
+          "value": 16
+        }
+      },
+      "overlord:look_17": {
+        "minecraft:variant": {
+          "value": 17
+        }
+      },
+      "overlord:look_18": {
+        "minecraft:variant": {
+          "value": 18
+        }
+      },
+      "overlord:look_19": {
+        "minecraft:variant": {
+          "value": 19
+        }
+      },
+      "overlord:look_20": {
+        "minecraft:variant": {
+          "value": 20
+        }
+      },
+      "overlord:look_21": {
+        "minecraft:variant": {
+          "value": 21
+        }
+      },
+      "overlord:look_22": {
+        "minecraft:variant": {
+          "value": 22
+        }
+      },
+      "overlord:look_23": {
+        "minecraft:variant": {
+          "value": 23
+        }
+      },
+      "overlord:look_24": {
+        "minecraft:variant": {
+          "value": 24
+        }
+      },
+      "overlord:look_25": {
+        "minecraft:variant": {
+          "value": 25
+        }
+      },
+      "overlord:look_26": {
+        "minecraft:variant": {
+          "value": 26
+        }
+      },
+      "overlord:look_27": {
+        "minecraft:variant": {
+          "value": 27
+        }
+      },
+      "overlord:look_28": {
+        "minecraft:variant": {
+          "value": 28
+        }
+      },
+      "overlord:look_29": {
+        "minecraft:variant": {
+          "value": 29
+        }
+      },
+      "overlord:look_30": {
+        "minecraft:variant": {
+          "value": 30
+        }
+      },
+      "overlord:look_31": {
+        "minecraft:variant": {
+          "value": 31
         }
       }
     },
@@ -520,6 +723,44 @@
           }
         ]
       },
+      "overlord:rally_monk": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "overlord:fall_back",
+                "overlord:voc_monk"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "overlord:voc_monk"
+              ]
+            }
+          }
+        ]
+      },
+      "overlord:rally_necromancer": {
+        "sequence": [
+          {
+            "remove": {
+              "component_groups": [
+                "overlord:fall_back",
+                "overlord:voc_necromancer"
+              ]
+            }
+          },
+          {
+            "add": {
+              "component_groups": [
+                "overlord:voc_necromancer"
+              ]
+            }
+          }
+        ]
+      },
       "overlord:look_0": {
         "remove": {
           "component_groups": [
@@ -534,11 +775,33 @@
             "overlord:look_9",
             "overlord:look_10",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_archer",
             "overlord:voc_mage",
             "overlord:voc_healer",
             "overlord:voc_rogue",
-            "overlord:voc_bard"
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -562,11 +825,33 @@
             "overlord:look_9",
             "overlord:look_10",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_archer",
             "overlord:voc_mage",
             "overlord:voc_healer",
             "overlord:voc_rogue",
-            "overlord:voc_bard"
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -590,11 +875,33 @@
             "overlord:look_9",
             "overlord:look_10",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_fighter",
             "overlord:voc_mage",
             "overlord:voc_healer",
             "overlord:voc_rogue",
-            "overlord:voc_bard"
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -618,11 +925,33 @@
             "overlord:look_9",
             "overlord:look_10",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_fighter",
             "overlord:voc_mage",
             "overlord:voc_healer",
             "overlord:voc_rogue",
-            "overlord:voc_bard"
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -646,11 +975,33 @@
             "overlord:look_9",
             "overlord:look_10",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_fighter",
             "overlord:voc_archer",
             "overlord:voc_healer",
             "overlord:voc_rogue",
-            "overlord:voc_bard"
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -674,11 +1025,33 @@
             "overlord:look_9",
             "overlord:look_10",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_fighter",
             "overlord:voc_archer",
             "overlord:voc_healer",
             "overlord:voc_rogue",
-            "overlord:voc_bard"
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -702,11 +1075,33 @@
             "overlord:look_9",
             "overlord:look_10",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_fighter",
             "overlord:voc_archer",
             "overlord:voc_mage",
             "overlord:voc_rogue",
-            "overlord:voc_bard"
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -730,11 +1125,33 @@
             "overlord:look_9",
             "overlord:look_10",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_fighter",
             "overlord:voc_archer",
             "overlord:voc_mage",
             "overlord:voc_rogue",
-            "overlord:voc_bard"
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -758,11 +1175,33 @@
             "overlord:look_9",
             "overlord:look_10",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_fighter",
             "overlord:voc_archer",
             "overlord:voc_mage",
             "overlord:voc_healer",
-            "overlord:voc_bard"
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -786,11 +1225,33 @@
             "overlord:look_8",
             "overlord:look_10",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_fighter",
             "overlord:voc_archer",
             "overlord:voc_mage",
             "overlord:voc_healer",
-            "overlord:voc_bard"
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -814,11 +1275,33 @@
             "overlord:look_8",
             "overlord:look_9",
             "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_fighter",
             "overlord:voc_archer",
             "overlord:voc_mage",
             "overlord:voc_healer",
-            "overlord:voc_rogue"
+            "overlord:voc_rogue",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
@@ -842,17 +1325,1039 @@
             "overlord:look_8",
             "overlord:look_9",
             "overlord:look_10",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
             "overlord:voc_fighter",
             "overlord:voc_archer",
             "overlord:voc_mage",
             "overlord:voc_healer",
-            "overlord:voc_rogue"
+            "overlord:voc_rogue",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
           ]
         },
         "add": {
           "component_groups": [
             "overlord:look_11",
             "overlord:voc_bard"
+          ]
+        }
+      },
+      "overlord:look_12": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_12",
+            "overlord:voc_fighter"
+          ]
+        }
+      },
+      "overlord:look_13": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_13",
+            "overlord:voc_fighter"
+          ]
+        }
+      },
+      "overlord:look_14": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_14",
+            "overlord:voc_archer"
+          ]
+        }
+      },
+      "overlord:look_15": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_15",
+            "overlord:voc_archer"
+          ]
+        }
+      },
+      "overlord:look_16": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_16",
+            "overlord:voc_mage"
+          ]
+        }
+      },
+      "overlord:look_17": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_17",
+            "overlord:voc_mage"
+          ]
+        }
+      },
+      "overlord:look_18": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_18",
+            "overlord:voc_healer"
+          ]
+        }
+      },
+      "overlord:look_19": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_19",
+            "overlord:voc_healer"
+          ]
+        }
+      },
+      "overlord:look_20": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_20",
+            "overlord:voc_rogue"
+          ]
+        }
+      },
+      "overlord:look_21": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_bard",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_21",
+            "overlord:voc_rogue"
+          ]
+        }
+      },
+      "overlord:look_22": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_22",
+            "overlord:voc_bard"
+          ]
+        }
+      },
+      "overlord:look_23": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_monk",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_23",
+            "overlord:voc_bard"
+          ]
+        }
+      },
+      "overlord:look_24": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_24",
+            "overlord:voc_monk"
+          ]
+        }
+      },
+      "overlord:look_25": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_25",
+            "overlord:voc_monk"
+          ]
+        }
+      },
+      "overlord:look_26": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_26",
+            "overlord:voc_monk"
+          ]
+        }
+      },
+      "overlord:look_27": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_necromancer"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_27",
+            "overlord:voc_monk"
+          ]
+        }
+      },
+      "overlord:look_28": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_28",
+            "overlord:voc_necromancer"
+          ]
+        }
+      },
+      "overlord:look_29": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_30",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_29",
+            "overlord:voc_necromancer"
+          ]
+        }
+      },
+      "overlord:look_30": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_31",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_30",
+            "overlord:voc_necromancer"
+          ]
+        }
+      },
+      "overlord:look_31": {
+        "remove": {
+          "component_groups": [
+            "overlord:look_0",
+            "overlord:look_1",
+            "overlord:look_2",
+            "overlord:look_3",
+            "overlord:look_4",
+            "overlord:look_5",
+            "overlord:look_6",
+            "overlord:look_7",
+            "overlord:look_8",
+            "overlord:look_9",
+            "overlord:look_10",
+            "overlord:look_11",
+            "overlord:look_12",
+            "overlord:look_13",
+            "overlord:look_14",
+            "overlord:look_15",
+            "overlord:look_16",
+            "overlord:look_17",
+            "overlord:look_18",
+            "overlord:look_19",
+            "overlord:look_20",
+            "overlord:look_21",
+            "overlord:look_22",
+            "overlord:look_23",
+            "overlord:look_24",
+            "overlord:look_25",
+            "overlord:look_26",
+            "overlord:look_27",
+            "overlord:look_28",
+            "overlord:look_29",
+            "overlord:look_30",
+            "overlord:voc_fighter",
+            "overlord:voc_archer",
+            "overlord:voc_mage",
+            "overlord:voc_healer",
+            "overlord:voc_rogue",
+            "overlord:voc_bard",
+            "overlord:voc_monk"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "overlord:look_31",
+            "overlord:voc_necromancer"
           ]
         }
       },

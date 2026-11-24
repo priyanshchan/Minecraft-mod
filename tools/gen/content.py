@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [10, 0, 6]
+VERSION = [11, 0, 0]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"
@@ -2196,6 +2196,13 @@ def entity_files():
         "sprint_speed_multiplier": 1.4}]}
     shot = lambda lo, hi, radius: {"priority": 3, "attack_interval_min": lo, "attack_interval_max": hi,
                                    "attack_radius": radius, "speed_multiplier": 1.0}
+    # v11: the monsters a companion goes for on its own - never a creeper (it would blow up beside the master)
+    # nor a zombie pigman (the whole crowd would turn on the master).
+    foes = {"all_of": [_is_family("monster"),
+                       {"test": "is_family", "subject": "other", "operator": "!=", "value": "creeper"},
+                       {"test": "is_family", "subject": "other", "operator": "!=", "value": "zombie_pigman"}]}
+    hunt = lambda dist, priority: {"priority": priority, "must_see": True, "reselect_targets": True,
+                                   "entity_types": [{"filters": foes, "max_dist": dist}]}
     groups = {
         "overlord:voc_fighter": {
             "minecraft:attack": {"damage": 9},
@@ -2218,25 +2225,31 @@ def entity_files():
         "overlord:voc_bard": {"minecraft:shooter": {"def": oid("magic_bullet")},
                               "minecraft:behavior.ranged_attack": shot(3.0, 4.5, 14.0),
                               "minecraft:behavior.avoid_mob_type": keep_away(5, 2)},
+        # v11: Monks close in fast and hit hard and often; Necromancers hang back behind their dead.
+        "overlord:voc_monk": {
+            "minecraft:attack": {"damage": 9},
+            "minecraft:knockback_resistance": {"value": 0.4},
+            "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.6, "track_target": True}},
+        "overlord:voc_necromancer": {"minecraft:shooter": {"def": oid("magic_bullet")},
+                                     "minecraft:behavior.ranged_attack": shot(1.4, 2.4, 16.0),
+                                     "minecraft:behavior.avoid_mob_type": keep_away(5, 2)},
         # A badly hurt member backs well away from monsters until it has recovered (set by the script).
         "overlord:fall_back": {"minecraft:behavior.avoid_mob_type": keep_away(10, 1)},
         # stances
+        # v11: by the master's side a companion still fights any monster that comes close, unbidden.
         "overlord:stance_come": {
             "minecraft:behavior.follow_owner": follow(5, 2),
             "minecraft:behavior.owner_hurt_by_target": {"priority": 1},
-            "minecraft:behavior.owner_hurt_target": {"priority": 2}},
+            "minecraft:behavior.owner_hurt_target": {"priority": 2},
+            "minecraft:behavior.nearest_attackable_target": hunt(10, 3)},
         "overlord:stance_go": {
             "minecraft:behavior.follow_owner": follow(14, 4),
             "minecraft:behavior.owner_hurt_by_target": {"priority": 1},
             "minecraft:behavior.owner_hurt_target": {"priority": 2},
-            "minecraft:behavior.nearest_attackable_target": {
-                "priority": 2, "must_see": True, "reselect_targets": True,
-                "entity_types": [{"filters": _is_family("monster"), "max_dist": 18}]}},
+            "minecraft:behavior.nearest_attackable_target": hunt(18, 2)},
         # Holding a spot still means defending it.
         "overlord:stance_stay": {
-            "minecraft:behavior.nearest_attackable_target": {
-                "priority": 2, "must_see": True, "reselect_targets": True,
-                "entity_types": [{"filters": _is_family("monster"), "max_dist": 10}]}},
+            "minecraft:behavior.nearest_attackable_target": hunt(10, 2)},
     }
     events = {"minecraft:entity_spawned": {"add": {"component_groups": ["overlord:stance_come"]}},
               "overlord:fall_back": {"add": {"component_groups": ["overlord:fall_back"]}}}
@@ -2246,11 +2259,12 @@ def entity_files():
             {"remove": {"component_groups": ["overlord:fall_back", f"overlord:voc_{v}"]}},
             {"add": {"component_groups": [f"overlord:voc_{v}"]}}]}
     for n in range(RETAINER_LOOKS):
+        voc = VOCATIONS[RETAINER_VOC[n]]
         groups[f"overlord:look_{n}"] = {"minecraft:variant": {"value": n}}
         events[f"overlord:look_{n}"] = {
             "remove": {"component_groups": [f"overlord:look_{k}" for k in range(RETAINER_LOOKS) if k != n] +
-                                           [f"overlord:voc_{v}" for v in VOCATIONS if v != VOCATIONS[n // 2]]},
-            "add": {"component_groups": [f"overlord:look_{n}", f"overlord:voc_{VOCATIONS[n // 2]}"]}}
+                                           [f"overlord:voc_{v}" for v in VOCATIONS if v != voc]},
+            "add": {"component_groups": [f"overlord:look_{n}", f"overlord:voc_{voc}"]}}
     for stance in ("come", "go", "stay"):
         events[f"overlord:stance_{stance}"] = {
             "remove": {"component_groups": [f"overlord:stance_{k}" for k in ("come", "go", "stay") if k != stance]},
@@ -3583,6 +3597,146 @@ PARTICLES = ["spark", "mote", "rise", "magic_circle", "magic_circle_inner", "rin
 PLAYER_BONES = ["head", "body", "rightArm", "leftArm", "rightLeg", "leftLeg"]
 
 
+def party_life_animations(pose, Z):
+    """v11: the companions' martial poses, emotes and reactions. "root" moves the whole body (sitting, jumping);
+    the arms and legs use the player's bone names, so the high five plays on the player as well."""
+    up = lambda h: (0, h, 0)
+    return {
+        # a straight jab off the back foot
+        "animation.overlord.party_punch": pose(
+            0.45,
+            rightArm=[(0, Z), (0.08, (-20, 0, 10)), (0.16, (-96, -10, 0)), (0.26, (-90, -10, 0)), (0.45, Z)],
+            leftArm=[(0, Z), (0.08, (-70, 12, 0)), (0.16, (-30, 0, 0)), (0.45, Z)],
+            body=[(0, Z), (0.08, (0, 18, 0)), (0.16, (0, -22, 0)), (0.45, Z)],
+            rightLeg=[(0, Z), (0.1, (16, 0, 0)), (0.36, (16, 0, 0)), (0.45, Z)],
+            leftLeg=[(0, Z), (0.1, (-18, 0, 0)), (0.36, (-18, 0, 0)), (0.45, Z)]),
+        # a high front kick, arms out for balance
+        "animation.overlord.party_kick": pose(
+            0.55,
+            rightLeg=[(0, Z), (0.1, (30, 0, 0)), (0.22, (-100, 0, 0)), (0.32, (-92, 0, 0)), (0.55, Z)],
+            body=[(0, Z), (0.22, (10, 0, 0)), (0.55, Z)],
+            rightArm=[(0, Z), (0.22, (-25, 0, 45)), (0.55, Z)],
+            leftArm=[(0, Z), (0.22, (-25, 0, -45)), (0.55, Z)]),
+        # a scythe's wide reaping sweep
+        "animation.overlord.party_reap": pose(
+            0.7,
+            rightArm=[(0, Z), (0.12, (-150, 40, 0)), (0.32, (-70, -60, 0)), (0.5, (-60, -70, 0)), (0.7, Z)],
+            leftArm=[(0, Z), (0.12, (-120, 40, 0)), (0.32, (-60, -40, 0)), (0.7, Z)],
+            body=[(0, Z), (0.12, (0, 30, 0)), (0.32, (0, -35, 0)), (0.7, Z)]),
+        # a whirling dance step, arms flowing overhead
+        "animation.overlord.party_dance": pose(
+            1.6,
+            root=[(0, Z), (0.4, (0, 90, 0)), (0.8, (0, 180, 0)), (1.2, (0, 270, 0)), (1.6, (0, 360, 0))],
+            rightArm=[(0, Z), (0.2, (-160, 0, 30)), (0.6, (-150, 0, 60)), (1.0, (-165, 0, 25)), (1.4, (-150, 0, 55)), (1.6, Z)],
+            leftArm=[(0, Z), (0.2, (-150, 0, -55)), (0.6, (-165, 0, -25)), (1.0, (-150, 0, -60)), (1.4, (-160, 0, -30)), (1.6, Z)],
+            rightLeg=[(0, Z), (0.4, (-25, 0, 0)), (0.8, (10, 0, 0)), (1.2, (-25, 0, 0)), (1.6, Z)],
+            leftLeg=[(0, Z), (0.4, (10, 0, 0)), (0.8, (-25, 0, 0)), (1.2, (10, 0, 0)), (1.6, Z)],
+            pos={"root": [(0, Z), (0.2, up(2)), (0.4, Z), (0.6, up(2)), (0.8, Z), (1.0, up(2)), (1.2, Z), (1.4, up(2)), (1.6, Z)]}),
+        # palms pressed together, ki gathering
+        "animation.overlord.party_meditate": pose(
+            1.0,
+            rightArm=[(0, Z), (0.2, (-72, 38, 0)), (0.8, (-74, 40, 0)), (1.0, Z)],
+            leftArm=[(0, Z), (0.2, (-72, -38, 0)), (0.8, (-74, -40, 0)), (1.0, Z)],
+            head=[(0, Z), (0.2, (12, 0, 0)), (0.8, (12, 0, 0)), (1.0, Z)],
+            rightLeg=[(0, Z), (0.2, (-10, 0, 8)), (0.8, (-10, 0, 8)), (1.0, Z)],
+            leftLeg=[(0, Z), (0.2, (-10, 0, -8)), (0.8, (-10, 0, -8)), (1.0, Z)]),
+        # both hands held out, pouring power forward
+        "animation.overlord.party_channel": pose(
+            1.2,
+            rightArm=[(0, Z), (0.2, (-82, -22, -8)), (0.5, (-86, -18, -8)), (0.8, (-80, -22, -8)), (1.0, (-84, -20, -8)), (1.2, Z)],
+            leftArm=[(0, Z), (0.2, (-82, 22, 8)), (0.5, (-86, 18, 8)), (0.8, (-80, 22, 8)), (1.0, (-84, 20, 8)), (1.2, Z)],
+            head=[(0, Z), (0.2, (-6, 0, 0)), (1.0, (-6, 0, 0)), (1.2, Z)],
+            body=[(0, Z), (0.2, (6, 0, 0)), (1.0, (6, 0, 0)), (1.2, Z)]),
+        # a hand raised to the sky and driven down at the earth: the dead answer
+        "animation.overlord.party_summon": pose(
+            1.2,
+            rightArm=[(0, Z), (0.25, (-172, 0, 10)), (0.6, (-176, 0, 10)), (0.8, (-30, 0, 12)), (1.0, (-34, 0, 12)), (1.2, Z)],
+            leftArm=[(0, Z), (0.25, (-60, 0, -50)), (1.0, (-60, 0, -50)), (1.2, Z)],
+            body=[(0, Z), (0.6, (-6, 0, 0)), (0.8, (20, 0, 0)), (1.0, (18, 0, 0)), (1.2, Z)],
+            head=[(0, Z), (0.25, (-22, 0, 0)), (0.6, (-22, 0, 0)), (0.8, (26, 0, 0)), (1.2, Z)]),
+        # two fingers to the lips: a whistle for the pack
+        "animation.overlord.party_whistle": pose(
+            0.9,
+            rightArm=[(0, Z), (0.15, (-125, 38, -28)), (0.75, (-125, 38, -28)), (0.9, Z)],
+            head=[(0, Z), (0.15, (-10, 0, 0)), (0.75, (-10, 0, 0)), (0.9, Z)]),
+        # a crouching spring out of harm's way
+        "animation.overlord.party_roll": pose(
+            0.5,
+            body=[(0, Z), (0.1, (25, 0, 0)), (0.3, (20, 0, 0)), (0.5, Z)],
+            rightLeg=[(0, Z), (0.1, (-30, 0, 0)), (0.3, (-20, 0, 0)), (0.5, Z)],
+            leftLeg=[(0, Z), (0.1, (-30, 0, 0)), (0.3, (-20, 0, 0)), (0.5, Z)],
+            rightArm=[(0, Z), (0.1, (30, 0, 20)), (0.5, Z)],
+            leftArm=[(0, Z), (0.1, (30, 0, -20)), (0.5, Z)],
+            pos={"root": [(0, Z), (0.1, up(-3)), (0.3, up(1)), (0.5, Z)]}),
+        # ---- emotes and reactions
+        "animation.overlord.party_wave": pose(
+            1.2,
+            rightArm=[(0, Z), (0.15, (-170, 0, 20)), (0.35, (-170, 0, 42)), (0.55, (-170, 0, 10)), (0.75, (-170, 0, 42)),
+                      (0.95, (-170, 0, 15)), (1.2, Z)],
+            head=[(0, Z), (0.15, (0, -10, 0)), (1.0, (0, -10, 0)), (1.2, Z)]),
+        "animation.overlord.party_bow": pose(
+            1.4,
+            body=[(0, Z), (0.35, (40, 0, 0)), (0.95, (40, 0, 0)), (1.4, Z)],
+            head=[(0, Z), (0.35, (12, 0, 0)), (0.95, (12, 0, 0)), (1.4, Z)],
+            rightArm=[(0, Z), (0.35, (-55, 32, 0)), (0.95, (-55, 32, 0)), (1.4, Z)],
+            leftArm=[(0, Z), (0.35, (30, 0, -10)), (0.95, (30, 0, -10)), (1.4, Z)]),
+        "animation.overlord.party_cheer": pose(
+            1.2,
+            rightArm=[(0, Z), (0.12, (-176, 0, 25)), (0.3, (-150, 0, 18)), (0.48, (-176, 0, 25)), (0.66, (-150, 0, 18)),
+                      (0.84, (-176, 0, 25)), (1.2, Z)],
+            leftArm=[(0, Z), (0.12, (-176, 0, -25)), (0.3, (-150, 0, -18)), (0.48, (-176, 0, -25)), (0.66, (-150, 0, -18)),
+                     (0.84, (-176, 0, -25)), (1.2, Z)],
+            head=[(0, Z), (0.12, (-22, 0, 0)), (0.84, (-22, 0, 0)), (1.2, Z)],
+            pos={"root": [(0, Z), (0.15, up(3)), (0.3, Z), (0.48, up(3)), (0.66, Z), (0.84, up(3)), (1.0, Z)]}),
+        "animation.overlord.party_laugh": pose(
+            1.2,
+            head=[(0, Z), (0.15, (-26, 0, 0)), (0.3, (-14, 0, 0)), (0.45, (-26, 0, 0)), (0.6, (-14, 0, 0)), (0.75, (-26, 0, 0)),
+                  (1.2, Z)],
+            body=[(0, Z), (0.15, (8, 0, 0)), (0.3, (3, 0, 0)), (0.45, (8, 0, 0)), (0.6, (3, 0, 0)), (0.75, (8, 0, 0)), (1.2, Z)],
+            rightArm=[(0, Z), (0.15, (-40, 30, 0)), (0.9, (-40, 30, 0)), (1.2, Z)],
+            leftArm=[(0, Z), (0.15, (-40, -30, 0)), (0.9, (-40, -30, 0)), (1.2, Z)]),
+        "animation.overlord.party_salute": pose(
+            1.2,
+            rightArm=[(0, Z), (0.2, (-132, -42, -22)), (0.9, (-132, -42, -22)), (1.2, Z)],
+            head=[(0, Z), (0.2, (-5, 0, 0)), (0.9, (-5, 0, 0)), (1.2, Z)]),
+        # sat on the ground, legs out, hands on the knees - held until it moves again
+        "animation.overlord.party_sit": pose(
+            0.5, loop="hold_on_last_frame",
+            rightLeg=[(0, Z), (0.4, (-88, 10, 0)), (0.5, (-88, 10, 0))],
+            leftLeg=[(0, Z), (0.4, (-88, -10, 0)), (0.5, (-88, -10, 0))],
+            rightArm=[(0, Z), (0.4, (-36, 0, 8)), (0.5, (-36, 0, 8))],
+            leftArm=[(0, Z), (0.4, (-36, 0, -8)), (0.5, (-36, 0, -8))],
+            pos={"root": [(0, Z), (0.4, up(-10)), (0.5, up(-10))]}),
+        "animation.overlord.party_highfive": pose(
+            0.8,
+            rightArm=[(0, Z), (0.2, (-160, -20, 0)), (0.32, (-150, -30, 0)), (0.4, (-166, -20, 0)), (0.65, (-160, -20, 0)), (0.8, Z)],
+            body=[(0, Z), (0.3, (0, -15, 0)), (0.65, (0, -10, 0)), (0.8, Z)]),
+        "animation.overlord.party_victory": pose(
+            1.6,
+            rightArm=[(0, Z), (0.25, (-176, 0, 15)), (1.3, (-176, 0, 15)), (1.6, Z)],
+            leftArm=[(0, Z), (0.25, (20, 0, -25)), (1.3, (20, 0, -25)), (1.6, Z)],
+            head=[(0, Z), (0.25, (-20, 0, 0)), (1.3, (-20, 0, 0)), (1.6, Z)],
+            body=[(0, Z), (0.25, (-6, 0, 0)), (1.3, (-6, 0, 0)), (1.6, Z)],
+            pos={"root": [(0, Z), (0.2, up(4)), (0.4, Z), (1.6, Z)]}),
+        "animation.overlord.party_hurt": pose(
+            0.4,
+            body=[(0, Z), (0.08, (-14, 0, 0)), (0.4, Z)],
+            head=[(0, Z), (0.08, (-20, 0, 0)), (0.4, Z)],
+            rightArm=[(0, Z), (0.08, (20, 0, 25)), (0.4, Z)],
+            leftArm=[(0, Z), (0.08, (20, 0, -25)), (0.4, Z)]),
+        "animation.overlord.party_think": pose(
+            1.6,
+            rightArm=[(0, Z), (0.25, (-112, 40, 0)), (1.3, (-112, 40, 0)), (1.6, Z)],
+            leftArm=[(0, Z), (0.25, (-50, -40, 0)), (1.3, (-50, -40, 0)), (1.6, Z)],
+            head=[(0, Z), (0.25, (15, -15, 0)), (0.8, (15, 15, 0)), (1.3, (15, -10, 0)), (1.6, Z)]),
+        "animation.overlord.party_talk": pose(
+            1.4,
+            rightArm=[(0, Z), (0.2, (-50, -20, 10)), (0.45, (-40, -30, 20)), (0.7, (-55, -15, 10)), (1.0, (-45, -30, 15)), (1.4, Z)],
+            leftArm=[(0, Z), (0.3, (-35, 20, -15)), (0.8, (-45, 25, -10)), (1.4, Z)],
+            head=[(0, Z), (0.3, (5, 0, 0)), (0.55, (-5, 0, 0)), (0.8, (5, 0, 0)), (1.1, (-3, 0, 0)), (1.4, Z)]),
+    }
+
+
 def player_animations_json():
     """Casting and weapon poses played on the player with Entity.playAnimation.
 
@@ -3596,8 +3750,18 @@ def player_animations_json():
         return {"animation_length": length,
                 "bones": {bone: {"rotation": keys(*frames)} for bone, frames in bones.items()}}
 
+    def pose(length, loop=None, pos=None, **bones):
+        """A pose that may also move bones (pos: bone -> frames of offsets) and hold its last frame."""
+        out = anim(length, **bones)
+        for bone, frames in (pos or {}).items():
+            out["bones"].setdefault(bone, {})["position"] = keys(*frames)
+        if loop:
+            out["loop"] = loop
+        return out
+
     Z = (0, 0, 0)
     return {"format_version": "1.8.0", "animations": {
+        **party_life_animations(pose, Z),
         # one hand drawn back, thrust at the target, then a short recoil
         "animation.overlord.cast_point": anim(
             0.65,
@@ -3794,8 +3958,11 @@ def player_animations_json():
 
 RENDER_CONTROLLER = "controller.render.overlord.entity"
 RETAINER_CONTROLLER = "controller.render.overlord.retainer"
-RETAINER_LOOKS = 12  # two looks per vocation
-VOCATIONS = ["fighter", "archer", "mage", "healer", "rogue", "bard"]
+VOCATIONS = ["fighter", "archer", "mage", "healer", "rogue", "bard", "monk", "necromancer"]
+# The vocation of each look, as in behavior_pack/scripts/classes.js: the twelve old looks (two men per vocation),
+# twelve women of the same vocations, then the Monks and the Necromancers (v11).
+RETAINER_VOC = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7]
+RETAINER_LOOKS = len(RETAINER_VOC)
 
 
 def render_controllers_json():
