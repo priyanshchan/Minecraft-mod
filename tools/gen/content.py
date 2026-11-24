@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 NS = "overlord"
-VERSION = [11, 0, 1]
+VERSION = [11, 0, 2]
 MIN_ENGINE = [1, 21, 90]
 UUID_BP = "e6440d11-49cb-4a78-994b-2621743284c3"
 UUID_BP_DATA = "92b407c1-2afe-47be-96e5-2ca63d6e95e3"

@@ -635,10 +635,13 @@ stats and classes, which work as before.
 ### Party: retainers and mercenaries
 
 **The companions overhaul (v11.0)**
-- **Thirty-two looks, men and women.** Every companion is drawn anew in high detail (four times the texture
-  detail of before): faces with eyes, lashes and brows, hair in a dozen styles (braids, ponytails, twin tails,
-  buns, long hair), and each class's own gear. Women of every vocation join the twelve old looks, and two new
-  vocations arrive with four looks each.
+- **Thirty-two looks, men and women,** built like hand-made Blockbench anime models (v11.0.1): pixel-art
+  shading, anime faces (big soft eyes for the bright and kind, narrow sharp eyes for the cool and dark), long
+  legs and slim builds, and hair in real 3D locks: bangs, side locks, long hair that flows down the back and
+  fades to a second colour at the tips, ponytails, twin tails, braids and buns. Flared skirts, layered plate,
+  capes and hats. The Grave Maiden has curled horns and great bat wings, the Valkyrie feathered wings and the
+  Priestess a halo. Women of every vocation join the twelve old looks, and two new vocations arrive with four
+  looks each.
 
   | Vocation | Looks |
   | --- | --- |
