@@ -21,7 +21,7 @@ from companions import (
     bow_tie, collar, hood, circlet, veil, mask, helm, wizard_hat, cap, headband, crown, ribbon, horns, bat_wings,
     feather_wings, halo, elf_ears, sword, katana, staff, scythe, spear, axe, mace, dagger, curved_blade, bow, shield,
     book, quiver, lute, wraps, beads, plate, faulds, emblem_cross, emblem_sun, emblem_skull, lock, chain, Hand, blade,
-    grip, bust, _rot, fashion,
+    grip, bust, _rot, fashion, round_figure,
 )
 
 H = Figure.HEAD
@@ -291,6 +291,7 @@ def build_person(name, look, dress, bones=()):
         if fig.female and not look.get("flat") and not (fig.modest and _cmp.FASHION) and fig.chest:
             color, kind, inflate = fig.chest
             bust(fig, color, kind, inflate)
+        round_figure(fig)
         return fig.m
     make.__name__ = name
     return make
@@ -308,7 +309,7 @@ def _albedo(f, L_):
     collar(f, GOLD)
     hair_style(f)
     horns(f, "#f4f0e2", "#d8d0b8", curl=0.9)
-    feather_wings(f, "#1a1622", "#3a2f4a", 1.1)
+    feather_wings(f, "#1a1622", "#3a2f4a", 1.0, folded=True)
     halberd(f)
 
 
@@ -485,11 +486,18 @@ def _evileye(f, L_):
     cape(f, "#5a0d11", 17, GOLD, lining="#1b1a22")
     gloves(f, "#1b1a22")
     hair_style(f)
-    mk = f.head.cube((-H / 2, 24, -H / 2 - 0.55), (H, 6, 1))
+    # her mask: pale, a little narrower than her face, slanted eye holes with her red eyes glowing in them
+    mk = f.head.cube((-H / 2 + 0.5, 24.3, -H / 2 - 0.45), (H - 1, 5, 1), inflate=-0.05)
     toon(mk, "#f1ede4")
     with paint(mk.front) as p:
-        p.rect(1.5, 2.5, 3.2, 3.2, "#15131a").rect(4.8, 2.5, 6.5, 3.2, "#15131a")
-        p.line([(1, 4.5), (2.5, 5.5)], "#e0202c").line([(7, 4.5), (5.5, 5.5)], "#e0202c")
+        W = p.w
+        for x0, x1 in ((0.9, 2.9), (W - 2.9, W - 0.9)):
+            p.rect(x0, 1.5, x1, 2.6, "#15131a")
+            p.rect((x0 + x1) / 2 - 0.3, 1.8, (x0 + x1) / 2 + 0.3, 2.3, "#ff3a3a")
+        for x0, dx in ((1.6, -0.5), (W - 1.6, 0.5)):  # crimson tears under the eyes
+            p.line([(x0, 2.8), (x0 + dx, 4.6)], "#c2171d")
+        p.rect(W / 2 - 0.25, 0.3, W / 2 + 0.25, 1.1, "#c2171d")
+        p.rect(0, 0, W, 0.25, shade("#f1ede4", 0.8)).rect(0, p.h - 0.25, W, p.h, shade("#f1ede4", 0.75))
     wide_hat(f, "#5a0d11", GOLD, 6)
 
 

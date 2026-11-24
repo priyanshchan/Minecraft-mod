@@ -16,13 +16,14 @@ style, eyes, a palette and its vocation's outfit in one of four cuts - built by 
 from __future__ import annotations
 
 import math
+import os
 import random
 import zlib
 
 import numpy as np
 from PIL import Image, ImageDraw
 
-from modelkit import Model, rgba, shade, mix
+from modelkit import Model, rgba, shade, mix, round_off
 
 R = 2  # texels per model unit: chunky pixel art, as hand-made Blockbench models are
 SHADE = "ramp"  # how a face is shaded: "ramp" (six dithered tones), "smooth" (blended tones) or "cel" (three flat tones)
@@ -35,26 +36,31 @@ STYLES = {
     "anime": {"res": 4, "shade": "cel"},  # finest texels (32 across a face), flat anime tones, big detailed eyes
     # the look of popular anime Blockbench mods: a bigger head, fuller hair, big eyes under heavy lashes
     "chibi": {"res": 2, "shade": "ramp", "head": 1.25, "eyes": "big", "fashion": True, "smooth": True},
-    "chibi_hd": {"res": 4, "shade": "smooth", "head": 1.25, "eyes": "big", "fashion": True, "smooth": True},
+    "chibi_hd": {"res": 4, "shade": "smooth", "head": 1.25, "eyes": "big", "fashion": True, "smooth": True, "round": True},
 }
 STYLE = "pixel"
 HEAD_SCALE = 1.0  # how much bigger a person's head is drawn in game (an always-on animation scales the bone)
 EYE_KIT = "anime"  # "anime" (v11.1 eyes) or "big" (bigger eyes under heavy lashes)
 FASHION = False  # the anime Blockbench build and dress: longer legs, over-knee socks, chokers, hair clips
 SMOOTH = False  # one light falling down the whole figure (no stripes where boxes stack) and gentle tapers
+ROUND = False  # bodies, limbs, clothes and hair with bevelled, rounded edges instead of box corners
 
 
 def set_style(name):
     """Switches every builder (the companions, the people and the monsters) to one art style."""
     import sys
-    global STYLE, SHADE, R, HEAD_SCALE, EYE_KIT, FASHION, SMOOTH
+    global STYLE, SHADE, R, HEAD_SCALE, EYE_KIT, FASHION, SMOOTH, ROUND
     st = STYLES[name]
     STYLE, SHADE, R = name, st["shade"], st["res"]
     HEAD_SCALE, EYE_KIT, FASHION = st.get("head", 1.0), st.get("eyes", "anime"), st.get("fashion", False)
-    SMOOTH = st.get("smooth", False)
+    SMOOTH, ROUND = st.get("smooth", False), st.get("round", False)
     for mod in ("npcs", "monsters"):
         if mod in sys.modules:
             sys.modules[mod].R = R
+
+
+# v11.2: every character is built in the "chibi_hd" style unless OVERLORD_STYLE names another
+set_style(os.environ.get("OVERLORD_STYLE", "chibi_hd"))
 
 GOLD, GOLD_L, GOLD_D = "#d9a92b", "#f6d968", "#96701a"
 SILVER, SILVER_L, SILVER_D = "#c9ced6", "#f1f4f8", "#7d838e"
@@ -298,7 +304,8 @@ def pixel_shade(p, color, light=0.0, tip=None, grad=(0.0, 1.0), edge=0.9, span=2
     if gy is not None:  # the figure's own light: one smooth fall from the shoulders to the feet, whatever box this is
         wy = gy[0] - ys * (gy[0] - gy[1])
         t = np.clip((31.0 - wy) / 31.0, 0.0, 1.0)
-        v = (1.3 if metal else 1.5) + t * 1.25 - light * 0.5 + (1 - np.minimum(1.0, e * 2.2)) * edge
+        en = np.abs(2 * (xs + 0.5) / W - 1)  # 0 mid-face, 1 at its edges: light rolls off round the sides
+        v = (1.3 if metal else 1.5) + t * 1.25 - light * 0.5 + en ** 2 * edge * 1.05
     else:
         v = base + ys * span - light + (1 - np.minimum(1.0, e * 2.2)) * edge
     if SHADE == "ramp" and dither:
@@ -490,8 +497,8 @@ class Figure:
             if SMOOTH:  # the same, with gentle steps: a slim waist, softly wider hips
                 self.segs = [(-3, 6, -1.5, 3, 19, 24, 0.0), (-3, 6, -1.5, 3, 16, 19, -0.22), (-3, 6, -1.5, 3, 14, 16, 0.18)]
                 if not modest:  # a woman's figure: an hourglass, smoothed by a box between each part
-                    self.segs = [(-3, 6, -1.5, 3, 19, 24, 0.05), (-3, 6, -1.5, 3, 16, 19, -0.34), (-3, 6, -1.5, 3, 14, 16, 0.34)]
-                    self.trans = [(-3, 6, -1.5, 3, 18, 19, -0.14), (-3, 6, -1.5, 3, 16, 17, -0.02)]
+                    self.segs = [(-3, 6, -1.5, 3, 19, 24, 0.1), (-3, 6, -1.5, 3, 16, 19, -0.46), (-3, 6, -1.5, 3, 14, 16, 0.52)]
+                    self.trans = [(-3, 6, -1.5, 3, 18, 19, -0.2), (-3, 6, -1.5, 3, 16, 17, 0.06), (-3, 6, -1.5, 3, 15, 16, 0.58)]
             self.arm_l = [Limb(self.rarm, -5, 2, -1, 2, 13, 24), Limb(self.larm, 3, 2, -1, 2, 13, 24)]
             self.leg_l = [Limb(self.rleg, -3.1, 3, -1.5, 3, 0, legs), Limb(self.lleg, 0.1, 3, -1.5, 3, 0, legs)]
             self.front, self.back = -1.5, 1.5
@@ -516,7 +523,7 @@ class Figure:
         self.legs_c = []
         knee = 6
         for limb in self.leg_l:  # a thigh and a slimmer shin
-            thigh, shin = ((0.08, -0.04) if SMOOTH else (0.15, -0.12)) if f else (0.0, 0.0)
+            thigh, shin = (((0.22, -0.02) if not modest else (0.08, -0.04)) if SMOOTH else (0.15, -0.12)) if f else (0.0, 0.0)
             self.legs_c.append(limb.bone.cube((limb.x0, knee, limb.z0), (limb.w, legs - knee, limb.d), inflate=limb.inflate + thigh))
             self.legs_c.append(limb.bone.cube((limb.x0, 0, limb.z0), (limb.w, knee, limb.d), inflate=limb.inflate + shin))
         ra = self.arm_l[0]
@@ -1136,8 +1143,20 @@ def bat_wings(fig, frame="#cfc8d8", membrane="#2a1f3a", glow="#9a3af0", span=1.0
                         p.px(hx, hy, mix(membrane, glow, 0.6))
 
 
-def feather_wings(fig, color="#f6f4f0", tip="#cfd8e8", span=1.0):
-    """White feathered wings, folded half open: rows of long feathers."""
+def feather_wings(fig, color="#f6f4f0", tip="#cfd8e8", span=1.0, folded=False):
+    """White feathered wings, folded half open: rows of long feathers. Folded wings grow from the small of the back
+    and hang down past the hips, their feathers fanning out and down."""
+    if folded:
+        z = fig.back + 0.8
+        for sx in (-1, 1):
+            root = np.array([sx * 1.2, fig.segs[2][5] + 2.5, z])
+            wing = (fig.rwing if sx < 0 else fig.lwing) or fig.body
+            for row, (rz, n, length) in enumerate(((sx * 160, 3, 6), (sx * 148, 4, 8), (sx * 136, 4, 9))):
+                for i in range(n):
+                    rot = (-14 - i * 4, sx * -25, rz - sx * i * 6)
+                    f = wing.cube((root[0] - 1, root[1], root[2] - 0.5 + row * 0.35), (2, int(length * span), 1), rotation=rot, pivot=tuple(root))
+                    toon_hair(f, color, "point", False, fig.n + row * 7 + i, tip, (0.0, 1.0))
+        return
     z = fig.back + 1.0
     for sx in (-1, 1):
         root = np.array([sx * 1.5, 21.5, z])
@@ -1155,6 +1174,30 @@ def halo(fig, color="#ffe48a"):
     for x0, z0, w, d in ((-3, -3, 6, 1), (-3, 2, 6, 1), (-3, -2, 1, 4), (2, -2, 1, 4)):
         c = fig.head.cube((x0, y, z0), (w, 1, d), inflate=-0.1)
         toon(c, color)
+
+
+def round_figure(fig):
+    """The rounded style, after all the painting: the head, the hair and hats over it, the arms, hands, legs and
+    feet and what is worn on them are bevelled on every edge; the stacked parts of the body (chest, waist, hips
+    and what is worn over them) on their upright edges, so no groove opens between them."""
+    if not ROUND:
+        return
+    limbs = ("rightArm", "leftArm", "rightLeg", "leftLeg")
+    for bone in fig.m.bones:
+        if bone.name in ("weapon", "offhand", "rightWing", "leftWing", "tail", "cape"):
+            continue
+        for c in list(bone.cubes):
+            if c.rotation:
+                continue
+            W, H, D = c.size
+            if bone.name == "head":
+                if c is fig.skull:
+                    round_off(bone, c, 0.5, ends=True)
+                elif min(W, D) >= Figure.HEAD:
+                    round_off(bone, c, 1.0, ends="top" if H >= 2 else False)
+            elif min(W, D) >= 2:
+                r = 0.5 if min(W, D) <= 4 else 1.0
+                round_off(bone, c, r, ends=bone.name in limbs and H >= 2)
 
 
 # ------------------------------------------------------------------------------------------ clothes
@@ -1302,11 +1345,11 @@ def clothe(fig, top, bottom, legs=None, sleeve=None, sleeve_to=0.0, hands=None, 
 
 def bust(fig, color, kind="cloth", inflate=0.08):
     z = fig.front - 0.9
-    if SMOOTH:  # rounder: a fuller lower part and a tapering upper one
-        z -= 0.05
-        up = fig.body.cube((-2.5, 21, z + 0.3), (5, 1, 1), inflate=inflate - 0.08)
+    if SMOOTH:  # rounder and fuller: a full lower part, a tapering upper one
+        z -= 0.25
+        up = fig.body.cube((-2.5, 21, z + 0.35), (5, 1, 1), inflate=inflate - 0.02)
         {"metal": lambda c: toon_metal(c, color), "leather": lambda c: toon_leather(c, color, stitch=False)}.get(kind, lambda c: toon(c, color))(up)
-        b = fig.body.cube((-2.5, 19, z), (5, 2, 1), inflate=inflate + 0.1)
+        b = fig.body.cube((-2.5, 19, z), (5, 2, 1), inflate=inflate + 0.2)
     else:
         b = fig.body.cube((-2.5, 19, z), (5, 3, 1), inflate=inflate)
     if kind == "metal":
@@ -1732,11 +1775,12 @@ def cap(fig, color, feather=None):
         p.clear()
     b = fig.head.cube((-H / 2 - 1, 24 + H - 2.2, -H / 2 - 1.5), (H + 2, 1, H + 2), rotation=(-6, 0, 8), pivot=(0, 24 + H, 0))
     toon(b, shade(color, 0.88))
-    if feather:
-        f = fig.head.cube((3, 24 + H, -1), (1, 7, 3), rotation=(-35, 0, 20), pivot=(3.5, 24 + H, 0.5))
-        toon(f, feather)
-        with paint(f.right) as p:
-            p.line([(p.w / 2, 0), (p.w / 2, p.h)], shade(feather, 0.7))
+    if feather:  # a slender plume curving back from the band
+        point = np.array([3.2, 24 + H - 0.4, 0.5])
+        for i, (length, rot) in enumerate(((3, (-28, 0, 16)), (3, (-52, 0, 20)), (3, (-78, 0, 22)))):
+            seg = fig.head.cube((point[0] - 0.5, point[1], point[2] - 0.5), (1, length, 1), rotation=rot, pivot=tuple(point), inflate=-0.08 - i * 0.06)
+            toon_hair(seg, feather, "point" if i == 2 else "blunt", False, i, shade(feather, 0.82), (i / 3, (i + 1) / 3))
+            point = point + _rot(*rot) @ np.array([0, length - 0.35, 0])
 
 
 def headband(fig, color, tails=True):
@@ -2554,6 +2598,7 @@ def build(n):
         if fig.female and not look.get("flat") and not (fig.modest and FASHION) and fig.chest:
             color, kind, inflate = fig.chest
             bust(fig, color, kind, inflate)
+        round_figure(fig)
         return fig.m
     make.__name__ = f"retainer_{n}"
     return make

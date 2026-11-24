@@ -186,6 +186,142 @@ class Bone:
         return c
 
 
+def round_off(bone, c, r, ends=False):
+    """Replaces an upright box with a rounded one, keeping its paint. The upright edges are bevelled: two boxes
+    (full width but shallower, full depth but narrower) and four slim boxes turned 45 degrees along those edges.
+    With `ends`, the top and bottom edges are bevelled too: a third, shorter core box and eight more slim boxes
+    along the top and bottom edges. Each part takes its texture from the matching part of the painted box, so
+    the painted light now rolls round the bevels. Returns the new boxes."""
+    k = c.res
+    W, H, D = c.size
+    rk = int(round(r * k))
+    top_only = ends == "top"  # hats and hair over a head: rounded over the top, open below
+    if ends and H * k - (1 if top_only else 2) * rk < k:
+        ends = False
+    if rk < 1 or W * k - 2 * rk < k or D * k - 2 * rk < k or H < 1:
+        return [c]
+    x0, y0, z0 = c.origin
+    x1, y1, z1 = x0 + W, y0 + H, z0 + D
+    i = c.inflate
+    img = c.img
+    Wk, Hk, Dk = W * k, H * k, D * k
+    et = r if ends else 0  # how far the top is bevelled
+    eb = r if ends and not top_only else 0  # and the bottom
+    etk, ebk = int(round(et * k)), int(round(eb * k))
+
+    def crop(f, cx0=0, cx1=None, cy0=0, cy1=None):
+        cx1 = f.w if cx1 is None else cx1
+        cy1 = f.h if cy1 is None else cy1
+        return img.crop((f.x + cx0, f.y + cy0, f.x + cx1, f.y + cy1))
+
+    def put(dst, face, piece):
+        if face.w == 0 or face.h == 0:
+            return
+        if piece.width == 0 or piece.height == 0:
+            return
+        if piece.size != (face.w, face.h):
+            piece = piece.resize((face.w, face.h), Image.NEAREST)
+        dst.img.paste(piece, (face.x, face.y))
+
+    def stack(*parts, vertical=False):
+        parts = [p for p in parts if p.width and p.height]
+        if vertical:
+            out = Image.new("RGBA", (max(p.width for p in parts), sum(p.height for p in parts)))
+            y = 0
+            for p in parts:
+                out.paste(p.resize((out.width, p.height), Image.NEAREST), (0, y))
+                y += p.height
+            return out
+        out = Image.new("RGBA", (sum(p.width for p in parts), max(p.height for p in parts)))
+        x = 0
+        for p in parts:
+            out.paste(p.resize((p.width, out.height), Image.NEAREST), (x, 0))
+            x += p.width
+        return out
+
+    out = []
+    # the cores
+    zc = Cube((x0 + r, y0 + eb, z0), (W - 2 * r, H - et - eb, D), i, None, None, k)  # full depth: the front and back
+    put(zc, zc.front, crop(c.front, rk, Wk - rk, etk, Hk - ebk))
+    put(zc, zc.back, crop(c.back, rk, Wk - rk, etk, Hk - ebk))
+    put(zc, zc.right, crop(c.right, 0, Dk, etk, Hk - ebk))
+    put(zc, zc.left, crop(c.left, 0, Dk, etk, Hk - ebk))
+    put(zc, zc.top, crop(c.top, rk, Wk - rk))
+    put(zc, zc.bottom, crop(c.bottom, rk, Wk - rk))
+    xc = Cube((x0, y0 + eb, z0 + r), (W, H - et - eb, D - 2 * r), i, None, None, k)  # full width: the sides
+    put(xc, xc.right, crop(c.right, rk, Dk - rk, etk, Hk - ebk))
+    put(xc, xc.left, crop(c.left, rk, Dk - rk, etk, Hk - ebk))
+    put(xc, xc.front, crop(c.front, 0, Wk, etk, Hk - ebk))
+    put(xc, xc.back, crop(c.back, 0, Wk, etk, Hk - ebk))
+    put(xc, xc.top, crop(c.top, 0, Wk, rk, Dk - rk))
+    put(xc, xc.bottom, crop(c.bottom, 0, Wk, rk, Dk - rk))
+    out += [zc, xc]
+    if ends:
+        yc = Cube((x0 + r, y0, z0 + r), (W - 2 * r, H, D - 2 * r), i, None, None, k)  # full height: the top (and bottom)
+        put(yc, yc.top, crop(c.top, rk, Wk - rk, rk, Dk - rk))
+        put(yc, yc.bottom, crop(c.bottom, rk, Wk - rk, rk, Dk - rk))
+        for f, src in ((yc.front, c.front), (yc.back, c.back)):
+            put(yc, f, crop(src, rk, Wk - rk))
+        for f, src in ((yc.right, c.right), (yc.left, c.left)):
+            put(yc, f, crop(src, rk, Dk - rk))
+        out.append(yc)
+    infl = (r * math.sqrt(2) - 1) / 2
+    lo_x, hi_x, lo_z, hi_z = x0 + r - i, x1 - r + i, z0 + r - i, z1 - r + i
+    # the upright edges
+    for cx, cz, s1, s2 in (
+        (lo_x, lo_z, crop(c.front, 0, rk, etk, Hk - ebk), crop(c.right, Dk - rk, Dk, etk, Hk - ebk)),
+        (hi_x, lo_z, crop(c.front, Wk - rk, Wk, etk, Hk - ebk), crop(c.left, 0, rk, etk, Hk - ebk)),
+        (lo_x, hi_z, crop(c.back, Wk - rk, Wk, etk, Hk - ebk), crop(c.right, 0, rk, etk, Hk - ebk)),
+        (hi_x, hi_z, crop(c.back, 0, rk, etk, Hk - ebk), crop(c.left, Dk - rk, Dk, etk, Hk - ebk)),
+    ):
+        hh = H - et - eb
+        low = 0.5 if eb or not ends else 0.0  # an open bottom stays flush
+        p = Cube((cx - 0.5, y0 + eb - low, cz - 0.5), (1, int(round(hh + 0.5 + low)), 1), infl, (0, 45, 0), (cx, y0 + eb, cz), k)
+        strip = stack(s1, s2)
+        for f in p.sides:
+            put(p, f, strip)
+        put(p, p.top, crop(c.top, 0, rk, 0, rk))
+        put(p, p.bottom, crop(c.bottom, 0, rk, 0, rk))
+        out.append(p)
+    if ends:
+        lo_y, hi_y = y0 + r - i, y1 - r + i
+        # along x: the top and bottom edges at the front and back
+        for cy, cz, s1, s2 in (
+            (hi_y, lo_z, crop(c.front, rk, Wk - rk, 0, rk), crop(c.top, rk, Wk - rk, Dk - rk, Dk)),
+            (hi_y, hi_z, crop(c.back, rk, Wk - rk, 0, rk).transpose(Image.FLIP_LEFT_RIGHT), crop(c.top, rk, Wk - rk, 0, rk)),
+            (lo_y, lo_z, crop(c.front, rk, Wk - rk, Hk - rk, Hk), crop(c.bottom, rk, Wk - rk, 0, rk)),
+            (lo_y, hi_z, crop(c.back, rk, Wk - rk, Hk - rk, Hk).transpose(Image.FLIP_LEFT_RIGHT), crop(c.bottom, rk, Wk - rk, Dk - rk, Dk)),
+        )[:2 if top_only else 4]:
+            p = Cube((x0 + r - 0.5, cy - 0.5, cz - 0.5), (int(W - 2 * r + 1), 1, 1), infl, (45, 0, 0), (x0, cy, cz), k)
+            strip = stack(s1, s2, vertical=True)
+            for f in (p.front, p.back, p.top, p.bottom):
+                put(p, f, strip)
+            put(p, p.right, crop(c.right, 0, rk, 0, rk))
+            put(p, p.left, crop(c.left, 0, rk, 0, rk))
+            out.append(p)
+        # along z: the top and bottom edges at the sides
+        for cx, cy, s1, s2 in (
+            (lo_x, hi_y, crop(c.right, rk, Dk - rk, 0, rk), crop(c.top, 0, rk, rk, Dk - rk).transpose(Image.ROTATE_90)),
+            (hi_x, hi_y, crop(c.left, rk, Dk - rk, 0, rk), crop(c.top, Wk - rk, Wk, rk, Dk - rk).transpose(Image.ROTATE_90)),
+            (lo_x, lo_y, crop(c.right, rk, Dk - rk, Hk - rk, Hk), crop(c.bottom, 0, rk, rk, Dk - rk).transpose(Image.ROTATE_90)),
+            (hi_x, lo_y, crop(c.left, rk, Dk - rk, Hk - rk, Hk), crop(c.bottom, Wk - rk, Wk, rk, Dk - rk).transpose(Image.ROTATE_90)),
+        )[:2 if top_only else 4]:
+            p = Cube((cx - 0.5, cy - 0.5, z0 + r - 0.5), (1, 1, int(D - 2 * r + 1)), infl, (0, 0, 45), (cx, cy, z0), k)
+            strip = stack(s1, s2, vertical=True)
+            for f in (p.right, p.left):
+                put(p, f, strip)
+            for f in (p.top, p.bottom):
+                put(p, f, strip.transpose(Image.ROTATE_90))
+            put(p, p.front, crop(c.front, 0, rk, 0, rk))
+            put(p, p.back, crop(c.back, 0, rk, 0, rk))
+            out.append(p)
+    for n in out:
+        n.bone = bone.name
+    idx = bone.cubes.index(c)
+    bone.cubes[idx:idx + 1] = out
+    return out
+
+
 def _enhance(region, low, k, rng, side):
     """Adds fine detail to one face of a cube, in place.
 
