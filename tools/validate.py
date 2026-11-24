@@ -317,6 +317,14 @@ def main():
                     for v in values if isinstance(values, list) else [values]:
                         if isinstance(v, str):
                             check(v.count("(") == v.count(")"), f"{name}: unbalanced parentheses in '{v}'")
+    # every pose the scripts play by name (v11) must be defined in the resource pack
+    import re as _re
+    for script in sorted((BP / "scripts").glob("*.js")):
+        text = script.read_text()
+        names = set(_re.findall(r'"(animation\.overlord\.[a-z0-9_]+)"', text))
+        names |= {f"animation.overlord.{n}" for n in _re.findall(r'\bP\("([a-z0-9_]+)"\)', text)}
+        for name in sorted(names):
+            check(name in animations, f"{rel(script)}: plays {name}, which is not defined")
     render_controllers = set()
     for f in sorted((RP / "render_controllers").glob("*.json")):
         render_controllers |= set(load(f)["render_controllers"])
@@ -368,6 +376,17 @@ def main():
         entities[ident] = d
     known_entities = set(entities) | VANILLA["entity"]
     check(set(entities) == set(client), f"behavior/client entity mismatch: {set(entities) ^ set(client)}")
+    # v11: each companion look fights in the vocation classes.js gives it, and has a model of its own
+    import re as _re
+    looks_js = _re.findall(r'\{ name: "[^"]+", voc: (\d+), sex: "[mf]" \}', (BP / "scripts/classes.js").read_text())
+    keeper = entities.get(f"{NS}:retainer")
+    if check(len(looks_js) > 0 and keeper is not None, "classes.js looks or the retainer entity are missing"):
+        vocs = _re.findall(r'^    key: "([a-z]+)", name: "[^"]+", role:', (BP / "scripts/classes.js").read_text(), _re.M)
+        for n, voc in enumerate(looks_js):
+            event = keeper["events"].get(f"{NS}:look_{n}", {})
+            want = f"{NS}:voc_{vocs[int(voc)]}" if int(voc) < len(vocs) else "?"
+            check(want in event.get("add", {}).get("component_groups", []), f"retainer look {n}: entity does not fight as {want}")
+            check(f"v{n}" in client.get(f"{NS}:retainer", {}).get("geometry", {}), f"retainer look {n} has no model")
     for ident, d in entities.items():
         where = f"entities/{ident.split(':')[1]}.json"
         check(f"entity.{ident}.name" in lang, f"{where}: entity.{ident}.name missing from en_US.lang")
@@ -638,7 +657,10 @@ def main():
     for anim_id in set(re.findall(r'"(animation\.overlord\.[a-z_]+)"', script)):
         if check(anim_id in animations, f"scripts: animation {anim_id} is not defined"):
             anim = animations[anim_id]
-            check(set(anim["bones"]) <= player_bones, f"{anim_id}: uses bones the player model does not have")
+            # the party's own poses (v11) may also move the companions' "root" - except the high five, which the
+            # player shares
+            allowed = player_bones | ({"root"} if anim_id.startswith("animation.overlord.party_") and not anim_id.endswith("highfive") else set())
+            check(set(anim["bones"]) <= allowed, f"{anim_id}: uses bones the player model does not have")
             for bone, channels in anim.get("bones", {}).items():
                 for frames in channels.values():
                     times = [float(t) for t in frames]
