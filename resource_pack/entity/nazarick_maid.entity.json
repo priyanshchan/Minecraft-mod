@@ -19,8 +19,10 @@
           "walk",
           "breathe",
           "flinch",
-          "lean"
-        ]
+          "lean",
+          "chibi_head"
+        ],
+        "scale": "0.9412"
       },
       "animations": {
         "look_at_target": "animation.overlord.look_at_target",
@@ -28,7 +30,8 @@
         "walk": "animation.overlord.walk",
         "breathe": "animation.overlord.breathe",
         "flinch": "animation.overlord.flinch",
-        "lean": "animation.overlord.lean"
+        "lean": "animation.overlord.lean",
+        "chibi_head": "animation.overlord.chibi_head"
       },
       "render_controllers": [
         "controller.render.overlord.entity"

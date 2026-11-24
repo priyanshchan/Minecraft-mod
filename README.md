@@ -736,6 +736,28 @@ sticks in a flag shape).
   Players cannot hurt retainers, their kills count as yours for XP, quests and the bestiary, and feeding one
   bread or a Healing Potion heals it.
 
+### The new anime look (v11.2)
+
+- **Every companion and person is redrawn in a new anime style**, modelled on popular anime Minecraft models:
+  - a bigger head on a figure that still stands as tall as before (the head is scaled in game by an always-on
+    animation, and the whole figure scaled down to match);
+  - big eyes set low under heavy lashes, with sparkle highlights, a small mouth and soft blush;
+  - fuller hair, with thick locks framing the face;
+  - textures twice as fine, with smooth shading that falls down the whole figure;
+  - rounded edges everywhere: the head, hair and hats, the arms and hands, the legs and feet, the body and the
+    clothes are bevelled instead of square-cornered.
+- **Figures:** grown women have an hourglass figure (fuller chest, narrow waist, curvier hips and thighs) and longer
+  legs; men have broad shoulders tapering to a narrow waist.
+- **Fashion:** over-knee socks with bare thighs under short skirts; cropped tops on Clementine, the Huntress,
+  Shieldmaiden, Nightblade, Lotus Fist and Blade Dancer; bare shoulders on Albedo, the vampire brides, the Songstress,
+  Witch, Death Witch, Enchantress, Grave Maiden and Wind Disciple; chokers; small hair clips; bigger sleeves; stronger
+  lip colour. Aura, Mare, Shalltear, Entoma, Evileye, CZ, Enri and Neia keep their outfits and a plain figure.
+- **Fixes:** beards hang below the mouth (a neat beard for Sebas, stubble for Gazef, full or long beards for the dwarf,
+  Fluder and the Wizard); hair stays inside open helmets; Albedo's wings fold down from the small of her back; the
+  archer's and Minstrel's hat feather is a slender plume; beast-folk fur is flecked, not striped; Gargantua's runes are
+  carved glyphs; Evileye has a proper mask.
+- Monsters keep their shapes and sizes, painted twice as finely.
+
 ### The people and monsters redrawn (v11.1)
 
 - **Every NPC is redrawn** in the companions' style: 86 models in all, each the same size as before.

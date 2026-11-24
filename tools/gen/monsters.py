@@ -48,8 +48,26 @@ def scales(c, color, belly=None):
 
 
 def fur(c, color, tip=None):
-    toon_hair(c, color, "blunt", False, int(c.origin[0] * 13 + c.origin[1] * 7), tip, (0.0, 1.0))
+    """Fur: the colour shaded down the body, flecked all over with short light and dark tufts (not stripes)."""
+    toon(c, color, tip=tip, grad=(0.0, 1.0))
+    rnd = random.Random(int(c.origin[0] * 13 + c.origin[1] * 7 + c.origin[2] * 3))
+    for f in sides(c) + [c.top]:
+        with paint(f) as p:
+            W, Hh = p.img.width, p.img.height
+            for _ in range(max(2, W * Hh // 9)):
+                x, y = rnd.randrange(W), rnd.randrange(Hh)
+                col = p.img.getpixel((x, y))
+                if not col[3]:
+                    continue
+                k = 0.8 if rnd.random() < 0.6 else 1.16
+                for dy in range(rnd.randint(1, 2)):
+                    if y + dy < Hh:
+                        p.img.putpixel((x, y + dy), shade(col, k))
     return c
+
+
+RUNE_GLYPHS = [["X.X", "XXX", "X.X", "X.X", "X.X"], ["XX.", "X.X", "XX.", "X.X", "XX."], ["X..", "XX.", "X.X", "X..", "X.."],
+               [".X.", "X.X", ".X.", "X.X", ".X."], ["X.X", ".X.", ".X.", ".X.", "X.X"]]
 
 
 def stone(c, color, moss=None, runes=None):
@@ -64,10 +82,15 @@ def stone(c, color, moss=None, runes=None):
             if moss and f is c.top:
                 for _ in range(p.img.width):
                     p.px(rnd.randrange(p.img.width), rnd.randrange(p.img.height), moss)
-            if runes and f in sides(c) and p.h >= 3:
+            if runes and f in sides(c) and p.h >= 3:  # carved runes, glowing: a row of small glyphs
+                cell = 0.4
                 for k in range(int(p.w // 2)):
-                    x = 0.5 + k * 2
-                    p.line([(x, p.h * 0.4), (x + 0.75, p.h * 0.6)], runes).line([(x + 0.75, p.h * 0.4), (x, p.h * 0.6)], runes)
+                    glyph = RUNE_GLYPHS[(k + int(p.face.x)) % len(RUNE_GLYPHS)]
+                    gx, gy = 0.6 + k * 2, p.h / 2 - len(glyph) * cell / 2
+                    for j, row in enumerate(glyph):
+                        for i, ch in enumerate(row):
+                            if ch == "X":
+                                p.rect(gx + i * cell, gy + j * cell, gx + (i + 1) * cell, gy + (j + 1) * cell, runes)
     return c
 
 
