@@ -85,9 +85,11 @@
           "lean",
           "follow",
           "cape",
-          "chibi_head"
+          "adult_figure"
         ],
-        "scale": "0.9412"
+        "pre_animation": [
+          "variable.width = 1.0 + (query.variant == 0) * 0.16 + (query.variant == 1) * 0.16 + (query.variant == 2) * 0.06 + (query.variant == 3) * 0.06 + (query.variant == 6) * 0.03 + (query.variant == 7) * 0.03 + (query.variant == 8) * 0.02 + (query.variant == 9) * 0.02 + (query.variant == 10) * 0.04 + (query.variant == 11) * 0.04 + (query.variant == 12) * 0.08 + (query.variant == 13) * 0.08 + (query.variant == 14) * 0.04 + (query.variant == 15) * 0.04 + (query.variant == 16) * 0.03 + (query.variant == 17) * 0.03 + (query.variant == 18) * 0.04 + (query.variant == 19) * 0.04 + (query.variant == 20) * 0.03 + (query.variant == 21) * 0.03 + (query.variant == 22) * 0.05 + (query.variant == 23) * 0.05 + (query.variant == 24) * 0.14 + (query.variant == 25) * 0.14 + (query.variant == 26) * 0.06 + (query.variant == 27) * 0.06 + (query.variant == 30) * 0.03 + (query.variant == 31) * 0.03;"
+        ]
       },
       "animations": {
         "look_at_target": "animation.overlord.look_at_target",
@@ -99,7 +101,7 @@
         "lean": "animation.overlord.lean",
         "follow": "animation.overlord.follow",
         "cape": "animation.overlord.cape",
-        "chibi_head": "animation.overlord.chibi_head"
+        "adult_figure": "animation.overlord.adult_figure"
       },
       "render_controllers": [
         "controller.render.overlord.retainer"

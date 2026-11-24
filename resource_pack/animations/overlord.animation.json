@@ -521,6 +521,103 @@
         }
       }
     },
+    "animation.overlord.adult_figure": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "scale": [
+            "1.05 / (variable.width ?? 1.0)",
+            1.05,
+            "1.05 / (variable.width ?? 1.0)"
+          ]
+        },
+        "rightLeg": {
+          "scale": [
+            1.0,
+            1.25,
+            1.0
+          ]
+        },
+        "leftLeg": {
+          "scale": [
+            1.0,
+            1.25,
+            1.0
+          ]
+        },
+        "cape": {
+          "scale": [
+            1.0,
+            1.18,
+            1.0
+          ]
+        },
+        "root": {
+          "position": [
+            0.0,
+            3.5,
+            0.0
+          ],
+          "scale": [
+            "(variable.width ?? 1.0)",
+            1.0,
+            "(variable.width ?? 1.0)"
+          ]
+        }
+      }
+    },
+    "animation.overlord.adult_robe": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "scale": [
+            "1.05 / (variable.width ?? 1.0)",
+            1.05,
+            "1.05 / (variable.width ?? 1.0)"
+          ]
+        },
+        "rightLeg": {
+          "scale": [
+            1.0,
+            1.25,
+            1.0
+          ]
+        },
+        "leftLeg": {
+          "scale": [
+            1.0,
+            1.25,
+            1.0
+          ]
+        },
+        "cape": {
+          "scale": [
+            1.0,
+            1.18,
+            1.0
+          ]
+        },
+        "root": {
+          "position": [
+            0.0,
+            3.5,
+            0.0
+          ],
+          "scale": [
+            "(variable.width ?? 1.0)",
+            1.0,
+            "(variable.width ?? 1.0)"
+          ]
+        },
+        "robe": {
+          "scale": [
+            1.0,
+            1.25,
+            1.0
+          ]
+        }
+      }
+    },
     "animation.overlord.projectile.spin": {
       "loop": true,
       "bones": {
