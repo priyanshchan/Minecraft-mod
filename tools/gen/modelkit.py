@@ -177,6 +177,7 @@ class Bone:
         self.res = res
         self.cubes: list[Cube] = []
         self.locators: dict = {}
+        self.scale = 1.0  # a scale an always-on animation gives this bone in game (v11.2: the anime heads)
 
     def cube(self, origin, size, inflate=0.0, rotation=None, pivot=None):
         c = Cube(origin, size, inflate, rotation, pivot, self.res)
@@ -230,6 +231,7 @@ class Model:
     def __init__(self, name, bounds=(3.0, 3.5, 1.25), res=1):
         self.name = name
         self.bones: list[Bone] = []
+        self.view_scale = 1.0  # the client entity's scale script, in game
         self.bounds = bounds  # visible bounds width, height, y offset (blocks)
         self.res = res  # texels painted per model unit; a model painted finely ships as painted
         self.texture = None
@@ -399,10 +401,13 @@ class Model:
                         pts = apply(pts, c.rotation, c.pivot or (0, 0, 0))
                     bb = b
                     while bb is not None:
+                        if bb.scale != 1.0:
+                            pv = np.array(bb.pivot, np.float64)
+                            pts = (pts - pv) * bb.scale + pv
                         if bb.rotation:
                             pts = apply(pts, bb.rotation, bb.pivot)
                         bb = bones.get(bb.parent) if bb.parent else None
-                    pts = pts @ cam.T
+                    pts = pts * self.view_scale @ cam.T
                     sx_ = pts[:, 0] * scale + W / 2
                     sy2 = H - 40 - pts[:, 1] * scale
                     sz_ = pts[:, 2]

@@ -32,16 +32,22 @@ STYLES = {
     "cel": {"res": 2, "shade": "cel"},  # the same texels in three flat anime tones with dark edges
     "hd": {"res": 3, "shade": "smooth"},  # finer texels (24 across a face) and smooth blended tones
     "anime": {"res": 4, "shade": "cel"},  # finest texels (32 across a face), flat anime tones, big detailed eyes
+    # the look of popular anime Blockbench mods: a bigger head, fuller hair, big eyes under heavy lashes
+    "chibi": {"res": 2, "shade": "ramp", "head": 1.25, "eyes": "big"},
+    "chibi_hd": {"res": 4, "shade": "smooth", "head": 1.25, "eyes": "big"},
 }
 STYLE = "pixel"
+HEAD_SCALE = 1.0  # how much bigger a person's head is drawn in game (an always-on animation scales the bone)
+EYE_KIT = "anime"  # "anime" (v11.1 eyes) or "big" (bigger eyes under heavy lashes)
 
 
 def set_style(name):
     """Switches every builder (the companions, the people and the monsters) to one art style."""
     import sys
-    global STYLE, SHADE, R
+    global STYLE, SHADE, R, HEAD_SCALE, EYE_KIT
     st = STYLES[name]
     STYLE, SHADE, R = name, st["shade"], st["res"]
+    HEAD_SCALE, EYE_KIT = st.get("head", 1.0), st.get("eyes", "anime")
     for mod in ("npcs", "monsters"):
         if mod in sys.modules:
             sys.modules[mod].R = R
@@ -447,6 +453,9 @@ class Figure:
         self.root = m.bone("root", (0, 0, 0))
         self.body = m.bone("body", (0, 24, 0), parent="root")
         self.head = m.bone("head", (0, 24, 0), parent="body")
+        if HEAD_SCALE != 1.0:  # a bigger head, the whole figure scaled down to stand as tall as before
+            self.head.scale = HEAD_SCALE
+            m.view_scale = 32 / (24 + Figure.HEAD * HEAD_SCALE)
         self.rarm = m.bone("rightArm", (-4, 23, 0) if f else (-5, 22.5, 0), parent="body")
         self.larm = m.bone("leftArm", (4, 23, 0) if f else (5, 22.5, 0), parent="body")
         self.rleg = m.bone("rightLeg", (-1.6, legs, 0) if f else (-1.9, legs, 0), parent="root")
@@ -556,6 +565,70 @@ EYES_HD = {
 }
 
 
+# The big eyes of anime Blockbench mods, under a heavy two-row lash that sweeps out at the outer corner.
+# Each is drawn for the left side of the face, outer corner first (column 0 is the sweep of the lash).
+EYES_BIG = {
+    2: {"soft": {"f": ["LLLLL", ".LDDL", ".DHIW", ".IIPW", "..JJ."],
+                 "m": ["LLLLL", ".DHDW", ".IIPW", "..JJ."]},
+        "sharp": {"f": ["LLL..", ".LLLL", ".DHDL", ".JIPW"],
+                  "m": ["LLLL.", ".LLLL", ".DHPW", "..JJ."]}},
+    4: {"soft": {"f": ["LLLLLLLLL.", "LLLLLLLLLL", ".LLDDDDDLL", "..DDHHDDDW", "..DHHHHDIW", "..IDHHDPIW", "..IIIIPPIW",
+                       "..JIIIIIJW", "...JJJJJJ.", "....SSSS.."],
+                 "m": ["LLLLLLLLLL", ".LLDDDDDLL", "..DHHDDDIW", "..IHHDPPIW", "..JIIIIIJ.", "...JJJJJ..", "....SSS..."]},
+        "sharp": {"f": ["LLLLL.....", ".LLLLLLL..", "..LLLLLLLL", "..DDHHDDLW", "..IHHDPPIW", "..JIIIIJJ.", "...SSSSS.."],
+                  "m": ["LLLLLL....", ".LLLLLLLLL", "..DHHDPDLW", "..JIIPPIJ.", "...SSSS..."]}},
+}
+
+
+def paint_face_big(fig, style):
+    """Big anime eyes set low on the face, as on the anime Blockbench models: the whole eye is drawn from a
+    kit for the face's resolution; brows hide under the bangs; a tiny mouth; soft blush for women."""
+    look = fig.look
+    skin, eye, hair = look["skin"], look["eyes"], look["hair"]
+    r = R
+    F = 8 * r
+    lash = mix(shade(hair, 0.25), "#120a12", 0.75)
+    glow = look.get("glow")
+
+    def palette(c):
+        return {"L": lash, "D": shade(c, 0.55) if not glow else c, "I": c, "J": mix(c, "#ffffff", 0.45),
+                "P": shade(c, 0.28) if not glow else mix(c, "#ffffff", 0.6), "H": "#ffffff",
+                "W": "#f4f0ee", "S": mix(lash, skin, 0.6)}
+
+    kits = EYES_BIG.get(r) or EYES_BIG[2]
+    eyes = (kits.get(style) or kits["soft"])["f" if fig.female else "m"]
+    ew, eh = len(eyes[0]), len(eyes)
+    lx = r // 2  # the lash's sweep reaches out towards the edge of the face
+    rx = F - lx - ew
+    ey = int(round(4.0 * r))  # the top of the lash, just under the bangs
+    pal, pal2 = palette(look.get("glow") or eye), palette(look["eyes2"]) if look.get("eyes2") else None
+    with paint(fig.skull.front) as p:
+        p.art(eyes, pal, lx, ey)
+        p.art(eyes, pal2 or pal, rx, ey, mirror=True)
+        c = F // 2
+        my = int(round(7.0 * r)) if r > 2 else 14
+        if fig.female:
+            lips = look.get("lips", "#c06470")
+            p.px(c - 1, my, mix(lips, skin, 0.25)).px(c, my, mix(lips, skin, 0.55))
+            if r >= 4:
+                p.px(c - 2, my - 1, mix(lips, skin, 0.6)).px(c + 1, my - 1, mix(lips, skin, 0.7))
+            for k in range(max(1, r // 2)):
+                for x in range(lx + r // 2, lx + r // 2 + 2 * max(1, r // 2)):
+                    p.blend(x, ey + eh + k, "#ff7f96", 0.28)
+                    p.blend(F - 1 - x, ey + eh + k, "#ff7f96", 0.28)
+        else:
+            lips = look.get("lips", shade(skin, 0.7))
+            for x in range(c - max(1, r // 2), c + max(1, r // 2)):
+                p.px(x, my, lips)
+        if r >= 4:
+            p.px(c, int(round(6.3 * r)), shade(skin, 0.9))
+        if look.get("scar"):
+            p.rect(6, 2.5, 6 + 1 / r, 4.6, shade(skin, 0.62))
+    for f in (fig.skull.right, fig.skull.left):
+        with paint(f) as p:  # ears
+            p.rect(3.5, 4, 4.5, 6, shade(skin, 0.86))
+
+
 def paint_face_hd(fig, style):
     look = fig.look
     skin, eye, hair = look["skin"], look["eyes"], look["hair"]
@@ -612,6 +685,8 @@ def paint_face_hd(fig, style):
 def paint_face(fig, style=None):
     """A Minecraft anime face: eyes four texels apart at the height of Steve's, a small mouth, blush on the cheeks."""
     style = style or fig.look.get("face", FACE)
+    if EYE_KIT == "big":
+        return paint_face_big(fig, "sharp" if style == "sharp" else "soft")
     if R > 2:
         return paint_face_hd(fig, style)
     look = fig.look
@@ -695,6 +770,8 @@ def chain(fig, start, parts, bone=None, fade=(0.0, 1.0)):
 
 def hair_cap(fig, sides="ear", back="short", inflate=0.4, bangs_base=1.25):
     H = Figure.HEAD
+    if HEAD_SCALE > 1:  # the anime Blockbench look: a fuller head of hair
+        inflate += 0.25
     cap = fig.head.cube((-H / 2, 24, -H / 2), (H, H, H), inflate=inflate)
     toon_hair(cap, fig.look["hair"], "blunt", True, fig.n, fig.look.get("tip"), (0.0, 0.25))
     with paint(cap.front) as p:
@@ -740,6 +817,11 @@ def bangs(fig, kind):
 def side_locks(fig, length=9):
     """Long locks falling in front of the shoulders."""
     H = Figure.HEAD
+    if HEAD_SCALE > 1:  # thick locks framing the face, as on the anime Blockbench models
+        for x, rz in ((-H / 2 - 0.4, -4), (H / 2 + 0.4, 4)):
+            chain(fig, (x, 24 + H - 0.5, -3.2), [(2, length // 2 + 2, 2, (-3, 0, rz)), (2, length - length // 2, 2, (5, 0, -rz / 2))],
+                  fade=(0.1, 0.9))
+        return
     for x, rz in ((-H / 2 - 0.45, -5), (H / 2 + 0.45, 5)):
         chain(fig, (x, 24 + H - 1, -2.8), [(1, length // 2 + 1, 2, (-4, 0, rz)), (1, length - length // 2, 2, (6, 0, -rz / 2))], fade=(0.1, 0.9))
 
