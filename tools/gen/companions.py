@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import math
 import random
+import zlib
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -33,21 +34,24 @@ STYLES = {
     "hd": {"res": 3, "shade": "smooth"},  # finer texels (24 across a face) and smooth blended tones
     "anime": {"res": 4, "shade": "cel"},  # finest texels (32 across a face), flat anime tones, big detailed eyes
     # the look of popular anime Blockbench mods: a bigger head, fuller hair, big eyes under heavy lashes
-    "chibi": {"res": 2, "shade": "ramp", "head": 1.25, "eyes": "big"},
-    "chibi_hd": {"res": 4, "shade": "smooth", "head": 1.25, "eyes": "big"},
+    "chibi": {"res": 2, "shade": "ramp", "head": 1.25, "eyes": "big", "fashion": True, "smooth": True},
+    "chibi_hd": {"res": 4, "shade": "smooth", "head": 1.25, "eyes": "big", "fashion": True, "smooth": True},
 }
 STYLE = "pixel"
 HEAD_SCALE = 1.0  # how much bigger a person's head is drawn in game (an always-on animation scales the bone)
 EYE_KIT = "anime"  # "anime" (v11.1 eyes) or "big" (bigger eyes under heavy lashes)
+FASHION = False  # the anime Blockbench build and dress: longer legs, over-knee socks, chokers, hair clips
+SMOOTH = False  # one light falling down the whole figure (no stripes where boxes stack) and gentle tapers
 
 
 def set_style(name):
     """Switches every builder (the companions, the people and the monsters) to one art style."""
     import sys
-    global STYLE, SHADE, R, HEAD_SCALE, EYE_KIT
+    global STYLE, SHADE, R, HEAD_SCALE, EYE_KIT, FASHION, SMOOTH
     st = STYLES[name]
     STYLE, SHADE, R = name, st["shade"], st["res"]
-    HEAD_SCALE, EYE_KIT = st.get("head", 1.0), st.get("eyes", "anime")
+    HEAD_SCALE, EYE_KIT, FASHION = st.get("head", 1.0), st.get("eyes", "anime"), st.get("fashion", False)
+    SMOOTH = st.get("smooth", False)
     for mod in ("npcs", "monsters"):
         if mod in sys.modules:
             sys.modules[mod].R = R
@@ -283,7 +287,7 @@ def ramp(color, metal=False):
     return [mix(color, "#ffffff", 0.22), shade(color, 1.12), rgba(color), shade(color, 0.83), shade(color, 0.67), shade(color, 0.5)]
 
 
-def pixel_shade(p, color, light=0.0, tip=None, grad=(0.0, 1.0), edge=0.9, span=2.3, base=1.2, metal=False, dither=True):
+def pixel_shade(p, color, light=0.0, tip=None, grad=(0.0, 1.0), edge=0.9, span=2.3, base=1.2, metal=False, dither=True, gy=None):
     """Fills a face with ramp shading: lighter at the top, darker down it and towards its side edges, dithered.
     `tip` fades the colour towards another down the face (hair ending in another colour); `grad` is the part of
     that fade this face covers. How the tones are laid down depends on the art style (SHADE)."""
@@ -291,7 +295,12 @@ def pixel_shade(p, color, light=0.0, tip=None, grad=(0.0, 1.0), edge=0.9, span=2
     ys = (np.arange(H)[:, None] + 0.5) / H
     xs = np.arange(W)[None, :]
     e = np.minimum(xs + 0.5, W - 0.5 - xs) / max(1.0, W / 2)
-    v = base + ys * span - light + (1 - np.minimum(1.0, e * 2.2)) * edge
+    if gy is not None:  # the figure's own light: one smooth fall from the shoulders to the feet, whatever box this is
+        wy = gy[0] - ys * (gy[0] - gy[1])
+        t = np.clip((31.0 - wy) / 31.0, 0.0, 1.0)
+        v = (1.3 if metal else 1.5) + t * 1.25 - light * 0.5 + (1 - np.minimum(1.0, e * 2.2)) * edge
+    else:
+        v = base + ys * span - light + (1 - np.minimum(1.0, e * 2.2)) * edge
     if SHADE == "ramp" and dither:
         v = v + (BAYER[np.arange(H)[:, None] % 2, np.arange(W)[None, :] % 2] - 0.375) * 0.45  # dither only near a step
     if SHADE == "cel":
@@ -334,7 +343,18 @@ def cel(p, color, light=1.14, dark=0.8, top=0.18, bottom=0.26, outline=True):
     return pixel_shade(p, color)
 
 
+def _gy(cube):
+    """The heights a box's sides span in the figure, for the smooth style's figure-wide light; None for the head
+    and for boxes turned far from upright (hair, wings, weapons), which keep their own light."""
+    if not SMOOTH or getattr(cube, "bone", "") in ("head", "weapon", "offhand", "rightWing", "leftWing"):
+        return None
+    if cube.rotation and max(abs(a) for a in cube.rotation) > 30:
+        return None
+    return (cube.origin[1] + cube.size[1] + cube.inflate, cube.origin[1] - cube.inflate)
+
+
 def toon(cube, color, outline=True, light=1.14, dark=0.8, top=0.18, bottom=0.26, tip=None, grad=(0.0, 1.0)):
+    gy = _gy(cube)
     for f in cube.faces:
         with paint(f) as p:
             if f is cube.top:
@@ -342,7 +362,7 @@ def toon(cube, color, outline=True, light=1.14, dark=0.8, top=0.18, bottom=0.26,
             elif f is cube.bottom:
                 pixel_shade(p, color, light=-2.2, span=0.6, edge=0.3, tip=tip, grad=(grad[1], grad[1]))
             else:
-                pixel_shade(p, color, tip=tip, grad=grad)
+                pixel_shade(p, color, tip=tip, grad=grad, gy=gy)
     return cube
 
 
@@ -355,7 +375,7 @@ def toon_metal(cube, color, trim=None, rivets=False):
             if f is cube.top:
                 pixel_shade(p, color, light=1.4, span=0.8, metal=True)
             else:
-                pixel_shade(p, color, span=2.6, base=1.0, metal=True)
+                pixel_shade(p, color, span=2.6, base=1.0, metal=True, gy=_gy(cube))
                 # the glint: one bright row a quarter of the way down, and a bright column
                 y = int(p.img.height * 0.25)
                 for x in range(1, p.img.width - 1):
@@ -445,11 +465,13 @@ class Figure:
 
     HEAD = 8
 
-    def __init__(self, n, look, name=None, bones=()):
+    def __init__(self, n, look, name=None, bones=(), modest=False):
         self.n, self.look = n, look
         f = self.female = look["sex"] == "f"
+        self.modest = modest  # young characters keep their outfits and a plain figure
+        self.trans = []  # thin boxes between the chest, waist and hips that smooth the figure's curves
         self.m = m = Model(name or f"retainer_{n}", bounds=(4.0, 4.2, 1.5), res=R)
-        legs = self.leg_top = 13 if f else 12  # long legs
+        legs = self.leg_top = (13 if f else 12) + (1 if FASHION else 0)  # long legs (longer still, anime-model style)
         self.root = m.bone("root", (0, 0, 0))
         self.body = m.bone("body", (0, 24, 0), parent="root")
         self.head = m.bone("head", (0, 24, 0), parent="body")
@@ -463,15 +485,29 @@ class Figure:
         # chest, waist and hips: (x0, width, z0, depth, y0, y1, inflate)
         if f:
             self.segs = [(-3, 6, -1.5, 3, 18, 24, 0.0), (-2.5, 5, -1.5, 3, 15, 18, -0.15), (-3.5, 7, -1.5, 3, 13, 15, 0.25)]
+            if FASHION:  # a shorter body over longer legs
+                self.segs = [(-3, 6, -1.5, 3, 19, 24, 0.0), (-2.5, 5, -1.5, 3, 16, 19, -0.15), (-3.5, 7, -1.5, 3, 14, 16, 0.25)]
+            if SMOOTH:  # the same, with gentle steps: a slim waist, softly wider hips
+                self.segs = [(-3, 6, -1.5, 3, 19, 24, 0.0), (-3, 6, -1.5, 3, 16, 19, -0.22), (-3, 6, -1.5, 3, 14, 16, 0.18)]
+                if not modest:  # a woman's figure: an hourglass, smoothed by a box between each part
+                    self.segs = [(-3, 6, -1.5, 3, 19, 24, 0.05), (-3, 6, -1.5, 3, 16, 19, -0.34), (-3, 6, -1.5, 3, 14, 16, 0.34)]
+                    self.trans = [(-3, 6, -1.5, 3, 18, 19, -0.14), (-3, 6, -1.5, 3, 16, 17, -0.02)]
             self.arm_l = [Limb(self.rarm, -5, 2, -1, 2, 13, 24), Limb(self.larm, 3, 2, -1, 2, 13, 24)]
             self.leg_l = [Limb(self.rleg, -3.1, 3, -1.5, 3, 0, legs), Limb(self.lleg, 0.1, 3, -1.5, 3, 0, legs)]
             self.front, self.back = -1.5, 1.5
         else:
             self.segs = [(-3.5, 7, -2, 4, 17, 24, 0.0), (-3, 6, -2, 4, 14, 17, -0.08), (-3.5, 7, -2, 4, 12, 14, 0.05)]
+            if FASHION:
+                self.segs = [(-3.5, 7, -2, 4, 18, 24, 0.0), (-3, 6, -2, 4, 15, 18, -0.08), (-3.5, 7, -2, 4, 13, 15, 0.05)]
+            if SMOOTH:
+                self.segs = [(-3.5, 7, -2, 4, 18, 24, 0.0), (-3.5, 7, -2, 4, 15, 18, -0.14), (-3.5, 7, -2, 4, 13, 15, -0.04)]
+                if not modest:  # a man's figure: broad shoulders tapering to a narrow waist
+                    self.segs = [(-3.5, 7, -2, 4, 18, 24, 0.22), (-3.5, 7, -2, 4, 15, 18, -0.2), (-3.5, 7, -2, 4, 13, 15, -0.06)]
+                    self.trans = [(-3.5, 7, -2, 4, 17, 18, 0.0)]
             self.arm_l = [Limb(self.rarm, -6.5, 3, -1.5, 3, 12, 24), Limb(self.larm, 3.5, 3, -1.5, 3, 12, 24)]
             self.leg_l = [Limb(self.rleg, -3.4, 3, -1.5, 3, 0, legs, 0.1), Limb(self.lleg, 0.4, 3, -1.5, 3, 0, legs, 0.1)]
             self.front, self.back = -2, 2
-        self.torso = [self.body.cube((x0, y0, z0), (w, y1 - y0, d), inflate=inf) for x0, w, z0, d, y0, y1, inf in self.segs]
+        self.torso = [self.body.cube((x0, y0, z0), (w, y1 - y0, d), inflate=inf) for x0, w, z0, d, y0, y1, inf in self.segs + self.trans]
         H = self.HEAD
         self.skull = self.head.cube((-H / 2, 24, -H / 2), (H, H, H))
         neck = self.head.cube((-1, 23, -1), (2, 1, 2))
@@ -480,8 +516,9 @@ class Figure:
         self.legs_c = []
         knee = 6
         for limb in self.leg_l:  # a thigh and a slimmer shin
-            self.legs_c.append(limb.bone.cube((limb.x0, knee, limb.z0), (limb.w, legs - knee, limb.d), inflate=limb.inflate + (0.15 if f else 0.0)))
-            self.legs_c.append(limb.bone.cube((limb.x0, 0, limb.z0), (limb.w, knee, limb.d), inflate=limb.inflate - (0.12 if f else 0.0)))
+            thigh, shin = ((0.08, -0.04) if SMOOTH else (0.15, -0.12)) if f else (0.0, 0.0)
+            self.legs_c.append(limb.bone.cube((limb.x0, knee, limb.z0), (limb.w, legs - knee, limb.d), inflate=limb.inflate + thigh))
+            self.legs_c.append(limb.bone.cube((limb.x0, 0, limb.z0), (limb.w, knee, limb.d), inflate=limb.inflate + shin))
         ra = self.arm_l[0]
         self.hx = ra.x0 + ra.w / 2  # where the right hand holds things
         self.hy = ra.y0 + 0.5
@@ -492,6 +529,15 @@ class Figure:
         self.offhand = m.bone("offhand", (self.ox, self.hy, la.z0), parent="leftArm")
         self.cape = m.bone("cape", (0, 24, self.back), parent="body")
         self.chest = None  # (colour, kind, inflate) of the outermost layer over a woman's chest
+        # what the outfit covers, for the anime dress pass (fashion)
+        self.legwear = None  # the colour the legs were dressed in
+        self.skirt_hem = None  # the height of the lowest skirt's hem
+        self.stocking_top = None
+        self.boot_top = 0
+        self.neck_open = False
+        self.headwear = False
+        self.overlays = []  # boxes worn over the torso (vests, plate), and over the arms (sleeves)
+        self.sleeve_cubes = []
         # bones some creatures' animations move: a robe that sways, a tail, wings (v11.1, for the NPCs)
         hips = self.segs[2]
         self.robe = m.bone("robe", (0, hips[5], 0), parent="body") if "robe" in bones else None
@@ -503,7 +549,7 @@ class Figure:
     def wrap(self, y0, y1, extra=0.3, bone=None):
         """Cubes hugging the torso between two heights (vests, plate, corsets, belts)."""
         out = []
-        for x0, w, z0, d, sy0, sy1, inf in self.segs:
+        for x0, w, z0, d, sy0, sy1, inf in self.segs + self.trans:
             a, b = max(y0, sy0), min(y1, sy1)
             if b > a:
                 out.append((bone or self.body).cube((x0, a, z0), (w, int(b - a), d), inflate=inf + extra))
@@ -525,9 +571,12 @@ def paint_skin(fig):
     """Skin is smooth: soft shading, no dithering."""
     skin = fig.look["skin"]
     for cube in fig.torso + fig.arms_c + fig.legs_c:
+        gy = _gy(cube)
         for f in cube.faces:
             with paint(f) as p:
-                pixel_shade(p, skin, light=1.0 if f is cube.top else -1.5 if f is cube.bottom else 0.4, span=1.4, edge=0.45, dither=False)
+                side = f is not cube.top and f is not cube.bottom
+                pixel_shade(p, skin, light=1.0 if f is cube.top else -1.5 if f is cube.bottom else 0.4, span=1.4, edge=0.45, dither=False,
+                            gy=gy if side else None)
     for f in fig.skull.faces:
         with paint(f) as p:
             if f is fig.skull.front:
@@ -609,7 +658,10 @@ def paint_face_big(fig, style):
         my = int(round(7.0 * r)) if r > 2 else 14
         if fig.female:
             lips = look.get("lips", "#c06470")
-            p.px(c - 1, my, mix(lips, skin, 0.25)).px(c, my, mix(lips, skin, 0.55))
+            if FASHION and not fig.modest:
+                p.px(c - 1, my, lips).px(c, my, mix(lips, skin, 0.2))
+            else:
+                p.px(c - 1, my, mix(lips, skin, 0.25)).px(c, my, mix(lips, skin, 0.55))
             if r >= 4:
                 p.px(c - 2, my - 1, mix(lips, skin, 0.6)).px(c + 1, my - 1, mix(lips, skin, 0.7))
             for k in range(max(1, r // 2)):
@@ -875,6 +927,11 @@ def hair_style(fig):
     bang = look.get("fringe", "hime" if fig.female else "spiky")
     if look.get("helmet") == "full":
         return  # all of it under the helm
+    if look.get("helmet") == "open" and FASHION:  # hair under an open helm: a fringe in the opening, locks below it
+        helm_hair(fig)
+        if look.get("beard"):
+            beard(fig)
+        return
     crowned = not look.get("helmet")
     if style == "bald":
         pass
@@ -949,7 +1006,29 @@ def hair_style(fig):
         beard(fig)
 
 
-def beard(fig):
+def helm_hair(fig):
+    """Hair under an open-faced helm: a fringe painted inside the opening, and for long hair, locks that fall from
+    under the helm's rim (they start inside it, so nothing pokes through the metal)."""
+    look = fig.look
+    hair = look["hair"]
+    H = Figure.HEAD
+    rnd = random.Random(fig.n * 31 + len(fig.m.name))
+    with paint(fig.skull.front) as p:
+        r = p.r
+        for x in range(int(1.2 * r), int((H - 1.2) * r)):
+            depth = int(3.0 * r) + rnd.randint(1, max(2, r))
+            for y in range(int(3.0 * r), depth):
+                p.px(x, y, shade(hair, 0.85 if (x // max(1, r // 2)) % 3 == 0 else 1.0))
+    if look["style"] in ("long", "braid", "ponytail", "twintails", "bob", "buns") or fig.female:
+        length = look.get("locks", 9)
+        for sx in (-1, 1):
+            chain(fig, (sx * (H / 2 - 1.2), 25.5, -2.0), [(2, length // 2 + 2, 2, (-3, 0, sx * 4)), (2, length - length // 2, 2, (4, 0, -sx * 2))],
+                  fade=(0.2, 0.9))
+        back = {"long": 12, "braid": 13, "ponytail": 10, "twintails": 9, "bob": 4, "buns": 4}.get(look["style"], 5)
+        lock(fig, (0, 25.5, H / 2 - 1.3), H - 2, back, 2, (6, 0, 0), "point", grad=(0.2, 1.0))
+
+
+def _beard_v11(fig):
     H = Figure.HEAD
     b = fig.head.cube((-H / 2, 23, -H / 2 - 0.6), (H, 4, 1))
     toon_hair(b, fig.look["hair"], "point", False, fig.n)
@@ -960,6 +1039,44 @@ def beard(fig):
         toon_hair(burn, fig.look["hair"], "blunt", False, fig.n)
     stache = fig.head.cube((-2, 26, -H / 2 - 0.65), (4, 1, 1))
     toon_hair(stache, fig.look["hair"], "blunt", False, fig.n)
+
+
+def beard(fig, kind=None):
+    """A beard that hangs from the jaw below the mouth (never a plate over the face):
+    "stubble" is painted on; "short" is a neat jaw beard; "full" hangs to the chest; "long" (sages) to the belt."""
+    if not FASHION:
+        return _beard_v11(fig)
+    kind = kind or fig.look.get("beard")
+    kind = "full" if kind is True else kind
+    H = Figure.HEAD
+    hair, skin = fig.look["hair"], fig.look["skin"]
+    with paint(fig.skull.front) as p:  # a moustache either side of the mouth, and stubble along the jaw
+        r = p.r
+        tint = mix(skin, hair, 0.35)
+        if kind == "stubble":
+            for x in range(r, (H - 1) * r):
+                for y in range(int(7.2 * r), H * r):
+                    if (x + y) % 2 == 0:
+                        p.blend(x, y, hair, 0.35)
+        else:
+            my = int(round(6.6 * r))
+            c = H * r // 2
+            for x in list(range(c - 2 * r, c - max(1, r // 2))) + list(range(c + max(1, r // 2), c + 2 * r)):
+                p.px(x, my, mix(hair, "#000000", 0.15))
+            for x in range(r // 2, H * r - r // 2):
+                p.blend(x, H * r - 1, tint, 0.5)
+    if kind == "stubble":
+        return
+    z = -H / 2 - 0.55
+    for sx in (-1, 1):  # sideburns along the cheeks
+        burn = fig.head.cube((sx * (H / 2 - 0.4) - 0.5, 24.2, -H / 2 + 0.6), (1, 3, 2), inflate=0.12)
+        toon_hair(burn, hair, "blunt", False, fig.n)
+    drop, width = {"short": (2, H - 2), "full": (4, H - 3), "long": (7, H - 4)}.get(kind, (3, H - 3))
+    chin = fig.head.cube((-width / 2, 24.6 - drop, z - 0.5), (width, drop, 2), rotation=(8, 0, 0), pivot=(0, 24.6, z))
+    toon_hair(chin, hair, "point", False, fig.n)
+    if kind in ("full", "long"):
+        tip = fig.head.cube((-1.5, 24.6 - drop - 2, z - 0.2), (3, 2, 1), rotation=(10, 0, 0), pivot=(0, 24.6, z))
+        toon_hair(tip, hair, "point", False, fig.n + 1)
 
 
 # ------------------------------------------------------------------------------------------ horns, wings and haloes
@@ -1041,14 +1158,113 @@ def halo(fig, color="#ffe48a"):
 
 
 # ------------------------------------------------------------------------------------------ clothes
+def fashion(fig):
+    """The anime Blockbench look (the chibi styles), over whatever outfit a woman wears: bare thighs between a
+    short skirt and over-knee socks, a choker where the neck is open and a cross clip in the bangs. Young
+    characters (fig.modest) keep their outfits as they are."""
+    if not FASHION or not fig.female or fig.modest:
+        return
+    look = fig.look
+    skin = look["skin"]
+    trim = look.get("trim") or look.get("ribbon") or GOLD
+    hem = fig.skirt_hem
+    if hem is not None and fig.legwear not in (None, skin) and fig.boot_top <= 8:
+        top = fig.stocking_top or 8.5
+        if hem > top + 0.6:
+            bare = fig.leg_top - top  # from the top of the thigh down to the sock
+            for thigh in fig.legs_c[0::2]:
+                for f in sides(thigh):
+                    with paint(f) as p:
+                        p.rect(0, 0, p.w, bare, skin)
+                        p.rect(0, 0, p.w, 0.5, shade(skin, 0.84))  # in the skirt's shadow
+                        p.rect(p.w - 0.5, 0, p.w, bare, shade(skin, 0.93))
+                        if not fig.stocking_top:
+                            p.rect(0, bare, p.w, bare + 0.5, mix(fig.legwear, "#ffffff", 0.3))  # the sock's band
+    if look.get("midriff"):  # a cropped top: the waist bare between the chest and the hips
+        lo, hi = fig.segs[2][5] + 0.3, fig.segs[0][4] - 0.2
+        for c in fig.torso + fig.overlays:
+            y0, y1 = c.origin[1] - c.inflate, c.origin[1] + c.size[1] + c.inflate
+            a, b = max(lo, y0), min(hi, y1)
+            if b <= a:
+                continue
+            for f in sides(c):
+                with paint(f) as p:
+                    if c in fig.torso:
+                        p.rect(0, y1 - b, p.w, y1 - a, skin)
+                        if f is c.front and a <= lo + 0.2:
+                            p.rect(p.w / 2 - 0.25, y1 - a - 1.2, p.w / 2 + 0.25, y1 - a - 0.8, shade(skin, 0.8))  # the navel
+                    else:
+                        p.clear(0, y1 - b, p.w, y1 - a)
+                        p.rect(0, y1 - b - 0.3, p.w, y1 - b, trim)  # the top's hem
+    if look.get("shoulders"):  # bare shoulders: the top and sleeves start below them
+        drop = 2.5
+        for c in fig.arms_c:
+            for f in sides(c):
+                with paint(f) as p:
+                    p.rect(0, 0, p.w, drop, skin)
+        for c in fig.sleeve_cubes:
+            for f in sides(c):
+                with paint(f) as p:
+                    p.clear(0, 0, p.w, drop)
+                    p.rect(0, drop, p.w, drop + 0.4, trim)
+        chest = fig.torso[0]
+        for f in sides(chest):
+            with paint(f) as p:
+                p.rect(0, 0, p.w, 1.0, skin)
+                p.rect(0, 1.0, p.w, 1.35, trim)
+        for c in fig.overlays:
+            if c.origin[1] + c.size[1] >= 23.5:
+                for f in sides(c):
+                    with paint(f) as p:
+                        p.clear(0, 0, p.w, 1.0)
+    if fig.neck_open:
+        ch = fig.head.cube((-1, 23, -1), (2, 1, 2), inflate=0.16)
+        toon(ch, look.get("choker", "#1c1620"))
+        hollow(ch)
+        with paint(ch.front) as p:
+            p.rect(p.w / 2 - 0.5, 0.25, p.w / 2 + 0.5, 1, trim)
+    if not fig.headwear and look.get("style") != "bald":
+        hair_clip(fig, look.get("clip") or ("x", "bars", "bow", "star", None)[zlib.crc32(fig.m.name.encode()) % 5])
+
+
+def hair_clip(fig, kind):
+    """A small ornament in the bangs over one eye: crossed pins, two bars, a ribbon bow or a star."""
+    if not kind:
+        return
+    look = fig.look
+    H = Figure.HEAD
+    color = look.get("ribbon") or look.get("clip_color") or ("#e0405a", "#f6d968", "#59b8ff", "#f08ac8")[zlib.crc32(fig.m.name.encode()) % 4]
+    x, y, z = -H / 2 + 1.5, 24 + H - 2.3, -H / 2 - 1.75
+    if kind == "x":
+        for rz in (45, -45):
+            c = fig.head.cube((x - 0.5, y - 1, z - 0.5), (1, 2, 1), rotation=(0, 0, rz), pivot=(x, y, z), inflate=-0.25)
+            toon(c, color)
+    elif kind == "bars":
+        for dy in (0.0, -0.9):
+            c = fig.head.cube((x - 1, y + dy - 0.5, z - 0.5), (2, 1, 1), rotation=(0, 0, 20), pivot=(x, y, z), inflate=-0.3)
+            toon_metal(c, color)
+    elif kind == "bow":
+        for sx in (-1, 1):
+            c = fig.head.cube((x + (0.2 if sx > 0 else -1.2) - 0.5, y - 0.5, z - 0.5), (2, 1, 1), rotation=(0, 0, sx * -25),
+                              pivot=(x, y, z), inflate=-0.2)
+            toon(c, color)
+        k = fig.head.cube((x - 0.5, y - 0.5, z - 0.6), (1, 1, 1), inflate=-0.25)
+        toon(k, shade(color, 0.8))
+    elif kind == "star":
+        for rz in (0, 45):
+            c = fig.head.cube((x - 0.5, y - 0.5, z - 0.5), (1, 1, 1), rotation=(0, 0, rz), pivot=(x, y, z), inflate=-0.05)
+            toon_metal(c, color)
+
+
 def clothe(fig, top, bottom, legs=None, sleeve=None, sleeve_to=0.0, hands=None, neckline="round", trim=None):
     """The base clothes: the top over chest and waist, the bottom over the hips, the legs (trousers, hose or
     stockings) and sleeves down the arms to `sleeve_to` (0 = the wrist; 6 = short sleeves)."""
     skin = fig.look["skin"]
     sleeve = sleeve or top
     legs = legs or bottom
-    for i, cube in enumerate(fig.torso):
-        toon(cube, top if i < 2 else bottom)
+    hips_top = fig.segs[2][5]
+    for cube in fig.torso:
+        toon(cube, top if cube.origin[1] + cube.size[1] / 2 >= hips_top else bottom)
     chest = fig.torso[0]
     with paint(chest.front) as p:
         cx = p.w / 2
@@ -1080,11 +1296,19 @@ def clothe(fig, top, bottom, legs=None, sleeve=None, sleeve_to=0.0, hands=None, 
     for cube in fig.legs_c:
         toon(cube, legs, top=0.0, bottom=0.15)
     fig.chest = (top, "cloth", 0.08)
+    fig.legwear = legs
+    fig.neck_open = neckline in ("v", "round", "none")
 
 
 def bust(fig, color, kind="cloth", inflate=0.08):
     z = fig.front - 0.9
-    b = fig.body.cube((-2.5, 19, z), (5, 3, 1), inflate=inflate)
+    if SMOOTH:  # rounder: a fuller lower part and a tapering upper one
+        z -= 0.05
+        up = fig.body.cube((-2.5, 21, z + 0.3), (5, 1, 1), inflate=inflate - 0.08)
+        {"metal": lambda c: toon_metal(c, color), "leather": lambda c: toon_leather(c, color, stitch=False)}.get(kind, lambda c: toon(c, color))(up)
+        b = fig.body.cube((-2.5, 19, z), (5, 2, 1), inflate=inflate + 0.1)
+    else:
+        b = fig.body.cube((-2.5, 19, z), (5, 3, 1), inflate=inflate)
     if kind == "metal":
         toon_metal(b, color)
     elif kind == "leather":
@@ -1099,6 +1323,7 @@ def bust(fig, color, kind="cloth", inflate=0.08):
 def wrap(fig, y0, y1, color, kind="cloth", extra=0.3, chest=True, trim=None):
     """A layer over the torso between two heights: a vest, a corset, plate."""
     cubes = fig.wrap(y0, y1, extra)
+    fig.overlays += cubes
     for c in cubes:
         {"metal": lambda c: toon_metal(c, color, trim), "leather": lambda c: toon_leather(c, color)}.get(kind, lambda c: toon(c, color))(c)
         hollow(c)
@@ -1128,6 +1353,10 @@ def flared_skirt(fig, color, length=5, trim=None, flare=16, pleats=True, second=
     """A skirt that flares out from the hips: eight tilted panels (front, back, sides and corners)."""
     x0, w, z0, d, y0, y1, inf = fig.segs[2]
     top = y1 if top is None else top
+    if FASHION and length >= 9:
+        length += 1  # gowns still reach the ankles over the longer legs
+    hem = top - length * math.cos(math.radians(flare))
+    fig.skirt_hem = hem if fig.skirt_hem is None else min(fig.skirt_hem, hem)
     hw, hd = w / 2 + inf + 0.1, d / 2 + inf + 0.1
     panels = [
         ((-hw, top - length, -hd - 0.6), (int(w), length, 1), (-flare, 0, 0), (0, top, -hd)),
@@ -1172,7 +1401,16 @@ def sleeves(fig, color, length=5, trim=None, flare=0.5, wide=False):
         toon(c, color)
         hollow(c)
         out.append(c)
-        if wide:  # a bell cuff at the wrist
+        fig.sleeve_cubes.append(c)
+        if wide and FASHION:  # big anime sleeves, wide and hanging past the hand
+            cuff = limb.cube(limb.y0 - 1, limb.y0 + 4, flare + 0.85)
+            toon(cuff, color)
+            hollow(cuff)
+            if trim:
+                for f in sides(cuff):
+                    with paint(f) as p:
+                        p.rect(0, p.h - 0.5, p.w, p.h, trim)
+        elif wide:  # a bell cuff at the wrist
             cuff = limb.cube(limb.y0 + 1, limb.y0 + 4, flare + 0.45)
             toon(cuff, color)
             hollow(cuff)
@@ -1208,12 +1446,17 @@ def gloves(fig, color):
 
 def boots(fig, color, height=5, cuff=None, kind="leather", heel=False):
     out = []
+    fig.boot_top = max(fig.boot_top, height)
     for limb in fig.leg_l:
         c = limb.bone.cube((limb.x0, 0, limb.z0), (limb.w, height, limb.d), inflate=limb.inflate + 0.25)
         (toon_metal(c, color) if kind == "metal" else toon_leather(c, color, stitch=False))
         toe = limb.bone.cube((limb.x0, 0, limb.z0 - 0.75), (limb.w, 1, 1), inflate=limb.inflate + 0.25)
         (toon_metal(toe, color) if kind == "metal" else toon(toe, shade(color, 0.92)))
-        if cuff:
+        if cuff and SMOOTH:  # the turned-down top, painted on
+            for f in sides(c):
+                with paint(f) as p:
+                    p.rect(0, 0, p.w, 0.9, cuff).rect(0, 0.9, p.w, 1.1, shade(cuff, 0.7))
+        elif cuff:
             band_ = limb.bone.cube((limb.x0, height - 1, limb.z0), (limb.w, 1, limb.d), inflate=limb.inflate + 0.4)
             toon(band_, cuff)
             hollow(band_)
@@ -1226,11 +1469,16 @@ def boots(fig, color, height=5, cuff=None, kind="leather", heel=False):
 
 def stockings(fig, color, height=9, band_color=None):
     """Thigh-high stockings over bare legs."""
+    fig.stocking_top = max(fig.stocking_top or 0, height)
     for limb in fig.leg_l:
         c = limb.bone.cube((limb.x0, 0, limb.z0), (limb.w, height, limb.d), inflate=limb.inflate + 0.06)
         toon(c, color, top=0.0, bottom=0.1)
         hollow(c)
-        if band_color:
+        if band_color and SMOOTH:
+            for f in sides(c):
+                with paint(f) as p:
+                    p.rect(0, 0, p.w, 0.6, band_color)
+        elif band_color:
             b = limb.bone.cube((limb.x0, height - 1, limb.z0), (limb.w, 1, limb.d), inflate=limb.inflate + 0.12)
             toon(b, band_color)
             hollow(b)
@@ -1322,6 +1570,7 @@ def sailor_collar(fig, color, stripe="#f4f1ea"):
 
 
 def collar(fig, color, fur=False, height=2):
+    fig.neck_open = False
     x0, w, z0, d, y0, y1, inf = fig.segs[0]
     c = fig.body.cube((x0 - 0.5, 24 - height + 0.5, z0 - 0.5), (int(w + 1), height, int(d + 1)), inflate=0.2)
     if fur:
@@ -1343,6 +1592,8 @@ def collar(fig, color, fur=False, height=2):
 
 
 def hood(fig, color, lining=None, peak=True, open_rows=(1.6, 9)):
+    fig.neck_open = False
+    fig.headwear = True
     H = Figure.HEAD
     h = fig.head.cube((-H / 2, 24, -H / 2), (H, H, H), inflate=0.8)
     toon(h, color)
@@ -1372,6 +1623,8 @@ def circlet(fig, color=GOLD, gem=None, y=None):
 
 
 def veil(fig, color, band=None, length=12):
+    fig.neck_open = False
+    fig.headwear = True
     H = Figure.HEAD
     v = fig.head.cube((-H / 2, 24, -H / 2), (H, H, H), inflate=0.6)
     toon(v, color)
@@ -1390,6 +1643,8 @@ def veil(fig, color, band=None, length=12):
 
 
 def mask(fig, color, skull=False):
+    fig.neck_open = False
+    fig.headwear = True
     H = Figure.HEAD
     if skull:
         mk = fig.head.cube((-H / 2, 24, -H / 2 - 0.7), (H, H, 1))
@@ -1412,6 +1667,7 @@ def mask(fig, color, skull=False):
 
 # ------------------------------------------------------------------------------------------ headgear
 def helm(fig, metal, trim=GOLD, plume=None, visor=True, wings=None, horns=None, open_face=False):
+    fig.headwear = True
     H = Figure.HEAD
     h = fig.head.cube((-H / 2, 24, -H / 2), (H, H, H), inflate=0.7)
     toon_metal(h, metal)
@@ -1441,6 +1697,7 @@ def helm(fig, metal, trim=GOLD, plume=None, visor=True, wings=None, horns=None, 
 
 
 def wizard_hat(fig, color, band=GOLD, wide=7, bent=True):
+    fig.headwear = True
     H = Figure.HEAD
     y = 24 + H - 0.5
     brim = fig.head.cube((-wide, y, -wide), (wide * 2, 1, wide * 2))
@@ -1467,6 +1724,7 @@ def wizard_hat(fig, color, band=GOLD, wide=7, bent=True):
 
 
 def cap(fig, color, feather=None):
+    fig.headwear = True
     H = Figure.HEAD
     c = fig.head.cube((-H / 2, 24 + H - 2.5, -H / 2), (H, 3, H), inflate=0.65)
     toon(c, color)
@@ -1940,7 +2198,10 @@ def mage(fig, L):
         belt(fig, LEATHER_D, trim, sash=second, pouch=False)
         hair_style(fig)
         H = Figure.HEAD
-        lock(fig, (0, 25, -H / 2 - 0.9), 5, 7, 1, (6, 0, 0), "point", ring=False)  # the long beard
+        if FASHION:
+            beard(fig, "long")
+        else:
+            lock(fig, (0, 25, -H / 2 - 0.9), 5, 7, 1, (6, 0, 0), "point", ring=False)  # the long beard
         wizard_hat(fig, cloth, trim)
         staff(fig, "orb", orb=orb, trim=trim)
     elif cut == "witch":
@@ -2248,7 +2509,7 @@ LOOKS = [
     dict(name="Knight", face="sharp", helmet="full", voc=0, sex="m", cut="knight", skin="#f2d2bc", hair="#5a3a26", style="short", fringe="spiky", eyes="#3a6ad0", main="#2f4f9f", plume="#d0302c"),
     dict(name="Swordsman", face="sharp", voc=0, sex="m", cut="swordsman", skin="#e8c2a4", hair="#c8402a", style="wild", fringe="spiky", eyes="#d08a2a", main="#9f2a2a", scar=True),
     dict(name="Ranger", helmet="hood", voc=1, sex="m", cut="ranger", skin="#f2d6c0", hair="#d8b048", style="short", fringe="swept", eyes="#3aa04a", main="#3f7a4a"),
-    dict(name="Hunter", face="sharp", voc=1, sex="m", cut="hunter", skin="#a8704a", hair="#1f1a16", style="short", fringe="short", eyes="#8a5a2a", main="#6b4a36", second="#7a5a3a", beard=True),
+    dict(name="Hunter", face="sharp", voc=1, sex="m", cut="hunter", skin="#a8704a", hair="#1f1a16", style="short", fringe="short", eyes="#8a5a2a", main="#6b4a36", second="#7a5a3a", beard="short"),
     dict(name="Sorcerer", face="sharp", helmet="hood", voc=2, sex="m", cut="sorcerer", skin="#f6e2d4", hair="#6a4a8a", style="short", fringe="parted", eyes="#a050e0", main="#4a2a7a", second="#6a3aa0", orb="#c05bff"),
     dict(name="Wizard", helmet="hat", voc=2, sex="m", cut="wizard", skin="#ecc8aa", hair="#eceae4", style="long", fringe="parted", eyes="#3a9ad0", main="#22336c", second="#6a4a9f", orb="#59d0ff"),
     dict(name="Priest", helmet="hat", voc=3, sex="m", cut="priest", skin="#f8e6d8", hair="#f0d070", style="short", fringe="swept", eyes="#3a7ad0", main="#f6f3ec", second="#e8c870", orb="#f6d968"),
@@ -2259,37 +2520,38 @@ LOOKS = [
     dict(name="Skald", face="sharp", helmet="open", voc=5, sex="m", cut="skald", skin="#f0cfb2", hair="#e0cfa0", style="braid", fringe="swept", eyes="#3a7ad0", main="#3a5a8a", beard=True, trim="#c9b98a"),
     # v11: the women of every vocation
     dict(name="Valkyrie", helmet="open", voc=0, sex="f", cut="valkyrie", skin="#fae2d2", hair="#f4d470", tip="#fff0b0", style="braid", fringe="parted", eyes="#3a9ae0", main="#2f4f9f", metal="#dfe4ec", ribbon="#2f4f9f"),
-    dict(name="Shieldmaiden", face="sharp", voc=0, sex="f", cut="shieldmaiden", skin="#f2d2bc", hair="#d0502e", tip="#f0a040", style="ponytail", fringe="swept", eyes="#4aa04a", main="#5a7a4a", shield="#8a2a22", ribbon="#e9e3cf"),
-    dict(name="Huntress", voc=1, sex="f", cut="huntress", skin="#eccaac", hair="#6a4428", style="ponytail", fringe="swept", eyes="#8a6a2a", main="#3f7a4a", second="#7a5238", ribbon="#3f7a4a"),
+    dict(name="Shieldmaiden", midriff=True, face="sharp", voc=0, sex="f", cut="shieldmaiden", skin="#f2d2bc", hair="#d0502e", tip="#f0a040", style="ponytail", fringe="swept", eyes="#4aa04a", main="#5a7a4a", shield="#8a2a22", ribbon="#e9e3cf"),
+    dict(name="Huntress", midriff=True, voc=1, sex="f", cut="huntress", skin="#eccaac", hair="#6a4428", style="ponytail", fringe="swept", eyes="#8a6a2a", main="#3f7a4a", second="#7a5238", ribbon="#3f7a4a"),
     dict(name="Windrunner", voc=1, sex="f", cut="windrunner", skin="#fae8dc", hair="#f4f6fa", tip="#7ae0c0", style="long", fringe="parted", eyes="#2ac0b0", main="#2f8a7a", second="#ecebe4", trim="#d9a92b", gem="#59d0ff"),
-    dict(name="Witch", helmet="hat", voc=2, sex="f", cut="witch", skin="#fae4d6", hair="#7a4ab0", tip="#e070c0", style="long", fringe="hime", eyes="#5ad06a", main="#2a1f3e", second="#5a2a7a", trim="#b07af0", orb="#63ff6b", ahoge=True),
-    dict(name="Enchantress", voc=2, sex="f", cut="enchantress", skin="#f6dcc8", hair="#d8e2f2", tip="#7ab0f0", style="long", fringe="parted", eyes="#4a80f0", main="#2a4a90", second="#a8c0e0", trim="#ecebe4", orb="#59d0ff"),
+    dict(name="Witch", shoulders=True, helmet="hat", voc=2, sex="f", cut="witch", skin="#fae4d6", hair="#7a4ab0", tip="#e070c0", style="long", fringe="hime", eyes="#5ad06a", main="#2a1f3e", second="#5a2a7a", trim="#b07af0", orb="#63ff6b", ahoge=True),
+    dict(name="Enchantress", shoulders=True, voc=2, sex="f", cut="enchantress", skin="#f6dcc8", hair="#d8e2f2", tip="#7ab0f0", style="long", fringe="parted", eyes="#4a80f0", main="#2a4a90", second="#a8c0e0", trim="#ecebe4", orb="#59d0ff"),
     dict(name="Priestess", helmet="veil", voc=3, sex="f", cut="priestess", skin="#fbe8dc", hair="#f8dc78", tip="#fff4c8", style="long", fringe="hime", eyes="#3a9ae0", main="#fdfcf8", second="#f4ead0", trim="#d9a92b"),
     dict(name="Battle Sister", helmet="veil", voc=3, sex="f", cut="battle_sister", skin="#a8704a", hair="#1f1a16", style="bob", fringe="hime", eyes="#8a5a2a", main="#24222e", trim="#d9a92b"),
     dict(name="Shadow Dancer", face="sharp", voc=4, sex="f", cut="shadow_dancer", skin="#f2d2bc", hair="#1e1828", tip="#6a3a9a", style="bob", fringe="hime", eyes="#c050f0", main="#2c2040", second="#3e2c58", trim="#c0a8e8", sash="#9a3af0"),
-    dict(name="Nightblade", face="sharp", voc=4, sex="f", cut="nightblade", skin="#fae4d6", hair="#262e48", tip="#6a3ab0", style="ponytail", fringe="swept", eyes="#e0303a", main="#1f2436", second="#2c3248", trim="#8a909c", scarf="#b8322e", ribbon="#b8322e"),
-    dict(name="Songstress", voc=5, sex="f", cut="songstress", skin="#fae2d2", hair="#d8703a", tip="#f0c050", style="long", fringe="parted", eyes="#4ab04a", main="#b0222e", second="#f0c050", gem="#e0405a"),
-    dict(name="Blade Dancer", voc=5, sex="f", cut="blade_dancer", skin="#c8906a", hair="#1f1a16", style="buns", fringe="hime", eyes="#e0b040", main="#1f8a8a", second="#38b0b0", trim="#f0c050", sash="#f0c050", ribbon="#f0c050"),
+    dict(name="Nightblade", midriff=True, face="sharp", voc=4, sex="f", cut="nightblade", skin="#fae4d6", hair="#262e48", tip="#6a3ab0", style="ponytail", fringe="swept", eyes="#e0303a", main="#1f2436", second="#2c3248", trim="#8a909c", scarf="#b8322e", ribbon="#b8322e"),
+    dict(name="Songstress", shoulders=True, voc=5, sex="f", cut="songstress", skin="#fae2d2", hair="#d8703a", tip="#f0c050", style="long", fringe="parted", eyes="#4ab04a", main="#b0222e", second="#f0c050", gem="#e0405a"),
+    dict(name="Blade Dancer", midriff=True, shoulders=True, voc=5, sex="f", cut="blade_dancer", skin="#c8906a", hair="#1f1a16", style="buns", fringe="hime", eyes="#e0b040", main="#1f8a8a", second="#38b0b0", trim="#f0c050", sash="#f0c050", ribbon="#f0c050"),
     # v11: the Monks and the Necromancers
     dict(name="Martial Monk", face="sharp", voc=6, sex="m", cut="martial", skin="#f0cfb2", hair="#15131a", style="short", fringe="spiky", eyes="#5a3a2a", main="#f6f3ec", second="#1a1418", band="#d0302c"),
     dict(name="Ascetic", face="sharp", voc=6, sex="m", cut="ascetic", skin="#c8906a", hair="#15131a", style="topknot", eyes="#6a4a2a", main="#f08a20", second="#b83a18", trim="#f6d968"),
-    dict(name="Wind Disciple", voc=6, sex="f", cut="wind", skin="#fae2d2", hair="#2a5a9a", tip="#7ac8f0", style="ponytail", fringe="swept", eyes="#3a9ae0", main="#a8d8f8", second="#f4f1ea", trim="#ecebe4", ribbon="#f4f1ea", ahoge=True),
-    dict(name="Lotus Fist", voc=6, sex="f", cut="lotus", skin="#fae4d6", hair="#1a1418", style="buns", fringe="hime", eyes="#a03a2a", main="#c0141c", second="#f6d968", trim="#e0b030", ribbon="#e0b030"),
+    dict(name="Wind Disciple", shoulders=True, voc=6, sex="f", cut="wind", skin="#fae2d2", hair="#2a5a9a", tip="#7ac8f0", style="ponytail", fringe="swept", eyes="#3a9ae0", main="#a8d8f8", second="#f4f1ea", trim="#ecebe4", ribbon="#f4f1ea", ahoge=True),
+    dict(name="Lotus Fist", midriff=True, voc=6, sex="f", cut="lotus", skin="#fae4d6", hair="#1a1418", style="buns", fringe="hime", eyes="#a03a2a", main="#c0141c", second="#f6d968", trim="#e0b030", ribbon="#e0b030"),
     dict(name="Necromancer", face="sharp", helmet="hood", voc=7, sex="m", cut="necromancer", skin="#e6dfd6", hair="#2a2632", style="short", fringe="parted", eyes="#7df0c8", main="#1f1a2a", second="#2c2040", trim="#9a3af0", orb="#c05bff"),
     dict(name="Bone Sage", face="sharp", voc=7, sex="m", cut="bone_sage", skin="#cfc6ba", hair="#8a8680", style="crop", eyes="#7df0c8", main="#4a4656", trim="#c9c0a0", orb="#7df0c8", glow="#7df0c8"),
-    dict(name="Death Witch", face="sharp", helmet="hat", voc=7, sex="f", cut="death_witch", skin="#f2eae4", hair="#18151e", tip="#2f8a4a", style="long", fringe="hime", eyes="#63ff6b", main="#2c2040", second="#1a1424", trim="#6ad07a", orb="#63ff6b"),
-    dict(name="Grave Maiden", face="sharp", voc=7, sex="f", cut="grave_maiden", skin="#f4e8ea", hair="#2a1e30", tip="#c04a9a", style="long", fringe="heavy", eyes="#d070ff", glow="#d070ff", main="#18141e", second="#8a3ad0", trim="#d0c8dc", length=24, strands=8),
+    dict(name="Death Witch", shoulders=True, face="sharp", helmet="hat", voc=7, sex="f", cut="death_witch", skin="#f2eae4", hair="#18151e", tip="#2f8a4a", style="long", fringe="hime", eyes="#63ff6b", main="#2c2040", second="#1a1424", trim="#6ad07a", orb="#63ff6b"),
+    dict(name="Grave Maiden", shoulders=True, face="sharp", voc=7, sex="f", cut="grave_maiden", skin="#f4e8ea", hair="#2a1e30", tip="#c04a9a", style="long", fringe="heavy", eyes="#d070ff", glow="#d070ff", main="#18141e", second="#8a3ad0", trim="#d0c8dc", length=24, strands=8),
 ]
 
 
 def build(n):
     def make():
         look = LOOKS[n]
-        fig = Figure(n, look)
+        fig = Figure(n, look, modest=look.get("modest", False))
         paint_skin(fig)
         paint_face(fig)
         VOCATION_BUILDERS[look["voc"]](fig, look)
-        if fig.female and not look.get("flat") and fig.chest:
+        fashion(fig)
+        if fig.female and not look.get("flat") and not (fig.modest and FASHION) and fig.chest:
             color, kind, inflate = fig.chest
             bust(fig, color, kind, inflate)
         return fig.m

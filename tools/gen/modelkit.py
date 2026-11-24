@@ -181,6 +181,7 @@ class Bone:
 
     def cube(self, origin, size, inflate=0.0, rotation=None, pivot=None):
         c = Cube(origin, size, inflate, rotation, pivot, self.res)
+        c.bone = self.name
         self.cubes.append(c)
         return c
 
