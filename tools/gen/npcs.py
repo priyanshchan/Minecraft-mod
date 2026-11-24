@@ -279,9 +279,19 @@ def scale_cloak(fig, color="#c9a53c"):
 
 # ------------------------------------------------------------------------------------------ the people
 MODEST = {"aura", "mare", "entoma", "shalltear", "evileye", "cz_delta", "enri", "neia"}  # young: dressed as they are
+# How broadly each grown-up is built (v11.2.1): the brawlers and soldiers broad, the sages and elves lean.
+WIDTH = {"gazef": 1.16, "dwarf": 1.22, "zero": 1.18, "arena_master": 1.12, "imperial_knight": 1.12, "guard": 1.1,
+         "soldier": 1.1, "paladin": 1.12, "remedios": 1.1, "bandit": 1.08, "brain": 1.04, "sebas": 1.06, "climb": 1.04,
+         "nigun": 1.02, "khajiit": 0.96, "fluder": 0.96, "demiurge": 1.02, "pandoras_actor": 1.0, "ainz": 1.06,
+         "theocracy_priest": 1.02, "adventurer": 1.06, "archer": 1.02, "decem": 0.98, "elf_ranger": 0.98, "nfirea": 0.98,
+         "albedo": 1.06, "clementine": 1.05, "lakyus": 1.06, "narberal": 1.03, "lupusregina": 1.06, "solution": 1.08,
+         "yuri": 1.07, "nazarick_maid": 1.03, "zesshi": 1.02, "vampire_bride": 1.04, "rubedo": 1.0, "pinison": 1.0}
 
 
 def build_person(name, look, dress, bones=()):
+    if name in WIDTH:
+        look = dict(look, width=WIDTH[name])
+
     def make():
         fig = Figure(0, look, name=name, bones=bones, modest=name in MODEST)
         paint_skin(fig)

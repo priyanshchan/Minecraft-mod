@@ -40,6 +40,22 @@ STYLES = {
 }
 STYLE = "pixel"
 HEAD_SCALE = 1.0  # how much bigger a person's head is drawn in game (an always-on animation scales the bone)
+# v11.2.1: grown-ups are not drawn as children: a head only a little bigger, legs a quarter longer (the figure lifted
+# to stand on them), so they stand taller than before. Children (modest) keep the big head on a small figure.
+ADULT_HEAD = 1.05
+ADULT_LEGS = 1.25
+# v11.2.1: how broad a grown-up is built, by vocation (men, women): warriors and monks broad, mages and the dead lean
+BUILD = {0: (1.16, 1.08), 1: (1.06, 1.04), 2: (1.0, 1.03), 3: (1.03, 1.04), 4: (1.02, 1.03), 5: (1.04, 1.05),
+         6: (1.14, 1.06), 7: (1.0, 1.03)}
+
+
+def width_of(look):
+    """How much wider than the plain figure a grown-up is drawn (the look's own "width", else its vocation's)."""
+    if "width" in look:
+        return look["width"]
+    m, f = BUILD.get(look.get("voc"), (1.06, 1.05))
+    return f if look["sex"] == "f" else m
+ADULT_CAPE = 1.18
 EYE_KIT = "anime"  # "anime" (v11.1 eyes) or "big" (bigger eyes under heavy lashes)
 FASHION = False  # the anime Blockbench build and dress: longer legs, over-knee socks, chokers, hair clips
 SMOOTH = False  # one light falling down the whole figure (no stripes where boxes stack) and gentle tapers
@@ -478,13 +494,20 @@ class Figure:
         self.modest = modest  # young characters keep their outfits and a plain figure
         self.trans = []  # thin boxes between the chest, waist and hips that smooth the figure's curves
         self.m = m = Model(name or f"retainer_{n}", bounds=(4.0, 4.2, 1.5), res=R)
-        legs = self.leg_top = (13 if f else 12) + (1 if FASHION else 0)  # long legs (longer still, anime-model style)
+        legs = self.leg_top = 14 if FASHION else (13 if f else 12)  # long legs (longer still, anime-model style)
         self.root = m.bone("root", (0, 0, 0))
         self.body = m.bone("body", (0, 24, 0), parent="root")
         self.head = m.bone("head", (0, 24, 0), parent="body")
-        if HEAD_SCALE != 1.0:  # a bigger head, the whole figure scaled down to stand as tall as before
+        self.legs_scaled = []
+        if HEAD_SCALE != 1.0 and modest:  # a child: a big head, the figure scaled down to stand as tall as before
             self.head.scale = HEAD_SCALE
             m.view_scale = 32 / (24 + Figure.HEAD * HEAD_SCALE)
+        elif HEAD_SCALE != 1.0:  # a grown-up: long legs (the whole figure lifted onto them), broad as built, and a
+            # head only a little bigger (and not widened with the rest)
+            w = self.width = width_of(look)
+            self.root.scale = (w, 1.0, w)
+            self.head.scale = (ADULT_HEAD / w, ADULT_HEAD, ADULT_HEAD / w)
+            self.root.offset = (0.0, legs * (ADULT_LEGS - 1), 0.0)
         self.rarm = m.bone("rightArm", (-4, 23, 0) if f else (-5, 22.5, 0), parent="body")
         self.larm = m.bone("leftArm", (4, 23, 0) if f else (5, 22.5, 0), parent="body")
         self.rleg = m.bone("rightLeg", (-1.6, legs, 0) if f else (-1.9, legs, 0), parent="root")
@@ -509,7 +532,7 @@ class Figure:
             if SMOOTH:
                 self.segs = [(-3.5, 7, -2, 4, 18, 24, 0.0), (-3.5, 7, -2, 4, 15, 18, -0.14), (-3.5, 7, -2, 4, 13, 15, -0.04)]
                 if not modest:  # a man's figure: broad shoulders tapering to a narrow waist
-                    self.segs = [(-3.5, 7, -2, 4, 18, 24, 0.22), (-3.5, 7, -2, 4, 15, 18, -0.2), (-3.5, 7, -2, 4, 13, 15, -0.06)]
+                    self.segs = [(-3.5, 7, -2, 4, 18, 24, 0.22), (-3.5, 7, -2, 4, 15, 18, -0.2), (-3.5, 7, -2, 4, 14, 15, -0.06)]
                     self.trans = [(-3.5, 7, -2, 4, 17, 18, 0.0)]
             self.arm_l = [Limb(self.rarm, -6.5, 3, -1.5, 3, 12, 24), Limb(self.larm, 3.5, 3, -1.5, 3, 12, 24)]
             self.leg_l = [Limb(self.rleg, -3.4, 3, -1.5, 3, 0, legs, 0.1), Limb(self.lleg, 0.4, 3, -1.5, 3, 0, legs, 0.1)]
@@ -548,6 +571,10 @@ class Figure:
         # bones some creatures' animations move: a robe that sways, a tail, wings (v11.1, for the NPCs)
         hips = self.segs[2]
         self.robe = m.bone("robe", (0, hips[5], 0), parent="body") if "robe" in bones else None
+        if HEAD_SCALE != 1.0 and not modest:  # the grown-up's longer legs; a gown and a cape fall with them
+            for b in (self.rleg, self.lleg) + ((self.robe,) if self.robe else ()):
+                b.scale = (1.0, ADULT_LEGS, 1.0)
+            self.cape.scale = (1.0, ADULT_CAPE, 1.0)
         self.tail = m.bone("tail", (0, hips[4] + 1, self.back), parent="body") if "tail" in bones else None
         self.rwing = m.bone("rightWing", (-1.5, 21, self.back + 0.5), parent="body") if "wings" in bones else None
         self.lwing = m.bone("leftWing", (1.5, 21, self.back + 0.5), parent="body") if "wings" in bones else None

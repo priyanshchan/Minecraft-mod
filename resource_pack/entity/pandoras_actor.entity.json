@@ -22,9 +22,11 @@
           "flinch",
           "lean",
           "follow",
-          "chibi_head"
+          "adult_figure"
         ],
-        "scale": "0.9412"
+        "pre_animation": [
+          "variable.width = 1.0;"
+        ]
       },
       "animations": {
         "look_at_target": "animation.overlord.look_at_target",
@@ -35,7 +37,7 @@
         "flinch": "animation.overlord.flinch",
         "lean": "animation.overlord.lean",
         "follow": "animation.overlord.follow",
-        "chibi_head": "animation.overlord.chibi_head"
+        "adult_figure": "animation.overlord.adult_figure"
       },
       "render_controllers": [
         "controller.render.overlord.entity"

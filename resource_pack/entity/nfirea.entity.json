@@ -20,9 +20,11 @@
           "breathe",
           "flinch",
           "lean",
-          "chibi_head"
+          "adult_figure"
         ],
-        "scale": "0.9412"
+        "pre_animation": [
+          "variable.width = 0.98;"
+        ]
       },
       "animations": {
         "look_at_target": "animation.overlord.look_at_target",
@@ -31,7 +33,7 @@
         "breathe": "animation.overlord.breathe",
         "flinch": "animation.overlord.flinch",
         "lean": "animation.overlord.lean",
-        "chibi_head": "animation.overlord.chibi_head"
+        "adult_figure": "animation.overlord.adult_figure"
       },
       "render_controllers": [
         "controller.render.overlord.entity"
