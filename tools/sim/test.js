@@ -637,12 +637,16 @@ party.shareKill(j, mob("minecraft:zombie", 20), () => 0.99); assert.equal(coinsO
 party.release(j, 2); assert.ok(party.hire(j, { name: "Zed", look: 5, level: 5, cost: 0 }).includes("joins")); party.summon(j); advance(45);
 assert.equal(party.formationOf(j).name, "Mage specialists");
 party.release(j, 3); assert.ok(party.hire(j, { name: "Lute", look: 10, level: 20, cost: 0 }).includes("Minstrel")); party.summon(j); advance(45);
-assert.equal(party.formationOf(j).name, "Balanced formation"); j.effects.clear(); lurker.afflicted.length = 0;
+assert.equal(party.formationOf(j).name, "Balanced formation"); j.effects.clear();
 world.afterEvents.entityHurt.fire({ hurtEntity: lurker, damage: 1, damageSource: { damagingEntity: j, cause: "entityAttack" } }); advance(45);
-assert.ok(j.effects.has("strength") && j.effects.has("speed"), "Ballad of Valour"); assert.ok(lurker.afflicted.includes("weakness"), "Dirge");
+// v11: companions fight on their own, so the bard may already have sung its Dissonance before the master struck
+assert.ok(j.effects.has("strength") && j.effects.has("speed"), "Ballad of Valour"); assert.ok([lurker, biter].some((m) => m.afflicted.includes("weakness")), "Dissonance");
 // saves from before this version are filled in and cleaned up
 const k = mkPlayer("kit"); rpg.profileOf(k).party = [{ name: "Old", look: 99, hired: true, level: 7, traits: ["keen", "bogus", "keen"], bond: 500 }];
-assert.deepEqual(party.partyOf(k)[0], { name: "Old", look: 11, gear: 0, hired: true, level: 7, out: false, xp: 0, bond: 100, tactic: 0, traits: ["keen"], gift: -1, persona: party.personaOf({ name: "Old" }) }, "older members are given a temper from their name");
+assert.deepEqual(party.partyOf(k)[0], { name: "Old", look: 31, gear: 0, hired: true, level: 7, out: false, xp: 0, bond: 100, tactic: 0, traits: ["keen"], gift: -1, persona: party.personaOf({ name: "Old" }),
+  branch: -1, mastery: -1, talk: -1 }, "older members are given a temper from their name, and no path yet (v11)");
+rpg.profileOf(k).party = [{ name: "Odd", look: 3, hired: true, level: 70, branch: 7, mastery: 1 }, { name: "Fine", look: 30, hired: true, level: 70, branch: 1, mastery: 0 }];
+assert.deepEqual(party.partyOf(k).map((m) => [m.branch, m.mastery]), [[-1, -1], [1, 0]], "a broken path is cleared, a sound one kept");
 
 // ---- v5.0: older systems tied into the newer ones ----
 // class advancement: at level 40 a class takes its advanced form, with a better skill on a shorter cooldown
@@ -912,15 +916,22 @@ players.splice(0, players.length, ...everyone, zoe);
   advance(1); lux.fx = []; vfx.beam(lux.dimension, { x: 0, y: 66, z: 0 }, { x: 0, y: 66, z: 8 }, "holy"); assert.ok(drew("beam_core") === 1 && drew("beam_glow") === 1, "a beam has a core and a glow");
   advance(1); lux.fx = []; vfx.castFx(lux, "arcane", 7, "point"); assert.equal(drew("orbit"), 1, "motes circle a caster of the higher tiers"); advance(20);
 
-  // companions: more attacks as they level, used in turn
-  assert.deepEqual([1, 8, 20, 35, 45].map((lv) => party.attacksKnown(0, lv).length), [1, 2, 4, 5, 6]); assert.equal(party.attacksKnown(2, 40).length, 5, "a seasoned mage has five");
-  for (const kit of party.ATTACKS) { assert.ok(kit.length >= 6, "six attacks for every vocation"); assert.equal(kit[0].level, 1, "everyone starts with one attack"); assert.equal(new Set(kit.map((a) => a.key)).size, kit.length); }
+  // companions (v11): an art every ten levels to 100 - the core three, a path's three from 30, a mastery's five from 60
+  assert.deepEqual([1, 9, 10, 20, 30, 60, 100].map((lv) => party.attacksKnown(0, lv).length), [1, 1, 2, 3, 3, 3, 3], "with no path, the core arts only");
+  assert.deepEqual([30, 40, 50, 60].map((lv) => party.attacksKnown(0, lv, 0).length), [4, 5, 6, 6], "a path's arts at 30, 40 and 50");
+  assert.deepEqual([60, 70, 99, 100].map((lv) => party.attacksKnown(0, lv, 0, 1).length), [7, 8, 10, 11], "a mastery's from 60 to 100");
+  for (let v = 0; v < party.VOCATIONS.length; v++) for (const b of [0, 1]) for (const m of [0, 1]) {
+    assert.deepEqual(party.attacksKnown(v, 100, b, m).map((a) => a.at), [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100], `${party.VOCATIONS[v]} ${b}/${m}`);
+  }
+  assert.equal(party.VOCATIONS.length, 8); assert.equal(party.LOOKS.length, 32);
+  for (const kit of party.ATTACKS) { assert.ok(kit.length >= 6, "the old party's six arts for every vocation"); assert.equal(kit[0].level, 1); assert.equal(new Set(kit.map((a) => a.key)).size, kit.length); }
   const used = []; for (const kit of party.ATTACKS) for (const attack of kit) { const real = attack.use; attack.use = (turn) => { const ok = real(turn); if (ok) used.push([turn.member.name, attack.key]); return ok; }; }
   const target = (name, at) => { const m = mob("minecraft:zombie", 1e6, ["monster", "undead"]); Object.assign(m, { id: name, location: at, dimension: lux.dimension, tags: new Set(), afflicted: [], addEffect(e) { m.afflicted.push(e); },
     applyKnockback() {}, setOnFire() {}, hasTag: (t) => m.tags.has(t), addTag: (t) => m.tags.add(t), getDynamicProperty: () => undefined, applyDamage(n) { m.damaged.push(n); } }); lux.dimension.mobs.push(m); return m; };
   const drill = (leader, looks) => { leader.dimension = lux.dimension; leader.location = { x: 0, y: 64, z: 0 }; rpg.profileOf(leader).level = 40;
-    looks.forEach((look, i) => { if (i === 0) party.createMain(leader, `${leader.name}0`, look); else party.hire(leader, { name: `${leader.name}${i}`, look, level: 40, cost: 0 }); }); party.summon(leader); };
+    looks.forEach((look, i) => { if (i === 0) { party.createMain(leader, `${leader.name}0`, look); party.choosePath(leader, 0, 0); } else party.hire(leader, { name: `${leader.name}${i}`, look, level: 40, cost: 0, branch: 0 }); }); party.summon(leader); };
   const max = mkPlayer("max"); players.push(lux, max); players.splice(0, players.length, lux, max); drill(lux, [0, 2, 4, 6]); drill(max, [8, 10]); advance(45);
+  assert.deepEqual(party.partyOf(lux).map((m) => party.classOf(m)), ["Knight", "Sharpshooter", "Elementalist", "Priest"]);
   const dummy = target("dummy", { x: 2, y: 64, z: 1 }); target("dummy2", { x: 3, y: 64, z: 2 }); target("dummy3", { x: 1, y: 64, z: 3 });
   for (let second = 0; second < 90; second++) {
     if (second % 5 === 0) for (const leader of [lux, max]) world.afterEvents.entityHurt.fire({ hurtEntity: dummy, damage: 1, damageSource: { damagingEntity: leader, cause: "entityAttack" } });
@@ -928,7 +939,7 @@ players.splice(0, players.length, ...everyone, zoe);
   }
   const kinds = (name) => new Set(used.filter(([who]) => who === name).map(([, key]) => key));
   assert.ok(kinds("lux0").size >= 3, `fighter: ${[...kinds("lux0")]}`); assert.ok(!kinds("lux0").has("cry"), "the Rallying Cry is kept for when the master is hurt");
-  assert.ok(kinds("lux1").size >= 4, `archer: ${[...kinds("lux1")]}`); assert.equal(kinds("lux2").size, 5, `mage: ${[...kinds("lux2")]}`);
+  assert.ok(kinds("lux1").size >= 4, `archer: ${[...kinds("lux1")]}`); assert.ok(kinds("lux2").size >= 4, `mage: ${[...kinds("lux2")]}`);
   assert.ok(kinds("lux3").has("smite") && kinds("lux3").has("blessing"), `healer: ${[...kinds("lux3")]}`);
   assert.ok(kinds("max0").size >= 4, `rogue: ${[...kinds("max0")]}`); assert.ok(kinds("max1").size >= 4, `bard: ${[...kinds("max1")]}`);
   for (const name of ["lux1", "lux2", "max0"]) { const mine = used.filter(([who]) => who === name); assert.notEqual(mine[0][1], mine[1][1], `${name} does not repeat itself straight away`); }
@@ -2560,6 +2571,84 @@ fili.location = { x: 9700.5, y: 64, z: 9694.5 }; deeps.tick(now = system.current
   Math.random = () => 0.5; kill(a, monster(0));
   Math.random = realRandom;
   assert.deepEqual(drops.filter((d) => d === "overlord:data_crystal"), ["overlord:data_crystal"], "a monster can drop a crystal where it falls, but usually does not");
+}
+
+// ---- v11: the companions' overhaul - classes and paths, arts to level 100, a mind of their own, and life with the party ----
+{
+  const v = mkPlayer("wilhelmina"); const pv = rpg.profileOf(v); v.dimension = makeLand(); v.dimension.getPlayers = () => [v];
+  v.inv.push(new ItemStack("overlord:yggdrasil_gold_coin", 64)); world.clock.time = 6000;
+  const animated = (e) => { e.anims = []; e.playAnimation = (n) => e.anims.push(n); e.applyImpulse = () => {}; return e; };
+  const companion = (name) => { const e = v.dimension.mobs.find((m) => m.typeId === "overlord:retainer" && m.nameTag.startsWith(name)); return e && (e.anims ? e : animated(e)); };
+  // thirty-two looks: women of every vocation, and the Monks and Necromancers
+  assert.equal(party.LOOKS.length, 32); assert.deepEqual([0, 12, 13, 24, 26, 28, 31].map((look) => party.vocOf({ look })), [0, 0, 0, 6, 6, 7, 7]);
+  // a path from level 30, a mastery from 60, and a retraining for coins
+  pv.level = 20; assert.ok(party.createMain(v, "Seren", 18)); const seren = () => party.partyOf(v)[0];
+  assert.equal(party.classOf(seren()), "Healer"); assert.ok(party.choosePath(v, 0, 0).includes("from level 30"));
+  pv.level = 30; assert.ok(party.choosePath(v, 0, 0).includes("now a Priest")); assert.ok(party.choosePath(v, 0, 1).includes("from level 60"));
+  pv.level = 60; assert.ok(party.choosePath(v, 0, 1).includes("now a Templar")); assert.ok(party.choosePath(v, 0, 0).includes("already mastered"));
+  assert.equal(party.artsOf(v, seren()).length, 7); assert.ok(v.msgs.some((m) => m.includes("becomes a §eTemplar")));
+  const purse = coinsOf(v); assert.ok(party.retrain(v, 0).includes("ready to choose")); assert.equal(coinsOf(v), purse - party.RETRAIN_COST); assert.equal(party.classOf(seren()), "Healer");
+  party.createMain(v, "Seren", 26); assert.equal(party.classOf(seren()), "Monk", "a new look of another vocation");
+  party.createMain(v, "Seren", 18); party.choosePath(v, 0, 0); party.choosePath(v, 0, 0); assert.equal(party.classOf(seren()), "Saint");
+  // a seasoned mercenary comes with a path already walked, and a name to suit
+  const offers = party.candidates(v, () => 0.99); assert.ok(offers.every((o) => o.level === 62 && o.look === 31 && o.branch === 1 && o.mastery === 1), JSON.stringify(offers[0]));
+  assert.equal(party.classOf(offers[0]), "Soul Binder");
+  // companions defend their master unbidden: a monster that comes near is fought though the master never struck it
+  pv.level = 100; party.summon(v); advance(45);
+  assert.ok(party.hire(v, { name: "Kai", look: 24, level: 100, cost: 0, branch: 0, mastery: 0 }).includes("joins")); party.summon(v); advance(45);
+  assert.equal(party.classOf(party.partyOf(v)[1]), "Dragon Fist"); assert.ok(companion("Kai").nameTag.includes("Dragon Fist"), companion("Kai").nameTag);
+  const foeAt = (name, x, z, type = "minecraft:zombie") => { const m = mob(type, 500, ["monster"]); Object.assign(m, { id: name, location: { x, y: 64, z }, dimension: v.dimension, tags: new Set(), afflicted: [],
+    addEffect(e) { m.afflicted.push(e); }, getEffect: () => undefined, removeEffect() {}, applyKnockback() {}, applyImpulse() {}, setOnFire() {}, hasTag: (t) => m.tags.has(t), addTag: (t) => m.tags.add(t),
+    getDynamicProperty: () => undefined, applyDamage(n) { m.damaged.push(n); } }); v.dimension.mobs.push(m); return m; };
+  const gone = (m) => { m.isValid = false; v.dimension.mobs = v.dimension.mobs.filter((x) => x !== m); };
+  const prowler = foeAt("prowler", 2, 1); advance(60); assert.ok(prowler.damaged.length >= 1, "a companion fights a monster near its master on its own"); gone(prowler);
+  // Hold fire starts no fights, but answers whatever hurts the master
+  party.partyOf(v).forEach((_, i) => party.setTactic(v, i, 3)); advance(400);
+  const idler = foeAt("idler", 2, -1); advance(60); assert.equal(idler.damaged.length, 0, "Hold fire starts no fights");
+  world.afterEvents.entityHurt.fire({ hurtEntity: v, damage: 2, damageSource: { damagingEntity: idler, cause: "entityAttack" } }); advance(45);
+  assert.ok(idler.damaged.length >= 1, "but answers whatever hurts the master"); gone(idler);
+  // a zombie pigman is left alone until it turns on the master or the party
+  party.partyOf(v).forEach((_, i) => party.setTactic(v, i, 0)); advance(400);
+  const pig = foeAt("pig", 1, 2, "minecraft:zombie_pigman"); advance(60); assert.equal(pig.damaged.length, 0, "the party leaves a pigman be");
+  world.afterEvents.entityHurt.fire({ hurtEntity: companion("Kai"), damage: 3, damageSource: { damagingEntity: pig, cause: "entityAttack" } }); advance(45);
+  assert.ok(pig.damaged.length >= 1, "until it strikes one of them"); assert.ok(companion("Kai").anims.includes("animation.overlord.party_hurt"), "a hurt companion flinches"); gone(pig);
+  // need comes first: a Saint mends a badly hurt master before anything else, and calls the fallen back
+  advance(400); const brute = foeAt("brute", 3, 0); world.afterEvents.entityHurt.fire({ hurtEntity: brute, damage: 1, damageSource: { damagingEntity: v, cause: "entityAttack" } });
+  v.health.currentValue = 5; advance(25); assert.ok(v.health.currentValue > 5, "the Saint heals first");
+  const kai = companion("Kai"); world.afterEvents.entityDie.fire({ deadEntity: kai, damageSource: {} }); kai.remove(); assert.ok(party.recovering(v, 1) > 0);
+  advance(45); assert.equal(party.recovering(v, 1), 0, "Resurrection calls the fallen back at once"); advance(45); assert.ok(companion("Kai"), "and Kai is with us again");
+  assert.ok(brute.damaged.length >= 1, "and the Monk fights on");
+  // a Necromancer raises the dead to fight, and they crumble when their time is up
+  party.release(v, 1); assert.ok(party.hire(v, { name: "Nyx", look: 30, level: 100, cost: 0, branch: 1, mastery: 0 }).includes("joins")); party.summon(v); advance(45);
+  assert.equal(party.classOf(party.partyOf(v)[1]), "Death Commander");
+  for (let i = 0; i < 6; i++) { world.afterEvents.entityHurt.fire({ hurtEntity: brute, damage: 1, damageSource: { damagingEntity: v, cause: "entityAttack" } }); advance(20); }
+  const raised = v.dimension.mobs.filter((m) => m.tags.has("overlord_art_summon")); assert.ok(raised.length >= 1, "the dead rise for the Necromancer");
+  assert.ok(raised.every((m) => m.tags.has("overlord_summoned") && m.tamedBy === "wilhelmina" && !m.tags.has("overlord_ally_wilhelmina")), "bound to the master, without using up the master's own summons");
+  advance(130 * 20); assert.ok(raised.every((m) => !m.isValid), "and return to the earth"); gone(brute);
+  // life with the party: using a companion opens its page, sneaking gives it a high five; talks and fives build the bond
+  advance(400); const lady = companion("Seren"); const before = seren().bond;
+  const use = (sneak) => { v.isSneaking = sneak; const ev = { player: v, target: lady, itemStack: undefined, cancel: false }; world.beforeEvents.playerInteractWithEntity.fire(ev); advance(2); v.isSneaking = false; return ev; };
+  assert.equal(use(false).cancel, true); assert.ok(shown.at(-1).title === "Seren" && shown.at(-1).buttons.some((b) => b.startsWith("Talk")), JSON.stringify(shown.at(-1)));
+  use(true); assert.ok(lady.anims.includes("animation.overlord.party_highfive") && v.anims.includes("animation.overlord.party_highfive")); assert.equal(seren().bond, before + 1);
+  use(true); assert.equal(seren().bond, before + 1, "one high five a while counts");
+  v.msgs.length = 0; party.talk(v, 0); assert.ok(v.msgs.some((m) => m.startsWith("§b<Seren>"))); assert.equal(seren().bond, before + 2); party.talk(v, 0); assert.equal(seren().bond, before + 2, "talk builds the bond once a day");
+  const other = { player: v, target: companion("Nyx"), itemStack: { typeId: "overlord:red_potion" }, cancel: false }; world.beforeEvents.playerInteractWithEntity.fire(other); assert.equal(other.cancel, false, "a potion still feeds it");
+  party.emoteAll(v, "dance"); assert.ok(lady.anims.includes("animation.overlord.party_dance"));
+  // a new art is announced with a cheer; a member ready for its path is told so once
+  v.msgs.length = 0; party.release(v, 1); assert.ok(party.hire(v, { name: "Wren", look: 14, level: 29, cost: 0 }).includes("joins")); party.summon(v); advance(45);
+  const wren = () => party.partyOf(v)[1]; wren().xp = rpg.xpForNext(29) - 1; kill(v, mob("minecraft:zombie", 20)); advance(45);
+  assert.equal(wren().level, 30); assert.ok(v.msgs.some((m) => m.includes("Wren") && m.includes("ready to choose a path")), v.msgs.join(" / "));
+  companion("Wren"); party.choosePath(v, 1, 1); advance(45); assert.ok(v.msgs.some((m) => m.includes("Wren§f has learned §eRain of Arrows")), v.msgs.join(" / "));
+  assert.ok(companion("Wren").anims.includes("animation.overlord.party_cheer"));
+  // a fight won is celebrated
+  advance(400); companion("Seren").anims.length = 0; const a1 = foeAt("a1", 2, 2); world.afterEvents.entityHurt.fire({ hurtEntity: a1, damage: 1, damageSource: { damagingEntity: v, cause: "entityAttack" } });
+  kill(v, mob("minecraft:zombie", 20)); kill(v, mob("minecraft:zombie", 20)); gone(a1); advance(300);
+  assert.ok(["party_victory", "party_cheer"].some((a) => companion("Seren").anims.includes(`animation.overlord.${a}`)), "victory!");
+  // the arts all name their poses, and every new art is a known kind
+  for (let voc = 0; voc < 8; voc++) for (const b of [0, 1]) for (const m of [0, 1]) for (const art of party.attacksKnown(voc, 100, b, m)) {
+    const info = party.artInfo(art); assert.ok(info.name && info.help && info.cd > 0, art.key);
+  }
+  party.dismiss(v); players.splice(players.indexOf(v), 1);
 }
 
 // persistence: saved profile is restored after leaving
