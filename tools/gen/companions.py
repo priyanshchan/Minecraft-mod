@@ -400,10 +400,10 @@ class Figure:
 
     HEAD = 8
 
-    def __init__(self, n, look):
+    def __init__(self, n, look, name=None, bones=()):
         self.n, self.look = n, look
         f = self.female = look["sex"] == "f"
-        self.m = m = Model(f"retainer_{n}", bounds=(4.0, 4.2, 1.5), res=R)
+        self.m = m = Model(name or f"retainer_{n}", bounds=(4.0, 4.2, 1.5), res=R)
         legs = self.leg_top = 13 if f else 12  # long legs
         self.root = m.bone("root", (0, 0, 0))
         self.body = m.bone("body", (0, 24, 0), parent="root")
@@ -444,6 +444,13 @@ class Figure:
         self.offhand = m.bone("offhand", (self.ox, self.hy, la.z0), parent="leftArm")
         self.cape = m.bone("cape", (0, 24, self.back), parent="body")
         self.chest = None  # (colour, kind, inflate) of the outermost layer over a woman's chest
+        # bones some creatures' animations move: a robe that sways, a tail, wings (v11.1, for the NPCs)
+        hips = self.segs[2]
+        self.robe = m.bone("robe", (0, hips[5], 0), parent="body") if "robe" in bones else None
+        self.tail = m.bone("tail", (0, hips[4] + 1, self.back), parent="body") if "tail" in bones else None
+        self.rwing = m.bone("rightWing", (-1.5, 21, self.back + 0.5), parent="body") if "wings" in bones else None
+        self.lwing = m.bone("leftWing", (1.5, 21, self.back + 0.5), parent="body") if "wings" in bones else None
+        self.skirt_bone = self.robe
 
     def wrap(self, y0, y1, extra=0.3, bone=None):
         """Cubes hugging the torso between two heights (vests, plate, corsets, belts)."""
@@ -510,9 +517,13 @@ def paint_face(fig, style=None):
     ew, eh = len(eyes[0]), len(eyes)
     ey = 8 if eh >= 3 else 9
     lx, rx = 2, 16 - 2 - ew
+    pal2 = dict(pal)
+    if look.get("eyes2"):
+        e2 = look["eyes2"]
+        pal2.update({"I": e2, "J": mix(e2, "#ffffff", 0.45), "P": shade(e2, 0.32)})
     with paint(fig.skull.front) as p:
         p.art(eyes, pal, lx, ey)
-        p.art(eyes, pal, rx, ey, mirror=True)
+        p.art(eyes, pal2, rx, ey, mirror=True)
         brow = mix(shade(hair, 0.75), lash, 0.4)
         by = ey - 2
         for x in range(1, ew):  # brows: a short line over each eye
@@ -786,23 +797,24 @@ def bat_wings(fig, frame="#cfc8d8", membrane="#2a1f3a", glow="#9a3af0", span=1.0
         root = np.array([sx * 1.5, 21.0, z])
         # the arm of the wing, up and out, then the fingers fanning from its end
         arm_rot = (0, sx * -25, sx * 38)
-        arm = fig.body.cube((root[0] - 0.5, root[1], root[2] - 0.5), (1, int(9 * span), 1), rotation=arm_rot, pivot=tuple(root))
+        wing = (fig.rwing if sx < 0 else fig.lwing) or fig.body  # wings flap on their own bones where there are any
+        arm = wing.cube((root[0] - 0.5, root[1], root[2] - 0.5), (1, int(9 * span), 1), rotation=arm_rot, pivot=tuple(root))
         toon(arm, frame)
         wrist = root + _rot(*arm_rot) @ np.array([0, 9 * span - 0.5, 0])
-        joint = fig.body.cube((wrist[0] - 1, wrist[1] - 1, wrist[2] - 1), (2, 2, 2))
+        joint = wing.cube((wrist[0] - 1, wrist[1] - 1, wrist[2] - 1), (2, 2, 2))
         toon(joint, frame)
-        claw = fig.body.cube((wrist[0] - 0.5, wrist[1] + 0.5, wrist[2] - 0.5), (1, 2, 1), rotation=(0, 0, sx * 20), pivot=tuple(wrist))
+        claw = wing.cube((wrist[0] - 0.5, wrist[1] + 0.5, wrist[2] - 0.5), (1, 2, 1), rotation=(0, 0, sx * 20), pivot=tuple(wrist))
         toon(claw, shade(frame, 0.7))
         fingers = [(sx * 100, 13), (sx * 135, 12), (sx * 165, 10)]
         for k, (rz, length) in enumerate(fingers):
             rot = (0, sx * -20, rz)
-            finger = fig.body.cube((wrist[0] - 0.5, wrist[1], wrist[2] - 0.5), (1, int(length * span), 1), rotation=rot, pivot=tuple(wrist))
+            finger = wing.cube((wrist[0] - 0.5, wrist[1], wrist[2] - 0.5), (1, int(length * span), 1), rotation=rot, pivot=tuple(wrist))
             toon(finger, frame)
             # the membrane between this finger and the next (or the body), a thin torn sheet
             nxt = fingers[k + 1][0] if k + 1 < len(fingers) else sx * 200
             mid = (rz + nxt) / 2
             mem_len = int(length * span * 0.95)
-            sheet = fig.body.cube((wrist[0] - 3, wrist[1], wrist[2] - 0.5), (6, mem_len, 1), rotation=(0, sx * -20, mid), pivot=tuple(wrist), inflate=-0.35)
+            sheet = wing.cube((wrist[0] - 3, wrist[1], wrist[2] - 0.5), (6, mem_len, 1), rotation=(0, sx * -20, mid), pivot=tuple(wrist), inflate=-0.35)
             for f in sheet.faces:
                 with paint(f) as p:
                     pixel_shade(p, membrane, tip=glow, grad=(0.1, 0.9), span=1.4, edge=0.4)
@@ -825,7 +837,8 @@ def feather_wings(fig, color="#f6f4f0", tip="#cfd8e8", span=1.0):
         for row, (rz, n, length) in enumerate(((sx * 20, 4, 8), (sx * 38, 5, 11), (sx * 58, 5, 13))):
             for i in range(n):
                 rot = (-12 - i * 3, sx * -40, rz + sx * i * 5)
-                f = fig.body.cube((root[0] - 1, root[1], root[2] - 0.5 + row * 0.3), (2, int(length * span), 1), rotation=rot, pivot=tuple(root))
+                wing = (fig.rwing if sx < 0 else fig.lwing) or fig.body
+                f = wing.cube((root[0] - 1, root[1], root[2] - 0.5 + row * 0.3), (2, int(length * span), 1), rotation=rot, pivot=tuple(root))
                 toon_hair(f, color, "point", False, fig.n + row * 7 + i, tip, (0.0, 1.0))
 
 
@@ -933,13 +946,14 @@ def flared_skirt(fig, color, length=5, trim=None, flare=16, pleats=True, second=
         ((hw - 0.4, top - length, -hd), (1, length, int(d) + 1), (0, 0, -flare), (hw, top, 0)),
     ]
     out = []
+    hang = fig.skirt_bone or fig.body
     for origin, size, rot, pivot in panels:
-        c = fig.body.cube(origin, size, rotation=rot, pivot=pivot)
+        c = hang.cube(origin, size, rotation=rot, pivot=pivot)
         toon(c, color, top=0.1, bottom=0.18)
         out.append(c)
     for sx, sz in ((-1, -1), (1, -1), (-1, 1), (1, 1)):  # the corners, turned 45 degrees
         cx, cz = sx * (hw - 0.4), sz * (hd - 0.2)
-        c = fig.body.cube((cx - 1, top - length, cz - 0.5), (2, length, 1), rotation=(sz * flare * 0.7, sx * sz * -45, sx * -flare * 0.7), pivot=(cx, top, cz))
+        c = hang.cube((cx - 1, top - length, cz - 0.5), (2, length, 1), rotation=(sz * flare * 0.7, sx * sz * -45, sx * -flare * 0.7), pivot=(cx, top, cz))
         toon(c, color, top=0.1, bottom=0.18)
         out.append(c)
     for c in out:

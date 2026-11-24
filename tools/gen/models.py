@@ -3650,3 +3650,10 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        platinum_dragon_lord, rubedo, wyrm_steed, ghoul, wraith, death_cavalier, treant_sapling, zytl_qae, pinison,
        skeleton_archer, quagoa_warlord, rune_golem, evil_lord_envy, evil_lord_greed, buser, brain_eater,
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]
+
+
+# v11.1: the people of the world are redrawn in the companions' anime style (npcs.py); each keeps its name and size.
+from npcs import MODELS as _PEOPLE  # noqa: E402
+
+_people = {fn.__name__: fn for fn in _PEOPLE}
+ALL = [_people.get(fn.__name__, fn) for fn in ALL]
