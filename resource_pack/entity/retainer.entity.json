@@ -84,8 +84,10 @@
           "flinch",
           "lean",
           "follow",
-          "cape"
-        ]
+          "cape",
+          "chibi_head"
+        ],
+        "scale": "0.9412"
       },
       "animations": {
         "look_at_target": "animation.overlord.look_at_target",
@@ -96,7 +98,8 @@
         "flinch": "animation.overlord.flinch",
         "lean": "animation.overlord.lean",
         "follow": "animation.overlord.follow",
-        "cape": "animation.overlord.cape"
+        "cape": "animation.overlord.cape",
+        "chibi_head": "animation.overlord.chibi_head"
       },
       "render_controllers": [
         "controller.render.overlord.retainer"
