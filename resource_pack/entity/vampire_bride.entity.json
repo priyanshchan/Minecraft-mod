@@ -16,7 +16,7 @@
         "animate": [
           "look_at_target",
           "idle",
-          "robe_walk",
+          "walk",
           "attack",
           "breathe",
           "flinch",
@@ -27,7 +27,7 @@
       "animations": {
         "look_at_target": "animation.overlord.look_at_target",
         "idle": "animation.overlord.idle",
-        "robe_walk": "animation.overlord.robe_walk",
+        "walk": "animation.overlord.walk",
         "attack": "animation.overlord.attack",
         "breathe": "animation.overlord.breathe",
         "flinch": "animation.overlord.flinch",

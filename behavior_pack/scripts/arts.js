@@ -19,7 +19,7 @@ const TICKS = 20;
  * @typedef {{
  *   player: Player, entity: Entity, member: any, level: number, power: number, d: import("@minecraft/server").Dimension,
  *   hand: Vector3, foe: Entity | undefined, gap: number, masterShare: number,
- *   masterHealth: import("@minecraft/server").EntityHealthComponent | undefined, near: boolean, voc?: number,
+ *   masterHealth: import("@minecraft/server").EntityHealthComponent | undefined, near: boolean, voc?: number, env?: Env,
  * }} Turn
  */
 /**
@@ -38,11 +38,14 @@ const TICKS = 20;
  *   coins: (player: Player, count: number) => void,
  *   legacy: (key: string) => { use: (t: Turn) => boolean, urgent?: boolean, name: string } | undefined,
  *   danger: (at: Vector3) => { x: number, z: number } | undefined,
- * }} Env
+ *   wild?: boolean,
+ * }} Env  wild: what an art summons is the foe's (an NPC's minions), not the party's
  */
 
 /** @type {Env} */
 const env = /** @type {any} */ ({});
+/** The env a turn acts in: the party's, or the one an NPC's turn brings (v11.1). @param {Turn} t @returns {Env} */
+const E = (t) => t.env ?? env;
 /** party.js hands over what the arts may use. @param {Partial<Env>} parts */
 export function bind(parts) {
   Object.assign(env, parts);
@@ -188,7 +191,7 @@ function harmTo(t, art, foe) {
     // unreadable
   }
   try {
-    if (art.elite && env.isElite(foe)) amount *= art.elite;
+    if (art.elite && E(t).isElite(foe)) amount *= art.elite;
   } catch {
     // no mark
   }
@@ -214,7 +217,7 @@ function harmTo(t, art, foe) {
 function strikeOne(t, art, foe, scale = 1) {
   if (!foe.isValid) return false;
   const amount = harmTo(t, art, foe) * scale;
-  if (amount > 0) env.hit(t, foe, amount, causeOf(art.el));
+  if (amount > 0) E(t).hit(t, foe, amount, causeOf(art.el));
   apply(foe, art.effects);
   if (art.knock || art.lift) {
     try {
@@ -225,13 +228,13 @@ function strikeOne(t, art, foe, scale = 1) {
       // immovable
     }
   }
-  if (art.stagger) env.stagger(foe, art.stagger);
+  if (art.stagger) E(t).stagger(foe, art.stagger);
   if (art.drain && amount > 0) healEntity(t, t.entity, amount * t.power * art.drain);
   if (art.mark) marks.set(foe.id, { mult: art.mark, until: system.currentTick + 10 * TICKS });
   if (art.coins) {
     let found = 0;
     for (let i = 0; i < art.coins; i++) if ((system.currentTick * 31 + i * 17 + foe.id.length) % 3 === 0) found++;
-    if (found > 0) env.coins(t.player, found);
+    if (found > 0) E(t).coins(t.player, found);
   }
   return true;
 }
@@ -240,7 +243,7 @@ function strikeOne(t, art, foe, scale = 1) {
 function healEntity(t, e, amount) {
   if (!(amount > 0)) return false;
   try {
-    if (e.id === t.player.id) return env.healPlayer(t.player, amount);
+    if (e.id === t.player.id) return E(t).healPlayer(t.player, amount);
     const h = e.getComponent("minecraft:health");
     if (!h || h.currentValue <= 0 || h.currentValue >= h.effectiveMax) return false;
     h.setCurrentValue(Math.min(h.effectiveMax, h.currentValue + amount));
@@ -284,7 +287,7 @@ const summonTag = (/** @type {Turn} */ t) => `ovs_${t.entity.id}`;
 /** @type {Record<string, (t: Turn, art: any) => boolean>} */
 export const KINDS = {
   legacy(t, art) {
-    const attack = env.legacy(art.key);
+    const attack = E(t).legacy(art.key);
     return attack ? attack.use(t) : false;
   },
 
@@ -312,7 +315,7 @@ export const KINDS = {
     if (art.pierce) {
       const len = t.gap || 1;
       const dir = { x: (t.foe.location.x - t.entity.location.x) / len, z: (t.foe.location.z - t.entity.location.z) / len };
-      const line = env.foesNear(t.player, t.entity.location, range).filter((e) => {
+      const line = E(t).foesNear(t.player, t.entity.location, range).filter((e) => {
         const along = (e.location.x - t.entity.location.x) * dir.x + (e.location.z - t.entity.location.z) * dir.z;
         if (along < 0 || along > range) return false;
         const off = Math.hypot(e.location.x - (t.entity.location.x + dir.x * along), e.location.z - (t.entity.location.z + dir.z * along));
@@ -350,7 +353,7 @@ export const KINDS = {
     const hops = [t.foe];
     for (let i = 0; i < (art.jumps ?? 3); i++) {
       const last = hops[hops.length - 1];
-      const next = env.foesNear(t.player, last.location, 6).filter((e) => !hops.some((h) => h.id === e.id))
+      const next = E(t).foesNear(t.player, last.location, 6).filter((e) => !hops.some((h) => h.id === e.id))
         .sort((a, b) => flat(a.location, last.location) - flat(b.location, last.location))[0];
       if (!next) break;
       hops.push(next);
@@ -370,13 +373,13 @@ export const KINDS = {
 
   cleave(t, art) {
     const radius = art.radius ?? 3.5;
-    const foes = env.foesNear(t.player, t.entity.location, radius);
+    const foes = E(t).foesNear(t.player, t.entity.location, radius);
     if (foes.length === 0) return false;
     const hits = art.hits ?? 1;
     for (let i = 0; i < hits; i++) {
       const round = () => {
         if (!t.entity.isValid) return;
-        for (const foe of env.foesNear(t.player, t.entity.location, radius).slice(0, 12)) strikeOne(t, i === 0 ? art : { ...art, effects: undefined, knock: undefined }, foe);
+        for (const foe of E(t).foesNear(t.player, t.entity.location, radius).slice(0, 12)) strikeOne(t, i === 0 ? art : { ...art, effects: undefined, knock: undefined }, foe);
         fx.ring(t.d, t.entity.location, fxEl(art.el), radius);
         fx.slash(t.d, above(t.entity, 1.1), fxEl(art.el), radius * 0.6);
       };
@@ -391,7 +394,7 @@ export const KINDS = {
     const atSelf = art.on === "self";
     if (!atSelf && (!t.foe || t.gap > 22)) return false;
     const centre = atSelf ? { ...t.entity.location } : { .../** @type {Entity} */ (t.foe).location };
-    const foes = env.foesNear(t.player, centre, radius);
+    const foes = E(t).foesNear(t.player, centre, radius);
     if (foes.length === 0) return false;
     fx.nova(t.d, { x: centre.x, y: centre.y + 0.6, z: centre.z }, fxEl(art.el), radius);
     for (const foe of foes.slice(0, 14)) strikeOne(t, art, foe);
@@ -410,7 +413,7 @@ export const KINDS = {
       system.runTimeout(() => {
         if (!t.entity.isValid || !t.player.isValid) return;
         fx.fall(t.d, centre, fxEl(art.el), 4, 2 - wave * 2);
-        for (const foe of env.foesNear(t.player, centre, radius).slice(0, 14)) strikeOne(t, wave === 0 ? art : { ...art, effects: undefined }, foe);
+        for (const foe of E(t).foesNear(t.player, centre, radius).slice(0, 14)) strikeOne(t, wave === 0 ? art : { ...art, effects: undefined }, foe);
       }, 6 + wave * 10);
     }
     return true;
@@ -431,7 +434,7 @@ export const KINDS = {
     for (let i = 0; i < (art.hits ?? 1); i++) {
       system.runTimeout(() => {
         if (!t.entity.isValid || !foe.isValid) return;
-        const struckFoes = art.radius ? env.foesNear(t.player, foe.location, art.radius).slice(0, 10) : [foe];
+        const struckFoes = art.radius ? E(t).foesNear(t.player, foe.location, art.radius).slice(0, 10) : [foe];
         if (!struckFoes.some((e) => e.id === foe.id)) struckFoes.push(foe);
         for (const e of struckFoes) strikeOne(t, i === 0 ? art : { ...art, effects: undefined, stagger: undefined }, e);
         fx.ring(t.d, foe.location, fxEl(art.el), art.radius ?? 1.5);
@@ -463,7 +466,7 @@ export const KINDS = {
     const atSelf = art.on === "self";
     if (!atSelf && (!t.foe || t.gap > 22)) return false;
     const centre = atSelf ? t.entity.location : /** @type {Entity} */ (t.foe).location;
-    const foes = art.radius ? env.foesNear(t.player, centre, art.radius) : [/** @type {Entity} */ (t.foe)];
+    const foes = art.radius ? E(t).foesNear(t.player, centre, art.radius) : [/** @type {Entity} */ (t.foe)];
     if (!atSelf && t.foe && !foes.some((e) => e.id === t.foe?.id)) foes.unshift(t.foe);
     if (foes.length === 0) return false;
     // A foe that already suffers the art's first effect is not worth the art again.
@@ -485,11 +488,11 @@ export const KINDS = {
   },
 
   aura(t, art) {
-    if (!env.inCombat(t.player) && !t.foe) return false;
+    if (!E(t).inCombat(t.player) && !t.foe) return false;
     const radius = art.radius ?? 5;
     const onFoe = art.on === "foe";
     if (onFoe && (!t.foe || t.gap > 20)) return false;
-    if (!onFoe && env.foesNear(t.player, t.entity.location, radius + 2).length === 0 && !art.heal && !art.allies) return false;
+    if (!onFoe && E(t).foesNear(t.player, t.entity.location, radius + 2).length === 0 && !art.heal && !art.allies) return false;
     if (auras >= 12) return false; // the field is full of them already
     const fixed = onFoe ? { .../** @type {Entity} */ (t.foe).location } : undefined;
     const seconds = art.sec ?? 8;
@@ -503,7 +506,7 @@ export const KINDS = {
       }
       const centre = fixed ?? t.entity.location;
       fx.ring(t.d, centre, fxEl(art.el), radius);
-      for (const foe of env.foesNear(t.player, centre, radius).slice(0, 14)) {
+      for (const foe of E(t).foesNear(t.player, centre, radius).slice(0, 14)) {
         if (art.dmg) strikeOne(t, { ...art, effects: undefined, mark: undefined }, foe);
         apply(foe, art.effects);
         if (art.pull) {
@@ -533,7 +536,7 @@ export const KINDS = {
     const atSelf = art.on === "self";
     if (!atSelf && (!t.foe || t.gap > 22)) return false;
     const centre = atSelf ? { ...t.entity.location } : { .../** @type {Entity} */ (t.foe).location };
-    const foes = env.foesNear(t.player, centre, art.radius ?? 7);
+    const foes = E(t).foesNear(t.player, centre, art.radius ?? 7);
     if (foes.length < (atSelf ? 1 : 2)) return false; // one foe needs no gathering
     for (const foe of foes.slice(0, 14)) {
       const len = flat(foe.location, centre) || 1;
@@ -542,7 +545,7 @@ export const KINDS = {
       } catch {
         // immovable
       }
-      env.stagger(foe, 1.5);
+      E(t).stagger(foe, 1.5);
       if (art.dmg) strikeOne(t, art, foe);
     }
     fx.implode(t.d, { x: centre.x, y: centre.y + 1, z: centre.z }, fxEl(art.el), art.radius ?? 7);
@@ -567,7 +570,7 @@ export const KINDS = {
         fx.rise(t.d, ally.location, "holy", 0.6);
       }
       fx.ring(t.d, t.entity.location, "holy", 6);
-      if (hurt.some((e) => e.id === t.player.id)) env.say(t.player, t.member, "Hold fast, everyone!", 25);
+      if (hurt.some((e) => e.id === t.player.id)) E(t).say(t.player, t.member, "Hold fast, everyone!", 25);
       return true;
     }
     const patient = neediest(t);
@@ -576,12 +579,12 @@ export const KINDS = {
     if (art.hot) apply(patient, [["regeneration", art.hot, 1]]);
     fx.beam(t.d, t.hand, above(patient, 1), "holy");
     fx.rise(t.d, patient.location, "holy", 0.7);
-    if (patient.id === t.player.id) env.say(t.player, t.member, "I have you, Master.", 30);
+    if (patient.id === t.player.id) E(t).say(t.player, t.member, "I have you, Master.", 30);
     return true;
   },
 
   shield(t, art) {
-    if (!env.inCombat(t.player)) return false;
+    if (!E(t).inCombat(t.player)) return false;
     const targets = art.party ? allies(t, 14) : [neediest(t, 0.7, 0.5) ?? (t.masterShare < 0.7 ? t.player : undefined)].filter((e) => e !== undefined);
     if (targets.length === 0) return false;
     const lead = /** @type {Entity} */ (targets[0]);
@@ -598,7 +601,7 @@ export const KINDS = {
   },
 
   buff(t, art) {
-    if (art.combat && !env.inCombat(t.player)) return false;
+    if (art.combat && !E(t).inCombat(t.player)) return false;
     const targets = art.self ? [t.entity] : art.party ? allies(t, 16) : [t.player, t.entity];
     const first = art.effects?.[0]?.[0];
     if (first) {
@@ -625,7 +628,7 @@ export const KINDS = {
   },
 
   summon(t, art) {
-    if (!t.foe || !env.inCombat(t.player)) return false;
+    if (!t.foe || !E(t).inCombat(t.player)) return false;
     const tag = summonTag(t);
     let present = [];
     try {
@@ -642,10 +645,13 @@ export const KINDS = {
       const a = (i / room) * Math.PI * 2;
       const spot = { x: t.entity.location.x + Math.cos(a) * 1.8, y: t.entity.location.y, z: t.entity.location.z + Math.sin(a) * 1.8 };
       try {
-        const options = art.type.startsWith("overlord:") ? { spawnEvent: "overlord:become_summoned" } : undefined;
+        const wild = E(t).wild === true; // an NPC's minions fight for it, against the players
+        const options = art.type.startsWith("overlord:") && !wild ? { spawnEvent: "overlord:become_summoned" } : undefined;
         const e = t.d.spawnEntity(art.type, spot, options);
-        e.addTag("overlord_summoned");
-        e.addTag(`overlord_party_ally_${t.player.id}`); // not counted against the master's own summons
+        if (!wild) {
+          e.addTag("overlord_summoned");
+          e.addTag(`overlord_party_ally_${t.player.id}`); // not counted against the master's own summons
+        }
         e.addTag(tag);
         e.addTag("overlord_art_summon");
         e.setDynamicProperty("overlord:until", until);
@@ -660,7 +666,7 @@ export const KINDS = {
       for (const e of raised) {
         try {
           if (!e.isValid || !t.player.isValid) continue;
-          e.getComponent("minecraft:tameable")?.tame(t.player);
+          if (!E(t).wild) e.getComponent("minecraft:tameable")?.tame(/** @type {Player} */ (t.player));
           apply(e, art.buff);
         } catch {
           // it fights all the same
@@ -683,11 +689,11 @@ export const KINDS = {
   },
 
   revive(t, art) {
-    if (env.fallen(t.player) === 0) return false;
-    const back = env.revive(t.player, art.count ?? 1);
+    if (E(t).fallen(t.player) === 0) return false;
+    const back = E(t).revive(t.player, art.count ?? 1);
     if (back === 0) return false;
     fx.pillar(t.d, t.entity.location, "holy", 6);
-    env.say(t.player, t.member, back > 1 ? "Rise, all of you!" : "Rise - we are not done yet!", 20, true);
+    E(t).say(t.player, t.member, back > 1 ? "Rise, all of you!" : "Rise - we are not done yet!", 20, true);
     return true;
   },
 
@@ -715,7 +721,7 @@ export const KINDS = {
     const radius = art.radius ?? 8;
     /** @type {Entity[]} */
     const drawn = [];
-    for (const foe of env.foesNear(t.player, t.entity.location, radius)) {
+    for (const foe of E(t).foesNear(t.player, t.entity.location, radius)) {
       const far = flat(foe.location, t.entity.location);
       if (far > 2.5 && !drawn.some((d) => d.id === foe.id)) drawn.push(foe);
     }
@@ -731,12 +737,12 @@ export const KINDS = {
       fx.beam(t.d, above(foe, 1), above(t.entity, 1.2), "fire", 0.5);
     }
     fx.ring(t.d, t.entity.location, "fire", 3);
-    env.say(t.player, t.member, "Over here! Face me!", 20);
+    E(t).say(t.player, t.member, "Over here! Face me!", 20);
     return true;
   },
 
   escape(t, art) {
-    const close = env.foesNear(t.player, t.entity.location, 3.5)[0];
+    const close = E(t).foesNear(t.player, t.entity.location, 3.5)[0];
     if (!close) return false;
     const len = flat(close.location, t.entity.location) || 1;
     const dist = art.dist ?? 6;
@@ -808,18 +814,18 @@ export function score(t, art, sense) {
   const kind = art.kind === "combo" ? art.parts?.[0]?.kind ?? "strike" : art.kind;
   let value = 10 + art.at * 0.4;
   if (art.kind === "legacy") {
-    const legacy = env.legacy(art.key);
+    const legacy = E(t).legacy(art.key);
     if (legacy?.urgent) value += 25; // the old party's urgent arts check need themselves
   } else if (SUPPORT.has(kind)) {
-    if (kind === "revive") value += env.fallen(t.player) > 0 ? 80 : -100;
+    if (kind === "revive") value += E(t).fallen(t.player) > 0 ? 80 : -100;
     else if (kind === "cleanse") value += 15;
     else value += sense.need > 0 ? 40 + sense.need * 80 : -100;
     if (kind === "shield" && sense.danger) value += 50; // a boss is about to strike: shield first
   } else if (kind === "buff") {
-    value += env.inCombat(t.player) ? 14 : -100;
+    value += E(t).inCombat(t.player) ? 14 : -100;
     if (sense.elite) value += 10;
   } else if (kind === "summon") {
-    value += env.inCombat(t.player) ? 18 + (sense.elite ? 15 : 0) + Math.min(3, sense.crowd) * 5 : -100;
+    value += E(t).inCombat(t.player) ? 18 + (sense.elite ? 15 : 0) + Math.min(3, sense.crowd) * 5 : -100;
   } else if (kind === "taunt") {
     value += t.masterShare < 0.5 ? 45 : sense.crowd >= 2 ? 12 : -20;
   } else if (kind === "escape") {
@@ -838,18 +844,18 @@ export function score(t, art, sense) {
 
 /** Everything a companion takes in before it chooses. @param {Turn} t @param {string | undefined} last */
 export function senseOf(t, last) {
-  const crowd = t.foe ? env.foesNear(t.player, t.foe.location, 4.5).length : env.foesNear(t.player, t.entity.location, 5).length;
+  const crowd = t.foe ? E(t).foesNear(t.player, t.foe.location, 4.5).length : E(t).foesNear(t.player, t.entity.location, 5).length;
   const needy = neediest(t);
   const need = needy ? 1 - shareOf(needy) : 0;
   let elite = false;
   try {
-    elite = Boolean(t.foe && env.isElite(t.foe));
+    elite = Boolean(t.foe && E(t).isElite(t.foe));
   } catch {
     elite = false;
   }
   let danger = false;
   try {
-    danger = Boolean(env.danger(t.player.location));
+    danger = Boolean(E(t).danger(t.player.location));
   } catch {
     danger = false;
   }
