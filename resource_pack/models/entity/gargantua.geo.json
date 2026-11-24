@@ -6,17 +6,26 @@
         "identifier": "geometry.overlord.gargantua",
         "texture_width": 128,
         "texture_height": 64,
-        "visible_bounds_width": 6,
-        "visible_bounds_height": 7,
+        "visible_bounds_width": 4.0,
+        "visible_bounds_height": 4.2,
         "visible_bounds_offset": [
           0,
-          2.5,
+          1.5,
           0
         ]
       },
       "bones": [
         {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
           "name": "body",
+          "parent": "root",
           "pivot": [
             0,
             24,
@@ -26,17 +35,82 @@
             {
               "origin": [
                 -7,
-                10,
+                11,
                 -4
               ],
               "size": [
                 14,
-                14,
+                13,
                 8
               ],
               "uv": [
                 48,
                 0
+              ]
+            },
+            {
+              "origin": [
+                -1.5,
+                17,
+                -4.8
+              ],
+              "size": [
+                3,
+                3,
+                1
+              ],
+              "uv": [
+                90,
+                40
+              ],
+              "inflate": 0.1
+            },
+            {
+              "origin": [
+                -6,
+                24,
+                -2
+              ],
+              "size": [
+                3,
+                2,
+                4
+              ],
+              "uv": [
+                48,
+                40
+              ]
+            },
+            {
+              "origin": [
+                -1.5,
+                24,
+                -2
+              ],
+              "size": [
+                3,
+                2,
+                4
+              ],
+              "uv": [
+                62,
+                40
+              ]
+            },
+            {
+              "origin": [
+                3,
+                24,
+                -2
+              ],
+              "size": [
+                3,
+                2,
+                4
+              ],
+              "uv": [
+                76,
+                40
               ]
             }
           ]
@@ -52,18 +126,18 @@
           "cubes": [
             {
               "origin": [
-                -4,
-                24,
+                -3,
+                23.5,
                 -4
               ],
               "size": [
-                8,
                 6,
-                8
+                5,
+                6
               ],
               "uv": [
-                24,
-                26
+                88,
+                23
               ]
             }
           ]
@@ -73,25 +147,59 @@
           "parent": "body",
           "pivot": [
             -10,
-            22,
+            21,
             0
           ],
           "cubes": [
             {
               "origin": [
                 -13,
-                4,
+                7,
                 -3
               ],
               "size": [
                 6,
-                20,
+                17,
                 6
               ],
               "uv": [
                 0,
                 0
               ]
+            },
+            {
+              "origin": [
+                -13,
+                6,
+                -3
+              ],
+              "size": [
+                6,
+                4,
+                6
+              ],
+              "uv": [
+                0,
+                40
+              ],
+              "inflate": 0.6
+            },
+            {
+              "origin": [
+                -14,
+                20,
+                -4
+              ],
+              "size": [
+                8,
+                5,
+                8
+              ],
+              "uv": [
+                24,
+                23
+              ],
+              "inflate": 0.1
             }
           ]
         },
@@ -100,45 +208,80 @@
           "parent": "body",
           "pivot": [
             10,
-            22,
+            21,
             0
           ],
           "cubes": [
             {
               "origin": [
                 7,
-                4,
+                7,
                 -3
               ],
               "size": [
                 6,
-                20,
+                17,
                 6
               ],
               "uv": [
                 24,
                 0
               ]
+            },
+            {
+              "origin": [
+                7,
+                6,
+                -3
+              ],
+              "size": [
+                6,
+                4,
+                6
+              ],
+              "uv": [
+                24,
+                40
+              ],
+              "inflate": 0.6
+            },
+            {
+              "origin": [
+                6,
+                20,
+                -4
+              ],
+              "size": [
+                8,
+                5,
+                8
+              ],
+              "uv": [
+                56,
+                23
+              ],
+              "inflate": 0.1
             }
           ]
         },
         {
           "name": "rightLeg",
+          "parent": "root",
           "pivot": [
             -3.5,
-            10,
+            11,
             0
           ],
           "cubes": [
             {
               "origin": [
-                -7,
+                -6.5,
                 0,
                 -3
               ],
               "size": [
                 6,
-                10,
+                11,
                 6
               ],
               "uv": [
@@ -150,28 +293,47 @@
         },
         {
           "name": "leftLeg",
+          "parent": "root",
           "pivot": [
             3.5,
-            10,
+            11,
             0
           ],
           "cubes": [
             {
               "origin": [
-                1,
+                0.5,
                 0,
                 -3
               ],
               "size": [
                 6,
-                10,
+                11,
                 6
               ],
               "uv": [
                 0,
-                26
+                23
               ]
             }
+          ]
+        },
+        {
+          "name": "weapon",
+          "parent": "rightArm",
+          "pivot": [
+            -10,
+            7.5,
+            -3
+          ]
+        },
+        {
+          "name": "offhand",
+          "parent": "leftArm",
+          "pivot": [
+            10,
+            7.5,
+            -3
           ]
         }
       ]

@@ -3652,8 +3652,11 @@ ALL = [ainz, albedo, shalltear, cocytus, demiurge, sebas, death_knight, elder_li
        crystal_shard, fireball, negative_burst, lightning_bolt, magic_bullet]
 
 
-# v11.1: the people of the world are redrawn in the companions' anime style (npcs.py); each keeps its name and size.
+# v11.1: the people of the world are redrawn in the companions' anime style (npcs.py), and the monsters, undead and
+# beasts in its pixel style (monsters.py); each keeps its name, size and the bones its animations move.
 from npcs import MODELS as _PEOPLE  # noqa: E402
 
-_people = {fn.__name__: fn for fn in _PEOPLE}
+from monsters import MODELS as _BEASTS  # noqa: E402
+
+_people = {fn.__name__: fn for fn in _PEOPLE + _BEASTS}
 ALL = [_people.get(fn.__name__, fn) for fn in ALL]
